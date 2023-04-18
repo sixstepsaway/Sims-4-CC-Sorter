@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "88VGrlkk7sA7bE4R5DLkaF8SlTrMqtx4QsH9PW1lj9K2F/VkvK6ZLESLc5nEqAlo4LU9fApDIEgv7iSjPYVGfQ==",
+  "dgSpecHash": "fdmaq73Ab+36Z72elrI/lk1kBxrC4LlbPg1JASZlx7ak8nCZqK+MpGqqIZrRPu0HQFU8ZHf2zOdZ9BUZzecKnQ==",
   "success": true,
-  "projectFilePath": "I:\\Code\\C#\\Sims-4-CC-Sorter\\Sims 4 CC Sorter\\app.csproj",
+  "projectFilePath": "I:\\Code\\C#\\Sims-4-CC-Sorter\\Sims 4 CC Sorter\\CCSorter.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

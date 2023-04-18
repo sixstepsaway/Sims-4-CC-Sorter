@@ -14,9 +14,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "I:\\Code\\C#\\Sims-4-CC-Sorter\\Sims 4 CC Sorter\\app.csproj",
-      "projectName": "app",
-      "projectPath": "I:\\Code\\C#\\Sims-4-CC-Sorter\\Sims 4 CC Sorter\\app.csproj",
+      "projectUniqueName": "I:\\Code\\C#\\Sims-4-CC-Sorter\\Sims 4 CC Sorter\\CCSorter.csproj",
+      "projectName": "CCSorter",
+      "projectPath": "I:\\Code\\C#\\Sims-4-CC-Sorter\\Sims 4 CC Sorter\\CCSorter.csproj",
       "packagesPath": "C:\\Users\\conta\\.nuget\\packages\\",
       "outputPath": "I:\\Code\\C#\\Sims-4-CC-Sorter\\Sims 4 CC Sorter\\obj\\",
       "projectStyle": "PackageReference",
