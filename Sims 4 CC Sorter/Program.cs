@@ -4,20 +4,17 @@ using System.IO;
 namespace Sims4CCSorter {
     public static class CCSorter {
         public static string ModFolder = "M:\\The Sims 4 (Documents)\\TESTING FOLDER";
-        private static readonly string packageExtension = "*.package";
+        private static readonly string packageExtension = "package";
         static void Main(){
             Console.WriteLine("Looking for packages inside: " + ModFolder);
-            try {
-                string[] allFiles = Directory.GetFiles(ModFolder);
-                string[] files = Directory.GetFiles(ModFolder, packageExtension);
-                Console.WriteLine("Files located: {0}.", allFiles.Length);
-                Console.WriteLine("Of which are packages: {0}.", files.Length);
-                foreach (string file in files) {
-                    Console.WriteLine(file);
+            string[] files = Directory.GetFiles(ModFolder);
+            foreach (string file in files) {
+                FileInfo package = new FileInfo(file);
+                if (packageExtension.Any(package.Extension.Contains)) {
+                    Console.WriteLine("File " + package.Name + " is a package.");
+                } else {
+                    Console.WriteLine("File " + package.Name + " is NOT package.");
                 }
-            }
-            catch (Exception e) {
-                Console.WriteLine("Hit a snag: {0}", e.ToString());
             }
         }
     }    

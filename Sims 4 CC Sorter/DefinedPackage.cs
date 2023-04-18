@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace S4CC.DefinePackage {
+namespace S4CC.DefinedPackage {
     ///<summary>
     ///Defines a package and its contents.
     ///</summary>
