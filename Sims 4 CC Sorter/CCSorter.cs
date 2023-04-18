@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using s4pi;
 using s4pi.Interfaces;
 using s4pi.Package;
 
@@ -16,17 +15,17 @@ namespace FindPackages.PackageDiscovery {
 
         public void IdentifyPackages(string ModFolder){
             Console.WriteLine("Looking for packages inside: " + ModFolder);
-            string[] files = Directory.GetFiles(ModFolder);
+            string[] files = Directory.GetFiles(ModFolder, "*", SearchOption.AllDirectories);
             foreach (string file in files) {
-                FileInfo package = new FileInfo(file);
-                if (packageExtension.Any(package.Extension.Contains)) {
-                    allPackages.Add(package);
+                FileInfo packageFile = new FileInfo(file);
+                if (packageExtension.Any(packageFile.Extension.Contains)) {
+                    allPackages.Add(packageFile);
                 } else {
-                    notPackages.Add(package);
+                    notPackages.Add(packageFile);
                 }
             }
         }
-        public void GetPackageInfo(FileInfo package){
+        public void GetPackageInfo(FileInfo packageFile){
             
         }
     }

@@ -12,9 +12,8 @@ namespace Sims4CCSorter {
             string ModFolder = "M:\\The Sims 4 (Documents)\\TESTING FOLDER";
             ParsePackageFolder parseFolder = new ParsePackageFolder();
             parseFolder.IdentifyPackages(ModFolder);
-            foreach (FileInfo package in parseFolder.allPackages) {
-                Console.WriteLine(package.Name);
-                parseFolder.GetPackageInfo(package);
+            foreach (FileInfo packageFile in parseFolder.allPackages) {
+                Console.WriteLine(packageFile.Name);
             }
         }
     }

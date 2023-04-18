@@ -7,8 +7,28 @@
   "targets": {
     ".NETCoreApp,Version=v6.0": {
       "CCSorter/1.0.0": {
+        "dependencies": {
+          "s4pi.Interfaces": "2104.21.1514.18445",
+          "s4pi.Package": "2002.10.2050.28502"
+        },
         "runtime": {
           "CCSorter.dll": {}
+        }
+      },
+      "s4pi.Interfaces/2104.21.1514.18445": {
+        "runtime": {
+          "s4pi.Interfaces.dll": {
+            "assemblyVersion": "2104.21.1514.18445",
+            "fileVersion": "2104.21.1514.18445"
+          }
+        }
+      },
+      "s4pi.Package/2002.10.2050.28502": {
+        "runtime": {
+          "s4pi.Package.dll": {
+            "assemblyVersion": "2002.10.2050.28502",
+            "fileVersion": "2002.10.2050.28502"
+          }
         }
       }
     }
@@ -16,6 +36,16 @@
   "libraries": {
     "CCSorter/1.0.0": {
       "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "s4pi.Interfaces/2104.21.1514.18445": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "s4pi.Package/2002.10.2050.28502": {
+      "type": "reference",
       "serviceable": false,
       "sha512": ""
     }
