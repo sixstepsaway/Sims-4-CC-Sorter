@@ -14,7 +14,8 @@ namespace Sims4CCSorter {
             parseFolder.IdentifyPackages(ModFolder);
             foreach (FileInfo packageFile in parseFolder.allPackages) {
                 Console.WriteLine(packageFile.Name);
-            }
+                parseFolder.GetPackageInfo(packageFile);
+            }            
         }
     }
 }
