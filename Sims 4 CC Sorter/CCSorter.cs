@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using s4pi.Interfaces;
-using s4pi.Package;
-using s4pi.Settings;
 
 
 namespace FindPackages.PackageDiscovery {

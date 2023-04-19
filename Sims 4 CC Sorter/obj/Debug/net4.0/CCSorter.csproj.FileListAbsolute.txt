@@ -1,0 +1,6 @@
+I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\obj\Debug\net4.0\CCSorter.csproj.AssemblyReference.cache
+I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\obj\Debug\net4.0\CCSorter.csproj.SuggestedBindingRedirects.cache
+I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\obj\Debug\net4.0\CCSorter.GeneratedMSBuildEditorConfig.editorconfig
+I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\obj\Debug\net4.0\CCSorter.AssemblyInfoInputs.cache
+I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\obj\Debug\net4.0\CCSorter.AssemblyInfo.cs
+I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\obj\Debug\net4.0\CCSorter.csproj.CoreCompileInputs.cache

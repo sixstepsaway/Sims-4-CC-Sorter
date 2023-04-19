@@ -57,7 +57,7 @@ namespace Sims4CCSorter {
             foreach (FileInfo item in parseFolder.allPackages) {
                 parseFolder.FindBrokenPackages(item, logfile, packagecount, gameInt);
             }
-            
+            Environment.Exit(0);            
         }
     }
 }
