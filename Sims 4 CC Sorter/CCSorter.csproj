@@ -13,6 +13,9 @@
    <Reference Include="s4pi.Interfaces">    
       <HintPath>dlls\s4pi.Interfaces.dll</HintPath>
    </Reference>
+   <Reference Include="s4pi.Settings">    
+    <HintPath>dlls\s4pi.Settings.dll</HintPath>
+ </Reference>
 </ItemGroup>
 
 </Project>

@@ -9,7 +9,8 @@
       "CCSorter/1.0.0": {
         "dependencies": {
           "s4pi.Interfaces": "2104.21.1514.18445",
-          "s4pi.Package": "2002.10.2050.28502"
+          "s4pi.Package": "2002.10.2050.28502",
+          "s4pi.Settings": "2104.21.1515.18463"
         },
         "runtime": {
           "CCSorter.dll": {}
@@ -30,6 +31,14 @@
             "fileVersion": "2002.10.2050.28502"
           }
         }
+      },
+      "s4pi.Settings/2104.21.1515.18463": {
+        "runtime": {
+          "s4pi.Settings.dll": {
+            "assemblyVersion": "2104.21.1515.18463",
+            "fileVersion": "2104.21.1515.18463"
+          }
+        }
       }
     }
   },
@@ -45,6 +54,11 @@
       "sha512": ""
     },
     "s4pi.Package/2002.10.2050.28502": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "s4pi.Settings/2104.21.1515.18463": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

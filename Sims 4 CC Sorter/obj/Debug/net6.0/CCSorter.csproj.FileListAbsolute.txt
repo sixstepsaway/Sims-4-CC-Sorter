@@ -16,3 +16,4 @@ I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\obj\Debug\net6.0\ref\CCSorter.dll
 I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\bin\Debug\net6.0\s4pi.Interfaces.dll
 I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\bin\Debug\net6.0\s4pi.Package.dll
 I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\obj\Debug\net6.0\CCSorter.csproj.CopyComplete
+I:\Code\C#\Sims-4-CC-Sorter\Sims 4 CC Sorter\bin\Debug\net6.0\s4pi.Settings.dll
