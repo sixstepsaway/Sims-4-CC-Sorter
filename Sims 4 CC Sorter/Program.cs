@@ -15,6 +15,13 @@ namespace Sims4CCSorter {
             foreach (FileInfo packageFile in parseFolder.allPackages) {
                 Console.WriteLine(packageFile.Name);
                 parseFolder.GetPackageInfo(packageFile);
+                string testPackageContents = "I:\\Code\\C#\\PackageContents.txt";
+                using (TextWriter putContentsIntoTxt = File.CreateText(testPackageContents)){
+                    putContentsIntoTxt.WriteLine(packageFile.Name);
+                    foreach (string line in parseFolder.packageContents) {
+                        putContentsIntoTxt.WriteLine(line);
+                    }
+                }
             }            
         }
     }

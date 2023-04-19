@@ -11,6 +11,7 @@ namespace FindPackages.PackageDiscovery {
         string packageExtension = "package";
         public List<FileInfo> allPackages = new List<FileInfo>();
         public List<FileInfo> notPackages = new List<FileInfo>();
+        public string[] packageContents;
 
 
         public void IdentifyPackages(string ModFolder){
@@ -26,11 +27,9 @@ namespace FindPackages.PackageDiscovery {
             }
         }
         public void GetPackageInfo(FileInfo packageFile){
-            FileStream getInfo = new FileStream(packageFile.FullName, FileMode.OpenOrCreate);
-            StreamReader readInside = new StreamReader(getInfo);
+            //FileStream getInfo = new FileStream(packageFile.FullName, FileMode.OpenOrCreate);
             Console.WriteLine("Opened " + packageFile.Name);
-            string read = readInside.ReadLine();
-            Console.WriteLine("Data read from file is: "+ read);
+            packageContents = File.ReadAllLines(packageFile.FullName);
         }
     }
 }
