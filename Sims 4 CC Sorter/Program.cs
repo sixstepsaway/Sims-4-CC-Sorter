@@ -26,16 +26,16 @@ namespace Sims4CCSorter {
                 }
 
             }*/
-            Console.WriteLine(parseFolder.allPackages[0].Name);
-            parseFolder.GetPackageInfo(parseFolder.allPackages[0]);           
-            putContentsIntoTxt.WriteLine(parseFolder.allPackages[0].Name);
+            Console.WriteLine(parseFolder.allPackages[20].Name);
+            parseFolder.GetPackageInfo(parseFolder.allPackages[20]);           
+            /*putContentsIntoTxt.WriteLine(parseFolder.allPackages[0].Name);
             foreach (string line in parseFolder.packageContents) {
                 putContentsIntoTxt.WriteLine(line);
                 putContentsIntoTxt.WriteLine("");
                 putContentsIntoTxt.WriteLine("");
                 putContentsIntoTxt.WriteLine("");
             }
-            putContentsIntoTxt.Close();    
+            putContentsIntoTxt.Close();*/ 
         }
     }
 }

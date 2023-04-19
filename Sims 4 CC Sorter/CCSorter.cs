@@ -26,10 +26,18 @@ namespace FindPackages.PackageDiscovery {
                 }
             }
         }
+
+        void LineType<T>(T LineType) {
+            Console.WriteLine(typeof(T));
+        }
         public void GetPackageInfo(FileInfo packageFile){
             //FileStream getInfo = new FileStream(packageFile.FullName, FileMode.OpenOrCreate);
             Console.WriteLine("Opened " + packageFile.Name);
-            packageContents = File.ReadAllLines(packageFile.FullName);
+            dynamic packageCont = File.ReadAllLines(packageFile.FullName);
+            foreach (dynamic item in packageCont) {
+                LineType(item);
+                //Console.Write(item);
+            }
         }
     }
 }
