@@ -15,6 +15,7 @@ namespace Sims4CCSorter {
             StreamWriter putContentsIntoTxt = new StreamWriter(testPackageContents, append: true);
             parseFolder.IdentifyPackages(ModFolder);
             /*foreach (FileInfo packageFile in parseFolder.allPackages) {
+                //this loop dumps EVERYTHING to a singular text file which is cool but only if you want a 1gb text file to crash notepad++ with :)
                 Console.WriteLine(packageFile.Name);
                 parseFolder.GetPackageInfo(packageFile);           
                 putContentsIntoTxt.WriteLine(packageFile.Name);
