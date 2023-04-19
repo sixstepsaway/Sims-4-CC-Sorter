@@ -11,18 +11,25 @@ namespace Sims4CCSorter {
             ModFolder = Console.ReadLine();*/
             string ModFolder = "M:\\The Sims 4 (Documents)\\TESTING FOLDER";
             ParsePackageFolder parseFolder = new ParsePackageFolder();
+            string testPackageContents = "I:\\Code\\C#\\PackageContents.txt";
+            StreamWriter putContentsIntoTxt = new StreamWriter(testPackageContents, append: true);
             parseFolder.IdentifyPackages(ModFolder);
-            foreach (FileInfo packageFile in parseFolder.allPackages) {
+            /*foreach (FileInfo packageFile in parseFolder.allPackages) {
                 Console.WriteLine(packageFile.Name);
-                parseFolder.GetPackageInfo(packageFile);
-                string testPackageContents = "I:\\Code\\C#\\PackageContents.txt";
-                using (TextWriter putContentsIntoTxt = File.CreateText(testPackageContents)){
-                    putContentsIntoTxt.WriteLine(packageFile.Name);
-                    foreach (string line in parseFolder.packageContents) {
-                        putContentsIntoTxt.WriteLine(line);
-                    }
+                parseFolder.GetPackageInfo(packageFile);           
+                putContentsIntoTxt.WriteLine(packageFile.Name);
+                foreach (string line in parseFolder.packageContents) {
+                    putContentsIntoTxt.WriteLine(line);
                 }
-            }            
+
+            }*/
+            Console.WriteLine(parseFolder.allPackages[0].Name);
+            parseFolder.GetPackageInfo(parseFolder.allPackages[0]);           
+            putContentsIntoTxt.WriteLine(parseFolder.allPackages[0].Name);
+            foreach (string line in parseFolder.packageContents) {
+                putContentsIntoTxt.WriteLine(line);
+            }
+            putContentsIntoTxt.Close();    
         }
     }
 }
