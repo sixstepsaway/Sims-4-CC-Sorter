@@ -2,6 +2,10 @@
 
 My first real C# project, at least the first one that's turned into something that works. 
 
+## Requirements
+
+[Dotnet 5.0](https://dotnet.microsoft.com/en-us/download/dotnet/5.0) or [later](https://dotnet.microsoft.com/en-us/download/dotnet).
+
 ## Premise 
 
 An app that searches through Sims .package files and gets some info:
