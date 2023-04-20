@@ -68,11 +68,9 @@ namespace CCSorter {
 
             uint major = readFile.ReadUInt32();
             test = major.ToString();
-            //Console.WriteLine(test);
             
             uint minor = readFile.ReadUInt32();
             test = minor.ToString();
-            //Console.WriteLine(test);
 
             counter++;
 
@@ -108,7 +106,7 @@ namespace CCSorter {
                     packageFiles.Add(temp);
                 } else {
                     time = DateTime.Now.ToString("h:mm:ss tt");
-                    statement = time + ": " + package.Name + " is a sims 4 file.";
+                    statement = time + ": " + package.FullName + " is a sims 4 file.";
                     putContentsIntoTxt.WriteLine(statement);
                     putContentsIntoTxt.Close();
                     var temp = new PackageFiles();
