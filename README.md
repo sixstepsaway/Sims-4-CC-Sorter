@@ -36,4 +36,4 @@ Thanks to the following, which I have been learning from:
 
 - Lazy Duchess' CC Merger https://github.com/LazyDuchess/CC-Merger 
 - This DBPF Editor https://github.com/noah-severyn/csDBPF 
-- Delphy's Download Organizer's Source Code which made everything suddenly make sense. 
+- Delphy's Download Organizer's Source Code which made everything suddenly make sense. I'm mostly using this DBPF reader so far and retyping it myself to learn from and adjust.
