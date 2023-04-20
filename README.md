@@ -4,7 +4,7 @@ My first real C# project, at least the first one that's turned into something th
 
 ## Requirements
 
-[Dotnet 5.0](https://dotnet.microsoft.com/en-us/download/dotnet/5.0) or [later](https://dotnet.microsoft.com/en-us/download/dotnet).
+[.net 5.0](https://dotnet.microsoft.com/en-us/download/dotnet/5.0) or [later](https://dotnet.microsoft.com/en-us/download/dotnet).
 
 ## Premise 
 
