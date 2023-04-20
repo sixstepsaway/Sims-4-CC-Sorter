@@ -25,7 +25,7 @@
                     <Button x:Name = "findBrokenButton" Click = "findBroken_Click" Content = "Find Broken Packages" Height = "40" Width = "180"/>
                     <Button x:Name = "exitButton" Click = "exitButton_Click" Content = "Exit" Height = "40" Width = "180" Margin = "5"/> 
                 </StackPanel>
-                <TextBlock x:Name="completionAlert" Text="number" Foreground="AliceBlue" TextAlignment="Center"/>
+                <TextBlock x:Name="completionAlert" Text="" Foreground="AliceBlue" TextAlignment="Center"/>
         </StackPanel>        
         <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="AliceBlue">Sims CC Sorter developed by sixstepsaway/sinfulsimming</TextBlock>
