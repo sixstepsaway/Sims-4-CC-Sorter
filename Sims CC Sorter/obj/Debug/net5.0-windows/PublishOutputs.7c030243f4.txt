@@ -1,5 +1,0 @@
-I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\publish\Sims 4 CC Sorter.exe
-I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\publish\Sims 4 CC Sorter.dll
-I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\publish\Sims 4 CC Sorter.deps.json
-I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\publish\Sims 4 CC Sorter.runtimeconfig.json
-I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\publish\Sims 4 CC Sorter.pdb
