@@ -1,4 +1,4 @@
-# Sims-4-CC-Sorter
+# Sims-CC-Sorter
 
 My first real C# project, at least the first one that's turned into something that works. 
 
