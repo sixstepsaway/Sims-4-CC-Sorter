@@ -15,8 +15,11 @@ An app that searches through Sims .package files and gets some info:
 - The name of the package file.
 - What type of in-game item the package file has inside it.
 - Whether the item is an override.
+- If you have the mesh required by a recolor.
 
 after that, it organizes the files for you and saves a lot of trouble. 
+
+All of these things will be optional, and hopefully have customization options. For example, if you want to sort your CC by type (buy, clothing, accessories) and then creators therein (buy/littledica for example) you can set that up. 
 
 ## Current Capabilities
 
@@ -24,6 +27,9 @@ after that, it organizes the files for you and saves a lot of trouble.
 
 ## Roadmap
 
+- NEXT: a functioning UI so you can do it all through that, rather than the command line, and get output both in the form of a log and the form of a list.
+-- Immediately after that? An option to automatically move incorrect packages to folders. So, for example, move all Sims 2 packages to "SCCS_Sims 2", all broken packages to "SCCS_Broken" and so on. 
+- After that: Get the name of the file from inside the package for Sims 2 packages that are named delightfully descriptive things like "23e73018f4f10e8c1f10b60a81eb19b90001.package", something which is my absolute nemesis.
 - Next up is identifying the type of file! Is it a bird, is it a plane? No! It's an override of the toaster oven! 
 
 ## License 
