@@ -2,6 +2,8 @@
 
 My first real C# project, at least the first one that's turned into something that works. 
 
+![An image of the WIP app as it is right now.](https://pbs.twimg.com/media/FuIOMMIXsAIiH4-?format=png&name=small)
+
 ## Requirements
 
 [.net 5.0](https://dotnet.microsoft.com/en-us/download/dotnet/5.0) or [later](https://dotnet.microsoft.com/en-us/download/dotnet).
@@ -43,3 +45,4 @@ Thanks to the following, which I have been learning from:
 - Lazy Duchess' CC Merger https://github.com/LazyDuchess/CC-Merger 
 - This DBPF Editor https://github.com/noah-severyn/csDBPF 
 - Delphy's Download Organizer's Source Code which made everything suddenly make sense. I'm mostly using this DBPF reader so far and retyping it myself to learn from and adjust.
+
