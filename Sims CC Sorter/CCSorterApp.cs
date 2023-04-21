@@ -24,6 +24,11 @@ namespace Sims_CC_Sorter
     /// </summary>
     public partial class CCSorterApp : Window
     {
+        string SelectedFolder = "";
+        int gameNum = 0;
+        public string proof = "Proof this works?";
+        ControlOverview controlOverview = new ControlOverview();
+
         public CCSorterApp()
         {
             InitializeComponent();
@@ -42,10 +47,6 @@ namespace Sims_CC_Sorter
             completionAlert.Text = value;
         }
 
-        string SelectedFolder = "";
-        int gameNum = 0;
-        public string proof = "Proof this works?";
-
         private void browseLocation_Click(object sender, EventArgs e) {
             using(var GetFolder = new FolderBrowserDialog())
             {
@@ -53,13 +54,12 @@ namespace Sims_CC_Sorter
                 if (result == System.Windows.Forms.DialogResult.OK) {
                     SelectedFolder = GetFolder.SelectedPath;
                     LocationBoxValue(SelectedFolder);
+                    controlOverview.FindPackages();
                 } else {
                     LocationBoxValue(SelectedFolder);
                 }
             }
-        }
-
-        BrokenIncorrect packageSearch = new BrokenIncorrect();
+        }        
 
         private void findBroken_Click(object sender, EventArgs e) {
             completionAlertValue("Starting search.");
@@ -70,9 +70,14 @@ namespace Sims_CC_Sorter
                 if (gameNum is 0){
                     //
                 } else {
-                    packageSearch.FindPackagesToRemove(gameNum, SelectedFolder);
+                    controlOverview.Initialize(gameNum, SelectedFolder);
+                    controlOverview.FindPackagesToRemove(gameNum, SelectedFolder);
                 }                
             }
+        }
+
+        private void renameSims2Packages_Click(object sender, EventArgs e) {
+            controlOverview.RenameS2Packages();
         }
 
         private void checkGame() {

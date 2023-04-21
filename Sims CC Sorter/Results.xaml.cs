@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 using System.Windows.Forms;
 using System.Diagnostics;
 
-namespace FindBrokenPackages {
+namespace ResultsWindow {
 
     public class PackageFiles {
         public string Name {get; set;}

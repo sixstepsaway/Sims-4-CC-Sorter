@@ -7,29 +7,57 @@
         mc:Ignorable="d"
         Title="Sims CC Sorter" Height="450" Width="800">
     <Grid Background="#FF231636"> 
-        <StackPanel>
+
+        <StackPanel Orientation="Vertical">
+            <Rectangle Height = "50" Width = "5"/>
             <TextBlock Text = "Sims CC Sorter" Height = "75" Width = "800" FontSize="50" Foreground="#FF7CC96D" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
             <TextBlock Text = "Welcome to the Sims CC Sorter app." Height = "20" Width = "800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
             <TextBlock Text = "Results will output into a 'SimsCCSorter.log' file in the folder you choose below." Height = "20" Width = "800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBox x:Name="PickedLocation" Height = "35" Width="300" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <Button x:Name="BrowseForLocation" Click = "browseLocation_Click" Content = "Browse" Width = "100" Height = "35" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </StackPanel> 
-                <TextBlock Text = "Which sims game are you running?" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBox x:Name="PickedLocation" Height = "35" Width="300" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Button x:Name="BrowseForLocation" Click = "browseLocation_Click" Content = "Browse" Width = "100" Height = "35" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </StackPanel> 
+            <Grid>        
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Vertical">
+                <TextBlock Text = "Game" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="25"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <RadioButton x:Name="radioButton_Sims2" IsChecked="False" GroupName="GameSelect" Content="Sims 2" Margin="5" Foreground="AliceBlue"/>
                     <RadioButton x:Name="radioButton_Sims3" IsChecked="False" GroupName="GameSelect" Content="Sims 3" Margin="5" Foreground="AliceBlue"/>
                     <RadioButton x:Name="radioButton_Sims4" IsChecked="False" GroupName="GameSelect" Content="Sims 4" Margin="5" Foreground="AliceBlue"/>
-                </StackPanel>                               
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button x:Name = "findBrokenButton" Click = "findBroken_Click" Content = "Find Broken Packages" Height = "40" Width = "180"/>
-                    <Button x:Name = "exitButton" Click = "exitButton_Click" Content = "Exit" Height = "40" Width = "180" Margin = "5"/> 
                 </StackPanel>
-                <TextBlock x:Name="completionAlert" Text="" Foreground="AliceBlue" TextAlignment="Center"/>
-        </StackPanel>        
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="AliceBlue">Sims CC Sorter developed by sixstepsaway/sinfulsimming</TextBlock>
-            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="AliceBlue">Development Alpha</TextBlock>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Vertical">
+                <TextBlock Text = "Actions" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="25"/>
+                <Rectangle Height="10" Width="100"/>
+                <Button x:Name = "findBrokenButton" Click = "findBroken_Click" Content = "Find Broken Packages" Height = "40" Width = "180" FontSize="13"/>
+                <Rectangle Height="10"/>
+                <Button x:Name = "renameSims2Packages" Click = "renameSims2Packages_Click" Content = "Rename Sims 2 Packages" Height = "40" Width = "180" FontSize="13"/>
+            </StackPanel>                
+            </Grid>
+            <TextBlock x:Name="completionAlert" Text="" Foreground="AliceBlue" TextAlignment="Center"/>
         </StackPanel>
+        <StackPanel Orientation="Vertical">
+            <Rectangle Height = "520" Width = "5"/>
+            <Button x:Name = "exitButton" Click = "exitButton_Click" Content = "Exit" Height = "40" Width = "350" Margin = "5"/>
+        </StackPanel>
+        
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Column="1">
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="AliceBlue">Sims CC Sorter developed by sixstepsaway/sinfulsimming</TextBlock>
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="AliceBlue">Development Alpha</TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Column="0">
+                <Image Source="img/ko-fi_logo-2039355488.png" Height="40" Margin="15"/>
+            </StackPanel>
+        </Grid>
+        
     </Grid> 
 </Window>

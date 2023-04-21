@@ -53,7 +53,7 @@ namespace FindBrokenPackages {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Sims CC Sorter;V1.0.0.0;component/results.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Sims CC Sorter;component/results.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\Results.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

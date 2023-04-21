@@ -1,0 +1,24 @@
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter.csproj.AssemblyReference.cache
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\CCSorterApp.g.cs
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Results.g.cs
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\App.g.cs
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter_MarkupCompile.cache
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter_MarkupCompile.lref
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\Sims CC Sorter.exe
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\Sims CC Sorter.deps.json
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\Sims CC Sorter.runtimeconfig.json
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\Sims CC Sorter.runtimeconfig.dev.json
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\Sims CC Sorter.dll
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\bin\Debug\net5.0-windows\Sims CC Sorter.pdb
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\CCSorterApp.baml
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Results.baml
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter.g.resources
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter.GeneratedMSBuildEditorConfig.editorconfig
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter.AssemblyInfoInputs.cache
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter.AssemblyInfo.cs
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter.csproj.CoreCompileInputs.cache
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter.dll
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\refint\Sims CC Sorter.dll
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter.pdb
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\Sims CC Sorter.genruntimeconfig.cache
+I:\Code\C#\Sims-4-CC-Sorter\Sims CC Sorter\obj\Debug\net5.0-windows\ref\Sims CC Sorter.dll

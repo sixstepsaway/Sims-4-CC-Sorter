@@ -3,17 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using FindBrokenPackages;
-using Sims_CC_Sorter;
+using ResultsWindow;
+using CCSorterControls;
+using SSAGlobals;
 
 namespace CCSorter {
     class ParsePackageFolder {
         string packageExtension = "package";
         public List<FileInfo> allPackages = new List<FileInfo>();
         public List<FileInfo> notPackages = new List<FileInfo>();
-        public string[] packageContents;
         public string filename = "";
         public int counter;
+
+        ControlOverview appInputInformation = new ControlOverview();
+        LoggingGlobals logGlobals = new LoggingGlobals();
+        private BinaryReader packagereader;
+        private FileStream dbpfFile;
+        
 
         public void IdentifyPackages(string ModFolder){
             string[] files = Directory.GetFiles(ModFolder, "*." + packageExtension, SearchOption.AllDirectories);
@@ -30,50 +36,46 @@ namespace CCSorter {
         void GetTypeOf<T>(T LineType) {
             Console.WriteLine(typeof(T));
         }
-        public void GetPackageInfo(FileInfo packageFile){
-            /*FileStream getInfo = new FileStream(packageFile.FullName, FileMode.OpenOrCreate);
-            Console.WriteLine("Opened " + packageFile.Name);
-            dynamic packageCont = File.ReadAllLines(packageFile.FullName);
-            foreach (dynamic item in packageCont) {
-                GetTypeOf(item);
-                //Console.Write(item);
-            }
-            var fileContents = System.IO.File.OpenRead(packageFile);
-            filename = fileContents;
-            Console.Write(fileContents.GetType);
-            FileStream packageContents = File.OpenRead(packageFile.FullName);
-            GetPackageContents(packageContents);            
-            GetTypeOf(fs);*/
-            
+
+        private FileStream Packagefs(FileInfo package)
+        {
+            FileStream dbpfFile = new FileStream(package.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return dbpfFile;
         }
 
-        public void FindBrokenPackages (FileInfo package, String logfile, int packageCount, int game){
-            FileStream dbpfFile = new FileStream(package.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            BinaryReader readFile = new BinaryReader(dbpfFile);
-            StreamWriter putContentsIntoTxt = new StreamWriter(logfile, append: true);
+        private BinaryReader Packagebr(FileStream dbpfFile)
+        {
+            BinaryReader packagereader = new BinaryReader(dbpfFile);
+            return packagereader;
+        }
+
+
+        public void FindBrokenPackages (FileInfo package){
+            FileStream dbpfFile = Packagefs(package);
+            BinaryReader packagereader = Packagebr(dbpfFile);
+            string test = "";
             //Console.WriteLine("Checking " + package.FullName);
-            string test;
-            test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
-            //Console.WriteLine(test);
-            var statement = "";
-            var time = "";
+            test = Encoding.ASCII.GetString(packagereader.ReadBytes(4));
             if (test != "DBPF") {
-                readFile.Close();
-                time = DateTime.Now.ToString("h:mm:ss tt");
-                statement = time + ": " + package.FullName + " is either not a package or is broken.";
-                putContentsIntoTxt.WriteLine(statement);
-                putContentsIntoTxt.Close();
+                packagereader.Close();
+                var statement = package.FullName + " is either not a package or is broken.";
+                logGlobals.MakeLog(statement, logGlobals.debugModeSetting, false);
                 return;
             }
+        }
 
-            uint major = readFile.ReadUInt32();
+        public void IdentifyGames(FileInfo package, int game){     
+            FileStream dbpfFile = Packagefs(package);
+            BinaryReader packagereader = Packagebr(dbpfFile);
+            string test = "";
+
+            uint major = packagereader.ReadUInt32();
             test = major.ToString();
             
-            uint minor = readFile.ReadUInt32();
+            uint minor = packagereader.ReadUInt32();
             test = minor.ToString();
 
-            counter++;
-
+            string statement = "";
             var packageFiles = new List<PackageFiles>();
 
             if (major is 1 && minor is 1) {
@@ -85,10 +87,8 @@ namespace CCSorter {
                     temp.Version = 2;
                     packageFiles.Add(temp);
                 } else {
-                    time = DateTime.Now.ToString("h:mm:ss tt");
-                    statement = time + ": " + package.FullName + " is a sims 2 file.";
-                    putContentsIntoTxt.WriteLine(statement);
-                    putContentsIntoTxt.Close();
+                    statement = package.FullName + " is a sims 2 file.";
+                    logGlobals.MakeLog(statement, logGlobals.debugModeSetting, false);
                     var temp = new PackageFiles();
                     temp.Name = package.Name;
                     temp.Location = package.FullName;
@@ -105,10 +105,8 @@ namespace CCSorter {
                     temp.Version = 4;
                     packageFiles.Add(temp);
                 } else {
-                    time = DateTime.Now.ToString("h:mm:ss tt");
-                    statement = time + ": " + package.FullName + " is a sims 4 file.";
-                    putContentsIntoTxt.WriteLine(statement);
-                    putContentsIntoTxt.Close();
+                    statement = package.FullName + " is a sims 4 file.";
+                    logGlobals.MakeLog(statement, logGlobals.debugModeSetting, false);
                     var temp = new PackageFiles();
                     temp.Name = package.Name;
                     temp.Location = package.FullName;
@@ -125,10 +123,8 @@ namespace CCSorter {
                     temp.Version = 3;
                     packageFiles.Add(temp);
                 } else {
-                    time = DateTime.Now.ToString("h:mm:ss tt");
-                    statement = time + ": " + package.FullName + " is a sims 3 file.";
-                    putContentsIntoTxt.WriteLine(statement);
-                    putContentsIntoTxt.Close();
+                    statement = package.FullName + " is a sims 4 file.";
+                    logGlobals.MakeLog(statement, logGlobals.debugModeSetting, false);
                     var temp = new PackageFiles();
                     temp.Name = package.Name;
                     temp.Location = package.FullName;
@@ -136,8 +132,16 @@ namespace CCSorter {
                     temp.Version = 3;
                     packageFiles.Add(temp);
                 }
+            } else if (major is 3 && minor is 0) {
+                statement = package.FullName + " is a Sim City 5 file.";
+                logGlobals.MakeLog(statement, logGlobals.debugModeSetting, false);
+                var temp = new PackageFiles();
+                temp.Name = package.Name;
+                temp.Location = package.FullName;
+                temp.Number = counter;
+                temp.Version = 12;
+                packageFiles.Add(temp);
             }
-        putContentsIntoTxt.Close();
         }        
     }
 }
