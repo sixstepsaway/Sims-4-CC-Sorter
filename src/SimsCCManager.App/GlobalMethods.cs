@@ -29,10 +29,10 @@ namespace SSAGlobals {
         private string statement = "";
 
         //Function for logging to the logfile set at the start of the program
-        public void MakeLog (string logfile, string Statement, bool debug, bool onlyDebug)
+        public void MakeLog (string Statement, bool onlyDebug)
         {
             if (onlyDebug) {
-                if (debug) {
+                if (GlobalVariables.debugMode) {
                     //Writes to a log file.
                     StreamWriter addToLog = new StreamWriter (GlobalVariables.logfile, append: true);
                     time = DateTime.Now.ToString("h:mm:ss tt");

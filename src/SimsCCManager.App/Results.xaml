@@ -1,0 +1,23 @@
+<Window x:Class="FindBrokenPackages.Results"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Sims_CC_Sorter"
+        mc:Ignorable="d"
+        Title="Results" Height="450" Width="400">
+        <Grid Background="#FF231636">
+            <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="50"/> 
+            <ColumnDefinition Width="Auto"/>   
+            </Grid.ColumnDefinitions>
+                  
+        <StackPanel x:Name="MenuBar" Grid.Column="0" Orientation="Horizontal">
+            <Image Source="img/ko-fi_logo-2039355488.png" Width="45" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+            <!--App content goes in here-->
+        </StackPanel>
+        </Grid> 
+        
+</Window>

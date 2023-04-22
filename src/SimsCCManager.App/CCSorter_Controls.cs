@@ -28,7 +28,21 @@ namespace CCSorter.Controls {
         ProcessSelectedFolder processFolder = new ProcessSelectedFolder();
         
         public void FindPackages(){            
-            //processFolder.IdentifyPackages(GlobalVariables.ModFolder);
+            processFolder.IdentifyPackages();
+        }
+
+        public void FindPackagesToRemove(int gameNum, string modLocation){
+            var packageCount = processFolder.allPackages.Count;
+            var statement = "Checking " + packageCount + " package files. Larger numbers will take a while and I don't know how to do progress bars yet, so please be patient.";
+            logGlobals.MakeLog(statement, false);
+            foreach (FileInfo item in processFolder.allPackages) {
+                processFolder.FindBrokenPackages(item);
+                processFolder.IdentifyGames(item, gameNum);
+            }
+            statement = "Checked all package files.";
+            logGlobals.MakeLog(statement, false);
+            //CCSorterApp mainWindow = new CCSorterApp();
+            //mainWindow.completionAlertValue("Search complete!");
         }
     }
 }

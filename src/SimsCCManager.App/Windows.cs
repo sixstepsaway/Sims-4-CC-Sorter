@@ -68,7 +68,7 @@ namespace Sims_CC_Sorter
                     SelectedFolder = GetFolder.SelectedPath;
                     globalVars.Initialize(gameNum, SelectedFolder);
                     LocationBoxValue(GlobalVariables.ModFolder);                    
-                    //controls.FindPackages();
+                    controls.FindPackages();
                 } else {
                     LocationBoxValue(SelectedFolder);
                 }
@@ -76,20 +76,18 @@ namespace Sims_CC_Sorter
         }        
 
         private void findBroken_Click(object sender, EventArgs e) {
-            /*completionAlertValue("Starting search.");
+            completionAlertValue("Starting search.");
             if (SelectedFolder == "") {
                 System.Windows.Forms.MessageBox.Show("Please select the folder containing your package files.");
             } else {
                 checkGame();
                 if (gameNum is 0){
                     //
-                } else {
-                    
+                } else {                    
                     controls.FindPackagesToRemove(gameNum, SelectedFolder);
                 }                
             }
-            completionAlertValue("Search completed.");
-          */  
+            completionAlertValue("Search completed."); 
         }
 
         private void renameSims2Packages_Click(object sender, EventArgs e) {
