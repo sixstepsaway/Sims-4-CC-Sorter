@@ -33,9 +33,25 @@
             <StackPanel Grid.Column="1" Orientation="Vertical">
                 <TextBlock Text = "Actions" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="25"/>
                 <Rectangle Height="10" Width="100"/>
-                <Button x:Name = "findBrokenButton" Click = "findBroken_Click" Content = "Find Broken Packages" Height = "40" Width = "180" FontSize="13"/>
-                <Rectangle Height="10"/>
-                <Button x:Name = "renameSims2Packages" Click = "renameSims2Packages_Click" Content = "Rename Sims 2 Packages" Height = "40" Width = "180" FontSize="13"/>
+                <TextBlock Text="Find Broken Packages" Foreground="AliceBlue" Margin="5" TextAlignment="Left" FontSize="18"/>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <TextBlock Text="Move Packages Automatically" Foreground="AliceBlue" Margin="5"/>
+                            <CheckBox x:Name="MoveBrokenPackages" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <TextBlock Text="Don't Show Results Screen" Foreground="AliceBlue" Margin="5" HorizontalAlignment="Right"/>
+                            <CheckBox x:Name="DontShowResults" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <Button x:Name = "findBrokenButton" Click = "findBroken_Click" Content = "Start" Height = "40" Width = "70" FontSize="13"/>
+                </StackPanel>
+                <TextBlock Text="Rename Sims 2 Packages" Foreground="AliceBlue" Margin="5" TextAlignment="Left" FontSize="18"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">                    
+                    <Button x:Name = "renameSims2Packages" Click = "renameSims2Packages_Click" Content = "Start" Height = "40" Width = "70" FontSize="13" HorizontalAlignment="Right"/>
+                </StackPanel>
             </StackPanel>                
             </Grid>
             <TextBlock x:Name="completionAlert" Text="" Foreground="AliceBlue" TextAlignment="Center"/>
