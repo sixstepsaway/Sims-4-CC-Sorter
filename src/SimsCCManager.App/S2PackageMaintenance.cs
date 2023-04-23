@@ -118,6 +118,8 @@ namespace S2PackageMaintenance {
             temp.HolesOffset = holesOffset;
             uint holesSize = readFile.ReadUInt32();
             temp.HolesSize = holesSize;
+            uint indexMinorVersion = readFile.ReadUInt32() -1;
+            temp.indexMinorVersion = indexMinorVersion.ToString();
             string reserved2 = Encoding.UTF8.GetString(readFile.ReadBytes(32));
             dbpfFile.Seek(this.chunkOffset + indexOffset, SeekOrigin.Begin);
             statement = "Identified package data:" + Environment.NewLine + "Package: " + temp.Location + Environment.NewLine + "Game: Sims 2" + Environment.NewLine + "DBPF: " + temp.DBPF + Environment.NewLine + "Major: " + temp.Major + Environment.NewLine + "Minor: " + temp.Minor + Environment.NewLine + "Date Created: " + temp.DateCreated + Environment.NewLine + "Date Modified: " + temp.DateModified + Environment.NewLine + "Index Major Version: " + temp.IndexMajorVersion + Environment.NewLine + "Index Count: " + temp.IndexCount + Environment.NewLine + "Index Offset: " + temp.IndexOffset + Environment.NewLine + "Index Size: " + temp.IndexSize + Environment.NewLine + "Holes Count: " + temp.HolesCount + Environment.NewLine + "Holes Offset: " + temp.HolesOffset + Environment.NewLine + "Holes Size: " + temp.HolesSize;
