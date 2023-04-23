@@ -155,23 +155,26 @@ namespace S2PackageMaintenance {
                 indexData.Add(myEntry);
                 myEntry = null;   
             }
-            //var entrynum = 0;
+            var entrynumalpha = 0;
+            statement = "Searching individual entries.";
+            loggingGlobals.MakeLog(statement, true);
             foreach (indexEntry iEntry in indexData)
             {
-                statement = "Searching individual entrise.";
-                loggingGlobals.MakeLog(statement, true);
-                //entrynum++
+                
+                entrynumalpha++;
                 uint numRecords;
                 string typeID;
                 string groupID;
                 string instanceID;
                 string instanceID2 = "";
                 uint myFilesize;
-
+                statement = "Entry " + entrynumalpha + " - TypeID: " + iEntry.typeID;
+                loggingGlobals.MakeLog(statement, true);
                 switch (iEntry.typeID.ToLower())
                 {
                     case "fc6e1f7": fileHas.shpe++; linkData.Add(iEntry); break;
                 }
+                
 
                 if (iEntry.typeID == "E86B1EEF")  // DIR Resource
                 {
@@ -190,6 +193,7 @@ namespace S2PackageMaintenance {
                         statement = "Number of records:" + numRecords + ".";
                         loggingGlobals.MakeLog(statement, true);
                     }
+                    
                     var entries = 0;
 
                     // Loop through getting all the compressed entries
@@ -271,7 +275,7 @@ namespace S2PackageMaintenance {
                                 case "4C697E5A": // Material Override - MMAT
                                 case "8C1580B5": // HairTone XML
                                     //Console.WriteLine("    " + idx.typeID + " file");
-                                    statement = "Idx Entry #" + indexentrynum + " - found XFNC, XFLR, XOBJ, XMOL, XROF, Texture Overlay XML, MMAT or Hair Tone XML.";
+                                    statement = "Idx Entry #" + indexentrynum + " - " + idx.typeID;
                                     loggingGlobals.MakeLog(statement, true);
                                     dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
 
@@ -436,14 +440,19 @@ namespace S2PackageMaintenance {
                 }
             }
 
-
-            if (IncomingInformation.Type is "Title") {                
+            /*
+            if (IncomingInformation.Type is "Title") {
+                statement = "Information type is title. Saving it to temp.Name.";
+                loggingGlobals.MakeLog(statement, true);            
                 temp.Name = IncomingInformation.Content;
             } else if (IncomingInformation.Type is "Description") {
+                statement = "Information type is description. Saving it to temp.Description.";
+                loggingGlobals.MakeLog(statement, true); 
                 temp.Description = IncomingInformation.Content;
             } else {
-                //
-            }
+                statement = "No title information available.";
+                loggingGlobals.MakeLog(statement, true);
+            }*/
 
 
             GlobalVariables.allSims2Packages.Add(temp);

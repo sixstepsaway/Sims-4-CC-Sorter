@@ -41,10 +41,10 @@ namespace SSAGlobals {
         public static string ModFolder;
         public static int gameVer;
 
-        public static List<PackageFile> packageFiles;
-        public static List<SimsPackage> allSims2Packages;
-        public static List<SimsPackage> allSims3Packages;
-        public static List<SimsPackage> allSims4Packages;
+        public static List<PackageFile> packageFiles = new List<PackageFile>();
+        public static List<SimsPackage> allSims2Packages = new List<SimsPackage>();
+        public static List<SimsPackage> allSims3Packages = new List<SimsPackage>();
+        public static List<SimsPackage> allSims4Packages = new List<SimsPackage>();
 
 
         public void Initialize(int gameNum, string modLocation){

@@ -32,10 +32,10 @@ namespace CCSorter.Controls {
         
 
         public void FindPackagesToRemove(){
-            packageCount = processFolder.allPackages.Count;
+            packageCount = ProcessSelectedFolder.allPackages.Count;
             var statement = "Checking " + packageCount + " package files. Larger numbers will take a while and I don't know how to do progress bars yet, so please be patient.";
             loggingGlobals.MakeLog(statement, false);
-            foreach (FileInfo item in processFolder.allPackages) {
+            foreach (FileInfo item in ProcessSelectedFolder.allPackages) {
                 statement = "Processing " + item.Name + ".";
                 loggingGlobals.MakeLog(statement, true);
                 processFolder.FindBrokenPackages(item);
@@ -48,7 +48,10 @@ namespace CCSorter.Controls {
         public void RenameS2Packages(){
             statement = "Retrieving packages from All Packages array.";
             loggingGlobals.MakeLog(statement, true);
-            foreach (FileInfo packagef in processFolder.allPackages) {
+
+            statement = "Items in array: " + ProcessSelectedFolder.allPackages.Count;
+            loggingGlobals.MakeLog(statement, true);
+            foreach (FileInfo packagef in ProcessSelectedFolder.allPackages) {
                 statement = "Identifying " + packagef.Name;
                 loggingGlobals.MakeLog(statement, true);
                 processFolder.IdentifyGames(packagef);
@@ -69,8 +72,7 @@ namespace CCSorter.Controls {
                     statement = "Pretending to rename " + package.Location + " to " + package.Description;
                 } else {
                     statement = package.Location  + " had no identifying internals.";
-                }
-                
+                }                
                 loggingGlobals.MakeLog(statement, false);
             }
         }
