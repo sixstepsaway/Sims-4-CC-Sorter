@@ -17,13 +17,6 @@ using System.Diagnostics;
 
 namespace ResultsWindow {
 
-    public class PackageFiles {
-        public string Name {get; set;}
-        public string Location {get; set;}
-        public int Number {get; set;}
-        public int Version {get; set;}
-    }
-
     public partial class Results : Window {
         public Results() 
         {

@@ -12,27 +12,6 @@ using DBPFReading;
 using SSAGlobals;
 
 namespace S2PackageMaintenance {
-
-    public class SimsPackage {
-        
-        public string Name {get; set;}
-        public string Description {get; set;}
-        public string Location {get; set;}
-        public string DBPF {get; set;}
-        public int Game {get; set;}
-        public uint Major {get; set;}
-        public uint Minor {get; set;}
-        public uint DateCreated {get; set;}
-        public uint DateModified {get; set;}
-        public uint IndexMajorVersion {get; set;}
-        public uint IndexCount {get; set;}
-        public uint IndexOffset {get; set;}
-        public uint IndexSize {get; set;}
-        public uint HolesCount {get; set;}
-        public uint HolesOffset {get; set;}
-        public uint HolesSize {get; set;}
-    }
-
     
     class S2Packages {
         private uint chunkOffset = 0;
@@ -87,7 +66,7 @@ namespace S2PackageMaintenance {
 
         //ReadByteStream readByteStream = new ReadByteStream();
         DBPFTypeRead dbpfTypeRead = new DBPFTypeRead();
-
+        LoggingGlobals loggingGlobals = new LoggingGlobals();
 
 
 
@@ -108,10 +87,10 @@ namespace S2PackageMaintenance {
             LoggingGlobals logGlobals = new LoggingGlobals();
             var statement = "";
             var IncomingInformation = new ExtractedItems();
-            var AllSimsPackages = new List<SimsPackage>();
             FileStream dbpfFile = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
             BinaryReader readFile = new BinaryReader(dbpfFile);
             var temp = new SimsPackage();
+            temp.Location = file;
             temp.Game = 2;
             string dbpf = Encoding.ASCII.GetString(readFile.ReadBytes(4));
             temp.DBPF = dbpf;
@@ -140,20 +119,36 @@ namespace S2PackageMaintenance {
             temp.HolesSize = holesSize;
             string reserved2 = Encoding.UTF8.GetString(readFile.ReadBytes(32));
             dbpfFile.Seek(this.chunkOffset + indexOffset, SeekOrigin.Begin);
+            statement = "Identified package data:" + Environment.NewLine + "Package: " + temp.Location + Environment.NewLine + "Game: Sims 2" + Environment.NewLine + "DBPF: " + temp.DBPF + Environment.NewLine + "Major: " + temp.Major + Environment.NewLine + "Minor: " + temp.Minor + Environment.NewLine + "Date Created: " + temp.DateCreated + Environment.NewLine + "Date Modified: " + temp.DateModified + Environment.NewLine + "Index Major Version: " + temp.IndexMajorVersion + Environment.NewLine + "Index Count: " + temp.IndexCount + Environment.NewLine + "Index Offset: " + temp.IndexOffset + Environment.NewLine + "Index Size: " + temp.IndexSize + Environment.NewLine + "Holes Count: " + temp.HolesCount + Environment.NewLine + "Holes Offset: " + temp.HolesOffset + Environment.NewLine + "Holes Size: " + temp.HolesSize;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "Searching for label to apply.";
+            loggingGlobals.MakeLog(statement, true);
             for (int i = 0; i < indexCount; i++)
             {
                 indexEntry myEntry = new indexEntry();
                 myEntry.typeID = readFile.ReadUInt32().ToString("X8");
+                statement = "Type ID: " + myEntry.typeID;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.groupID = readFile.ReadUInt32().ToString("X8");
+                statement = "Group ID: " + myEntry.groupID;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.instanceID = readFile.ReadUInt32().ToString("X8");
+                statement = "Instance ID: " + myEntry.instanceID;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.instanceID2 = "00000000";
                 if ((this.indexMajorVersion == 7) && (this.indexMinorVersion == 1)) 
                 {
                     myEntry.instanceID2 = readFile.ReadUInt32().ToString("X8");
+                    statement = "Instance ID2: " + myEntry.instanceID2;
+                    loggingGlobals.MakeLog(statement, true);
                 }
 
                 myEntry.offset = readFile.ReadUInt32();
+                statement = "Offset: " + myEntry.offset;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.filesize = readFile.ReadUInt32();
+                statement = "Filesize: " + myEntry.filesize;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.truesize = 0;
                 myEntry.compressed = false;
 
@@ -163,6 +158,8 @@ namespace S2PackageMaintenance {
             //var entrynum = 0;
             foreach (indexEntry iEntry in indexData)
             {
+                statement = "Searching individual entrise.";
+                loggingGlobals.MakeLog(statement, true);
                 //entrynum++
                 uint numRecords;
                 string typeID;
@@ -178,26 +175,53 @@ namespace S2PackageMaintenance {
 
                 if (iEntry.typeID == "E86B1EEF")  // DIR Resource
                 {
+                    statement = "Identified DIR resource (typeid " + iEntry.typeID + ").";
+                    loggingGlobals.MakeLog(statement, true);
                     dbpfFile.Seek(this.chunkOffset + iEntry.offset, SeekOrigin.Begin);
                     if (indexMajorVersion == 7 && indexMinorVersion == 1)
                     {
                         numRecords = iEntry.filesize / 20;
+                        statement = "Number of records:" + numRecords + ".";
+                        loggingGlobals.MakeLog(statement, true);
                     }
                     else 
                     {
                         numRecords = iEntry.filesize / 16;
+                        statement = "Number of records:" + numRecords + ".";
+                        loggingGlobals.MakeLog(statement, true);
                     }
+                    var entries = 0;
 
                     // Loop through getting all the compressed entries
                     for (int i = 0; i < numRecords; i++)
                     {
+                        entries++;
+                        statement = "Looping through compressed entries.";
+                        loggingGlobals.MakeLog(statement, true);
                         typeID = readFile.ReadUInt32().ToString("X8");
+                        statement = "Entry #" + entries + " - Type ID:" + typeID;
+                        loggingGlobals.MakeLog(statement, true);
                         groupID = readFile.ReadUInt32().ToString("X8");
+                        statement = "Entry #" + entries + " - Group ID:" + groupID;
+                        loggingGlobals.MakeLog(statement, true);
                         instanceID = readFile.ReadUInt32().ToString("X8");
-                        if (indexMajorVersion == 7 && indexMinorVersion == 1) instanceID2 = readFile.ReadUInt32().ToString("X8");
+                        statement = "Entry #" + entries + " - Instance ID:" + instanceID;
+                        loggingGlobals.MakeLog(statement, true);
+                        if (indexMajorVersion == 7 && indexMinorVersion == 1) {
+                            instanceID2 = readFile.ReadUInt32().ToString("X8");
+                            statement = "Entry #" + entries + " - Instance ID2:" + instanceID2;
+                            loggingGlobals.MakeLog(statement, true);
+                        }
+                        
                         myFilesize = readFile.ReadUInt32();
+                        statement = "Entry #" + entries + " - Filesize:" + myFilesize;
+                        loggingGlobals.MakeLog(statement, true);
+                        var indexentrynum = 0;
                         
                         foreach (indexEntry idx in indexData) {
+                            indexentrynum++;
+                            statement = "Now reading index entry idx.";
+                            loggingGlobals.MakeLog(statement, true);
 
                             int cFileSize = 0;
                             string cTypeID = "";
@@ -206,24 +230,36 @@ namespace S2PackageMaintenance {
                             {
                                 case "43545353": // Catalog Description - CTSS
                                     //Console.WriteLine("    Catalog Description file");
+                                    statement = "Idx Entry #" + indexentrynum + " - found CTSS.";
+                                    loggingGlobals.MakeLog(statement, true);
                                     dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
 
                                         cFileSize = readFile.ReadInt32();
+                                        statement = "Idx Entry #" + indexentrynum + " - cfilesize: " + cFileSize;
+                                        loggingGlobals.MakeLog(statement, true);
                                         cTypeID = readFile.ReadUInt16().ToString("X4");
+                                        statement = "Idx Entry #" + indexentrynum + " - cTypeID: " + cTypeID;
+                                        loggingGlobals.MakeLog(statement, true);
                                         // check for the proper QFS type
                                         if (cTypeID == "FB10") 
-                                        {
+                                        {                                               
                                             byte[] tempBytes = readFile.ReadBytes(3);
                                             uint cFullSize = DBPFTypeRead.QFSLengthToInt(tempBytes);
+                                            statement = "Idx Entry #" + indexentrynum + " - cfullsize: " + cFullSize;
+                                            loggingGlobals.MakeLog(statement, true);
 
                                             ReadByteStream decompressed = new ReadByteStream(DBPFTypeRead.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));                                           
 
                                             IncomingInformation = dbpfTypeRead.readCTSSchunk(decompressed);
+                                            statement = "Idx Entry #" + indexentrynum + " - Chunk Read As: " + IncomingInformation;
+                                            loggingGlobals.MakeLog(statement, true);
                                         } 
                                         else 
                                         {
                                             dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
                                             IncomingInformation = dbpfTypeRead.readCTSSchunk(readFile);
+                                            statement = "Idx Entry #" + indexentrynum + " - Chunk Read As: " + IncomingInformation;
+                                            loggingGlobals.MakeLog(statement, true);
                                         }
                                     break;
                                 case "2CB230B8": // XFNC - Fence XML
@@ -235,13 +271,21 @@ namespace S2PackageMaintenance {
                                 case "4C697E5A": // Material Override - MMAT
                                 case "8C1580B5": // HairTone XML
                                     //Console.WriteLine("    " + idx.typeID + " file");
+                                    statement = "Idx Entry #" + indexentrynum + " - found XFNC, XFLR, XOBJ, XMOL, XROF, Texture Overlay XML, MMAT or Hair Tone XML.";
+                                    loggingGlobals.MakeLog(statement, true);
                                     dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
 
                                     //if (idx.compressed == true)
                                     //{
                                         // Is this always in XML format?
+
                                     cFileSize = readFile.ReadInt32();
+                                    statement = "Idx Entry #" + indexentrynum + " - cfilesize: " + cFileSize;
+                                    loggingGlobals.MakeLog(statement, true);
                                     cTypeID = readFile.ReadUInt16().ToString("X4");
+                                    statement = "Idx Entry #" + indexentrynum + " - cTypeID: " + cTypeID;
+                                    loggingGlobals.MakeLog(statement, true);
+
                                     // check for the proper QFS type
                                     if (cTypeID == "FB10") 
                                     {
@@ -250,10 +294,14 @@ namespace S2PackageMaintenance {
 
                                         // Check for CPF type
                                         string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                                        statement = "Idx Entry #" + indexentrynum + " - cpfTypeID: " + cpfTypeID;
+                                        loggingGlobals.MakeLog(statement, true);
                                         if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
-                                        {
+                                        {   
                                             // Is an actual CPF file, so we have to decompress it...
                                             IncomingInformation = dbpfTypeRead.readCPFchunk(readFile);
+                                            statement = "Idx Entry #" + indexentrynum + " - Chunk Read As: " + IncomingInformation;
+                                            loggingGlobals.MakeLog(statement, true);
                                         } 
                                         else 
                                         {
@@ -265,18 +313,28 @@ namespace S2PackageMaintenance {
 
                                                 // Read first four bytes
                                                 cpfTypeID = decompressed.ReadUInt32().ToString("X8");
+                                                statement = "Idx Entry #" + indexentrynum + " - cpfTypeID: " + cpfTypeID;
+                                                loggingGlobals.MakeLog(statement, true);
 
                                                 //Console.WriteLine("CPF type id: " + cpfTypeID);
                                                 if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
                                                 {
+                                                    statement = "Idx Entry #" + indexentrynum + " - Identified as an actual CPF file.";
+                                                    loggingGlobals.MakeLog(statement, true);
                                                     // Is an actual CPF file, so we have to decompress it...
                                                     IncomingInformation = dbpfTypeRead.readCPFchunk(decompressed);
+                                                    statement = "Idx Entry #" + indexentrynum + " - Chunk Read As: " + IncomingInformation;
+                                                    loggingGlobals.MakeLog(statement, true);
                                                 }
 
                                             } 
                                             else 
                                             {
+                                                statement = "Idx Entry #" + indexentrynum + " - Identified as actually XML.";
+                                                loggingGlobals.MakeLog(statement, true);
                                                 IncomingInformation = dbpfTypeRead.readXMLchunk(decompressed);
+                                                statement = "Idx Entry #" + indexentrynum + " - Chunk Read As: " + IncomingInformation;
+                                                loggingGlobals.MakeLog(statement, true);
                                             }
                                         }
                                     } 
@@ -285,29 +343,40 @@ namespace S2PackageMaintenance {
                                         dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
 
                                         string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-                                        //Console.WriteLine("CPF type id: " + cpfTypeID);
+                                        statement = "Idx Entry #" + indexentrynum + " - cpfTypeID: " + cpfTypeID;
+                                        loggingGlobals.MakeLog(statement, true);
                                         if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
                                         {
+                                            statement = "Idx Entry #" + indexentrynum + " - Identified as an actual CPF file.";
+                                            loggingGlobals.MakeLog(statement, true);
                                             // Is an actual CPF file, so we have to decompress it...
                                             IncomingInformation = dbpfTypeRead.readCPFchunk(readFile);
+                                            statement = "Idx Entry #" + indexentrynum + " - Chunk Read As: " + IncomingInformation;
+                                            loggingGlobals.MakeLog(statement, true);
                                         }
 
                                         // Actually an uncompressed XML file, so we can use the xmlChunk to 
                                         // process
                                         if  (cpfTypeID == "6D783F3C")
                                         {
+                                            statement = "Idx Entry #" + indexentrynum + " - Identified as actually XML.";
+                                            loggingGlobals.MakeLog(statement, true);
                                             // Backtrack 4 bytes
                                             dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
 
                                             // Read entire XML as a normal string
                                             string xmlData = Encoding.UTF8.GetString(readFile.ReadBytes((int)idx.filesize));
                                             IncomingInformation = dbpfTypeRead.readXMLchunk(xmlData);
+                                            statement = "Idx Entry #" + indexentrynum + " - Chunk Read As: " + IncomingInformation;
+                                            loggingGlobals.MakeLog(statement, true);
 
                                         }
                                     }
                                     break;
                                 case "EBCF3E27":
                                     // Property Set - only read if no other XML/CPF resources
+                                    statement = "Idx Entry #" + indexentrynum + " - Giving up and reading Property Set.";
+                                    loggingGlobals.MakeLog(statement, true);
                                     if ((fileHas.xhtn == 0) && (fileHas.xobj == 0) && (fileHas.xflr == 0) && (fileHas.xfnc == 0) && (fileHas.xmol == 0) && (fileHas.xngb == 0) && (fileHas.xobj == 0) && (fileHas.xrof == 0) && (fileHas.xstn == 0) && (fileHas.xtol == 0) && (fileHas.aged == 0) )
                                     {
                                         //Console.WriteLine("    Property Set GZPS");
@@ -325,12 +394,18 @@ namespace S2PackageMaintenance {
 
                                             // Read first four bytes
                                             string cpfTypeID = decompressed.ReadUInt32().ToString("X8");
+                                            statement = "Idx Entry #" + indexentrynum + " - cpfTypeID: " + cpfTypeID + ".";
+                                            loggingGlobals.MakeLog(statement, true);
 
                                             //Console.WriteLine("CPF type id: " + cpfTypeID);
                                             if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
                                             {
+                                                statement = "Idx Entry #" + indexentrynum + " - Identified as an actual CPF file.";
+                                                loggingGlobals.MakeLog(statement, true);
                                                 // Is an actual CPF file, so we have to decompress it...
                                                 IncomingInformation = dbpfTypeRead.readCPFchunk(decompressed);
+                                                statement = "Idx Entry #" + indexentrynum + " - Chunk Read As: " + IncomingInformation;
+                                                loggingGlobals.MakeLog(statement, true);
                                             }
 
                                         } 
@@ -341,8 +416,12 @@ namespace S2PackageMaintenance {
                                             //Console.WriteLine("CPF type id: " + cpfTypeID);
                                             if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
                                             {
+                                                statement = "Idx Entry #" + indexentrynum + " - Identified as an actual CPF file.";
+                                                loggingGlobals.MakeLog(statement, true);
                                                 // Is an actual CPF file, so we have to decompress it...
                                                 IncomingInformation = dbpfTypeRead.readCPFchunk(readFile);
+                                                statement = "Idx Entry #" + indexentrynum + " - Chunk Read As: " + IncomingInformation;
+                                                loggingGlobals.MakeLog(statement, true);
                                             }
 
                                         }
@@ -357,7 +436,8 @@ namespace S2PackageMaintenance {
                 }
             }
 
-            if (IncomingInformation.Type is "Title") {
+
+            if (IncomingInformation.Type is "Title") {                
                 temp.Name = IncomingInformation.Content;
             } else if (IncomingInformation.Type is "Description") {
                 temp.Description = IncomingInformation.Content;
@@ -365,18 +445,11 @@ namespace S2PackageMaintenance {
                 //
             }
 
-            temp.Location = file;
-            
-            AllSimsPackages.Add(temp);
 
-            foreach (SimsPackage package in AllSimsPackages) {
-                statement = package.Location;
-                logGlobals.MakeLog(statement, false);
-                statement = package.Name;
-                logGlobals.MakeLog(statement, false);
-                statement = package.Description;
-                logGlobals.MakeLog(statement, false);
-            }     
+            GlobalVariables.allSims2Packages.Add(temp);
+            statement = "Adding package to All Sims 2 Packages.";
+            loggingGlobals.MakeLog(statement, true);
+            temp = null;
 
         }
     } 

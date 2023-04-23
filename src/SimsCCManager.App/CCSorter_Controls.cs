@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.IO;
 using SSAGlobals;
 using CCSorter.Funcs;
+using ResultsWindow;
+using S2PackageMaintenance;
 
 namespace CCSorter.Controls {
 
@@ -21,28 +23,56 @@ namespace CCSorter.Controls {
         11 = Spore,
         12 = SimCity 5*/
         
-        //public int packageCount;
-        LoggingGlobals logGlobals = new LoggingGlobals();
+        public int packageCount;
+        string statement = "";
+        LoggingGlobals loggingGlobals = new LoggingGlobals();
         //Package OpenPackage = new Package();
-        //S2Packages s2methods = new S2Packages();
+        S2Packages s2methods = new S2Packages();
         ProcessSelectedFolder processFolder = new ProcessSelectedFolder();
         
-        public void FindPackages(){            
-            processFolder.IdentifyPackages();
-        }
 
-        public void FindPackagesToRemove(int gameNum, string modLocation){
-            var packageCount = processFolder.allPackages.Count;
+        public void FindPackagesToRemove(){
+            packageCount = processFolder.allPackages.Count;
             var statement = "Checking " + packageCount + " package files. Larger numbers will take a while and I don't know how to do progress bars yet, so please be patient.";
-            logGlobals.MakeLog(statement, false);
+            loggingGlobals.MakeLog(statement, false);
             foreach (FileInfo item in processFolder.allPackages) {
+                statement = "Processing " + item.Name + ".";
+                loggingGlobals.MakeLog(statement, true);
                 processFolder.FindBrokenPackages(item);
-                processFolder.IdentifyGames(item, gameNum);
+                processFolder.IdentifyGames(item);
             }
             statement = "Checked all package files.";
-            logGlobals.MakeLog(statement, false);
-            //CCSorterApp mainWindow = new CCSorterApp();
-            //mainWindow.completionAlertValue("Search complete!");
+            loggingGlobals.MakeLog(statement, false);
+        }    
+
+        public void RenameS2Packages(){
+            statement = "Retrieving packages from All Packages array.";
+            loggingGlobals.MakeLog(statement, true);
+            foreach (FileInfo packagef in processFolder.allPackages) {
+                statement = "Identifying " + packagef.Name;
+                loggingGlobals.MakeLog(statement, true);
+                processFolder.IdentifyGames(packagef);
+            }
+            foreach (PackageFile package in GlobalVariables.packageFiles)
+            {
+                if (package.Version is 2)
+                {   
+                    statement = "Looking for Sims 2 packages to rename.";
+                    loggingGlobals.MakeLog(statement, false);
+                    s2methods.s2GetLabel(package.Location);
+                }
+            }
+            foreach (SimsPackage package in GlobalVariables.allSims2Packages) {
+                if (package.Name != "") {
+                    statement = "Pretending to rename " + package.Location + " to " + package.Name;
+                } else if (package.Description != "") { 
+                    statement = "Pretending to rename " + package.Location + " to " + package.Description;
+                } else {
+                    statement = package.Location  + " had no identifying internals.";
+                }
+                
+                loggingGlobals.MakeLog(statement, false);
+            }
         }
     }
 }

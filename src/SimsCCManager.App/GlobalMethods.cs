@@ -7,11 +7,45 @@ using System.IO;
 
 namespace SSAGlobals {
 
+    public class PackageFile { //A basic summary of a package file.
+        public string Name {get; set;}
+        public string Location {get; set;}
+        public int Number {get; set;}
+        public int Version {get; set;}
+        public bool Broken {get; set;}
+    }
+
+    public class SimsPackage { // A more in depth package file.
+        
+        public string Name {get; set;}
+        public string Description {get; set;}
+        public string Location {get; set;}
+        public string DBPF {get; set;}
+        public int Game {get; set;}
+        public uint Major {get; set;}
+        public uint Minor {get; set;}
+        public uint DateCreated {get; set;}
+        public uint DateModified {get; set;}
+        public uint IndexMajorVersion {get; set;}
+        public uint IndexCount {get; set;}
+        public uint IndexOffset {get; set;}
+        public uint IndexSize {get; set;}
+        public uint HolesCount {get; set;}
+        public uint HolesOffset {get; set;}
+        public uint HolesSize {get; set;}
+    }
+
     public class GlobalVariables {
-        public static bool debugMode = false;
+        public static bool debugMode = true;
         public static string logfile;
         public static string ModFolder;
         public static int gameVer;
+
+        public static List<PackageFile> packageFiles;
+        public static List<SimsPackage> allSims2Packages;
+        public static List<SimsPackage> allSims3Packages;
+        public static List<SimsPackage> allSims4Packages;
+
 
         public void Initialize(int gameNum, string modLocation){
             gameVer = gameNum;

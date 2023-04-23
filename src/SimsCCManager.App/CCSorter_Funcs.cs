@@ -15,20 +15,31 @@ namespace CCSorter.Funcs {
         public List<FileInfo> allPackages = new List<FileInfo>();
         public List<FileInfo> notPackages = new List<FileInfo>();
         public string filename = "";
+        public string statement = "";
         public int counter = 0;
-        LoggingGlobals logGlobals = new LoggingGlobals();
+        LoggingGlobals loggingGlobals = new LoggingGlobals();
         
         
         public void IdentifyPackages(){
+            statement = "Running Identify Packages.";
+            loggingGlobals.MakeLog(statement, true);
             string[] files = Directory.GetFiles(GlobalVariables.ModFolder, "*." + packageExtension, SearchOption.AllDirectories);
             foreach (string file in files) {
                 FileInfo packageFile = new FileInfo(file);
+                statement = "Found " + packageFile.FullName;
+                loggingGlobals.MakeLog(statement, true);
                 if (packageExtension.Any(packageFile.Extension.Contains)) {
+                    statement = "This file is a package file.";
+                    loggingGlobals.MakeLog(statement, true);
                     allPackages.Add(packageFile);
                 } else {
+                    statement = "This file is not a package file.";
+                    loggingGlobals.MakeLog(statement, true);
                     notPackages.Add(packageFile);
                 }
             }
+            statement = "Checked all packages, returning.";
+            loggingGlobals.MakeLog(statement, true);
         }
 
         void GetTypeOf<T>(T LineType) {
@@ -57,12 +68,20 @@ namespace CCSorter.Funcs {
             if (test != "DBPF") {
                 packagereader.Close();
                 var statement = package.FullName + " is either not a package or is broken.";
-                logGlobals.MakeLog(statement, false);
+                var temp = new PackageFile();
+                    temp.Name = package.Name;
+                    temp.Location = package.FullName;
+                    temp.Number = counter;
+                    temp.Version = 0;
+                    temp.Broken = true;
+                    GlobalVariables.packageFiles.Add(temp);
+                loggingGlobals.MakeLog(statement, false);
                 return;
             }
         }
 
-        public void IdentifyGames(FileInfo package, int game){ 
+        public void IdentifyGames(FileInfo package){ 
+            string statement = "";
             counter++;    
             FileStream dbpfFile = Packagefs(package);
             BinaryReader packagereader = Packagebr(dbpfFile);
@@ -70,76 +89,92 @@ namespace CCSorter.Funcs {
 
             uint major = packagereader.ReadUInt32();
             test = major.ToString();
+            statement = package.Name + " has " + major + " as a major.";
+            loggingGlobals.MakeLog(statement, true);
             
             uint minor = packagereader.ReadUInt32();
             test = minor.ToString();
+            statement = package.Name + " has " + minor + " as a minor.";
+            loggingGlobals.MakeLog(statement, true);
 
-            string statement = "";
-            var packageFiles = new List<PackageFiles>();
+            ;
 
             if (major is 1 && minor is 1) {
-                if (game is 2) {
-                    var temp = new PackageFiles();
+                if (GlobalVariables.gameVer is 2) {
+                    statement = "[DEBUG] " + package.FullName + " is a sims 2 file.";
+                    loggingGlobals.MakeLog(statement, true);
+                    var temp = new PackageFile();
                     temp.Name = package.Name;
                     temp.Location = package.FullName;
                     temp.Number = counter;
                     temp.Version = 2;
-                    packageFiles.Add(temp);
+                    temp.Broken = false;
+                    GlobalVariables.packageFiles.Add(temp);
                 } else {
                     statement = package.FullName + " is a sims 2 file.";
-                    logGlobals.MakeLog(statement, false);
-                    var temp = new PackageFiles();
+                    loggingGlobals.MakeLog(statement, false);
+                    var temp = new PackageFile();
                     temp.Name = package.Name;
                     temp.Location = package.FullName;
                     temp.Number = counter;
                     temp.Version = 2;
-                    packageFiles.Add(temp);
+                    temp.Broken = false;
+                    GlobalVariables.packageFiles.Add(temp);
                 }                
             } else if (major is 2 && minor is 1) {
-                if (game is 4) {
-                    var temp = new PackageFiles();
+                if (GlobalVariables.gameVer is 4) {
+                    statement = "[DEBUG] " + package.FullName + " is a sims 4 file.";
+                    loggingGlobals.MakeLog(statement, true);
+                    var temp = new PackageFile();
                     temp.Name = package.Name;
                     temp.Location = package.FullName;
                     temp.Number = counter;
                     temp.Version = 4;
-                    packageFiles.Add(temp);
+                    temp.Broken = false;
+                    GlobalVariables.packageFiles.Add(temp);
                 } else {
                     statement = package.FullName + " is a sims 4 file.";
-                    logGlobals.MakeLog(statement, false);
-                    var temp = new PackageFiles();
+                    loggingGlobals.MakeLog(statement, false);
+                    var temp = new PackageFile();
                     temp.Name = package.Name;
                     temp.Location = package.FullName;
                     temp.Number = counter;
                     temp.Version = 4;
-                    packageFiles.Add(temp);
+                    temp.Broken = false;
+                    GlobalVariables.packageFiles.Add(temp);
                 }                
             } else if (major is 2 && minor is 0) {
-                if (game is 3) {
-                    var temp = new PackageFiles();
+                if (GlobalVariables.gameVer is 3) {
+                    statement = "[DEBUG] " + package.FullName + " is a sims 3 file.";
+                    loggingGlobals.MakeLog(statement, true);
+                    var temp = new PackageFile();
                     temp.Name = package.Name;
                     temp.Location = package.FullName;
                     temp.Number = counter;
                     temp.Version = 3;
-                    packageFiles.Add(temp);
+                    temp.Broken = false;
+                    GlobalVariables.packageFiles.Add(temp);
                 } else {
                     statement = package.FullName + " is a sims 4 file.";
-                    logGlobals.MakeLog(statement, false);
-                    var temp = new PackageFiles();
+                    loggingGlobals.MakeLog(statement, false);
+                    var temp = new PackageFile();
                     temp.Name = package.Name;
                     temp.Location = package.FullName;
                     temp.Number = counter;
                     temp.Version = 3;
-                    packageFiles.Add(temp);
+                    temp.Broken = false;
+                    GlobalVariables.packageFiles.Add(temp);
                 }
             } else if (major is 3 && minor is 0) {
                 statement = package.FullName + " is a Sim City 5 file.";
-                logGlobals.MakeLog(statement, false);
-                var temp = new PackageFiles();
+                loggingGlobals.MakeLog(statement, false);
+                var temp = new PackageFile();
                 temp.Name = package.Name;
                 temp.Location = package.FullName;
                 temp.Number = counter;
                 temp.Version = 12;
-                packageFiles.Add(temp);
+                temp.Broken = false;
+                GlobalVariables.packageFiles.Add(temp);
             }
         }
     }

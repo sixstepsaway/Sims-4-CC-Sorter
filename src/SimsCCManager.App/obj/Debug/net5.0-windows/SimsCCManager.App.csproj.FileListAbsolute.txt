@@ -1,3 +1,9 @@
+I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.exe
+I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.deps.json
+I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.runtimeconfig.json
+I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.runtimeconfig.dev.json
+I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.dll
+I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.pdb
 I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App.csproj.AssemblyReference.cache
 I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\obj\Debug\net5.0-windows\MainWindow.g.cs
 I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\obj\Debug\net5.0-windows\Results.g.cs
@@ -5,12 +11,6 @@ I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\obj\Debug\net5.0-windows\Splas
 I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\obj\Debug\net5.0-windows\App.g.cs
 I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App_MarkupCompile.cache
 I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App_MarkupCompile.lref
-I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.exe
-I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.deps.json
-I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.runtimeconfig.json
-I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.runtimeconfig.dev.json
-I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.dll
-I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\bin\Debug\net5.0-windows\SimsCCManager.App.pdb
 I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\obj\Debug\net5.0-windows\MainWindow.baml
 I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\obj\Debug\net5.0-windows\Results.baml
 I:\Code\C#\Sims-4-CC-Sorter\src\SimsCCManager.App\obj\Debug\net5.0-windows\SplashScreen.baml
