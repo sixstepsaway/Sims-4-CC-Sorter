@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Collections;
 using System.Xml;
-using System.Security.Cryptography;
+//using System.Security.Cryptography;
 using DBPFReading;
 using SSAGlobals;
 
@@ -74,7 +74,7 @@ namespace S2PackageMaintenance {
             
         }
 
-        public void setParams(string filename, uint chunkOffset, string[] packageTypes, string[] xmlCatalogSortTypes, string[] xmlSubTypes, string[] xmlCategoryTypes){
+        public void setParms(string filename, uint chunkOffset, string[] packageTypes, string[] xmlCatalogSortTypes, string[] xmlSubTypes, string[] xmlCategoryTypes){
             this.filename = filename;
             this.chunkOffset = chunkOffset;
             this.packageTypes = packageTypes;
@@ -93,6 +93,7 @@ namespace S2PackageMaintenance {
             temp.Location = file;
             temp.Game = 2;
             string dbpf = Encoding.ASCII.GetString(readFile.ReadBytes(4));
+            int bytes = 4;
             temp.DBPF = dbpf;
             uint major = readFile.ReadUInt32();
             temp.Major = major;
@@ -170,13 +171,14 @@ namespace S2PackageMaintenance {
                 uint myFilesize;
                 statement = "Entry " + entrynumalpha + " - TypeID: " + iEntry.typeID;
                 loggingGlobals.MakeLog(statement, true);
+                
                 switch (iEntry.typeID.ToLower())
                 {
                     case "fc6e1f7": fileHas.shpe++; linkData.Add(iEntry); break;
                 }
                 
 
-                if (iEntry.typeID == "E86B1EEF")  // DIR Resource
+                if (iEntry.typeID == "E86B1EEF")  // DIR Resource //
                 {
                     statement = "Identified DIR resource (typeid " + iEntry.typeID + ").";
                     loggingGlobals.MakeLog(statement, true);
@@ -193,7 +195,7 @@ namespace S2PackageMaintenance {
                         statement = "Number of records:" + numRecords + ".";
                         loggingGlobals.MakeLog(statement, true);
                     }
-                    
+
                     var entries = 0;
 
                     // Loop through getting all the compressed entries
@@ -440,7 +442,7 @@ namespace S2PackageMaintenance {
                 }
             }
 
-            /*
+            
             if (IncomingInformation.Type is "Title") {
                 statement = "Information type is title. Saving it to temp.Name.";
                 loggingGlobals.MakeLog(statement, true);            
@@ -452,7 +454,7 @@ namespace S2PackageMaintenance {
             } else {
                 statement = "No title information available.";
                 loggingGlobals.MakeLog(statement, true);
-            }*/
+            }
 
 
             GlobalVariables.allSims2Packages.Add(temp);
