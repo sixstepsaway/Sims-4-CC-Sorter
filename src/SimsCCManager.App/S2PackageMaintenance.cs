@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Collections;
 using System.Xml;
-//using System.Security.Cryptography;
+using System.Security.Cryptography;
 using DBPFReading;
 using SSAGlobals;
 
