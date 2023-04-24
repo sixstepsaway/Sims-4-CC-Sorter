@@ -314,9 +314,7 @@ namespace S2PackageMaintenance {
 
                 switch (iEntry.typeID.ToLower())
                 {
-                    statement = "File has shpe.";
-                    loggingGlobals.MakeLog(statement, true);
-                    case "fc6e1f7": fileHas.shpe++; linkData.Add(iEntry); break;
+                    case "fc6e1f7": fileHas.shpe++; linkData.Add(iEntry); statement = "File has shpe."; loggingGlobals.MakeLog(statement, true); break;
                 }
 
                 if (iEntry.typeID == "E86B1EEF")  // DIR Resource
