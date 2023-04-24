@@ -138,13 +138,13 @@ namespace S2PackageMaintenance {
 
             //gets the major version
             majorVersion = readFile.ReadUInt32();
-            record.Major = major;
+            record.Major = majorVersion;
             statement = "Reading major - " + record.Major;
             loggingGlobals.MakeLog(statement, true); 
 
             //gets the minor version
             minorVersion = readFile.ReadUInt32();
-            record.Minor = minor;
+            record.Minor = minorVersion;
             statement = "Reading minor - " + record.Minor;
             loggingGlobals.MakeLog(statement, true); 
 
