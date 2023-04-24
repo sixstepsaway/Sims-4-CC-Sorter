@@ -227,6 +227,8 @@ namespace S2PackageMaintenance {
             for (int i = 0; i < indexCount; i++)
             {
                 indexEntry myEntry = new indexEntry();
+                statement = "Entry " + i + ": Entry Instance ID 2 at this point: " + myEntry.instanceID2;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.typeID = readFile.ReadUInt32().ToString("X8");
                 statement = "Entry " + i + ": Type ID: " + myEntry.typeID;
                 loggingGlobals.MakeLog(statement, true);
@@ -235,8 +237,7 @@ namespace S2PackageMaintenance {
                 loggingGlobals.MakeLog(statement, true);
                 myEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                 statement = "Entry " + i + ": Instance ID: " + myEntry.instanceID;
-                loggingGlobals.MakeLog(statement, true);
-                myEntry.instanceID2 = "00000000";
+                loggingGlobals.MakeLog(statement, true);                
                 statement = "Record's index major version: " + record.IndexMajorVersion;
                 loggingGlobals.MakeLog(statement, true);
                 statement = "Record's index minor version: " + record.IndexMinorVersion;
@@ -245,18 +246,22 @@ namespace S2PackageMaintenance {
                 loggingGlobals.MakeLog(statement, true);
                 statement = "This's index minor version: " + this.indexMinorVersion;
                 loggingGlobals.MakeLog(statement, true);
+                myEntry.instanceID2 = "00000000";
+                statement = "Entry " + i + ": Entry Instance ID 2 after being set to 00000000: " + myEntry.instanceID2;
+                loggingGlobals.MakeLog(statement, true);
 
                 if ((this.indexMajorVersion == 7) && (this.indexMinorVersion == 1))
                 {
                     statement = "Minor and major versions match.";
                     loggingGlobals.MakeLog(statement, true);
-                    //myEntry.instanceID2 = readFile.ReadUInt32().ToString("X8");
+                    myEntry.instanceID2 = readFile.ReadUInt32().ToString("X8");
 
                     //this crashes it
                     //break;
+                } else {
+                    
                 }
 
-                //it never runs the below
 
                 myEntry.offset = readFile.ReadUInt32();
                 statement = "Entry offset: " + myEntry.offset;

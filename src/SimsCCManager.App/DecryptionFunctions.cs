@@ -12,21 +12,21 @@ using System.Security.Cryptography;
 namespace DBPFReading {
     public class indexEntry
     {
-        public string typeID;
-        public string groupID;
-        public string instanceID;
-        public string instanceID2;
-        public uint offset;
-        public uint filesize;
-        public uint truesize;
-        public bool compressed;
-        public string unused;
+        public string typeID {get; set;}
+        public string groupID {get; set;}
+        public string instanceID {get; set;}
+        public string instanceID2 {get; set;}
+        public uint offset {get; set;}
+        public uint filesize {get; set;}
+        public uint truesize {get; set;}
+        public bool compressed {get; set;}
+        public string unused {get; set;}
     }
 
     public class ExtractedItems
     {
-        public string Type;
-        public string Content;
+        public string Type {get; set;}
+        public string Content {get; set;}
 
     }
 
