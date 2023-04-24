@@ -117,7 +117,37 @@ namespace S2PackageMaintenance {
             loggingGlobals.MakeLog(statement, true); 
             statement = "Searching package " + packageFile.Name + " for label to apply.";
             loggingGlobals.MakeLog(statement, true); 
-
+            
+            statement = "Original Vars:";
+            loggingGlobals.MakeLog(statement, true); 
+            statement = "Major - " + majorVersion;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "Minor - " + minorVersion;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "Reserved - " + reserved;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "Date Created - " + dateCreated;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "Date Mod - " + dateModified;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "I Maj - " + indexMajorVersion;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "i Min - " + indexMinorVersion;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "i count - " + indexCount;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "i offset - " + indexOffset;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "i size - " + indexSize;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "flags - " + flags;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "holes count - " + holesCount;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "h offset - " + holesOffset;
+            loggingGlobals.MakeLog(statement, true);
+            statement = "h size - " + holesSize;
+            loggingGlobals.MakeLog(statement, true);
             /* Reading through all the bytes to get to where we need to be. */
 
             record.Game = 2;
