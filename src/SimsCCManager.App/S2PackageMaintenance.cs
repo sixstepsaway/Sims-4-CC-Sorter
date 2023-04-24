@@ -476,6 +476,8 @@ namespace S2PackageMaintenance {
                                             } 
                                             else 
                                             {
+                                                statement = "IDX #" + idxc + " decompressing as XML.";
+                                                loggingGlobals.MakeLog(statement, true)
                                                 IncomingInformation = dbpfTypeRead.readXMLchunk(decompressed);
                                                 statement = "IDX #" + idxc + " decompressed and read as " + IncomingInformation;
                                                 loggingGlobals.MakeLog(statement, true);
