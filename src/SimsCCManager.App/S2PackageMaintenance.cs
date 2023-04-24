@@ -416,7 +416,7 @@ namespace S2PackageMaintenance {
                                     statement = "IDX #" + idxc + " cfilesize = " + cFileSize;
                                     loggingGlobals.MakeLog(statement, true);
                                     cTypeID = readFile.ReadUInt16().ToString("X4");
-                                    statement = "IDX #" + idxc + " cTypeID = " + ctypeID;
+                                    statement = "IDX #" + idxc + " cTypeID = " + cTypeID;
                                     loggingGlobals.MakeLog(statement, true);
                                     // check for the proper QFS type
                                     if (cTypeID == "FB10") 
