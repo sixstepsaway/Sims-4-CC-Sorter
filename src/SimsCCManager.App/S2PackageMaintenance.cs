@@ -249,8 +249,8 @@ namespace S2PackageMaintenance {
             for (int i = 0; i < indexCount; i++)
             {
                 indexEntry myEntry = new indexEntry();
-                statement = "Entry " + i + ": Entry Instance ID 2 at this point: " + myEntry.instanceID2;
-                loggingGlobals.MakeLog(statement, true);
+                //statement = "Entry " + i + ": Entry Instance ID 2 at this point: " + myEntry.instanceID2;
+                //loggingGlobals.MakeLog(statement, true);
                 myEntry.typeID = readFile.ReadUInt32().ToString("X8");
                 statement = "Entry " + i + ": Type ID: " + myEntry.typeID;
                 loggingGlobals.MakeLog(statement, true);
@@ -260,44 +260,42 @@ namespace S2PackageMaintenance {
                 myEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                 statement = "Entry " + i + ": Instance ID: " + myEntry.instanceID;
                 loggingGlobals.MakeLog(statement, true);                
-                statement = "Record's index major version: " + record.IndexMajorVersion;
-                loggingGlobals.MakeLog(statement, true);
-                statement = "Record's index minor version: " + record.IndexMinorVersion;
-                loggingGlobals.MakeLog(statement, true);
-                statement = "This's index major version: " + this.indexMajorVersion;
-                loggingGlobals.MakeLog(statement, true);
-                statement = "This's index minor version: " + this.indexMinorVersion;
-                loggingGlobals.MakeLog(statement, true);
-                myEntry.instanceID2 = "00000000";
-                statement = "Entry " + i + ": Entry Instance ID 2 after being set to 00000000: " + myEntry.instanceID2;
-                loggingGlobals.MakeLog(statement, true);
+                //statement = "Record's index major version: " + record.IndexMajorVersion;
+                //loggingGlobals.MakeLog(statement, true);
+                //statement = "Record's index minor version: " + record.IndexMinorVersion;
+                //loggingGlobals.MakeLog(statement, true);
+                //statement = "This's index major version: " + this.indexMajorVersion;
+                //loggingGlobals.MakeLog(statement, true);
+                //statement = "This's index minor version: " + this.indexMinorVersion;
+                //loggingGlobals.MakeLog(statement, true);
+                
+                //statement = "Entry " + i + ": Entry Instance ID 2 after being set to 00000000: " + myEntry.instanceID2;
+                //loggingGlobals.MakeLog(statement, true);
 
                 if ((this.indexMajorVersion == 7) && (this.indexMinorVersion == 1))
                 {
                     statement = "Minor and major versions match.";
                     loggingGlobals.MakeLog(statement, true);
                     myEntry.instanceID2 = readFile.ReadUInt32().ToString("X8");
-
-                    //this crashes it
-                    //break;
                 } else {
-                    
+                    myEntry.instanceID2 = "00000000";
                 }
 
-
+                statement = "Entry " + i + ": Entry Instance ID 2: " + myEntry.instanceID2;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.offset = readFile.ReadUInt32();
-                statement = "Entry offset: " + myEntry.offset;
+                statement = "Entry " + i + "offset: " + myEntry.offset;
                 loggingGlobals.MakeLog(statement, true);
                 myEntry.filesize = readFile.ReadUInt32();
-                statement = "Entry filesize: " + myEntry.filesize;
+                statement = "Entry " + i + "  filesize: " + myEntry.filesize;
                 loggingGlobals.MakeLog(statement, true);
                 myEntry.truesize = 0;
-                statement = "Truesize: " + myEntry.truesize;
+                statement = "Entry " + i + " truesize: " + myEntry.truesize;
                 loggingGlobals.MakeLog(statement, true);
                 myEntry.compressed = false;
 
                 indexData.Add(myEntry);
-                statement = "Added to indexData.";
+                statement = "Added entry to indexData.";
                 loggingGlobals.MakeLog(statement, true);
                 myEntry = null;   
             }
@@ -316,6 +314,8 @@ namespace S2PackageMaintenance {
 
                 switch (iEntry.typeID.ToLower())
                 {
+                    statement = "File has shpe.";
+                    loggingGlobals.MakeLog(statement, true);
                     case "fc6e1f7": fileHas.shpe++; linkData.Add(iEntry); break;
                 }
 
@@ -325,22 +325,43 @@ namespace S2PackageMaintenance {
                     if (indexMajorVersion == 7 && indexMinorVersion == 1)
                     {
                         numRecords = iEntry.filesize / 20;
+                        statement = "Index Major is 7, minor is 1. Setting numRecords to: " + numRecords;
+                        loggingGlobals.MakeLog(statement, true);
                     }
                     else 
                     {
                         numRecords = iEntry.filesize / 16;
+                        statement = "Setting numRecords to: " + numRecords;
+                        loggingGlobals.MakeLog(statement, true);
                     }
 
                     // Loop through getting all the compressed entries
                     for (int i = 0; i < numRecords; i++)
-                    {
+                    {   
+                        statement = "Getting compressed entry #" + i;
+                        loggingGlobals.MakeLog(statement, true);
                         typeID = readFile.ReadUInt32().ToString("X8");
+                        statement = "Compressed entry " + i + " typeID is: " + typeID;
+                        loggingGlobals.MakeLog(statement, true);
                         groupID = readFile.ReadUInt32().ToString("X8");
+                        statement = "Compressed entry " + i + " groupID is: " + groupID;
+                        loggingGlobals.MakeLog(statement, true);                        
                         instanceID = readFile.ReadUInt32().ToString("X8");
-                        if (indexMajorVersion == 7 && indexMinorVersion == 1) instanceID2 = readFile.ReadUInt32().ToString("X8");
+                        statement = "Compressed entry " + i + " instanceID is: " + instanceID;
+                        loggingGlobals.MakeLog(statement, true);                          
+                        if (indexMajorVersion == 7 && indexMinorVersion == 1) {
+                            instanceID2 = readFile.ReadUInt32().ToString("X8");
+                            statement = "Compressed entry " + i + "index major is 7, minor is 1, setting InstanceID2 to " + instanceID2;
+                            loggingGlobals.MakeLog(statement, true);
+                        }
                         myFilesize = readFile.ReadUInt32();
-                        
-                        foreach (indexEntry idx in indexData) {
+                        statement = "Compressed entry " + i + "filesize is " + myFilesize;
+                        loggingGlobals.MakeLog(statement, true);
+                        int idxc = 0;
+                        foreach (indexEntry idx in indexData) 
+                        {   idxc++;
+                            statement = "Now reading IDX " + idxc;
+                            loggingGlobals.MakeLog(statement, true);
 
                             int cFileSize = 0;
                             string cTypeID = "";
@@ -349,6 +370,8 @@ namespace S2PackageMaintenance {
                             {
                                 case "43545353": // Catalog Description - CTSS
                                     //Console.WriteLine("    Catalog Description file");
+                                    statement = "IDX #" + idxc + " catalog description file found.";
+                                    loggingGlobals.MakeLog(statement, true);
                                     dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
 
                                         cFileSize = readFile.ReadInt32();
@@ -378,6 +401,8 @@ namespace S2PackageMaintenance {
                                 case "4C697E5A": // Material Override - MMAT
                                 case "8C1580B5": // HairTone XML
                                     //Console.WriteLine("    " + idx.typeID + " file");
+                                    statement = "IDX #" + idxc + " found typeID of " + idx.typeID;
+                                    loggingGlobals.MakeLog(statement, true);
                                     dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
 
                                     //if (idx.compressed == true)
@@ -453,6 +478,8 @@ namespace S2PackageMaintenance {
                                     // Property Set - only read if no other XML/CPF resources
                                     if ((fileHas.xhtn == 0) && (fileHas.xobj == 0) && (fileHas.xflr == 0) && (fileHas.xfnc == 0) && (fileHas.xmol == 0) && (fileHas.xngb == 0) && (fileHas.xobj == 0) && (fileHas.xrof == 0) && (fileHas.xstn == 0) && (fileHas.xtol == 0) && (fileHas.aged == 0) )
                                     {
+                                        statement = "IDX #" + idxc + " idx has no other resources, reading Property Set.";
+                                        loggingGlobals.MakeLog(statement, true);
                                         //Console.WriteLine("    Property Set GZPS");
                                         dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
 
