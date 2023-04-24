@@ -139,13 +139,13 @@ namespace S2PackageMaintenance {
             //gets the major version
             uint major = readFile.ReadUInt32();
             record.Major = major;
-            statement = "Reading major - " + record.Minor;
+            statement = "Reading major - " + record.Major;
             loggingGlobals.MakeLog(statement, true); 
 
             //gets the minor version
             uint minor = readFile.ReadUInt32();
             record.Minor = minor;
-            statement = "Reading minor - " + record.Major;
+            statement = "Reading minor - " + record.Minor;
             loggingGlobals.MakeLog(statement, true); 
 
             //gets the flags (unused)
@@ -227,8 +227,14 @@ namespace S2PackageMaintenance {
             {
                 indexEntry myEntry = new indexEntry();
                 myEntry.typeID = readFile.ReadUInt32().ToString("X8");
+                statement = "Entry " + i + ": Type ID: " + myEntry.typeID;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.groupID = readFile.ReadUInt32().ToString("X8");
+                statement = "Entry " + i + ": Type ID: " + myEntry.groupID;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.instanceID = readFile.ReadUInt32().ToString("X8");
+                statement = "Entry " + i + ": Instance ID: " + myEntry.instanceID;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.instanceID2 = "00000000";
                 statement = "Record's index major version: " + record.IndexMajorVersion;
                 loggingGlobals.MakeLog(statement, true);
