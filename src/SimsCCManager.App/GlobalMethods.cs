@@ -33,7 +33,7 @@ namespace SSAGlobals {
         public uint HolesCount {get; set;}
         public uint HolesOffset {get; set;}
         public uint HolesSize {get; set;}
-        public string indexMinorVersion {get; set;}
+        public uint IndexMinorVersion {get; set;}
     }
 
     public class GlobalVariables {
