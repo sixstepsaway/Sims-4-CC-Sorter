@@ -129,7 +129,7 @@ namespace S2PackageMaintenance {
             /* Reading through all the bytes to get to where we need to be. */
 
             record.Game = 2;
-
+        
             //checks it's a package
             record.DBPF = Encoding.ASCII.GetString(readFile.ReadBytes(4));
             int bytes = 4;
@@ -137,13 +137,13 @@ namespace S2PackageMaintenance {
             loggingGlobals.MakeLog(statement, true); 
 
             //gets the major version
-            uint major = readFile.ReadUInt32();
+            majorVersion = readFile.ReadUInt32();
             record.Major = major;
             statement = "Reading major - " + record.Major;
             loggingGlobals.MakeLog(statement, true); 
 
             //gets the minor version
-            uint minor = readFile.ReadUInt32();
+            minorVersion = readFile.ReadUInt32();
             record.Minor = minor;
             statement = "Reading minor - " + record.Minor;
             loggingGlobals.MakeLog(statement, true); 
@@ -161,6 +161,7 @@ namespace S2PackageMaintenance {
 
             //gets the modification date (usually 0)
             dateModified = readFile.ReadUInt32();
+            record.DateModified = dateModified;
             statement = "Reading modification date - " + record.DateModified;
             loggingGlobals.MakeLog(statement, true); 
 
@@ -171,37 +172,37 @@ namespace S2PackageMaintenance {
             loggingGlobals.MakeLog(statement, true); 
 
             //gets the count of index entries, so you know how many to read through
-            uint indexCount = readFile.ReadUInt32();
+            indexCount = readFile.ReadUInt32();
             record.IndexCount = indexCount;
             statement = "Reading index count - " + record.IndexCount;
             loggingGlobals.MakeLog(statement, true); 
 
             //gets the index offset (aka location)
-            uint indexOffset = readFile.ReadUInt32();
+            indexOffset = readFile.ReadUInt32();
             record.IndexOffset = indexOffset;
             statement = "Reading index offset - " + record.IndexOffset;
             loggingGlobals.MakeLog(statement, true);
 
             //gets the index size
-            uint indexSize = readFile.ReadUInt32();
+            indexSize = readFile.ReadUInt32();
             record.IndexSize = indexSize;
             statement = "Reading index size - " + record.IndexSize;
             loggingGlobals.MakeLog(statement, true); 
 
             //gets the holes count (usually 0)
-            uint holesCount = readFile.ReadUInt32();
+            holesCount = readFile.ReadUInt32();
             record.HolesCount = holesCount;
             statement = "Reading holes count - " + record.HolesCount;
             loggingGlobals.MakeLog(statement, true); 
 
             //gets the holes offset (usually 0)
-            uint holesOffset = readFile.ReadUInt32();
+            holesOffset = readFile.ReadUInt32();
             record.HolesOffset = holesOffset;
             statement = "Reading holes offset - " + record.HolesOffset;
             loggingGlobals.MakeLog(statement, true); 
 
             //gets the holes size (usually 0)
-            uint holesSize = readFile.ReadUInt32();
+            holesSize = readFile.ReadUInt32();
             record.HolesSize = holesSize;
             statement = "Reading holes size - " + record.HolesSize;
             loggingGlobals.MakeLog(statement, true); 
@@ -213,7 +214,7 @@ namespace S2PackageMaintenance {
             loggingGlobals.MakeLog(statement, true);
 
             //gets the 32 bytes of reserved matter
-            string reserved2 = Encoding.UTF8.GetString(readFile.ReadBytes(32));
+            reserved2 = Encoding.UTF8.GetString(readFile.ReadBytes(32));
 
             statement = "Chunk offset:  " + this.chunkOffset;
             loggingGlobals.MakeLog(statement, true); 
