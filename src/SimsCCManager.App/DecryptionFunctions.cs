@@ -943,6 +943,8 @@ namespace DBPFReading {
 			statement = "Reading chunk as XML (A).";
             loggingGlobals.MakeLog(statement, true);
 			var temp = new ExtractedItems();
+			statement = "Created temp var.";
+            loggingGlobals.MakeLog(statement, true);
 			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(readFile.GetEntireStream())));
 			//xmlDoc.Load(new StringReader(xmlData));
 			statement = "Made XML text reader";
