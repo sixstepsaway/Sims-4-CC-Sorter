@@ -465,7 +465,7 @@ namespace S2PackageMaintenance {
                                                 //Console.WriteLine("CPF type id: " + cpfTypeID);
                                                 if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
                                                 {
-                                                    statement = "IDX #" + idxc + " identified as actual CPF file."
+                                                    statement = "IDX #" + idxc + " identified as actual CPF file.";
                                                     loggingGlobals.MakeLog(statement, true);
                                                     // Is an actual CPF file, so we have to decompress it...
                                                     IncomingInformation = dbpfTypeRead.readCPFchunk(decompressed);
