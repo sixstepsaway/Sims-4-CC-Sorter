@@ -453,6 +453,8 @@ namespace S2PackageMaintenance {
                                             loggingGlobals.MakeLog(statement, true);
                                             statement = "IDX #" + idxc + " decompressed bytes: " + decompressed;
                                             loggingGlobals.MakeLog(statement, true);
+                                            statement = "IDX #" + idxc + " 50 decompressed bytes: " + decompressed.ReadBytes(50);
+                                            loggingGlobals.MakeLog(statement, true);
                                             
                                             var allstream = decompressed.GetEntireStream();
                                             statement = "Got entire stream: " + allstream;

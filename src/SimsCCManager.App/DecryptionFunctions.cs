@@ -96,7 +96,7 @@ namespace DBPFReading {
     public class ReadByteStream {
         
         private int currOffset = 0;
-        private byte[] byteStream;
+        public byte[] byteStream;
 		LoggingGlobals loggingGlobals = new LoggingGlobals();
 		private string statement = "";
 
@@ -248,12 +248,7 @@ namespace DBPFReading {
 
         public static Byte[] Uncompress(Byte[] data, uint targetSize, int offset)
 		{
-			return null;
-            
-            /*
-
-
-            Byte[] uncdata = null;
+			Byte[] uncdata = null;
 			int index = offset;			
 
 			try 
@@ -334,7 +329,7 @@ namespace DBPFReading {
 					uncdata[uncindex++] = data[index++];
 				}
 			}
-			return uncdata;*/
+			return uncdata;
 		}
 
         public void readOBJDchunk(BinaryReader readFile)
