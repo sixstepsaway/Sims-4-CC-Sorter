@@ -230,11 +230,25 @@ namespace S2PackageMaintenance {
                 myEntry.groupID = readFile.ReadUInt32().ToString("X8");
                 myEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                 myEntry.instanceID2 = "00000000";
+                statement = "Record's index major version: " + record.IndexMajorVersion;
+                loggingGlobals.MakeLog(statement, true);
+                statement = "Record's index minor version: " + record.IndexMinorVersion;
+                loggingGlobals.MakeLog(statement, true);
+                statement = "This's index major version: " + this.indexMajorVersion;
+                loggingGlobals.MakeLog(statement, true);
+                statement = "This's index minor version: " + this.indexMinorVersion;
+                loggingGlobals.MakeLog(statement, true);
 
                 if ((this.indexMajorVersion == 7) && (this.indexMinorVersion == 1)) 
                 {
-                    myEntry.instanceID2 = readFile.ReadUInt32().ToString("X8");
+                    statement = "Minor and major versions match.";
+                    loggingGlobals.MakeLog(statement, true);
+                    //myEntry.instanceID2 = readFile.ReadUInt32().ToString("X8");
+
+                    //this crashes it
                 }
+
+                //it never runs the below
 
                 myEntry.offset = readFile.ReadUInt32();
                 myEntry.filesize = readFile.ReadUInt32();
@@ -242,7 +256,7 @@ namespace S2PackageMaintenance {
                 myEntry.compressed = false;
 
                 indexData.Add(myEntry);
-                myEntry = null;
+                myEntry = null;   
             }
             var entrynum = 0;
             foreach (indexEntry iEntry in indexData)
