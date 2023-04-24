@@ -245,28 +245,39 @@ namespace S2PackageMaintenance {
                 statement = "This's index minor version: " + this.indexMinorVersion;
                 loggingGlobals.MakeLog(statement, true);
 
-                if ((this.indexMajorVersion == 7) && (this.indexMinorVersion == 1)) 
+                if ((this.indexMajorVersion == 7) && (this.indexMinorVersion == 1))
                 {
                     statement = "Minor and major versions match.";
                     loggingGlobals.MakeLog(statement, true);
                     //myEntry.instanceID2 = readFile.ReadUInt32().ToString("X8");
 
                     //this crashes it
+                    //break;
                 }
 
                 //it never runs the below
 
                 myEntry.offset = readFile.ReadUInt32();
+                statement = "Entry offset: " + myEntry.offset;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.filesize = readFile.ReadUInt32();
+                statement = "Entry filesize: " + myEntry.filesize;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.truesize = 0;
+                statement = "Truesize: " + myEntry.truesize;
+                loggingGlobals.MakeLog(statement, true);
                 myEntry.compressed = false;
 
                 indexData.Add(myEntry);
+                statement = "Added to indexData.";
+                loggingGlobals.MakeLog(statement, true);
                 myEntry = null;   
             }
             var entrynum = 0;
             foreach (indexEntry iEntry in indexData)
             {
+                statement = "Searching entry" + entrynum;
+                loggingGlobals.MakeLog(statement, true);
                 entrynum++;
                 uint numRecords;
                 string typeID;
