@@ -451,6 +451,8 @@ namespace S2PackageMaintenance {
                                             ReadByteStream decompressed = new ReadByteStream(DBPFTypeRead.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
                                             statement = "IDX #" + idxc + " uncompressing bytes.";
                                             loggingGlobals.MakeLog(statement, true);
+                                            statement = "IDX #" + idxc + " decompressed bytes: " + decompressed;
+                                            loggingGlobals.MakeLog(statement, true);
 
                                             if (cpfTypeID == "E750E0E2") 
                                             {
