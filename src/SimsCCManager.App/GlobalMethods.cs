@@ -71,9 +71,10 @@ namespace SSAGlobals {
             if (onlyDebug) {
                 if (GlobalVariables.debugMode) {
                     //Writes to a log file.
+                    FileInfo filepath = new FileInfo(filePath);
                     StreamWriter addToLog = new StreamWriter (GlobalVariables.logfile, append: true);
                     time = DateTime.Now.ToString("h:mm:ss tt");
-                    statement = "[L" + lineNumber + " | " + filePath + "]" + time + ": " + Statement;
+                    statement = "[L" + lineNumber + " | " + filepath.Name + "] " + time + ": " + Statement;
                     addToLog.WriteLine(statement);
                     addToLog.Close();
                 } else {

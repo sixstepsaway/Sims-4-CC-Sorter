@@ -118,7 +118,7 @@ namespace S2PackageMaintenance {
             statement = "Searching package " + packageFile.Name + " for label to apply.";
             loggingGlobals.MakeLog(statement, true); 
             
-            statement = "Original Vars:";
+            /*statement = "Original Vars:";
             loggingGlobals.MakeLog(statement, true); 
             statement = "Major - " + majorVersion;
             loggingGlobals.MakeLog(statement, true);
@@ -147,7 +147,7 @@ namespace S2PackageMaintenance {
             statement = "h offset - " + holesOffset;
             loggingGlobals.MakeLog(statement, true);
             statement = "h size - " + holesSize;
-            loggingGlobals.MakeLog(statement, true);
+            loggingGlobals.MakeLog(statement, true);*/
             /* Reading through all the bytes to get to where we need to be. */
 
             record.Game = 2;

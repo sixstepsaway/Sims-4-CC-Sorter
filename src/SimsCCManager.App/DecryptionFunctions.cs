@@ -943,9 +943,24 @@ namespace DBPFReading {
 			var entirestream = readFile.GetEntireStream();
 			statement = "Got entire stream";
             loggingGlobals.MakeLog(statement, true);
+			
 			var stringfromstream = Encoding.UTF8.GetString(entirestream);
-			statement = "Converted stream to string: " + stringfromstream;
+			statement = "Converted stream to string as UTF8: " + stringfromstream;
             loggingGlobals.MakeLog(statement, true);
+
+			/*var stringfromstreamUTF8 = Encoding.UTF8.GetString(entirestream);
+			statement = "Converted stream to string as UTF8: " + stringfromstreamUTF8;
+            loggingGlobals.MakeLog(statement, true);
+			var stringfromstreamUnicode = Encoding.Unicode.GetString(entirestream);
+			statement = "Converted stream to string as Unicode: " + stringfromstreamUnicode;
+            loggingGlobals.MakeLog(statement, true);
+			var stringfromstreamUTF32 = Encoding.UTF32.GetString(entirestream);
+			statement = "Converted stream to string as UTF32: " + stringfromstreamUTF32;
+            loggingGlobals.MakeLog(statement, true);
+			var stringfromstreamUTF7 = Encoding.UTF7.GetString(entirestream);
+			statement = "Converted stream to string as UTF32: " + stringfromstreamUTF7;
+            loggingGlobals.MakeLog(statement, true);*/
+
 			StringReader stringreader = new StringReader(stringfromstream);
 			statement = "Created string reader: " + stringreader;
             loggingGlobals.MakeLog(statement, true);
@@ -959,11 +974,11 @@ namespace DBPFReading {
             loggingGlobals.MakeLog(statement, true);
 			bool inDesc = false;
 			string inAttrDesc = "";
-
+			statement = "Reading XML";
+            loggingGlobals.MakeLog(statement, true);
 			while (xmlDoc.Read())
 			{
-				statement = "Reading XML";
-            	loggingGlobals.MakeLog(statement, true);
+				
 				if (xmlDoc.NodeType == XmlNodeType.Element) 
 				{
 					if (xmlDoc.Name == "AnyString")	inDesc = true;
