@@ -383,11 +383,15 @@ namespace S2PackageMaintenance {
                                             ReadByteStream decompressed = new ReadByteStream(DBPFTypeRead.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));                                           
 
                                             IncomingInformation = dbpfTypeRead.readCTSSchunk(decompressed);
+                                            statement = "IDX #" + idxc + " decompressed and read as " + IncomingInformation;
+                                            loggingGlobals.MakeLog(statement, true);
                                         } 
                                         else 
                                         {
                                             dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
                                             IncomingInformation = dbpfTypeRead.readCTSSchunk(readFile);
+                                            statement = "IDX #" + idxc + " decompressed and read as " + IncomingInformation;
+                                            loggingGlobals.MakeLog(statement, true);
                                         }
                                     break;
                                 case "2CB230B8": // XFNC - Fence XML
@@ -402,72 +406,120 @@ namespace S2PackageMaintenance {
                                     statement = "IDX #" + idxc + " found typeID of " + idx.typeID;
                                     loggingGlobals.MakeLog(statement, true);
                                     dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                                    statement = "IDX #" + idxc + " seeking through idx entry.";
+                                    loggingGlobals.MakeLog(statement, true);
 
                                     //if (idx.compressed == true)
                                     //{
                                         // Is this always in XML format?
                                     cFileSize = readFile.ReadInt32();
+                                    statement = "IDX #" + idxc + " cfilesize = " + cFileSize;
+                                    loggingGlobals.MakeLog(statement, true);
                                     cTypeID = readFile.ReadUInt16().ToString("X4");
+                                    statement = "IDX #" + idxc + " cTypeID = " + ctypeID;
+                                    loggingGlobals.MakeLog(statement, true);
                                     // check for the proper QFS type
                                     if (cTypeID == "FB10") 
                                     {
+                                        statement = "IDX #" + idxc + " found QFS type of " + cTypeID;
+                                        loggingGlobals.MakeLog(statement, true);
                                         byte[] tempBytes = readFile.ReadBytes(3);
+                                        statement = "IDX #" + idxc + " read some temp bytes of " + tempBytes;
+                                        loggingGlobals.MakeLog(statement, true);
                                         uint cFullSize = DBPFTypeRead.QFSLengthToInt(tempBytes);
+                                        statement = "IDX #" + idxc + " got cfullsize of " + cFullSize;
+                                        loggingGlobals.MakeLog(statement, true);
 
                                         // Check for CPF type
                                         string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                                        statement = "IDX #" + idxc + " cpf type is " + cpfTypeID;
+                                        loggingGlobals.MakeLog(statement, true);
                                         if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
                                         {
                                             // Is an actual CPF file, so we have to decompress it...
+                                            statement = "IDX #" + idxc + " read as actual CPF type.";
+                                            loggingGlobals.MakeLog(statement, true);
                                             IncomingInformation = dbpfTypeRead.readCPFchunk(readFile);
+                                            statement = "IDX #" + idxc + " decompressed and read as " + IncomingInformation;
+                                            loggingGlobals.MakeLog(statement, true);
                                         } 
                                         else 
                                         {
                                             dbpfFile.Seek(this.chunkOffset + idx.offset + 9, SeekOrigin.Begin);
+                                            statement = "IDX #" + idxc + " seeking through again.";
+                                            loggingGlobals.MakeLog(statement, true);
                                             ReadByteStream decompressed = new ReadByteStream(DBPFTypeRead.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+                                            statement = "IDX #" + idxc + " uncompressing bytes.";
+                                            loggingGlobals.MakeLog(statement, true);
 
                                             if (cpfTypeID == "E750E0E2") 
                                             {
+                                                statement = "IDX #" + idxc + " identified cpftypeid " + cpfTypeID;
+                                                loggingGlobals.MakeLog(statement, true);
 
                                                 // Read first four bytes
                                                 cpfTypeID = decompressed.ReadUInt32().ToString("X8");
+                                                statement = "IDX #" + idxc + " read first four bites as " + cpfTypeID;
+                                                loggingGlobals.MakeLog(statement, true);
 
                                                 //Console.WriteLine("CPF type id: " + cpfTypeID);
                                                 if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
                                                 {
+                                                    statement = "IDX #" + idxc + " identified as actual CPF file."
+                                                    loggingGlobals.MakeLog(statement, true);
                                                     // Is an actual CPF file, so we have to decompress it...
                                                     IncomingInformation = dbpfTypeRead.readCPFchunk(decompressed);
+                                                    statement = "IDX #" + idxc + " decompressed and read as " + IncomingInformation;
+                                                    loggingGlobals.MakeLog(statement, true);
                                                 }
 
                                             } 
                                             else 
                                             {
                                                 IncomingInformation = dbpfTypeRead.readXMLchunk(decompressed);
+                                                statement = "IDX #" + idxc + " decompressed and read as " + IncomingInformation;
+                                                loggingGlobals.MakeLog(statement, true);
                                             }
                                         }
                                     } 
                                     else 
                                     {
                                         dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                                        statement = "IDX #" + idxc + " seeking through.";
+                                        loggingGlobals.MakeLog(statement, true);
 
                                         string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                                        statement = "IDX #" + idxc + " got cpftypeid as " + cpfTypeID;
+                                        loggingGlobals.MakeLog(statement, true);
                                         //Console.WriteLine("CPF type id: " + cpfTypeID);
                                         if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
                                         {
+                                            statement = "IDX #" + idxc + " identified as cpf.";
+                                            loggingGlobals.MakeLog(statement, true);
                                             // Is an actual CPF file, so we have to decompress it...
                                             IncomingInformation = dbpfTypeRead.readCPFchunk(readFile);
+                                            statement = "IDX #" + idxc + " decompressed and read as " + IncomingInformation;
+                                            loggingGlobals.MakeLog(statement, true);
                                         }
 
                                         // Actually an uncompressed XML file, so we can use the xmlChunk to 
                                         // process
                                         if  (cpfTypeID == "6D783F3C")
                                         {
+                                            statement = "IDX #" + idxc + " discovered this is an XML file.";
+                                            loggingGlobals.MakeLog(statement, true);
                                             // Backtrack 4 bytes
                                             dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                                            statement = "IDX #" + idxc + " backtracked 4 bytes.";
+                                            loggingGlobals.MakeLog(statement, true);
 
                                             // Read entire XML as a normal string
                                             string xmlData = Encoding.UTF8.GetString(readFile.ReadBytes((int)idx.filesize));
+                                            statement = "IDX #" + idxc + " converted to normal string.";
+                                            loggingGlobals.MakeLog(statement, true);
                                             IncomingInformation = dbpfTypeRead.readXMLchunk(xmlData);
+                                            statement = "IDX #" + idxc + " decompressed and read as " + IncomingInformation;
+                                            loggingGlobals.MakeLog(statement, true);
 
                                         }
                                     }
