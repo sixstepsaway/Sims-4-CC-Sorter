@@ -17,33 +17,25 @@ namespace S2PackageMaintenance {
         
         string packageExtension = "package";
 
+        private uint chunkOffset = 0;
         public string[] packageTypes = { };
-        public string[] xmlCatalogSortTypes = { };
+		public string[] xmlCatalogSortTypes = { };
 		public string[] xmlSubtypes = { };
 		public string[] xmlCategoryTypes = { };
-
-		private uint majorVersion;
-		private uint minorVersion;
-
-		private string reserved;
-
-		private uint dateCreated;
-		private uint dateModified;
-
-		private uint indexMajorVersion;
-		private uint indexMinorVersion;
-
-		private uint indexCount;
-		private uint indexOffset;
-		private uint indexSize;
-        private string flags;
-
-		private uint holesCount;
-		private uint holesOffset;
-		private uint holesSize;
-
-		private uint chunkOffset = 0;
-
+		private uint majorVersion = 239083;
+		private uint minorVersion = 239083;
+		private string reserved = " = 239083 including the equals because it made me laugh <3";
+		private uint dateCreated = 239083;
+		private uint dateModified = 239083;
+		private uint indexMajorVersion = 239083;
+		private uint indexMinorVersion = 239083;
+		private uint indexCount = 239083;
+		private uint indexOffset = 239083;
+		private uint indexSize = 239083;
+		private string flags = "239083";
+		private uint holesCount = 239083;
+		private uint holesOffset = 239083;
+		private uint holesSize = 239083;
 		public string title = "";
 		public string description = "";
 		public string pkgType = "";
