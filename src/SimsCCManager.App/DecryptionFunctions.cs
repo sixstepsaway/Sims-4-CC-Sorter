@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Collections;
 using System.Xml;
 using System.Security.Cryptography;
+using SSAGlobals;
 
 namespace DBPFReading {
     public class indexEntry
@@ -96,6 +97,8 @@ namespace DBPFReading {
         
         private int currOffset = 0;
         private byte[] byteStream;
+		LoggingGlobals loggingGlobals = new LoggingGlobals();
+		private string statement = "";
 
         public ReadByteStream(byte[] inputBytes) 
         {
@@ -935,14 +938,22 @@ namespace DBPFReading {
 
         public ExtractedItems readXMLchunk(ReadByteStream readFile)
 		{
+			LoggingGlobals loggingGlobals = new LoggingGlobals();
+			var statement = "";
+			statement = "Reading chunk as XML (A).";
+            loggingGlobals.MakeLog(statement, true);
 			var temp = new ExtractedItems();
 			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(readFile.GetEntireStream())));
 			//xmlDoc.Load(new StringReader(xmlData));
+			statement = "Made XML text reader";
+            loggingGlobals.MakeLog(statement, true);
 			bool inDesc = false;
 			string inAttrDesc = "";
 
 			while (xmlDoc.Read())
 			{
+				statement = "Reading XML";
+            	loggingGlobals.MakeLog(statement, true);
 				if (xmlDoc.NodeType == XmlNodeType.Element) 
 				{
 					if (xmlDoc.Name == "AnyString")	inDesc = true;
@@ -967,6 +978,8 @@ namespace DBPFReading {
 								case "subsort":
 								case "subtype":
 								case "category":
+									statement = "XML has " + xmlDoc.Value;
+            						loggingGlobals.MakeLog(statement, true);
 									inAttrDesc = xmlDoc.Value;
 									break;
 							}
@@ -977,48 +990,71 @@ namespace DBPFReading {
 				{
 					if (inAttrDesc != "") 
 					{
+						statement = "XML attribute description is " + inAttrDesc;
+						{
+							
+						};
+            			loggingGlobals.MakeLog(statement, true);
 						switch (inAttrDesc)
 						{
 							case "subtype":
 								this.xmlSubtype = xmlDoc.Value;                                
 								temp.Type = "XML Subtype";
                                 temp.Content = this.xmlSubtype;
+								statement = "XML Content is " + temp.Content;
+            					loggingGlobals.MakeLog(statement, true);
                                 break;
 							case "subsort":
 								this.xmlSubtype = xmlDoc.Value;
 								temp.Type = "XML Subtype";
                                 temp.Content = this.xmlSubtype;
+								statement = "XML Content is " + temp.Content;
+            					loggingGlobals.MakeLog(statement, true);
                                 break;
 							case "category":
 								this.xmlCategory = xmlDoc.Value;
 								temp.Type = "XML Category";
                                 temp.Content = this.xmlCategory;
+								statement = "XML Content is " + temp.Content;
+            					loggingGlobals.MakeLog(statement, true);
                                 break;
 							case "name":
 								if (this.title == "") this.title = xmlDoc.Value;
 								temp.Type = "Title";
                                 temp.Content = this.title;
+								statement = "XML Content is " + temp.Content;
+            					loggingGlobals.MakeLog(statement, true);
                                 break;
 							case "type":
 								this.xmlType = xmlDoc.Value;
 								temp.Type = "XML Type";
                                 temp.Content = this.xmlType;
+								statement = "XML Content is " + temp.Content;
+            					loggingGlobals.MakeLog(statement, true);
                                 break;
 							case "description":
 								if (this.description == "") this.description = xmlDoc.Value.Replace("\n", " ");
 								temp.Type = "Description";
                                 temp.Content = this.description;
+								statement = "XML Content is " + temp.Content;
+            					loggingGlobals.MakeLog(statement, true);
                                 break;
 						}
 					}
 				}
 				//if ((this.title != "") && (this.description != "")) break;
-			}            
+			}
+			statement = "Returning data: " + temp.Content;
+			loggingGlobals.MakeLog(statement, true);
             return temp;
 		}
 
 		public ExtractedItems readXMLchunk(string xmlData)
 		{
+			LoggingGlobals loggingGlobals = new LoggingGlobals();
+			var statement = "";
+			statement = "Reading chunk as XML (B).";
+            loggingGlobals.MakeLog(statement, true);
 			var temp = new ExtractedItems();
 			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(xmlData));
 			//xmlDoc.Load(new StringReader(xmlData));
