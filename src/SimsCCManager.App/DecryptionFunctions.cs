@@ -946,9 +946,19 @@ namespace DBPFReading {
 			statement = "Created temp var.";
             loggingGlobals.MakeLog(statement, true);
 			var entirestream = readFile.GetEntireStream();
-			statement = "Entire Stream: " + entirestream;
+			statement = "Got entire stream";
             loggingGlobals.MakeLog(statement, true);
-			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(readFile.GetEntireStream())));
+			var stringfromstream = Encoding.UTF8.GetString(entirestream);
+			statement = "Converted stream to string: " + stringfromstream;
+            loggingGlobals.MakeLog(statement, true);
+			StringReader stringreader = new StringReader(stringfromstream);
+			statement = "Created string reader: " + stringreader;
+            loggingGlobals.MakeLog(statement, true);
+			XmlTextReader xmlDoc = new XmlTextReader(stringreader);
+			statement = "Created xmldoc: " + xmlDoc;
+            loggingGlobals.MakeLog(statement, true);
+			
+			//XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(readFile.GetEntireStream())));
 			//xmlDoc.Load(new StringReader(xmlData));
 			statement = "Made XML text reader";
             loggingGlobals.MakeLog(statement, true);

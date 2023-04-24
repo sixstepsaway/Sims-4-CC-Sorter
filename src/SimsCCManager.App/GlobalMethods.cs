@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace SSAGlobals {
 
@@ -62,16 +63,17 @@ namespace SSAGlobals {
         
         private string time = "";
         private string statement = "";
-
+        
         //Function for logging to the logfile set at the start of the program
-        public void MakeLog (string Statement, bool onlyDebug)
-        {
+        public void MakeLog (string Statement, bool onlyDebug, [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string filePath = "")
+        {   
+            
             if (onlyDebug) {
                 if (GlobalVariables.debugMode) {
                     //Writes to a log file.
                     StreamWriter addToLog = new StreamWriter (GlobalVariables.logfile, append: true);
                     time = DateTime.Now.ToString("h:mm:ss tt");
-                    statement = time + ": " + Statement;
+                    statement = "[L" + lineNumber + " | " + filePath + "]" + time + ": " + Statement;
                     addToLog.WriteLine(statement);
                     addToLog.Close();
                 } else {
