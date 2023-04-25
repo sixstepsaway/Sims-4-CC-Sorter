@@ -1,8 +1,21 @@
 {
   "version": 2,
-  "dgSpecHash": "2idPcPJILxT9yXzg2fHmtScLLuORnbfNOQyEu+Ow3lCw0R8/CmqlyH/h4KfzHc2U6FnvdXqwWmVYbOu22bqPlA==",
+  "dgSpecHash": "d5xS2Y0TNnJ9qD8jXRi1HWZG6oLQgymHlO+V+7atQnZpOsMK4T4tepgRM5C6Hlhb9wY7jbWkB2usUYi1dArOuw==",
   "success": true,
   "projectFilePath": "I:\\Code\\C#\\Sims-4-CC-Sorter\\src\\SimsCCManager.App\\SimsCCManager.App.csproj",
-  "expectedPackageFiles": [],
-  "logs": []
+  "expectedPackageFiles": [
+    "C:\\Users\\conta\\.nuget\\packages\\zetalongpaths\\1.0.16\\zetalongpaths.1.0.16.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'ZetaLongPaths 1.0.16' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8' instead of the project target framework 'net5.0-windows7.0'. This package may not be fully compatible with your project.",
+      "libraryId": "ZetaLongPaths",
+      "targetGraphs": [
+        "net5.0-windows7.0"
+      ]
+    }
+  ]
 }
