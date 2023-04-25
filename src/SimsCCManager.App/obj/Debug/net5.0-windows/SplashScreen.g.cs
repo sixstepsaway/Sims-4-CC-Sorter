@@ -53,7 +53,7 @@ namespace Sims_CC_Sorter {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/SimsCCManager.App;V1.0.0.0;component/splashscreen.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/SimsCCManager.App;component/splashscreen.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\SplashScreen.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Sims_CC_Sorter"
         mc:Ignorable="d"
-        Title="Sims CC Sorter" Height="650" Width="800"
+        Title="Sims CC Sorter" Height="650" Width="1000"
         WindowStyle="None"
         WindowStartupLocation="CenterScreen">
     <Grid Background="#FF231636" Visibility="Visible"> 
