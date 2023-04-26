@@ -41,7 +41,13 @@ namespace SimsCCManager.Packages.Containers
         public string XMLCreator {get; set;}
         public string XMLAge {get; set;}
         public string XMLGender {get; set;}
+        public string[] RequiredEPs {get; set;}
 
+    }
+
+    public class fileHasList {
+        public string term {get; set;}
+        public int location {get; set;}
     }
 
     public class Containers {

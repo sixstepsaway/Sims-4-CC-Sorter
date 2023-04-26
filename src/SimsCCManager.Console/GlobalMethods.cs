@@ -14,6 +14,9 @@ namespace SSAGlobals {
         public string typeID;
         public string info;
     }
+    public class SortingValues {
+        string name {set; get;}        
+    }
 
     public class TypeListings {
 
@@ -2928,8 +2931,8 @@ namespace SSAGlobals {
         
         private string time = "";
         private string statement = "";
-        public bool firstrunmain = true;
-        public bool firstrundebug = true;
+        public static bool firstrunmain = true;
+        public static bool firstrundebug = true;
         private string debuglog = "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.Console\\log\\debug.log";
         
         //Function for logging to the logfile set at the start of the program
