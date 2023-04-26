@@ -36,9 +36,9 @@ namespace SimsCCManager.Packages.Search
         //Lists
         public static SimsPackage thisPackage = new SimsPackage();
         public static SimsPackage infovar = new SimsPackage();
-        public fileHasList fileHas = new fileHasList();
         ArrayList linkData = new ArrayList();
-        ArrayList indexData = new ArrayList();        
+        ArrayList indexData = new ArrayList();
+        Dictionary<string, bool> fileHas = new Dictionary<string, bool>();        
 
         //Vars for Package Info
         uint chunkOffset = 0;
@@ -158,6 +158,12 @@ namespace SimsCCManager.Packages.Search
 
                 holderEntry = null;
 
+                if (indexCount == 0) 
+                {
+                    log.MakeLog("P" + packageparsecount + " - Package is broken. Closing.", true);
+                    readFile.Close();
+                    return;
+                }
                 
             }
 
@@ -174,15 +180,24 @@ namespace SimsCCManager.Packages.Search
 
                 switch (iEntry.typeID.ToLower()) 
                 {                    
-                    case "fc6eb1f7": fileHas.shpe++; linkData.Add(iEntry); log.MakeLog("P" + packageparsecount + " - File has SHPE.", true); break;
+                    case "fc6eb1f7": fileHas.Add("SHPE", true); linkData.Add(iEntry); log.MakeLog("P" + packageparsecount + " - File has SHPE.", true); break;
                 }
 
                 foreach (typeList type in TypeListings.AllTypesS2) {
                     if (iEntry.typeID == type.typeID) {
                         log.MakeLog("P" + packageparsecount + " - Found: " + type.desc, true);
                         typefound = type.desc;
+                        try {
+                            fileHas.Add(type.desc, true);
+                        } catch {
+                            //nada
+                        }
                         break;
                     }
+                }
+                log.MakeLog("P" + packageparsecount + " - This file has:", true);
+                foreach (KeyValuePair<string, bool> kvp in fileHas) {
+                    log.MakeLog(kvp.Key + ": " + kvp.Value, true);
                 }
 
 
