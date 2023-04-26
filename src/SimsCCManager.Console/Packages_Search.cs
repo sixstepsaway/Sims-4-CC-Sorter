@@ -181,7 +181,7 @@ namespace SimsCCManager.Packages.Search
                             numRecords = iEntry.filesize / 16;
                         }
 
-                        log.MakeLog("Moving on to compressed entries.", true);
+                        log.MakeLog("Reading compressed entries from " + typefound, true);
                         log.MakeLog("Number of records: " + numRecords, true);
                         
                         for (int j = 0; j < numRecords; j++) {
@@ -202,61 +202,23 @@ namespace SimsCCManager.Packages.Search
 
                             int idxcount = 0;      
                             foreach (indexEntry idx in indexData) {
+                                typefound = "";
                                 idxcount++;
                                 log.MakeLog("This idx type is: " + idx.typeID, true);
                                 foreach (typeList type in TypeListings.AllTypesS2) {
-                                    if (idx.typeID == typeID) {
+                                    if (idx.typeID == type.typeID) {
                                         log.MakeLog("Matched to: " + type.desc, true);
                                         typefound = type.desc;
                                     }
                                 }
                                 log.MakeLog("Now reading IDX " + idxcount, true);
                                 int cFileSize = 0;
-                                string cTypeID = "";                                     
-                                dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
-                                cFileSize = readFile.ReadInt32();
-                                log.MakeLog("cFileSize: " + cFileSize, true);
-                                cTypeID = readFile.ReadUInt16().ToString("X4");
-                                log.MakeLog("cTypeID: " + cTypeID, true);
-                                if (cTypeID == "FB10"){
-                                    byte[] tempBytes = readFile.ReadBytes(3);
-                                    uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
-                                    string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-                                    log.MakeLog("CPF Type is: " + cpfTypeID, true);
-                                    if((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")){
-                                        //actual CPF
-                                        //infovar = readentries.readCPFchunk(readFile);
-                                        log.MakeLog("Dropped into the first if CPFtypeID is with " + cpfTypeID, true);
-                                    } else {
-                                        log.MakeLog("Dropped into the first CPFtypeID else with " + cpfTypeID, true);
-                                        dbpfFile.Seek(this.chunkOffset + idx.offset + 9, SeekOrigin.Begin);
-                                        DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-                                        var allstream = decompressed.GetEntireStream();
-                                        var stringfromstream = Encoding.UTF8.GetString(allstream);
-                                        log.MakeLog("Second CPF type id is: " + cpfTypeID, true);
-                                        if (cpfTypeID == "E750E0E2") 
-                                        {
+                                string cTypeID = "";
 
-                                            // Read first four bytes
-                                            //cpfTypeID = decompressed.ReadUInt32().ToString("X8");
-                                            log.MakeLog("Dropped into IF: " + cpfTypeID, true);
-
-                                            if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
-                                            {
-                                                log.MakeLog("Dropped into another IF: " + cpfTypeID, true);
-                                                // Is an actual CPF file, so we have to decompress it...
-                                                //infovar = readentries.readCPFchunk(decompressed);
-
-                                            }
-
-                                        } 
-                                        else 
-                                        {
-                                            log.MakeLog("Ended up in Else: " + cpfTypeID, true);
-                                            //infovar = readentries.readXMLchunk(decompressed);
-                                        }
-                                    }
+                                if (typefound == "XOBJ" || typefound == "XFNC" || typefound == "XFLR" || typefound == "XMOL" || typefound == "XROF"  || typefound == "XTOL"  || typefound == "MMAT" || typefound == "XHTN"){
+                                    log.MakeLog("Confirming found " + typefound + " and moving forward.", true);
                                 }
+
                             }
 
                         }
