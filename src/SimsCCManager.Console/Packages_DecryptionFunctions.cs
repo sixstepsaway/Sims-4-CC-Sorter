@@ -9,6 +9,7 @@ using System.Collections;
 using System.Xml;
 using System.Security.Cryptography;
 using SimsCCManager.Packages.Containers;
+using SSAGlobals;
 
 namespace SimsCCManager.Packages.Decryption
 {
@@ -148,6 +149,7 @@ namespace SimsCCManager.Packages.Decryption
         public bool debugMode = false;
 
         SimsPackage infovar = new SimsPackage();
+		LoggingGlobals log = new LoggingGlobals();
 
 
         public static uint QFSLengthToInt(Byte[] data)
@@ -1080,8 +1082,11 @@ namespace SimsCCManager.Packages.Decryption
 			
 			uint fieldValueInt = 0;
 			string fieldValueString = "";
-			
-			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(readFile.GetEntireStream())));
+			log.MakeLog("Reading XML", true);
+			var entirestream = readFile.GetEntireStream();
+			StringReader stringver = new StringReader(Encoding.UTF8.GetString(entirestream));
+			XmlTextReader xmlDoc = new XmlTextReader(stringver);
+			log.MakeLog(entirestream.ToString(), true);
 			//xmlDoc.Load(new StringReader(xmlData));
 			bool inDesc = false;
 			string inAttrDesc = "";
@@ -1126,22 +1131,27 @@ namespace SimsCCManager.Packages.Decryption
 						{
 							case "name":
 								if (this.title == "") this.title = fieldValueString;
+								log.MakeLog("Title is " + this.title, true);
 								infovar.Title = this.title;
 								break;
 							case "description":
 								if (this.description == "") this.description = fieldValueString;
+								log.MakeLog("Description is " + this.description, true);
 								infovar.Description = this.description;
 								break;
 							case "type":
 								this.xmlType = fieldValueString;
+								log.MakeLog("XML Type is " + this.xmlType, true);
 								infovar.XMLType = this.xmlType;
 								break;
 							case "subsort":
 								this.xmlSubtype = fieldValueInt.ToString();
+								log.MakeLog("XML Subtype is " + this.xmlSubtype, true);
 								infovar.XMLSubtype = this.xmlSubtype;
 								break;
 							case "category":
 								this.xmlCategory = fieldValueInt.ToString();
+								log.MakeLog("XML Category is " + this.xmlCategory, true);
 								infovar.XMLCategory = this.xmlCategory;
 								break;
 						}

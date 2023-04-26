@@ -215,8 +215,53 @@ namespace SimsCCManager.Packages.Search
                                 int cFileSize = 0;
                                 string cTypeID = "";
 
-                                if (typefound == "XOBJ" || typefound == "XFNC" || typefound == "XFLR" || typefound == "XMOL" || typefound == "XROF"  || typefound == "XTOL"  || typefound == "MMAT" || typefound == "XHTN"){
+                                if (typefound == "CTSS"){
+                                    log.MakeLog("Confirming found " + typefound, true);
+                                    break;
+                                } else if (typefound == "XOBJ" || typefound == "XFNC" || typefound == "XFLR" || typefound == "XMOL" || typefound == "XROF"  || typefound == "XTOL"  || typefound == "MMAT" || typefound == "XHTN"){
                                     log.MakeLog("Confirming found " + typefound + " and moving forward.", true);
+                                    dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                                    cFileSize = readFile.ReadInt32();
+                                    cTypeID = readFile.ReadUInt16().ToString("X4");
+                                    log.MakeLog(typefound + " size: " + cFileSize + ", ctypeid: " + cTypeID, true);
+                                    if (cTypeID == "FB10"){
+                                        log.MakeLog("FB10 confirmed.", true);
+                                        byte[] tempBytes = readFile.ReadBytes(3);
+                                        uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
+                                        log.MakeLog("cFullSize is: " + cFileSize, true);
+                                        string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                                        log.MakeLog("cpfTypeID is: " + cpfTypeID, true);
+                                        if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")){
+                                            infovar = readentries.readCPFchunk(readFile);
+                                            log.MakeLog("Real CPF file. Processing as CPF chunk.",true);
+                                        } else {
+                                            log.MakeLog("Not a real CPF. Searching for more information.", true);
+                                            dbpfFile.Seek(this.chunkOffset + idx.offset + 9, SeekOrigin.Begin);
+            								DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+                                            if (cpfTypeID == "E750E0E2")
+                                            {
+                                                // Read first four bytes
+                                                cpfTypeID = decompressed.ReadUInt32().ToString("X8");
+                                                log.MakeLog("Secondary cpf type id: " + cpfTypeID, true);
+                                                if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
+                                                {
+                                                    log.MakeLog("Real CPF. Decompressing.", true);
+                                                    infovar = readentries.readCPFchunk(decompressed);
+                                                } 
+                                            } else 
+                                            {
+                                                log.MakeLog("Actually an XML. Reading.", true);
+                                                infovar = readentries.readXMLchunk(decompressed);
+                                            }
+                                        }
+
+                                    } else {
+                                        log.MakeLog("Not FB10.", true);
+
+                                    }
+
+
+                                    break;
                                 }
 
                             }
