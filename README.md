@@ -1,3 +1,6 @@
+<p align="center><img src=
+https://img.shields.io/github/downloads/sixstepsaway/Sims-CC-Sorter/total?style=for-the-badge></p>
+
 # Sims-CC-Sorter
 
 My first real C# project, at least the first one that's turned into something that works. 
