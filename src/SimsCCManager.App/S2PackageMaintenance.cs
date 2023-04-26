@@ -104,7 +104,7 @@ namespace S2PackageMaintenance {
         public void s2GetLabel(String file)
         {
             var record = new SimsPackage();
-            var IncomingInformation = new ExtractedItems();
+            var IncomingInformation = new SimsPackage();
             var AllSimsPackages = new List<SimsPackage>();
             FileInfo packageFile = new FileInfo(file);
             FileStream dbpfFile = new FileStream(packageFile.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -319,7 +319,9 @@ namespace S2PackageMaintenance {
 
                 if (iEntry.typeID == "E86B1EEF")  // DIR Resource
                 {
-                    dbpfFile.Seek(this.chunkOffset + iEntry.offset, SeekOrigin.Begin);
+                    dbpfFile.Seek(this.chunkOffset + iEntry.offset, SeekOrigin.Begin);                        
+                    statement = "Identified DIR resource.";
+                    loggingGlobals.MakeLog(statement, true);
                     if (indexMajorVersion == 7 && indexMinorVersion == 1)
                     {
                         numRecords = iEntry.filesize / 20;
@@ -587,20 +589,26 @@ namespace S2PackageMaintenance {
                 }
             }
 
-            if (IncomingInformation.Type is "Title") {
-                record.Name = IncomingInformation.Content;
-            } else if (IncomingInformation.Type is "Description") {
-                record.Description = IncomingInformation.Content;
-            } else {
-                //
+            record.Name = IncomingInformation.Name;
+            record.Description = IncomingInformation.Description;
+            loggingGlobals.MakeLog("IncomingInformation: " + IncomingInformation.Description, true);
+            loggingGlobals.MakeLog("IncomingInformation: " + IncomingInformation.Name, true);
+            if (IncomingInformation.Name != null) {
+                loggingGlobals.MakeLog("Title is not null! Title is: " + IncomingInformation.Name, true);
+                record.Name = IncomingInformation.Name;
             }
+            if (IncomingInformation.Description != null) {
+                loggingGlobals.MakeLog("Description is not null! Description is: " + IncomingInformation.Description, true);
+                record.Description = IncomingInformation.Description;
+            }
+
 
             record.Location = file;
             
-            AllSimsPackages.Add(record);
+            GlobalVariables.allSims2Packages.Add(record);
             record = null;
 
-            foreach (SimsPackage package in AllSimsPackages) {
+            foreach (SimsPackage package in GlobalVariables.allSims2Packages) {
                 statement = package.Location;
                 loggingGlobals.MakeLog(statement, false);
                 statement = package.Name;

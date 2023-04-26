@@ -21,8 +21,8 @@ namespace SSAGlobals {
         public string Name {get; set;}
         public string Description {get; set;}
         public string Location {get; set;}
-        public string DBPF {get; set;}
         public int Game {get; set;}
+        public string DBPF {get; set;}
         public uint Major {get; set;}
         public uint Minor {get; set;}
         public uint DateCreated {get; set;}
@@ -35,6 +35,16 @@ namespace SSAGlobals {
         public uint HolesOffset {get; set;}
         public uint HolesSize {get; set;}
         public uint IndexMinorVersion {get; set;}
+        public string XMLType {get; set;}
+        public string XMLSubtype {get; set;}
+        public string XMLCategory {get; set;}
+        public string XMLModelName {get; set;}
+        public string ObjectGUID {get; set;}
+        public string XMLCreator {get; set;}
+        public string XMLAge {get; set;}
+        public string XMLGender {get; set;}
+
+
     }
 
     public class GlobalVariables {

@@ -517,7 +517,7 @@ namespace SimsCCManager.Packages.Decryption
 			} 
 		}
 
-        public void readCPFchunk(BinaryReader readFile)
+        public SimsPackage readCPFchunk(BinaryReader readFile)
 		{
 			
 			
@@ -569,39 +569,50 @@ namespace SimsCCManager.Packages.Decryption
 				{
 					case "name":
 						if (this.title == "") this.title = fieldValueString;
+						infovar.Title = this.title;
 						break;
 					case "description":
 						if (this.description == "") this.description = fieldValueString;
+						infovar.Description = this.description;
 						break;
 					case "type":
 						this.xmlType = fieldValueString;
+						infovar.XMLType = this.xmlType;
 						break;
 					case "subtype":
 						this.xmlSubtype = fieldValueInt.ToString();
+						infovar.XMLSubtype = this.xmlSubtype;
 						break;
 					case "category":
 						this.xmlCategory = fieldValueInt.ToString();
+						infovar.XMLCategory = this.xmlCategory;
 						break;
 					case "modelName":
 						this.xmlModelName = fieldValueString;
+						infovar.XMLModelName = this.xmlModelName;
 						break;
 					case "objectGUID":
 						this.objectGUID.Add(fieldValueInt.ToString("X8"));
+						infovar.ObjectGUID = this.objectGUID;
 						break;
 					case "creator":
 						this.xmlCreator = fieldValueString;
+						infovar.XMLCreator = this.xmlCreator;
 						break;
 					case "age":
 						this.xmlAge = fieldValueInt.ToString();
+						infovar.XMLAge = xmlAge;
 						break;
 					case "gender":
 						this.xmlGender = fieldValueInt.ToString();
+						infovar.XMLGender = xmlGender;
 						break;
 				}
 			}
+			return infovar;
 
 		}
-		public void readCPFchunk(DecryptByteStream readFile)
+		public SimsPackage readCPFchunk(DecryptByteStream readFile)
 		{
 			
 			
@@ -654,36 +665,47 @@ namespace SimsCCManager.Packages.Decryption
 				{
 					case "name":
 						if (this.title == "") this.title = fieldValueString;
+						infovar.Title = this.title;
 						break;
 					case "description":
 						if (this.description == "") this.description = fieldValueString;
+						infovar.Description = this.description;
 						break;
 					case "type":
 						this.xmlType = fieldValueString;
+						infovar.XMLType = this.xmlType;
 						break;
 					case "subtype":
 						this.xmlSubtype = fieldValueInt.ToString();
+						infovar.XMLSubtype = this.xmlSubtype;
 						break;
 					case "category":
 						this.xmlCategory = fieldValueInt.ToString();
+						infovar.XMLCategory = this.xmlCategory;
 						break;
 					case "modelName":
 						this.xmlModelName = fieldValueString;
+						infovar.XMLModelName = this.xmlModelName;
 						break;
 					case "objectGUID":
 						this.objectGUID.Add(fieldValueInt.ToString("X8"));
+						infovar.ObjectGUID = this.objectGUID;
 						break;
 					case "creator":
 						this.xmlCreator = fieldValueString;
+						infovar.XMLCreator = this.xmlCreator;
 						break;
 					case "age":
 						this.xmlAge = fieldValueInt.ToString();
+						infovar.XMLAge = this.xmlAge;
 						break;
 					case "gender":
 						this.xmlGender = fieldValueInt.ToString();
+						infovar.XMLGender = this.xmlGender;
 						break;
 				}
 			}
+			return infovar;
 
 		}
 
@@ -705,7 +727,7 @@ namespace SimsCCManager.Packages.Decryption
 					lineNum++;
 					if (lineNum == 1) { 
 						tempString = readNullString(readFile).Replace("\n", " ");
-						if ((infovar.Title != "") && (infovar.Description == "")) 
+						if ((infovar.Title != null) && (infovar.Description == null)) 
 						{
 							infovar.Title = tempString;
 						} 
@@ -725,7 +747,7 @@ namespace SimsCCManager.Packages.Decryption
 					readNullString(readFile);
 					readNullString(readFile);
 				}
-				if ((infovar.Title != "") && (infovar.Description != "")) { break; }
+				if ((infovar.Title != null) && (infovar.Description != null)) { break; }
 			}
             return infovar;
 		}
@@ -1053,10 +1075,11 @@ namespace SimsCCManager.Packages.Decryption
 			}
 		}
 
-        public void readXMLchunk(DecryptByteStream readFile)
+        public SimsPackage readXMLchunk(DecryptByteStream readFile)
 		{
 			
-			
+			uint fieldValueInt = 0;
+			string fieldValueString = "";
 			
 			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(readFile.GetEntireStream())));
 			//xmlDoc.Load(new StringReader(xmlData));
@@ -1101,35 +1124,39 @@ namespace SimsCCManager.Packages.Decryption
 					{
 						switch (inAttrDesc)
 						{
-							case "subtype":
-								this.xmlSubtype = xmlDoc.Value;
-								break;
-							case "subsort":
-								this.xmlSubtype = xmlDoc.Value;
-								break;
-							case "category":
-								this.xmlCategory = xmlDoc.Value;
-								break;
 							case "name":
-								if (this.title == "") this.title = xmlDoc.Value;
-								break;
-							case "type":
-								this.xmlType = xmlDoc.Value;
+								if (this.title == "") this.title = fieldValueString;
+								infovar.Title = this.title;
 								break;
 							case "description":
-								if (this.description == "") this.description = xmlDoc.Value.Replace("\n", " ");
+								if (this.description == "") this.description = fieldValueString;
+								infovar.Description = this.description;
+								break;
+							case "type":
+								this.xmlType = fieldValueString;
+								infovar.XMLType = this.xmlType;
+								break;
+							case "subsort":
+								this.xmlSubtype = fieldValueInt.ToString();
+								infovar.XMLSubtype = this.xmlSubtype;
+								break;
+							case "category":
+								this.xmlCategory = fieldValueInt.ToString();
+								infovar.XMLCategory = this.xmlCategory;
 								break;
 						}
 					}
 				}
 				//if ((this.title != "") && (this.description != "")) break;
 			}
+			return infovar;
 		}
 
-		public void readXMLchunk(string xmlData)
+		public SimsPackage readXMLchunk(string xmlData)
 		{
 			
-			
+			uint fieldValueInt = 0;
+			string fieldValueString = "";
 			
 			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(xmlData));
 			//xmlDoc.Load(new StringReader(xmlData));
@@ -1174,29 +1201,32 @@ namespace SimsCCManager.Packages.Decryption
 					{
 						switch (inAttrDesc)
 						{
-							case "subtype":
-								this.xmlSubtype = xmlDoc.Value;
-								break;
-							case "subsort":
-								this.xmlSubtype = xmlDoc.Value;
-								break;
-							case "category":
-								this.xmlCategory = xmlDoc.Value;
-								break;
 							case "name":
-								if (this.title == "") this.title = xmlDoc.Value;
-								break;
-							case "type":
-								this.xmlType = xmlDoc.Value;
+								if (this.title == "") this.title = fieldValueString;
+								infovar.Title = this.title;
 								break;
 							case "description":
-								if (this.description == "") this.description = xmlDoc.Value.Replace("\n", " ");
+								if (this.description == "") this.description = fieldValueString;
+								infovar.Description = this.description;
+								break;
+							case "type":
+								this.xmlType = fieldValueString;
+								infovar.XMLType = this.xmlType;
+								break;
+							case "subsort":
+								this.xmlSubtype = fieldValueInt.ToString();
+								infovar.XMLSubtype = this.xmlSubtype;
+								break;
+							case "category":
+								this.xmlCategory = fieldValueInt.ToString();
+								infovar.XMLCategory = this.xmlCategory;
 								break;
 						}
 					}
 				}
 				//if ((this.title != "") && (this.description != "")) break;
 			}
+			return infovar;
 		}
 
         public void readCTSSchunk(BinaryReader readFile)

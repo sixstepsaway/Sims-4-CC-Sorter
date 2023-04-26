@@ -27,15 +27,15 @@ namespace SimsCCManager.CMD
 
             //Console.Write("File Location:   ");
             //string file = Console.ReadLine();
-            string file = "M:\\The Sims 4 (Documents)\\TESTING FOLDER\\currenttest\\519efb0cdbea4e62af9a08dc57ad4fad0001.package";
+            string file = "M:\\The Sims 4 (Documents)\\TESTING FOLDER\\currenttest\\23e73018f4f10e8c1f10b60a81eb19b90001.package";
             searcher.SearchS2Packages(file);
 
+            Console.WriteLine("Packages in array:");
             foreach (SimsPackage pack in Containers.allSims2Packages){
                 Console.WriteLine(pack.Title);
                 Console.WriteLine(pack.Description);
                 Console.WriteLine(pack.Game);
                 Console.WriteLine(pack.Location);
-                Console.WriteLine(pack);
             }
         }
     }

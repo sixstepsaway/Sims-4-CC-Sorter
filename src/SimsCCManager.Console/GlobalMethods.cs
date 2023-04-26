@@ -29,13 +29,7 @@ namespace SSAGlobals {
             atype.info = "2D Array";
             AllTypes.Add(atype);
             atype = new typeList();
-
-            atype.desc = "CLST";
-            atype.typeID = "CCA8E925";
-            atype.info = "Directory of compressed files";
-            AllTypes.Add(atype);
-            atype = new typeList();
-
+            
             atype.desc = "3ARY";
             atype.typeID = "2A51171B";
             atype.info = "3D Array";
@@ -661,7 +655,7 @@ namespace SSAGlobals {
             atype = new typeList();
 
             atype.desc = "XOBJ";
-            atype.typeID = "584F424A";
+            atype.typeID = "CCA8E925";
             atype.info = "Object Class Dump";
             AllTypes.Add(atype);
             atype = new typeList();

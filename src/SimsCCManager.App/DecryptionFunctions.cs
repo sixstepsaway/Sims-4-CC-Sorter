@@ -24,13 +24,6 @@ namespace DBPFReading {
         public string unused {get; set;}
     }
 
-    public class ExtractedItems
-    {
-        public string Type {get; set;}
-        public string Content {get; set;}
-
-    }
-
     public class scanTypeList
     {
         public bool CTSS = true;
@@ -212,6 +205,7 @@ namespace DBPFReading {
         private bool debugMode = false;
         public ArrayList objectGUID = new ArrayList();
         public ArrayList guidData = new ArrayList();
+		public SimsPackage infovar = new SimsPackage();
 
         // Values read in from the various XML / CPF types
         public string xmlType = "";
@@ -401,8 +395,8 @@ namespace DBPFReading {
 						}
 						//this.xmlCatalog = this.xmlCategoryTypes[2] + " -> " + this.xmlSubtype;
 					}
-					if (this.xmlSubtype != "") this.xmlCatalog = this.xmlCategoryTypes[2] + " -> " + this.xmlSubtype;
-					//if (this.xmlSubtype != "") this.xmlCatalog += this.xmlSubtype + " ";
+					if (this.xmlSubtype != null) this.xmlCatalog = this.xmlCategoryTypes[2] + " -> " + this.xmlSubtype;
+					//if (this.xmlSubtype != null) this.xmlCatalog += this.xmlSubtype + " ";
 
 					// Also set the xmlCategory to Object
 					if (((masterTileSubIndex == 0) || (masterTileSubIndex == 65535)) && (buildModeSubsort == 0) && (buildModeType == 0) && (functionSortFlag[0] == 0))
@@ -425,7 +419,7 @@ namespace DBPFReading {
 				else 
 				{
 					// Set the xmlCategory to Object
-					if (this.xmlCategory == "") this.xmlCategory = this.xmlCategoryTypes[1];
+					if (this.xmlCategory == null) this.xmlCategory = this.xmlCategoryTypes[1];
 
 					// Also, get the catalog placement for this object
 					readFile.ReadBytes(46);
@@ -580,7 +574,7 @@ namespace DBPFReading {
 					{
 						this.xmlSubtype = this.xmlSubtypes[17];
 					}
-					if (this.xmlSubtype != "") this.xmlCatalog = this.xmlSubtype + " -> " + this.xmlCatalog;
+					if (this.xmlSubtype != null) this.xmlCatalog = this.xmlSubtype + " -> " + this.xmlCatalog;
 
 				}
 
@@ -595,11 +589,10 @@ namespace DBPFReading {
 			} 
 		}
 
-        public ExtractedItems readCPFchunk(BinaryReader readFile)
+        public SimsPackage readCPFchunk(BinaryReader readFile)
 		{
 			// Read an uncompressed CPF chunk and extract the name, description and type
 			// Version
-            var temp = new ExtractedItems();
 			readFile.ReadUInt16();
 
 			uint numItems = readFile.ReadUInt32();
@@ -649,64 +642,55 @@ namespace DBPFReading {
 				switch (fieldName)
 				{
 					case "name":
-						if (this.title == "") this.title = fieldValueString;                        
-                        temp.Type = "Title";
-                        temp.Content = this.title;                        
+						if (this.title == null) this.title = fieldValueString;                        
+                        infovar.Name = this.title;
                         break;
 					case "description":
-						if (this.description == "") this.description = fieldValueString;
-						temp.Type = "Description";
-                        temp.Content = this.description;
+						if (this.description == null) this.description = fieldValueString;
+						infovar.Description = this.description;
                         break;
 					case "type":
 						this.xmlType = fieldValueString;
-                        temp.Type = "XML Type";
-                        temp.Content = this.xmlType;
+                        infovar.XMLType = this.xmlType;
                         break;
 					case "subtype":
 						this.xmlSubtype = fieldValueInt.ToString();
-                        temp.Type = "XML Subtype";
-                        temp.Content = this.xmlSubtype;
+                        infovar.XMLSubtype = this.xmlSubtype;
                         break;
 					case "category":
 						this.xmlCategory = fieldValueInt.ToString();
-						temp.Type = "XML Category";
-                        temp.Content = this.xmlCategory;
+						infovar.XMLCategory = this.xmlCategory;
                         break;
 					case "modelName":
 						this.xmlModelName = fieldValueString;
-						temp.Type = "XML Model Name";
-                        temp.Content = this.xmlModelName;
+						infovar.XMLModelName = this.xmlModelName;
                         break;
 					case "objectGUID":
 						this.objectGUID.Add(fieldValueInt.ToString("X8"));
-						temp.Type = "objectGUID";
-                        temp.Content = this.objectGUID.ToString();
+						infovar.ObjectGUID = this.objectGUID.ToString();
                         break;
 					case "creator":
 						this.xmlCreator = fieldValueString;
-						temp.Type = "XML Creator";
-                        temp.Content = this.xmlCreator;
+						infovar.XMLCreator = this.xmlCreator;
                         break;
 					case "age":
 						this.xmlAge = fieldValueInt.ToString();
-						temp.Type = "Age";
-                        temp.Content = this.xmlAge;break;
+						infovar.XMLAge = this.xmlAge;
+						break;
 					case "gender":
 						this.xmlGender = fieldValueInt.ToString();
-						temp.Type = "Gender";
-                        temp.Content = this.xmlGender;
+						infovar.XMLGender = this.xmlGender;
 						break;
 				}
                                 
 			}
-        return temp;
+        return infovar;
 		}
-		public ExtractedItems readCPFchunk(ReadByteStream readFile)
+		public SimsPackage readCPFchunk(ReadByteStream readFile)
 		{
 			// Read a compressed CPF chunk from a byte stream and extrac the name, 
 			// description and type
-            var temp = new ExtractedItems();
+            var temp = new SimsPackage();
 			// Version
 			readFile.ReadUInt16();
 
@@ -756,64 +740,53 @@ namespace DBPFReading {
 				switch (fieldName)
 				{
 					case "name":
-						if (this.title == "") this.title = fieldValueString;                        
-                        temp.Type = "Title";
-                        temp.Content = this.title;
+						if (this.title == null) this.title = fieldValueString;                        
+                        infovar.Name = this.title;
                         break;
 					case "description":
-						if (this.description == "") this.description = fieldValueString;
-						temp.Type = "Description";
-                        temp.Content = this.description;
+						if (this.description == null) this.description = fieldValueString;
+						infovar.Description = this.description;
                         break;
 					case "type":
 						this.xmlType = fieldValueString;
-                        temp.Type = "XML Type";
-                        temp.Content = this.xmlType;
+                        infovar.XMLType = this.xmlType;
                         break;
 					case "subtype":
 						this.xmlSubtype = fieldValueInt.ToString();
-                        temp.Type = "XML Subtype";
-                        temp.Content = this.xmlSubtype;
+                        infovar.XMLSubtype = this.xmlSubtype;
                         break;
 					case "category":
 						this.xmlCategory = fieldValueInt.ToString();
-						temp.Type = "XML Category";
-                        temp.Content = this.xmlCategory;
+						infovar.XMLCategory = this.xmlCategory;
                         break;
 					case "modelName":
 						this.xmlModelName = fieldValueString;
-						temp.Type = "XML Model Name";
-                        temp.Content = this.xmlModelName;
+						infovar.XMLModelName = this.xmlModelName;
                         break;
 					case "objectGUID":
 						this.objectGUID.Add(fieldValueInt.ToString("X8"));
-						temp.Type = "objectGUID";
-                        temp.Content = this.objectGUID.ToString();
-						break;
+						infovar.ObjectGUID = this.objectGUID.ToString();
+                        break;
 					case "creator":
 						this.xmlCreator = fieldValueString;
-						temp.Type = "XML Creator";
-                        temp.Content = this.xmlCreator;
+						infovar.XMLCreator = this.xmlCreator;
                         break;
 					case "age":
 						this.xmlAge = fieldValueInt.ToString();
-						temp.Type = "Age";
-                        temp.Content = this.xmlAge;
-                        break;
+						infovar.XMLAge = this.xmlAge;
+						break;
 					case "gender":
 						this.xmlGender = fieldValueInt.ToString();
-						temp.Type = "Gender";
-                        temp.Content = this.xmlGender;
-                        break;
+						infovar.XMLGender = this.xmlGender;
+						break;
 				}
                 
 			}
-        return temp;
+        return infovar;
 		}
 
-        public ExtractedItems readSTRchunk(BinaryReader readFile)
+        public SimsPackage readSTRchunk(BinaryReader readFile)
 		{
-			var temp = new ExtractedItems();
             readFile.ReadBytes(64);
 			readFile.ReadBytes(2);
 			uint numStrings = readFile.ReadUInt16();
@@ -827,24 +800,21 @@ namespace DBPFReading {
 					lineNum++;
 					if (lineNum == 1) { 
 						tempString = readNullString(readFile).Replace("\n", " ");
-						if ((this.title != "") && (this.description == "")) 
+						if ((this.title != null) && (this.description == null)) 
 						{
 							this.description = tempString;
-                            temp.Type = "Description";
-                            temp.Content = this.description;
+                            infovar.Description = this.description;
 						} 
 						else 
 						{
 							this.title = tempString;
-                            temp.Type = "Title";
-                            temp.Content = this.title;						
+                            infovar.Name = this.title;						
 						}
 					}
 					if (lineNum == 2) { 
 						tempString = readNullString(readFile).Replace("\n", " "); 
 						this.description += tempString; 
-                        temp.Type = "Description";
-                        temp.Content = this.description;
+                        infovar.Description = this.description;
 					}
 					readNullString(readFile);
 				}
@@ -853,10 +823,10 @@ namespace DBPFReading {
 					readNullString(readFile);
 					readNullString(readFile);
 				}
-				if ((this.title != "") && (this.description != "")) { break; }
+				if ((this.title != null) && (this.description != null)) { break; }
 			}
             
-            return temp;
+            return infovar;
 		}
 
         public string readNullString(BinaryReader reader)
@@ -876,15 +846,15 @@ namespace DBPFReading {
 			return result;
 		}
 
-		public ExtractedItems readSTRchunk(ReadByteStream readFile)
+		public SimsPackage readSTRchunk(ReadByteStream readFile)
 		{
 			readFile.SkipAhead(66);
-            var temp = new ExtractedItems();
+            var temp = new SimsPackage();
 			//readFile.ReadBytes(64);
 			//readFile.ReadBytes(2);
 
-			if (this.title != "") this.title += " ";
-			if (this.description != "") this.description += " ";
+			if (this.title != null) this.title += " ";
+			if (this.description != null) this.description += " ";
 
 			uint numStrings = readFile.ReadUInt16();
 			int lineNum = 0;
@@ -898,25 +868,22 @@ namespace DBPFReading {
 					if (lineNum == 1) 
 					{ 
 						tempString = readFile.GetNullString().Replace("\n", " ");
-						if ((this.title != "") && (this.description == "")) 
+						if ((this.title != null) && (this.description == null)) 
 						{
 							this.description += tempString;
-                            temp.Type = "Description";
-                            temp.Content = this.description;
+                            infovar.Description = this.description;
 						} 
 						else 
 						{
 							this.title += tempString;
-                            temp.Type = "Title";
-                            temp.Content = this.title;
+                            infovar.Name = this.title;
 						} 
 					}
 					if (lineNum == 2) 
 					{ 
 						tempString = readFile.GetNullString().Replace("\n", " "); 
 						this.description += tempString;
-                        temp.Type = "Description";
-                        temp.Content = this.description;
+                        infovar.Description = this.description;
 					}
 
 					readFile.GetNullString();
@@ -926,59 +893,20 @@ namespace DBPFReading {
 					readFile.GetNullString();
 					readFile.GetNullString();
 				}
-				if ((this.title != "") && (this.description != "")) { break; }			
+				if ((this.title != null) && (this.description != null)) { break; }			
             }
-            return temp;
+            return infovar;
 		}
 
-        public ExtractedItems readXMLchunk(ReadByteStream readFile)
+        public SimsPackage readXMLchunk(ReadByteStream readFile)
 		{
-			LoggingGlobals loggingGlobals = new LoggingGlobals();
-			var statement = "";
-			statement = "Reading chunk as XML (A).";
-            loggingGlobals.MakeLog(statement, true);
-			var temp = new ExtractedItems();
-			statement = "Created temp var.";
-            loggingGlobals.MakeLog(statement, true);
-			var entirestream = readFile.GetEntireStream();
-			statement = "Got entire stream";
-            loggingGlobals.MakeLog(statement, true);
-			
-			var stringfromstream = Encoding.UTF8.GetString(entirestream);
-			statement = "Converted stream to string as UTF8: " + stringfromstream;
-            loggingGlobals.MakeLog(statement, true);
-
-			/*var stringfromstreamUTF8 = Encoding.UTF8.GetString(entirestream);
-			statement = "Converted stream to string as UTF8: " + stringfromstreamUTF8;
-            loggingGlobals.MakeLog(statement, true);
-			var stringfromstreamUnicode = Encoding.Unicode.GetString(entirestream);
-			statement = "Converted stream to string as Unicode: " + stringfromstreamUnicode;
-            loggingGlobals.MakeLog(statement, true);
-			var stringfromstreamUTF32 = Encoding.UTF32.GetString(entirestream);
-			statement = "Converted stream to string as UTF32: " + stringfromstreamUTF32;
-            loggingGlobals.MakeLog(statement, true);
-			var stringfromstreamUTF7 = Encoding.UTF7.GetString(entirestream);
-			statement = "Converted stream to string as UTF32: " + stringfromstreamUTF7;
-            loggingGlobals.MakeLog(statement, true);*/
-
-			StringReader stringreader = new StringReader(stringfromstream);
-			statement = "Created string reader: " + stringreader;
-            loggingGlobals.MakeLog(statement, true);
-			XmlTextReader xmlDoc = new XmlTextReader(stringreader);
-			statement = "Created xmldoc: " + xmlDoc;
-            loggingGlobals.MakeLog(statement, true);
-			
-			//XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(readFile.GetEntireStream())));
+			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(readFile.GetEntireStream())));
 			//xmlDoc.Load(new StringReader(xmlData));
-			statement = "Made XML text reader";
-            loggingGlobals.MakeLog(statement, true);
 			bool inDesc = false;
 			string inAttrDesc = "";
-			statement = "Reading XML";
-            loggingGlobals.MakeLog(statement, true);
+
 			while (xmlDoc.Read())
 			{
-				
 				if (xmlDoc.NodeType == XmlNodeType.Element) 
 				{
 					if (xmlDoc.Name == "AnyString")	inDesc = true;
@@ -1003,8 +931,6 @@ namespace DBPFReading {
 								case "subsort":
 								case "subtype":
 								case "category":
-									statement = "XML has " + xmlDoc.Value;
-            						loggingGlobals.MakeLog(statement, true);
 									inAttrDesc = xmlDoc.Value;
 									break;
 							}
@@ -1013,74 +939,49 @@ namespace DBPFReading {
 				}
 				if (xmlDoc.NodeType == XmlNodeType.Text)
 				{
-					if (inAttrDesc != "") 
+					if (inAttrDesc != null) 
 					{
-						statement = "XML attribute description is " + inAttrDesc;
-						{
-							
-						};
-            			loggingGlobals.MakeLog(statement, true);
 						switch (inAttrDesc)
 						{
 							case "subtype":
-								this.xmlSubtype = xmlDoc.Value;                                
-								temp.Type = "XML Subtype";
-                                temp.Content = this.xmlSubtype;
-								statement = "XML Content is " + temp.Content;
-            					loggingGlobals.MakeLog(statement, true);
-                                break;
+								this.xmlSubtype = xmlDoc.Value;
+								infovar.XMLSubtype = this.xmlSubtype;
+								break;
 							case "subsort":
 								this.xmlSubtype = xmlDoc.Value;
-								temp.Type = "XML Subtype";
-                                temp.Content = this.xmlSubtype;
-								statement = "XML Content is " + temp.Content;
-            					loggingGlobals.MakeLog(statement, true);
-                                break;
+								infovar.XMLSubtype = this.xmlSubtype;
+								break;
 							case "category":
 								this.xmlCategory = xmlDoc.Value;
-								temp.Type = "XML Category";
-                                temp.Content = this.xmlCategory;
-								statement = "XML Content is " + temp.Content;
-            					loggingGlobals.MakeLog(statement, true);
-                                break;
+								infovar.XMLCategory = this.xmlCategory;
+								break;
 							case "name":
-								if (this.title == "") this.title = xmlDoc.Value;
-								temp.Type = "Title";
-                                temp.Content = this.title;
-								statement = "XML Content is " + temp.Content;
-            					loggingGlobals.MakeLog(statement, true);
-                                break;
+								if (this.title == null) this.title = xmlDoc.Value;
+								infovar.Name = this.title;
+								break;
 							case "type":
 								this.xmlType = xmlDoc.Value;
-								temp.Type = "XML Type";
-                                temp.Content = this.xmlType;
-								statement = "XML Content is " + temp.Content;
-            					loggingGlobals.MakeLog(statement, true);
-                                break;
+								infovar.XMLType = this.xmlType;
+								break;
 							case "description":
-								if (this.description == "") this.description = xmlDoc.Value.Replace("\n", " ");
-								temp.Type = "Description";
-                                temp.Content = this.description;
-								statement = "XML Content is " + temp.Content;
-            					loggingGlobals.MakeLog(statement, true);
-                                break;
+								if (this.description == null) this.description = xmlDoc.Value.Replace("\n", " ");
+								infovar.Description = this.description;
+								break;
 						}
 					}
 				}
-				//if ((this.title != "") && (this.description != "")) break;
+				//if ((this.title != null) && (this.description != null)) break;
 			}
-			statement = "Returning data: " + temp.Content;
-			loggingGlobals.MakeLog(statement, true);
-            return temp;
+			return infovar;
 		}
 
-		public ExtractedItems readXMLchunk(string xmlData)
+		public SimsPackage readXMLchunk(string xmlData)
 		{
 			LoggingGlobals loggingGlobals = new LoggingGlobals();
 			var statement = "";
 			statement = "Reading chunk as XML (B).";
             loggingGlobals.MakeLog(statement, true);
-			var temp = new ExtractedItems();
+			var temp = new SimsPackage();
 			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(xmlData));
 			//xmlDoc.Load(new StringReader(xmlData));
 			bool inDesc = false;
@@ -1120,51 +1021,45 @@ namespace DBPFReading {
 				}
 				if (xmlDoc.NodeType == XmlNodeType.Text)
 				{
-					if (inAttrDesc != "") 
+					if (inAttrDesc != null) 
 					{
 						switch (inAttrDesc)
 						{
 							case "subtype":
 								this.xmlSubtype = xmlDoc.Value;                                
-								temp.Type = "XML Subtype";
-                                temp.Content = this.xmlSubtype;
+								infovar.XMLSubtype = this.xmlSubtype;
                                 break;
 							case "subsort":
 								this.xmlSubtype = xmlDoc.Value;
-								temp.Type = "XML Subtype";
-                                temp.Content = this.xmlSubtype;
+								infovar.XMLSubtype = this.xmlSubtype;
                                 break;
 							case "category":
 								this.xmlCategory = xmlDoc.Value;
-								temp.Type = "XML Category";
-                                temp.Content = this.xmlCategory;
+								infovar.XMLCategory = this.xmlCategory;
                                 break;
 							case "name":
-								if (this.title == "") this.title = xmlDoc.Value;
-								temp.Type = "Title";
-                                temp.Content = this.title;
+								if (this.title == null) this.title = xmlDoc.Value;
+								infovar.Name = this.title;
                                 break;
 							case "type":
 								this.xmlType = xmlDoc.Value;
-								temp.Type = "XML Type";
-                                temp.Content = this.xmlType;
+								infovar.XMLType = this.xmlType;
                                 break;
 							case "description":
-								if (this.description == "") this.description = xmlDoc.Value.Replace("\n", " ");
-								temp.Type = "Description";
-                                temp.Content = this.description;
+								if (this.description == null) this.description = xmlDoc.Value.Replace("\n", " ");
+								infovar.Description = this.description;
                                 break;
 						}
 					}
 				}
-				//if ((this.title != "") && (this.description != "")) break;
+				//if ((this.title != null) && (this.description != null)) break;
 			}
-        return temp;
+        return infovar;
 		}
 
-        public ExtractedItems readCTSSchunk(BinaryReader readFile)
+        public SimsPackage readCTSSchunk(BinaryReader readFile)
 		{
-            var temp = new ExtractedItems();
+            var temp = new SimsPackage();
 			readFile.ReadBytes(64);
 			readFile.ReadUInt16();
 
@@ -1181,23 +1076,21 @@ namespace DBPFReading {
 				if (langCode == 1) 
 				{
 					if (foundLang == true) { this.description = blah.Replace("\n", " "); 
-                    temp.Type = "Description";
-                    temp.Content = this.description;
+                    infovar.Description = this.description;
                     }
 					if (foundLang == false) { this.title = blah.Replace("\n", " "); foundLang = true; 
-                    temp.Type = "Title";
-                    temp.Content = this.title;
+                    infovar.Name = this.title;
                     }
                     
 				}
 
 			}            
-        return temp;
+        return infovar;
 		}
 
-		public ExtractedItems readCTSSchunk(ReadByteStream readFile)
+		public SimsPackage readCTSSchunk(ReadByteStream readFile)
 		{   
-            var temp = new ExtractedItems();
+            var temp = new SimsPackage();
 
 			readFile.SkipAhead(66);
 			//readFile.ReadBytes(64);
@@ -1216,16 +1109,14 @@ namespace DBPFReading {
 				if (langCode[0] == 1) 
 				{
 					if (foundLang == true) { this.description = blah.Replace("\n", " "); 
-                    temp.Type = "Description";
-                    temp.Content = this.description;
-                    return temp;}
+                    infovar.Description = this.description;
+                    return infovar;}
 					if (foundLang == false) { this.title = blah.Replace("\n", " "); foundLang = true; }
-                    temp.Type = "Title";
-                    temp.Content = this.title;
+                    infovar.Name = this.title;
 				}
 
 			}        
-        return temp;
+        return infovar;
 		}
 
 
