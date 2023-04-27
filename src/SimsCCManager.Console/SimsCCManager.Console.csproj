@@ -6,4 +6,8 @@
     <RollForward>Major</RollForward>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.2" />
+  </ItemGroup>
+
 </Project>

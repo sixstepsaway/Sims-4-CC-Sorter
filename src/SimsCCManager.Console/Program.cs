@@ -31,24 +31,29 @@ namespace SimsCCManager.CMD
             //Console.Write("File Location:   ");
             //string file = Console.ReadLine();
 
+            log.InitializeLog();
+
             string location = "M:\\The Sims 4 (Documents)\\TESTING FOLDER\\currenttest\\";
             string[] files = Directory.GetFiles(location, "*.package", SearchOption.AllDirectories);
 
-            foreach (string file in files) {
-                searcher.SearchS2Packages(file);
-            }            
+            if (GlobalVariables.debugMode == true)
+            {
+                foreach (string file in files) {
+                    searcher.SearchS2Packages(file);
+                }
+            }
+            else 
+            {
+                Parallel.ForEach (files, file => 
+                {
+                    searcher.SearchS2Packages(file);
+                });
+            }
 
             log.MakeLog("Packages in array:", true);
+            //Containers.allSims2Packages.ForEach(i => log.MakeLog("{0}\t", i));
             foreach (SimsPackage pack in Containers.allSims2Packages){
-                log.MakeLog("--- " + pack.Location + ": ", true);
-                log.MakeLog("--- " + pack.Title, true);
-                log.MakeLog("--- " + pack.Description, true);
-                log.MakeLog("--- " + pack.Game, true);
-                log.MakeLog("--- " + pack.XMLCategory, true);
-                log.MakeLog("--- " + pack.Function, true);
-                if (pack.FunctionSubcategory != null) {
-                    log.MakeLog("--- " + pack.FunctionSubcategory, true);
-                }
+                log.MakeLog(pack.ToString(), false);
             }
         }
     }

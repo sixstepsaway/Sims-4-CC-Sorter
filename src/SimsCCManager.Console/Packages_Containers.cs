@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace SimsCCManager.Packages.Containers
 {    
@@ -14,15 +15,16 @@ namespace SimsCCManager.Packages.Containers
         public bool Broken {get; set;}
     }
 
-
     public class SimsPackage { // A more in depth package file.
         
         public string Title {get; set;}        
         public string Description {get; set;}
         public string Location {get; set;}
         public string PackageName {get; set;}
+        public string Type {get; set;}
         public int Game {get; set;}
         public string DBPF {get; set;}
+        public List<string> InstanceIDs {get; set;}
         public uint Major {get; set;}
         public uint Minor {get; set;}
         public uint DateCreated {get; set;}
@@ -48,6 +50,11 @@ namespace SimsCCManager.Packages.Containers
         public string FunctionSubcategory {get; set;}
         public string[] RoomSort {get; set;}
 
+        public override string ToString()
+        {
+            return string.Format("Title: {0} \n Description: {1} \n Type: {2} \n InstanceID: {3} \n Location: {4} \n PackageName: {5} \n Game: {6} \n DBPF: {7} \n Major: {8} \n Minor: {9} \n DateCreated: {10} \n DateModified: {11} \n IndexMajorVersion: {12} \n IndexCount: {13} \n IndexOffset: {14} \n IndexSize: {15} \n HolesCount: {16} \n HolesOffset: {17} \n HolesSize: {18} \n IndexMinorVersion: {19} \n XMLType: {20} \n XMLSubtype: {21} \n XMLCategory: {22} \n XMLModelName: {23} \n ObjectGUID: {24} \n XMLCreator: {25} \n XMLAge: {26} \n XMLGender: {27} \n RequiredEPs: {28} \n Function: {29} \n FunctionSubcategory: {30} \n RoomSort: {31}", this.Title, this.Description, this.Type, this.InstanceIDs, this.Location, this.PackageName, this.Game, this.DBPF, this.Major, this.Minor, this.DateCreated, this.DateModified, this.IndexMajorVersion, this.IndexCount, this.IndexOffset, this.IndexSize, this.HolesCount, this.HolesOffset, this.HolesSize, this.IndexMinorVersion, this.XMLType, this.XMLSubtype, this.XMLCategory, this.XMLModelName, this.ObjectGUID, this.XMLCreator, this.XMLAge, this.XMLGender, this.RequiredEPs, this.Function, this.FunctionSubcategory, this.RoomSort);
+        }
+
     }
 
     public class fileHasList {
@@ -63,11 +70,10 @@ namespace SimsCCManager.Packages.Containers
     }
 
     public class Containers {
-
-        public static List<PackageFile> packageFiles = new List<PackageFile>();
-        public static List<SimsPackage> allSims2Packages = new List<SimsPackage>();
-        public static List<SimsPackage> allSims3Packages = new List<SimsPackage>();
-        public static List<SimsPackage> allSims4Packages = new List<SimsPackage>();
+        public static SynchronizedCollection<PackageFile> packageFiles = new SynchronizedCollection<PackageFile>();
+        public static SynchronizedCollection<SimsPackage> allSims2Packages = new SynchronizedCollection<SimsPackage>();
+        public static SynchronizedCollection<SimsPackage> allSims3Packages = new SynchronizedCollection<SimsPackage>();
+        public static SynchronizedCollection<SimsPackage> allSims4Packages = new SynchronizedCollection<SimsPackage>();
 
     }
 

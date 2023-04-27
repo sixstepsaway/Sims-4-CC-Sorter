@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Threading;
 using System.Runtime.CompilerServices;
 using SimsCCManager.Packages.Containers;
 
@@ -722,7 +723,9 @@ namespace SSAGlobals {
         public static bool debugMode = true;
         public static string logfile = "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.Console\\log\\mainlog.log";
         public static string ModFolder;
-        public static int gameVer;        
+        public static int gameVer;  
+
+        public static int packagesRead = 1;
 
 
         public void Initialize(int gameNum, string modLocation){
@@ -736,52 +739,49 @@ namespace SSAGlobals {
 
     public class LoggingGlobals
     {
-        
-        private string time = "";
-        private string statement = "";
         public static bool firstrunmain = true;
         public static bool firstrundebug = true;
         private string debuglog = "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.Console\\log\\debug.log";
-        
+        static ReaderWriterLock locker = new ReaderWriterLock();
         //Function for logging to the logfile set at the start of the program
+        public void InitializeLog() {
+            StreamWriter addToInternalLog = new StreamWriter (debuglog, append: false);
+            addToInternalLog.WriteLine("Initializing internal log file.");
+            addToInternalLog.Close();
+            StreamWriter addToLog = new StreamWriter (GlobalVariables.logfile, append: false);
+            addToLog.WriteLine("Initializing log file.");
+            addToLog.Close();
+        }
         public void MakeLog (string Statement, bool debug, [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string filePath = "")
         {   
-            FileInfo filepath = new FileInfo(filePath);            
-
+            string time = "";
+            string statement = "";
+            FileInfo filepath = new FileInfo(filePath);
             if (debug) {
-                if (firstrundebug){
-                    StreamWriter addToInternalLog = new StreamWriter (debuglog, append: false);
-                    addToInternalLog.WriteLine("Initializing internal log file.");
+                try
+                {
                     time = DateTime.Now.ToString("h:mm:ss tt");
                     statement = "[L" + lineNumber + " | " + filepath.Name + "] " + time + ": " + Statement;
-                    addToInternalLog.WriteLine(statement);
-                    addToInternalLog.Close();
-                    firstrundebug = false;
-                } else {
-                    StreamWriter addToLog = new StreamWriter (debuglog, append: true);
-                    time = DateTime.Now.ToString("h:mm:ss tt");
-                    statement = "[L" + lineNumber + " | " + filepath.Name + "] " + time + ": " + Statement;
-                    addToLog.WriteLine(statement);
-                    addToLog.Close(); 
-                }         
-            } else {                
-                if (firstrunmain){
-                    StreamWriter addToLog = new StreamWriter (GlobalVariables.logfile, append: false);
-                    addToLog.WriteLine("Initializing log file.");
-                    time = DateTime.Now.ToString("h:mm:ss tt");
-                    statement = "[L" + lineNumber + " | " + filepath.Name + "] " + time + ": " + Statement;
-                    addToLog.WriteLine(statement);
-                    addToLog.WriteLine(statement);
-                    addToLog.Close();
-                    firstrunmain = false;
-                } else {
-                    StreamWriter addToLog = new StreamWriter (GlobalVariables.logfile, append: true);
-                    time = DateTime.Now.ToString("h:mm:ss tt");
-                    statement = "[L" + lineNumber + " | " + filepath.Name + "] " + time + ": " + Statement;
-                    addToLog.WriteLine(statement);
-                    addToLog.Close();
+                    locker.AcquireWriterLock(int.MaxValue); 
+                    System.IO.File.AppendAllLines(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""), debuglog), new[] { statement });
                 }
-            }
+                finally
+                {
+                    locker.ReleaseWriterLock();
+                }
+            } else {
+                try
+                {
+                    time = DateTime.Now.ToString("h:mm:ss tt");
+                    statement = time + ": " + Statement;
+                    locker.AcquireWriterLock(int.MaxValue); 
+                    System.IO.File.AppendAllLines(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""), GlobalVariables.logfile), new[] { statement });
+                }
+                finally
+                {
+                    locker.ReleaseWriterLock();
+                }
+            }            
         }
     } 
 }
