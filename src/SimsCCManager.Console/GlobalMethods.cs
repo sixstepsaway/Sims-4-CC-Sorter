@@ -25,8 +25,6 @@ namespace SSAGlobals {
         public static List<typeList> AllTypesS4;
         public static List<FunctionSortList> S2FunctionSort;
         
-        typeList atype = new typeList();
-        FunctionSortList aflist = new FunctionSortList();
         public List<typeList> createS2TypeList(){
             List<typeList> AllTypes = new List<typeList>();
             AllTypes.Add(new typeList{typeID="6B943B43", desc="2ARY", info="2D Array"});
@@ -525,12 +523,154 @@ namespace SSAGlobals {
             List<FunctionSortList> s2fs = new List<FunctionSortList>();
             //seating
             s2fs.Add(new FunctionSortList{flagnum = 0, functionsubsortnum = 1, Category = "Seating", Subcategory = "Dining Room"});
-
-
-
+            s2fs.Add(new FunctionSortList{flagnum = 0, functionsubsortnum = 2, Category = "Seating", Subcategory = "Living Room"});
+            s2fs.Add(new FunctionSortList{flagnum = 0, functionsubsortnum = 4, Category = "Seating", Subcategory = "Sofas"});
+            s2fs.Add(new FunctionSortList{flagnum = 0, functionsubsortnum = 8, Category = "Seating", Subcategory = "Beds"});
+            s2fs.Add(new FunctionSortList{flagnum = 0, functionsubsortnum = 16, Category = "Seating", Subcategory = "Recreation"});
+            s2fs.Add(new FunctionSortList{flagnum = 0, functionsubsortnum = 32, Category = "Seating", Subcategory = "Unknown I"});
+            s2fs.Add(new FunctionSortList{flagnum = 0, functionsubsortnum = 64, Category = "Seating", Subcategory = "Unknown II"});
+            s2fs.Add(new FunctionSortList{flagnum = 0, functionsubsortnum = 128, Category = "Seating", Subcategory = "Misc"});
             
+            //surfaces
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 1, Category = "Surfaces", Subcategory = "Counters"});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 2, Category = "Surfaces", Subcategory = "Tables"});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 4, Category = "Surfaces", Subcategory = "End Tables"});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 8, Category = "Surfaces", Subcategory = "Desks"});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 16, Category = "Surfaces", Subcategory = "Coffee Tables"});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 32, Category = "Surfaces", Subcategory = "Shelves"});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 64, Category = "Surfaces", Subcategory = "Unknown II"});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 128, Category = "Surfaces", Subcategory = "Misc"});
+            
+            //Appliances
+            s2fs.Add(new FunctionSortList{flagnum = 2, functionsubsortnum = 1, Category = "Appliances", Subcategory = "Cooking"});
+            s2fs.Add(new FunctionSortList{flagnum = 2, functionsubsortnum = 2, Category = "Appliances", Subcategory = "Fridges"});
+            s2fs.Add(new FunctionSortList{flagnum = 2, functionsubsortnum = 4, Category = "Appliances", Subcategory = "Small"});
+            s2fs.Add(new FunctionSortList{flagnum = 2, functionsubsortnum = 8, Category = "Appliances", Subcategory = "Large"});
+            s2fs.Add(new FunctionSortList{flagnum = 2, functionsubsortnum = 16, Category = "Appliances", Subcategory = "Unknown I"});
+            s2fs.Add(new FunctionSortList{flagnum = 2, functionsubsortnum = 32, Category = "Appliances", Subcategory = "Unknown II"});
+            s2fs.Add(new FunctionSortList{flagnum = 2, functionsubsortnum = 64, Category = "Appliances", Subcategory = "Unknown III"});
+            s2fs.Add(new FunctionSortList{flagnum = 2, functionsubsortnum = 128, Category = "Appliances", Subcategory = "Misc"});
+            //Electronics
+            s2fs.Add(new FunctionSortList{flagnum = 3, functionsubsortnum = 1, Category = "Electronics", Subcategory = "Entertainment"});
+            s2fs.Add(new FunctionSortList{flagnum = 3, functionsubsortnum = 2, Category = "Electronics", Subcategory = "TV/Computer"});
+            s2fs.Add(new FunctionSortList{flagnum = 3, functionsubsortnum = 4, Category = "Electronics", Subcategory = "Audio"});
+            s2fs.Add(new FunctionSortList{flagnum = 3, functionsubsortnum = 8, Category = "Electronics", Subcategory = "Small"});
+            s2fs.Add(new FunctionSortList{flagnum = 3, functionsubsortnum = 16, Category = "Electronics", Subcategory = "Unknown I"});
+            s2fs.Add(new FunctionSortList{flagnum = 3, functionsubsortnum = 32, Category = "Electronics", Subcategory = "Unknown II"});
+            s2fs.Add(new FunctionSortList{flagnum = 3, functionsubsortnum = 64, Category = "Electronics", Subcategory = "Unknown III"});
+            s2fs.Add(new FunctionSortList{flagnum = 3, functionsubsortnum = 128, Category = "Electronics", Subcategory = "Misc"});
+            //Plumbing
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 1, Category = "Plumbing", Subcategory = "Toilets"});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 2, Category = "Plumbing", Subcategory = "Showers"});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 4, Category = "Plumbing", Subcategory = "Sinks"});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 8, Category = "Plumbing", Subcategory = "Hot Tubs"});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 16, Category = "Plumbing", Subcategory = "Unknown I"});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 32, Category = "Plumbing", Subcategory = "Unknown II"});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 64, Category = "Plumbing", Subcategory = "Unknown III"});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 128, Category = "Plumbing", Subcategory = "Misc"});
+
+            //Decorative
+            s2fs.Add(new FunctionSortList{flagnum = 5, functionsubsortnum = 1, Category = "Decorative", Subcategory = "Wall Decorations"});
+            s2fs.Add(new FunctionSortList{flagnum = 5, functionsubsortnum = 2, Category = "Decorative", Subcategory = "Sculptures"});
+            s2fs.Add(new FunctionSortList{flagnum = 5, functionsubsortnum = 4, Category = "Decorative", Subcategory = "Rugs"});
+            s2fs.Add(new FunctionSortList{flagnum = 5, functionsubsortnum = 8, Category = "Decorative", Subcategory = "Plants"});
+            s2fs.Add(new FunctionSortList{flagnum = 5, functionsubsortnum = 16, Category = "Decorative", Subcategory = "Mirrors"});
+            s2fs.Add(new FunctionSortList{flagnum = 5, functionsubsortnum = 32, Category = "Decorative", Subcategory = "Curtains"});
+            s2fs.Add(new FunctionSortList{flagnum = 5, functionsubsortnum = 64, Category = "Decorative", Subcategory = "Unknown II"});
             s2fs.Add(new FunctionSortList{flagnum = 5, functionsubsortnum = 128, Category = "Decorative", Subcategory = "Misc"});
 
+            //General
+            s2fs.Add(new FunctionSortList{flagnum = 6, functionsubsortnum = 1, Category = "Misc", Subcategory = "Unknown I"});
+            s2fs.Add(new FunctionSortList{flagnum = 6, functionsubsortnum = 2, Category = "Misc", Subcategory = "Dressers"});
+            s2fs.Add(new FunctionSortList{flagnum = 6, functionsubsortnum = 4, Category = "Misc", Subcategory = "Unknown II"});
+            s2fs.Add(new FunctionSortList{flagnum = 6, functionsubsortnum = 8, Category = "Misc", Subcategory = "Party"});
+            s2fs.Add(new FunctionSortList{flagnum = 6, functionsubsortnum = 16, Category = "Misc", Subcategory = "Child"});
+            s2fs.Add(new FunctionSortList{flagnum = 6, functionsubsortnum = 32, Category = "Misc", Subcategory = "Cars"});
+            s2fs.Add(new FunctionSortList{flagnum = 6, functionsubsortnum = 64, Category = "Misc", Subcategory = "Pets"});
+            s2fs.Add(new FunctionSortList{flagnum = 6, functionsubsortnum = 128, Category = "Misc", Subcategory = "Misc"});
+            //Lighting
+            s2fs.Add(new FunctionSortList{flagnum = 7, functionsubsortnum = 1, Category = "Lighting", Subcategory = "Table Lamps"});
+            s2fs.Add(new FunctionSortList{flagnum = 7, functionsubsortnum = 2, Category = "Lighting", Subcategory = "Floor Lamps"});
+            s2fs.Add(new FunctionSortList{flagnum = 7, functionsubsortnum = 4, Category = "Lighting", Subcategory = "Wall Lamps"});
+            s2fs.Add(new FunctionSortList{flagnum = 7, functionsubsortnum = 8, Category = "Lighting", Subcategory = "Ceiling Lamps"});
+            s2fs.Add(new FunctionSortList{flagnum = 7, functionsubsortnum = 16, Category = "Lighting", Subcategory = "Outdoor"});
+            s2fs.Add(new FunctionSortList{flagnum = 7, functionsubsortnum = 32, Category = "Lighting", Subcategory = "Unknown I"});
+            s2fs.Add(new FunctionSortList{flagnum = 7, functionsubsortnum = 64, Category = "Lighting", Subcategory = "Unknown II"});
+            s2fs.Add(new FunctionSortList{flagnum = 7, functionsubsortnum = 128, Category = "Lighting", Subcategory = "Misc"});
+            //Hobbies
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 1, Category = "Hobbies", Subcategory = "Creative"});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 2, Category = "Hobbies", Subcategory = "Knowledge"});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 4, Category = "Hobbies", Subcategory = "Exercise"});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 8, Category = "Hobbies", Subcategory = "Recreation"});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 16, Category = "Hobbies", Subcategory = "Unknown I"});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 32, Category = "Hobbies", Subcategory = "Unknown II"});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 64, Category = "Hobbies", Subcategory = "Unknown III"});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 128, Category = "Hobbies", Subcategory = "Misc"});
+            //Aspiration Rewards
+            s2fs.Add(new FunctionSortList{flagnum = 9, functionsubsortnum = 1, Category = "Aspiration Rewards", Subcategory = "Unknown I"});
+            s2fs.Add(new FunctionSortList{flagnum = 9, functionsubsortnum = 2, Category = "Aspiration Rewards", Subcategory = "Unknown II"});
+            s2fs.Add(new FunctionSortList{flagnum = 9, functionsubsortnum = 4, Category = "Aspiration Rewards", Subcategory = "Unknown III"});
+            s2fs.Add(new FunctionSortList{flagnum = 9, functionsubsortnum = 8, Category = "Aspiration Rewards", Subcategory = "Unknown IV"});
+            s2fs.Add(new FunctionSortList{flagnum = 9, functionsubsortnum = 16, Category = "Aspiration Rewards", Subcategory = "Unknown V"});
+            s2fs.Add(new FunctionSortList{flagnum = 9, functionsubsortnum = 32, Category = "Aspiration Rewards", Subcategory = "Unknown VI"});
+            s2fs.Add(new FunctionSortList{flagnum = 9, functionsubsortnum = 64, Category = "Aspiration Rewards", Subcategory = "Unknown VII"});
+            s2fs.Add(new FunctionSortList{flagnum = 9, functionsubsortnum = 128, Category = "Aspiration Rewards", Subcategory = "Unknown VIII"});
+            //Career Rewards
+            s2fs.Add(new FunctionSortList{flagnum = 10, functionsubsortnum = 1, Category = "Career Rewards", Subcategory = "Unknown I"});
+            s2fs.Add(new FunctionSortList{flagnum = 10, functionsubsortnum = 2, Category = "Career Rewards", Subcategory = "Unknown II"});
+            s2fs.Add(new FunctionSortList{flagnum = 10, functionsubsortnum = 4, Category = "Career Rewards", Subcategory = "Unknown III"});
+            s2fs.Add(new FunctionSortList{flagnum = 10, functionsubsortnum = 8, Category = "Career Rewards", Subcategory = "Unknown IV"});
+            s2fs.Add(new FunctionSortList{flagnum = 10, functionsubsortnum = 16, Category = "Career Rewards", Subcategory = "Unknown V"});
+            s2fs.Add(new FunctionSortList{flagnum = 10, functionsubsortnum = 32, Category = "Career Rewards", Subcategory = "Unknown VI"});
+            s2fs.Add(new FunctionSortList{flagnum = 10, functionsubsortnum = 64, Category = "Career Rewards", Subcategory = "Unknown VII"});
+            s2fs.Add(new FunctionSortList{flagnum = 10, functionsubsortnum = 128, Category = "Career Rewards", Subcategory = "Unknown VIII"});
+            /*//seating
+            s2fs.Add(new FunctionSortList{flagnum = 11, functionsubsortnum = 1, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 11, functionsubsortnum = 2, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 11, functionsubsortnum = 4, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 11, functionsubsortnum = 8, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 11, functionsubsortnum = 16, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 11, functionsubsortnum = 32, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 11, functionsubsortnum = 64, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 11, functionsubsortnum = 128, Category = "Seating", Subcategory = ""});
+            //seating
+            s2fs.Add(new FunctionSortList{flagnum = 12, functionsubsortnum = 1, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 12, functionsubsortnum = 2, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 12, functionsubsortnum = 4, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 12, functionsubsortnum = 8, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 12, functionsubsortnum = 16, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 12, functionsubsortnum = 32, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 12, functionsubsortnum = 64, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 12, functionsubsortnum = 128, Category = "Seating", Subcategory = ""});
+            //seating
+            s2fs.Add(new FunctionSortList{flagnum = 13, functionsubsortnum = 1, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 13, functionsubsortnum = 2, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 13, functionsubsortnum = 4, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 13, functionsubsortnum = 8, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 13, functionsubsortnum = 16, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 13, functionsubsortnum = 32, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 13, functionsubsortnum = 64, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 13, functionsubsortnum = 128, Category = "Seating", Subcategory = ""});
+            //seating
+            s2fs.Add(new FunctionSortList{flagnum = 14, functionsubsortnum = 1, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 14, functionsubsortnum = 2, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 14, functionsubsortnum = 4, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 14, functionsubsortnum = 8, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 14, functionsubsortnum = 16, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 14, functionsubsortnum = 32, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 14, functionsubsortnum = 64, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 14, functionsubsortnum = 128, Category = "Seating", Subcategory = ""});
+            //seating
+            s2fs.Add(new FunctionSortList{flagnum = 15, functionsubsortnum = 1, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 15, functionsubsortnum = 2, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 15, functionsubsortnum = 4, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 15, functionsubsortnum = 8, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 15, functionsubsortnum = 16, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 15, functionsubsortnum = 32, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 15, functionsubsortnum = 64, Category = "Seating", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 15, functionsubsortnum = 128, Category = "Seating", Subcategory = ""});
+            */
+            
 
 
             return s2fs;

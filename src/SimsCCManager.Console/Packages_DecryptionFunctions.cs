@@ -297,7 +297,7 @@ namespace SimsCCManager.Packages.Decryption
 
 				// No function sort, check Build Mode Sort
 				if (functionSortFlag[0] == 0) 
-				{
+				{/*
 					// Skip until we hit the Build Mode sort and EP
 					readFile.ReadBytes(46);
 					uint expansionFlag = readFile.ReadUInt16();
@@ -351,7 +351,7 @@ namespace SimsCCManager.Packages.Decryption
 					else 
 					{
 						this.xmlCategory = this.xmlCategoryTypes[2];
-					}
+					}*/
 				} 
 				else 
 				{
@@ -371,6 +371,14 @@ namespace SimsCCManager.Packages.Decryption
 					uint functionSubsort = readFile.ReadUInt16();
 					Console.WriteLine(functionSubsort);
 
+                    int fsl = 0;
+                    foreach (FunctionSortList function in TypeListings.S2FunctionSort){
+                        if ((fsl == function.flagnum) && (functionSortFlags[fsl] == true) && (functionSubsort == function.functionsubsortnum)){
+                            log.MakeLog("Function num is " + fsl + " and subsort number is " + functionSubsort + ". Object is category is " + function.Category + " and its subcategory is " + function.Subcategory, true);
+                        }
+                        fsl++;
+                    }
+                    /*
 					if (functionSortFlags[0] == true) 
 					{
 						this.xmlSubtype = this.xmlSubtypes[8]; 
@@ -512,9 +520,9 @@ namespace SimsCCManager.Packages.Decryption
 						this.xmlSubtype = this.xmlSubtypes[17];
 					}
 					if (this.xmlSubtype != "") this.xmlCatalog = this.xmlSubtype + " -> " + this.xmlCatalog;
-
+                    */
 				}
-
+                /*
 				IEnumerator ie = functionSortFlags.GetEnumerator();
 				while (ie.MoveNext() == true)
 				{
@@ -522,7 +530,7 @@ namespace SimsCCManager.Packages.Decryption
 				}
 				if (this.debugMode) Console.WriteLine();
 
-				if (this.debugMode) Console.WriteLine(functionSortFlag);
+				if (this.debugMode) Console.WriteLine(functionSortFlag);*/
 			} 
             return infovar;
 		}
@@ -579,15 +587,8 @@ namespace SimsCCManager.Packages.Decryption
                 log.MakeLog("Function Sort Flag: " + functionSortFlag[0], true);
                 log.MakeLog("Function Sort Flags: ", true);                
                 log.MakeLog("Length: " + functionSortFlags.Length, true);
-                for (int p = 0; p < functionSortFlags.Length; p++) {
-                    if (functionSortFlags[p] == true) {
-                        log.MakeLog("Flag " + p + " is true",true);
-                        //int flag = functionSortFlags[p];
-                        //log.MakeLog("And its number is: " + flag, true);
-                    } else {
-                        log.MakeLog("Flag " + p + " is false",true);
-                    }
-                }
+                
+                
                 
 
 				// No function sort, check Build Mode Sort
@@ -682,6 +683,14 @@ namespace SimsCCManager.Packages.Decryption
 					readFile.SkipAhead(38);
 					uint functionSubsort = readFile.ReadUInt16();
                     log.MakeLog("Function Subsort: " + functionSubsort, true);
+
+                    int fsl = 0;
+                    foreach (FunctionSortList function in TypeListings.S2FunctionSort){
+                        if ((fsl == function.flagnum) && (functionSortFlags[fsl] == true) && (functionSubsort == function.functionsubsortnum)){
+                            log.MakeLog("Function num is " + fsl + " and subsort number is " + functionSubsort + ". Object is category is " + function.Category + " and its subcategory is " + function.Subcategory, true);
+                        }
+                        fsl++;
+                    }
                     /*
 					if (functionSortFlags[0] == true) 
 					{

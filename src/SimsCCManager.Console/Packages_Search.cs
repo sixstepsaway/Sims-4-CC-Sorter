@@ -175,7 +175,8 @@ namespace SimsCCManager.Packages.Search
                     return;
                 }
                 
-            }
+            }           
+
             var entrynum = 0;
             foreach (indexEntry iEntry in indexData) {
                 log.MakeLog("P" + packageparsecount + " - Entry [" + entrynum + "]", true);
@@ -215,7 +216,7 @@ namespace SimsCCManager.Packages.Search
                     fh++;
                 }
                 log.MakeLog("P" + packageparsecount + " - DIR is at entry [" + dirnum + "]", true);
-                entrynum = 0;
+                entrynum = 0;                
 
                 foreach (indexEntry iEntry in indexData) {
                     numRecords = 0;
@@ -280,7 +281,7 @@ namespace SimsCCManager.Packages.Search
 
                     }
                     entrynum++;
-                }    
+                }
             }
             
             if (fileHas.Exists(x => x.term == "OBJD")) {       
