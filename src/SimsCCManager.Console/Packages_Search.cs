@@ -70,6 +70,7 @@ namespace SimsCCManager.Packages.Search
             ArrayList linkData = new ArrayList();
             List<indexEntry> indexData = new List<indexEntry>();
             FileInfo packageinfo = new FileInfo(file); 
+            List<string> iids = new List<string>();
 
             //create readers  
             FileStream dbpfFile = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -86,13 +87,16 @@ namespace SimsCCManager.Packages.Search
             log.MakeLog("Logged Package #" + packageparsecount + " as meant for The Sims " + thisPackage.Game, true);           
             test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
             log.MakeLog("P" + packageparsecount + " - DBPF Bytes: " + test, true);
+            thisPackage.DBPF = test;
             
             uint major = readFile.ReadUInt32();
             test = major.ToString();  
+            thisPackage.major = test;
             log.MakeLog("P" + packageparsecount + " - Major: " + test, true);
 
             uint minor = readFile.ReadUInt32();
             test = minor.ToString();
+            thisPackage.minor = test;
             log.MakeLog("P" + packageparsecount + " - Minor: " + test, true);
             
             string reserved = Encoding.UTF8.GetString(readFile.ReadBytes(12));
@@ -101,42 +105,52 @@ namespace SimsCCManager.Packages.Search
             
             uint dateCreated = readFile.ReadUInt32();
             test = dateCreated.ToString();
+            thisPackage.dateCreated = test;
             log.MakeLog("P" + packageparsecount + " - Date created: " + test, true);
             
             uint dateModified = readFile.ReadUInt32();
             test = dateModified.ToString();
+            thisPackage.dateModified = test;
             log.MakeLog("P" + packageparsecount + " - Date modified: " + test, true);
             
             uint indexMajorVersion = readFile.ReadUInt32();
             test = indexMajorVersion.ToString();
+            thisPackage.indexMajorVersion = test;
             log.MakeLog("P" + packageparsecount + " - Index Major: " + test, true);
             
             uint indexCount = readFile.ReadUInt32();
             test = indexCount.ToString();
+            thisPackage.indexCount = test;
             log.MakeLog("P" + packageparsecount + " - Index Count: " + test, true);
             
             uint indexOffset = readFile.ReadUInt32();
             test = indexOffset.ToString();
+            thisPackage.indexOffset = test;
             log.MakeLog("P" + packageparsecount + " - Index Offset: " + test, true);
             
             uint indexSize = readFile.ReadUInt32();
             test = indexSize.ToString();
+            thisPackage.indexSize = test;
             log.MakeLog("P" + packageparsecount + " - Index Size: " + test, true);
             
             uint holesCount = readFile.ReadUInt32();
             test = holesCount.ToString();
+            thisPackage.holesCount = test;
             log.MakeLog("P" + packageparsecount + " - Holes Count: " + test, true);
 
             uint holesOffset = readFile.ReadUInt32();
             test = holesOffset.ToString();
+            thisPackage.holesOffset = test;
             log.MakeLog("P" + packageparsecount + " - Holes Offset: " + test, true);
             
             uint holesSize = readFile.ReadUInt32();
             test = holesSize.ToString();
+            thisPackage.holesSize = test;
             log.MakeLog("P" + packageparsecount + " - Holes Size: " + test, true);
             
             uint indexMinorVersion = readFile.ReadUInt32() -1;
             test = indexMinorVersion.ToString();
+            thisPackage.indexMinorVersion = test;
             log.MakeLog("P" + packageparsecount + " - Index Minor Version: " + test, true);
             
             string reserved2 = Encoding.UTF8.GetString(readFile.ReadBytes(32));
@@ -155,7 +169,7 @@ namespace SimsCCManager.Packages.Search
                 log.MakeLog("P" + packageparsecount + " - Index Entry GroupID: " + holderEntry.groupID, true);
                 holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                 //Console.WriteLine(holderEntry.instanceID);
-                //infovar.InstanceIDs.Add(holderEntry.instanceID);
+                iids.Add(holderEntry.instanceID.ToString());
                 log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
 
                 if ((indexMajorVersion == 7) && (indexMinorVersion == 1)) {
@@ -201,6 +215,7 @@ namespace SimsCCManager.Packages.Search
                 }
                 
                 foreach (typeList type in TypeListings.AllTypesS2) {
+                    log.MakeLog("P" + packageparsecount + " - Checking entry " + entrynum + " (type ID: " + iEntry.typeID + ") for: " + type.desc, true);
                     if (iEntry.typeID == type.typeID) {
                         log.MakeLog("P" + packageparsecount + " - Found: " + type.desc, true);
                         typefound = type.desc;

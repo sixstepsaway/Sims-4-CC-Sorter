@@ -103,6 +103,7 @@ namespace SSAGlobals {
             AllTypes.Add(new typeList{typeID="0C900FDB", desc="POOL", info="Pool Surface"});
             AllTypes.Add(new typeList{typeID="2C310F46", desc="Popups", info="Unknown"});
             AllTypes.Add(new typeList{typeID="504F5349", desc="POSI", info="Edith Positional Information (deprecated)"});
+            AllTypes.Add(new typeList{typeID="4DCADB7E", desc="TXTR", info="Terrain Texture"});
             AllTypes.Add(new typeList{typeID="50544250", desc="PTBP", info="Package Toolkit"});
             AllTypes.Add(new typeList{typeID="AB9406AA", desc="ROOF", info="Roof"});
             AllTypes.Add(new typeList{typeID="8DB5E4C2", desc="SFX", info="Sound Effects"});
