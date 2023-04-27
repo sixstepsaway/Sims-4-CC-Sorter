@@ -36,6 +36,7 @@ namespace SimsCCManager.Packages.Search
         //Vars
         uint chunkOffset = 0;        
 
+        int packageparsecount = 0;
 
         public void SearchS2Packages(string file) {
             //Vars for Package Info
@@ -53,7 +54,6 @@ namespace SimsCCManager.Packages.Search
         
             //Misc Vars
             string test = "";        
-            int packageparsecount = 0;
             int dirnum = 0;   
             int objdnum = 0;
 

@@ -101,7 +101,7 @@ namespace S2PackageMaintenance {
 			this.xmlCategoryTypes = xmlCategoryTypes;
 		}
 
-        public void s2GetLabel(String file)
+        public void s2GetInformation(String file)
         {
             var record = new SimsPackage();
             var IncomingInformation = new SimsPackage();

@@ -24,6 +24,7 @@ namespace SimsCCManager.CMD
             TypeListings.AllTypesS2 = typeListings.createS2TypeList();
             TypeListings.AllTypesS3 = typeListings.createS3TypeList();
             TypeListings.AllTypesS4 = typeListings.createS4TypeList();
+            TypeListings.S2FunctionSort = typeListings.createS2functionsortlist();
 
             //Console.Write("File Location:   ");
             //string file = Console.ReadLine();

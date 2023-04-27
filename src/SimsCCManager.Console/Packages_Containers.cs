@@ -50,6 +50,13 @@ namespace SimsCCManager.Packages.Containers
         public int location {get; set;}
     }
 
+    public class FunctionSortList {
+        public int flagnum {get; set;}
+        public int functionsubsortnum {get; set;}
+        public string Category {get; set;}
+        public string Subcategory {get; set;}
+    }
+
     public class Containers {
 
         public static List<PackageFile> packageFiles = new List<PackageFile>();

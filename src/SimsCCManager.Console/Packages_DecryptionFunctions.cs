@@ -293,6 +293,8 @@ namespace SimsCCManager.Packages.Decryption
 				functionSortFlag[0] = (int)readFile.ReadUInt16();
 				BitArray functionSortFlags = new BitArray(functionSortFlag);
 
+
+
 				// No function sort, check Build Mode Sort
 				if (functionSortFlag[0] == 0) 
 				{
@@ -574,8 +576,19 @@ namespace SimsCCManager.Packages.Decryption
 				int[] functionSortFlag = new int[1];
 				functionSortFlag[0] = (int)readFile.ReadUInt16();
 				BitArray functionSortFlags = new BitArray(functionSortFlag);
-                log.MakeLog("Function Sort Flags: ", true);
-                log.MakeLog("Function Sort Flags Length: " + functionSortFlags.Length, true);
+                log.MakeLog("Function Sort Flag: " + functionSortFlag[0], true);
+                log.MakeLog("Function Sort Flags: ", true);                
+                log.MakeLog("Length: " + functionSortFlags.Length, true);
+                for (int p = 0; p < functionSortFlags.Length; p++) {
+                    if (functionSortFlags[p] == true) {
+                        log.MakeLog("Flag " + p + " is true",true);
+                        //int flag = functionSortFlags[p];
+                        //log.MakeLog("And its number is: " + flag, true);
+                    } else {
+                        log.MakeLog("Flag " + p + " is false",true);
+                    }
+                }
+                
 
 				// No function sort, check Build Mode Sort
 				if (functionSortFlag[0] == 0) 
@@ -597,7 +610,7 @@ namespace SimsCCManager.Packages.Decryption
                     log.MakeLog("Build Mode Subsort: " + buildModeSubsort, true);
 
                     log.MakeLog("Build Mode Types: " + this.xmlSubtype, true);
-
+                    /*
 					switch (buildModeType)
 					{
 						case 1: this.xmlSubtype = this.xmlSubtypes[1]; break;
@@ -641,6 +654,7 @@ namespace SimsCCManager.Packages.Decryption
 					{
 						this.xmlCategory = this.xmlCategoryTypes[2];
 					}
+                    */
 				} 
 				else 
 				{
@@ -668,7 +682,7 @@ namespace SimsCCManager.Packages.Decryption
 					readFile.SkipAhead(38);
 					uint functionSubsort = readFile.ReadUInt16();
                     log.MakeLog("Function Subsort: " + functionSubsort, true);
-
+                    /*
 					if (functionSortFlags[0] == true) 
 					{
 						this.xmlSubtype = this.xmlSubtypes[8]; 
@@ -810,7 +824,7 @@ namespace SimsCCManager.Packages.Decryption
 						this.xmlSubtype = this.xmlSubtypes[17];
 					}
 					if (this.xmlSubtype != "") this.xmlCatalog = this.xmlSubtype + " -> " + this.xmlCatalog;
-                    
+                    */
 				}
 			}
             return infovar;

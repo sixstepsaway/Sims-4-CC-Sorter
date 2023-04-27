@@ -128,14 +128,17 @@ namespace Sims_CC_Sorter
                 statement = "Sims 2 picked.";
                 loggingGlobals.MakeLog(statement, true);
                 gameNum = 2;
+                //get info
             } else if ((bool)radioButton_Sims3.IsChecked) {
                 statement = "Sims 3 picked.";
                 loggingGlobals.MakeLog(statement, true);
                 gameNum = 3;
+                //get info
             } else if ((bool)radioButton_Sims4.IsChecked) {
                 statement = "Sims 4 picked.";
                 loggingGlobals.MakeLog(statement, true);
                 gameNum = 4;
+                //get info
             } else {
                 System.Windows.Forms.MessageBox.Show("Please select a game.");
                 statement = "No game picked.";
@@ -153,6 +156,5 @@ namespace Sims_CC_Sorter
             statement = "Dev test button clicked.";
             loggingGlobals.MakeLog(statement, true);
         }
-
     }
 }
