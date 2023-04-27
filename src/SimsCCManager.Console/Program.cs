@@ -21,10 +21,12 @@ namespace SimsCCManager.CMD
             GlobalVariables globals = new GlobalVariables();
             TypeListings typeListings = new TypeListings();
             PackageSearch searcher = new PackageSearch();
+            LoggingGlobals log = new LoggingGlobals();
             TypeListings.AllTypesS2 = typeListings.createS2TypeList();
             TypeListings.AllTypesS3 = typeListings.createS3TypeList();
             TypeListings.AllTypesS4 = typeListings.createS4TypeList();
-            TypeListings.S2FunctionSort = typeListings.createS2functionsortlist();
+            TypeListings.S2BuyFunctionSort = typeListings.createS2buyfunctionsortlist();
+            TypeListings.S2BuildFunctionSort = typeListings.createS2buildfunctionsortlist();
 
             //Console.Write("File Location:   ");
             //string file = Console.ReadLine();
@@ -36,12 +38,17 @@ namespace SimsCCManager.CMD
                 searcher.SearchS2Packages(file);
             }            
 
-            Console.WriteLine("Packages in array:");
+            log.MakeLog("Packages in array:", true);
             foreach (SimsPackage pack in Containers.allSims2Packages){
-                Console.WriteLine(pack.Title);
-                Console.WriteLine(pack.Description);
-                Console.WriteLine(pack.Game);
-                Console.WriteLine(pack.Location);
+                log.MakeLog("--- " + pack.Location + ": ", true);
+                log.MakeLog("--- " + pack.Title, true);
+                log.MakeLog("--- " + pack.Description, true);
+                log.MakeLog("--- " + pack.Game, true);
+                log.MakeLog("--- " + pack.XMLCategory, true);
+                log.MakeLog("--- " + pack.Function, true);
+                if (pack.FunctionSubcategory != null) {
+                    log.MakeLog("--- " + pack.FunctionSubcategory, true);
+                }
             }
         }
     }

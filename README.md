@@ -5,6 +5,8 @@ My first real C# project, at least the first one that's turned into something th
 
 ![An image of the WIP app as it is right now.](https://pbs.twimg.com/media/FuIOMMIXsAIiH4-?format=png&name=small)
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/M4M16X1W)
+
 ## Requirements
 
 [.net 5.0](https://dotnet.microsoft.com/en-us/download/dotnet/5.0) or [later](https://dotnet.microsoft.com/en-us/download/dotnet).
@@ -35,6 +37,10 @@ All of these things will be optional, and hopefully have customization options. 
 - After that: Get the name of the file from inside the package for Sims 2 packages that are named delightfully descriptive things like "23e73018f4f10e8c1f10b60a81eb19b90001.package", something which is my absolute nemesis.
 - Next up is identifying the type of file! Is it a bird, is it a plane? No! It's an override of the toaster oven! 
 
+## Will this replace-- 
+
+I don't know. Genuinely, I do not. My intention is not to replace CC Merger by LazyDuchess, or g0kur's Mod Organizer, but I do hope to bring Download Organizer functionality to all four games, and add some of my own useful functions along with it.
+
 ## License 
 
 This is my first C# project worth a damn, but if you see something that's useful to you, feel free to use it in your own, just don't claim it's all yours. Link back!
@@ -46,4 +52,9 @@ Thanks to the following, which I have been learning from:
 - Lazy Duchess' CC Merger https://github.com/LazyDuchess/CC-Merger 
 - This DBPF Editor https://github.com/noah-severyn/csDBPF 
 - Delphy's Download Organizer's Source Code which made everything suddenly make sense. I'm mostly using this DBPF reader so far and retyping it myself to learn from and adjust.
+
+Thank you also to: 
+
+- Wanda for her unending support and help constantly.
+- Tali for bundling into my hip and helping me debug my code.
 

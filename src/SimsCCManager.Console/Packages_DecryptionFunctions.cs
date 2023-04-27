@@ -262,7 +262,6 @@ namespace SimsCCManager.Packages.Decryption
         public SimsPackage readOBJDchunk(BinaryReader readFile)
 		{
             infovar = new SimsPackage();
-			if (this.debugMode) Console.WriteLine("  Reading un-compressed OBJD...");
 
 			readFile.ReadBytes(64); // Filename - 64 bytes
 			uint version = readFile.ReadUInt32();
@@ -293,72 +292,49 @@ namespace SimsCCManager.Packages.Decryption
 				functionSortFlag[0] = (int)readFile.ReadUInt16();
 				BitArray functionSortFlags = new BitArray(functionSortFlag);
 
+                int fsfn = 0;
+                foreach (var fsf in functionSortFlags){
+                    log.MakeLog("Function Sort Flag [" + fsfn + "] is: " + functionSortFlags[fsfn].ToString(), true);                    
+                    fsfn++;
+                }
 
 
 				// No function sort, check Build Mode Sort
-				if (functionSortFlag[0] == 0) 
-				{/*
+				if (functionSortFlag[0] == 0)                 
+				{
+                    log.MakeLog("This is a build mode item.", true);
+                    
+                    infovar.XMLCategory = "Build Item";
+                    log.MakeLog("This is a build mode item.", true);
 					// Skip until we hit the Build Mode sort and EP
 					readFile.ReadBytes(46);
 					uint expansionFlag = readFile.ReadUInt16();
+                    log.MakeLog("Expansion Flag: " + expansionFlag, true);
 
 					readFile.ReadBytes(8);
 					uint buildModeType = readFile.ReadUInt16();
+                    log.MakeLog("Build Mode Type: " + buildModeType, true);
 					string originalGUID = readFile.ReadUInt32().ToString("X8");
+                    log.MakeLog("Original GUID: " + originalGUID, true);
 					string objectModelGUID = readFile.ReadUInt32().ToString("X8");
+                    log.MakeLog("Object Model GUID: " + objectModelGUID, true);
 					uint buildModeSubsort = readFile.ReadUInt16();
+                    log.MakeLog("Build Mode Subsort: " + buildModeSubsort, true);
 
-					switch (buildModeType)
-					{
-						case 1: this.xmlSubtype = this.xmlSubtypes[1]; break;
-						case 2: this.xmlSubtype = this.xmlSubtypes[2]; break;
-						case 3: this.xmlSubtype = this.xmlSubtypes[3]; break;
-						case 4: this.xmlSubtype = this.xmlSubtypes[4]; break;
-						case 5: this.xmlSubtype = this.xmlSubtypes[5]; break;
-						case 6: this.xmlSubtype = this.xmlSubtypes[6]; break;
-						case 7: this.xmlSubtype = this.xmlSubtypes[7]; break;
-						case 8: 
-						{
-							switch (buildModeSubsort)
-							{
-								case 1: this.xmlSubtype = this.xmlSubtypes[1]; break;
-								case 2: this.xmlSubtype = this.xmlSubtypes[2]; break;
-								case 4: this.xmlSubtype = this.xmlSubtypes[2]; break;
-								case 8: this.xmlSubtype = this.xmlSubtypes[1]; break;
-								case 16: this.xmlSubtype = this.xmlSubtypes[1]; break;
-								default: this.xmlSubtype = this.xmlSubtypes[0]; break;
-							}
-							break;
-						}
-						//this.xmlCatalog = this.xmlCategoryTypes[2] + " -> " + this.xmlSubtype;
-					}
-					if (this.xmlSubtype != "") this.xmlCatalog = this.xmlCategoryTypes[2] + " -> " + this.xmlSubtype;
-					//if (this.xmlSubtype != "") this.xmlCatalog += this.xmlSubtype + " ";
+                    log.MakeLog("Build Mode Types: " + this.xmlSubtype, true);
 
-					// Also set the xmlCategory to Object
-					if (((masterTileSubIndex == 0) || (masterTileSubIndex == 65535)) && (buildModeSubsort == 0) && (buildModeType == 0) && (functionSortFlag[0] == 0))
-					{
-						switch (objectType)
-						{
-							case 7: this.pkgTypeInt = 2; break;
-							case 9: this.xmlCategory = this.xmlCategoryTypes[2]; this.xmlSubtype = this.xmlSubtypes[2]; break;
-							case 10: this.xmlCategory = this.xmlCategoryTypes[2]; break;
-							case 20: this.xmlCategory = this.xmlCategoryTypes[5]; break;
-							case 14: this.xmlCategory = this.xmlCategoryTypes[5]; break;
-							default: break;
-						}
-					} 
-					else 
-					{
-						this.xmlCategory = this.xmlCategoryTypes[2];
-					}*/
+                    int funcflags = functionSortFlags.Length;
+                    foreach (FunctionSortList category in TypeListings.S2BuildFunctionSort){                            
+                        if ((buildModeType == category.flagnum) && (buildModeSubsort == category.functionsubsortnum)) {
+                            infovar.Function = category.Category;
+                            infovar.FunctionSubcategory = category.Subcategory;
+                            log.MakeLog("Identified function: " + infovar.Function, true);
+                        }                        
+                    } 
 				} 
 				else 
 				{
-					// Set the xmlCategory to Object
-					//if (this.xmlCategory == "") this.xmlCategory = this.xmlCategoryTypes[1];
-
-					// Also, get the catalog placement for this object
+					infovar.XMLCategory = "Object";
 					readFile.ReadBytes(46);
 					uint expansionFlag = readFile.ReadUInt16();
 
@@ -369,161 +345,24 @@ namespace SimsCCManager.Packages.Decryption
 					uint buildModeSubsort = readFile.ReadUInt16();
 					readFile.ReadBytes(38);
 					uint functionSubsort = readFile.ReadUInt16();
-					Console.WriteLine(functionSubsort);
 
-                    int fsl = 0;
-                    foreach (FunctionSortList function in TypeListings.S2FunctionSort){
-                        if ((fsl == function.flagnum) && (functionSortFlags[fsl] == true) && (functionSubsort == function.functionsubsortnum)){
-                            log.MakeLog("Function num is " + fsl + " and subsort number is " + functionSubsort + ". Object is category is " + function.Category + " and its subcategory is " + function.Subcategory, true);
+                    
+
+                    int funcflags = functionSortFlags.Length;
+                    foreach (FunctionSortList category in TypeListings.S2BuyFunctionSort){
+                        //log.MakeLog("Catnum: " + category.flagnum, true);
+                        for (int f = 0; f < funcflags; f++){
+                            //log.MakeLog("Flag: " + f, true);                            
+                            if ((f == category.flagnum) && (functionSortFlags[f] == true) && (category.functionsubsortnum == functionSubsort)) {
+                                infovar.Function = category.Category;
+                                infovar.FunctionSubcategory = category.Subcategory;
+                                log.MakeLog("Identified function: " + infovar.Function + "/" + infovar.FunctionSubcategory, true);
+                            }
                         }
-                        fsl++;
-                    }
-                    /*
-					if (functionSortFlags[0] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[8]; 
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[1]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[2]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[3]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[4]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[5]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[6]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[7]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[1] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[9]; 
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[9]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[10]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[11]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[12]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[13]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[14]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[15]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[2] == true) 
-					{ 
-						this.xmlSubtype = this.xmlSubtypes[10]; 
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[16]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[17]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[18]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[19]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[20]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[21]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[22]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-
-					}
-					if (functionSortFlags[3] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[11]; 
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[23]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[24]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[25]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[26]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[27]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[28]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[29]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[4] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[12];
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[30]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[31]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[32]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[33]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[34]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[35]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[36]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[5] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[13];
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[37]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[38]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[39]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[40]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[41]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[42]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[43]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[6] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[14]; 
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[44]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[45]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[46]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[47]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[48]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[49]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[50]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[7] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[15];
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[51]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[52]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[53]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[54]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[55]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[56]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[57]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[8] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[16];
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[58]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[59]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[60]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[61]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[62]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[63]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[64]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[10] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[17];
-					}
-					if (this.xmlSubtype != "") this.xmlCatalog = this.xmlSubtype + " -> " + this.xmlCatalog;
-                    */
+                    } 
 				}
-                /*
-				IEnumerator ie = functionSortFlags.GetEnumerator();
+                
+				/*IEnumerator ie = functionSortFlags.GetEnumerator();
 				while (ie.MoveNext() == true)
 				{
 					if (this.debugMode) Console.Write("{0} ", ie.Current);
@@ -585,8 +424,12 @@ namespace SimsCCManager.Packages.Decryption
 				functionSortFlag[0] = (int)readFile.ReadUInt16();
 				BitArray functionSortFlags = new BitArray(functionSortFlag);
                 log.MakeLog("Function Sort Flag: " + functionSortFlag[0], true);
-                log.MakeLog("Function Sort Flags: ", true);                
-                log.MakeLog("Length: " + functionSortFlags.Length, true);
+                log.MakeLog("Function Sort Flags: ", true);
+                /*int fsfn = 0;
+                foreach (var fsf in functionSortFlags){
+                    log.MakeLog("Function Sort Flag [" + fsfn + "] is: " + functionSortFlags[fsfn].ToString(), true);                    
+                    fsfn++;
+                }*/
                 
                 
                 
@@ -594,7 +437,8 @@ namespace SimsCCManager.Packages.Decryption
 				// No function sort, check Build Mode Sort
 				if (functionSortFlag[0] == 0) 
 				{
-                    log.MakeLog("No function sort flag.", true);
+                    infovar.XMLCategory = "Build Item";
+                    log.MakeLog("This is a build mode item.", true);
 					// Skip until we hit the Build Mode sort and EP
 					readFile.SkipAhead(46);
 					uint expansionFlag = readFile.ReadUInt16();
@@ -611,51 +455,15 @@ namespace SimsCCManager.Packages.Decryption
                     log.MakeLog("Build Mode Subsort: " + buildModeSubsort, true);
 
                     log.MakeLog("Build Mode Types: " + this.xmlSubtype, true);
-                    /*
-					switch (buildModeType)
-					{
-						case 1: this.xmlSubtype = this.xmlSubtypes[1]; break;
-						case 2: this.xmlSubtype = this.xmlSubtypes[2]; break;
-						case 3: this.xmlSubtype = this.xmlSubtypes[3]; break;
-						case 4: this.xmlSubtype = this.xmlSubtypes[4]; break;
-						case 5: this.xmlSubtype = this.xmlSubtypes[5]; break;
-						case 6: this.xmlSubtype = this.xmlSubtypes[6]; break;
-						case 7: this.xmlSubtype = this.xmlSubtypes[7]; break;
-						case 8: 
-						{
-							switch (buildModeSubsort)
-							{
-								case 1: this.xmlSubtype = this.xmlSubtypes[1]; break;
-								case 2: this.xmlSubtype = this.xmlSubtypes[2]; break;
-								case 4: this.xmlSubtype = this.xmlSubtypes[2]; break;
-								case 8: this.xmlSubtype = this.xmlSubtypes[1]; break;
-								case 16: this.xmlSubtype = this.xmlSubtypes[1]; break;
-								default: this.xmlSubtype = this.xmlSubtypes[0]; break;
-							}
-							break;
-						}
-					}
-					if (this.xmlSubtype != "") this.xmlCatalog = this.xmlCategoryTypes[2] + " -> " + this.xmlSubtype;
-					//if (this.xmlSubtype != "") this.xmlCatalog += this.xmlSubtype + " ";
 
-					// Also set the xmlCategory to Object
-					if (((masterTileSubIndex == 0) || (masterTileSubIndex == 65535)) && (buildModeSubsort == 0) && (buildModeType == 0) && (functionSortFlag[0] == 0))
-					{
-						switch (objectType)
-						{
-							case 7: this.pkgTypeInt = 2; break;
-							case 9: this.xmlCategory = this.xmlCategoryTypes[2]; this.xmlSubtype = this.xmlSubtypes[2]; break;
-							case 10: this.xmlCategory = this.xmlCategoryTypes[2]; break;
-							case 20: this.xmlCategory = this.xmlCategoryTypes[5]; break;
-							case 14: this.xmlCategory = this.xmlCategoryTypes[5]; break;
-							default: break;
-						}
-					} 
-					else 
-					{
-						this.xmlCategory = this.xmlCategoryTypes[2];
-					}
-                    */
+                    int funcflags = functionSortFlags.Length;
+                    foreach (FunctionSortList category in TypeListings.S2BuildFunctionSort){                            
+                        if ((buildModeType == category.flagnum) && (buildModeSubsort == category.functionsubsortnum)) {
+                            infovar.Function = category.Category;
+                            infovar.FunctionSubcategory = category.Subcategory;
+                            log.MakeLog("Identified function: " + infovar.Function, true);
+                        }                        
+                    } 
 				} 
 				else 
 				{
@@ -667,7 +475,7 @@ namespace SimsCCManager.Packages.Decryption
 					readFile.SkipAhead(46);
 					uint expansionFlag = readFile.ReadUInt16();
                     if (expansionFlag == 0){
-                        //infovar.RequiredEPs = "None";
+                        //infovar.RequiredEPs.Add("None");
                     }
                     log.MakeLog("Expansion Flag: " + expansionFlag, true);
 
@@ -684,171 +492,21 @@ namespace SimsCCManager.Packages.Decryption
 					uint functionSubsort = readFile.ReadUInt16();
                     log.MakeLog("Function Subsort: " + functionSubsort, true);
 
-                    int fsl = 0;
-                    foreach (FunctionSortList function in TypeListings.S2FunctionSort){
-                        if ((fsl == function.flagnum) && (functionSortFlags[fsl] == true) && (functionSubsort == function.functionsubsortnum)){
-                            log.MakeLog("Function num is " + fsl + " and subsort number is " + functionSubsort + ". Object is category is " + function.Category + " and its subcategory is " + function.Subcategory, true);
+                    int funcflags = functionSortFlags.Length;
+                    foreach (FunctionSortList category in TypeListings.S2BuyFunctionSort){
+                        //log.MakeLog("Catnum: " + category.flagnum, true);
+                        for (int f = 0; f < funcflags; f++){
+                            //log.MakeLog("Flag: " + f, true);                            
+                            if ((f == category.flagnum) && (functionSortFlags[f] == true) && (category.functionsubsortnum == functionSubsort)) {
+                                infovar.Function = category.Category;
+                                infovar.FunctionSubcategory = category.Subcategory;
+                                log.MakeLog("Identified function: " + infovar.Function + "/" + infovar.FunctionSubcategory, true);
+                            }
                         }
-                        fsl++;
-                    }
-                    /*
-					if (functionSortFlags[0] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[8]; 
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[1]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[2]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[3]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[4]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[5]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[6]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[7]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[1] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[9]; 
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[9]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[10]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[11]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[12]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[13]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[14]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[15]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[2] == true) 
-					{ 
-						this.xmlSubtype = this.xmlSubtypes[10]; 
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[16]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[17]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[18]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[19]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[20]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[21]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[22]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-
-					}
-					if (functionSortFlags[3] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[11]; 
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[23]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[24]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[25]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[26]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[27]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[28]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[29]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[4] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[12];
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[30]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[31]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[32]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[33]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[34]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[35]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[36]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[5] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[13];
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[37]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[38]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[39]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[40]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[41]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[42]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[43]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[6] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[14]; 
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[44]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[45]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[46]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[47]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[48]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[49]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[50]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[7] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[15];
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[51]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[52]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[53]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[54]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[55]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[56]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[57]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[8] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[16];
-						switch (functionSubsort)
-						{
-							case 1: this.xmlCatalog = this.xmlCatalogSortTypes[58]; break;
-							case 2: this.xmlCatalog = this.xmlCatalogSortTypes[59]; break;
-							case 4: this.xmlCatalog = this.xmlCatalogSortTypes[60]; break;
-							case 8: this.xmlCatalog = this.xmlCatalogSortTypes[61]; break;
-							case 16: this.xmlCatalog = this.xmlCatalogSortTypes[62]; break;
-							case 32: this.xmlCatalog = this.xmlCatalogSortTypes[63]; break;
-							case 64: this.xmlCatalog = this.xmlCatalogSortTypes[64]; break;
-							case 128: this.xmlCatalog = this.xmlCatalogSortTypes[8]; break;
-						}
-					}
-					if (functionSortFlags[10] == true) 
-					{
-						this.xmlSubtype = this.xmlSubtypes[17];
-					}
-					if (this.xmlSubtype != "") this.xmlCatalog = this.xmlSubtype + " -> " + this.xmlCatalog;
-                    */
+                    }                    
 				}
 			}
             return infovar;
 		}
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

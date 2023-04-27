@@ -23,7 +23,12 @@ namespace SSAGlobals {
         public static List<typeList> AllTypesS2;
         public static List<typeList> AllTypesS3;
         public static List<typeList> AllTypesS4;
-        public static List<FunctionSortList> S2FunctionSort;
+        public static List<FunctionSortList> S2BuyFunctionSort;
+        public static List<FunctionSortList> S2BuildFunctionSort;
+        public static List<FunctionSortList> S3BuyFunctionSort;
+        public static List<FunctionSortList> S3BuildFunctionSort;
+        public static List<FunctionSortList> S4BuyFunctionSort;
+        public static List<FunctionSortList> S4BuildFunctionSort;
         
         public List<typeList> createS2TypeList(){
             List<typeList> AllTypes = new List<typeList>();
@@ -519,7 +524,7 @@ namespace SSAGlobals {
             return AllTypes;
         }
     
-        public List<FunctionSortList> createS2functionsortlist(){
+        public List<FunctionSortList> createS2buyfunctionsortlist(){
             List<FunctionSortList> s2fs = new List<FunctionSortList>();
             //seating
             s2fs.Add(new FunctionSortList{flagnum = 0, functionsubsortnum = 1, Category = "Seating", Subcategory = "Dining Room"});
@@ -670,11 +675,45 @@ namespace SSAGlobals {
             s2fs.Add(new FunctionSortList{flagnum = 15, functionsubsortnum = 64, Category = "Seating", Subcategory = ""});
             s2fs.Add(new FunctionSortList{flagnum = 15, functionsubsortnum = 128, Category = "Seating", Subcategory = ""});
             */
+            return s2fs;
+        }
+        
+        public List<FunctionSortList> createS2buildfunctionsortlist(){
+            List<FunctionSortList> s2fs = new List<FunctionSortList>();
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 1, Category = "Door", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 4, Category = "Window", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 100, Category = "Two Story Door", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 2, Category = "Two Story Window", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 10, Category = "Arch", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 20, Category = "Staircase", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 0, functionsubsortnum = 0, Category = "Fireplaces (?)", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 400, Category = "Garage", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 1, Category = "Trees", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 4, Category = "Flowers", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 10, Category = "Gardening", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 4, functionsubsortnum = 2, Category = "Shrubs", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 1000, Category = "Architecture", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 8, Category = "Column", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 100, Category = "Two Story Column", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 200, Category = "Connecting Column", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 40, Category = "Pools", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 8, functionsubsortnum = 8, Category = "Gates", Subcategory = ""});
+            s2fs.Add(new FunctionSortList{flagnum = 1, functionsubsortnum = 800, Category = "Elevator", Subcategory = ""});
             
-
+            
 
             return s2fs;
         }
+        
+        
+        
+        /*public List<FunctionSortList> createS3functionsortlist(){
+            //List<FunctionSortList> s3fs = new List<FunctionSortList>()            
+            //return s2fs;
+        }*/
+    
+    
+    
     
     }
     

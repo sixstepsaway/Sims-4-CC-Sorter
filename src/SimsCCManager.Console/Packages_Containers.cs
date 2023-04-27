@@ -17,8 +17,10 @@ namespace SimsCCManager.Packages.Containers
 
     public class SimsPackage { // A more in depth package file.
         
-        public string Title {get; set;}        public string Description {get; set;}
+        public string Title {get; set;}        
+        public string Description {get; set;}
         public string Location {get; set;}
+        public string PackageName {get; set;}
         public int Game {get; set;}
         public string DBPF {get; set;}
         public uint Major {get; set;}
@@ -42,6 +44,9 @@ namespace SimsCCManager.Packages.Containers
         public string XMLAge {get; set;}
         public string XMLGender {get; set;}
         public string[] RequiredEPs {get; set;}
+        public string Function {get; set;}
+        public string FunctionSubcategory {get; set;}
+        public string[] RoomSort {get; set;}
 
     }
 

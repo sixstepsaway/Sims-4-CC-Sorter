@@ -37,6 +37,8 @@ namespace SimsCCManager.Packages.Search
         uint chunkOffset = 0;        
 
         int packageparsecount = 0;
+        public static SimsPackage thisPackage = new SimsPackage();
+        public static SimsPackage infovar = new SimsPackage();
 
         public void SearchS2Packages(string file) {
             //Vars for Package Info
@@ -54,20 +56,22 @@ namespace SimsCCManager.Packages.Search
         
             //Misc Vars
             string test = "";        
-            int dirnum = 0;   
-            int objdnum = 0;
+            int dirnum = 0;
+            List<int> objdnum = new List<int>();   
+            List<int> strnm = new List<int>();
 
             //Lists 
-            SimsPackage thisPackage = new SimsPackage();
-            SimsPackage infovar = new SimsPackage();
+            
             List<fileHasList> fileHas = new List<fileHasList>();
             ArrayList linkData = new ArrayList();
-            ArrayList indexData = new ArrayList();
+            List<indexEntry> indexData = new List<indexEntry>();
             FileInfo packageinfo = new FileInfo(file); 
 
             //create readers  
             FileStream dbpfFile = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
             BinaryReader readFile = new BinaryReader(dbpfFile);
+
+            infovar.PackageName = dbpfFile.Name;
 
             //start actually reading the package            
             packageparsecount++;
@@ -175,7 +179,9 @@ namespace SimsCCManager.Packages.Search
                     return;
                 }
                 
-            }           
+            }
+
+            //Console.WriteLine(indexData[0].typeID);
 
             var entrynum = 0;
             foreach (indexEntry iEntry in indexData) {
@@ -202,6 +208,7 @@ namespace SimsCCManager.Packages.Search
                 }
                 entrynum++;
             }
+
             log.MakeLog("P" + packageparsecount + " - This file has:", true);
             foreach (fileHasList item in fileHas) {
                 log.MakeLog("--- " + item.term + " at: " + item.location, true);
@@ -216,71 +223,68 @@ namespace SimsCCManager.Packages.Search
                     fh++;
                 }
                 log.MakeLog("P" + packageparsecount + " - DIR is at entry [" + dirnum + "]", true);
-                entrynum = 0;                
+                entrynum = 0;
+            
+                //go through dir entry specifically 
+                
+                numRecords = 0;
+                typeID = "";
+                groupID = "";
+                instanceID = "";
+                instanceID2 = "";
+                myFilesize = 0;
+                
+                log.MakeLog("P" + packageparsecount + " - DIR entry confirmation: ", true);
+                log.MakeLog(indexData[dirnum].typeID, true);
 
-                foreach (indexEntry iEntry in indexData) {
-                    numRecords = 0;
-                    typeID = "";
-                    groupID = "";
-                    instanceID = "";
-                    instanceID2 = "";
-                    myFilesize = 0;
-                    
-                    if (entrynum == dirnum) {
-                        log.MakeLog("P" + packageparsecount + " - This is the DIR entry.", true);
-                        log.MakeLog("Confirmation:", true);
-                        log.MakeLog(iEntry.typeID, true);
+                dbpfFile.Seek(this.chunkOffset + indexData[dirnum].offset, SeekOrigin.Begin);
+                if (indexMajorVersion == 7 && indexMinorVersion == 1)
+                {
+                    numRecords = indexData[dirnum].filesize / 20;
+                }
+                else 
+                {
+                    numRecords = indexData[dirnum].filesize / 16;
+                }  
 
-                        dbpfFile.Seek(this.chunkOffset + iEntry.offset, SeekOrigin.Begin);
-                        if (indexMajorVersion == 7 && indexMinorVersion == 1)
+                log.MakeLog("P" + packageparsecount + " - Number of compressed records in entry:" + numRecords, true);
+                
+                for (int c = 0; c < numRecords; c++)
+                {
+                    log.MakeLog("P" + packageparsecount + " - Reading compressed record #" + c, true);
+                    typeID = readFile.ReadUInt32().ToString("X8");
+                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Type ID is " + typeID, true);
+                    groupID = readFile.ReadUInt32().ToString("X8");
+                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Group ID is " + groupID, true);
+                    instanceID = readFile.ReadUInt32().ToString("X8");
+                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Instance ID is " + instanceID, true);
+                    if (indexMajorVersion == 7 && indexMinorVersion == 1) instanceID2 = readFile.ReadUInt32().ToString("X8");
+                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": InstanceID2 is " + instanceID2, true);
+                    myFilesize = readFile.ReadUInt32();
+                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Filesize is " + myFilesize, true);
+
+                    foreach (indexEntry idx in indexData) {
+                        if ((idx.typeID == typeID) && (idx.groupID == groupID) && (idx.instanceID == instanceID))
                         {
-                            numRecords = iEntry.filesize / 20;
-                        }
-                        else 
-                        {
-                            numRecords = iEntry.filesize / 16;
-                        }  
-
-                        log.MakeLog("P" + packageparsecount + " - Number of compressed records in entry:" + numRecords, true);
-                        
-                        for (int c = 0; c < numRecords; c++)
-                        {
-                            log.MakeLog("P" + packageparsecount + " - Reading compressed record #" + c, true);
-                            typeID = readFile.ReadUInt32().ToString("X8");
-                            log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Type ID is " + typeID, true);
-                            groupID = readFile.ReadUInt32().ToString("X8");
-                            log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Group ID is " + groupID, true);
-                            instanceID = readFile.ReadUInt32().ToString("X8");
-                            log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Instance ID is " + instanceID, true);
-                            if (indexMajorVersion == 7 && indexMinorVersion == 1) instanceID2 = readFile.ReadUInt32().ToString("X8");
-                            log.MakeLog("P" + packageparsecount + " - CR#" + c + ": InstanceID2 is " + instanceID2, true);
-                            myFilesize = readFile.ReadUInt32();
-                            log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Filesize is " + myFilesize, true);
-
-                            foreach (indexEntry idx in indexData) {
-                                if ((idx.typeID == typeID) && (idx.groupID == groupID) && (idx.instanceID == instanceID))
+                            if (indexMajorVersion == 7 && indexMinorVersion == 1) 
+                            {
+                                if (idx.instanceID2 == instanceID2) 
                                 {
-                                    if (indexMajorVersion == 7 && indexMinorVersion == 1) 
-                                    {
-                                        if (idx.instanceID2 == instanceID2) 
-                                        {
-                                            idx.compressed = true;
-                                            idx.truesize = myFilesize;
-                                            break;
-                                        }
-                                    } 
-                                    else
-                                    {
-                                        idx.compressed = true;
-                                        idx.truesize = myFilesize;
-                                        break;
-                                    }
+                                    idx.compressed = true;
+                                    idx.truesize = myFilesize;
+                                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Index entry filesize is " + myFilesize, true);
+                                    break;
                                 }
+                            } 
+                            else
+                            {
+                                idx.compressed = true;
+                                idx.truesize = myFilesize;
+                                log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Index entry filesize is " + myFilesize, true);
+                                break;
                             }
                         }
-
                     }
-                    entrynum++;
                 }
             }
             
@@ -288,52 +292,96 @@ namespace SimsCCManager.Packages.Search
                 int fh = 0;
                 foreach (fileHasList item in fileHas) {
                     if (item.term == "OBJD"){
-                        objdnum = fh;
+                        objdnum.Add(fh);
                     }
                     fh++;
                 }
-                log.MakeLog("P" + packageparsecount + " - OBJD is at entry [" + objdnum + "]", true);
-                entrynum = 0;
-                foreach (indexEntry idx in indexData)
-                {
-                    if (entrynum == objdnum) {
-                        log.MakeLog("P" + packageparsecount + " - Found OBJD at entry [" + entrynum + "]", true);
-                        dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
-                        cFileSize = readFile.ReadInt32();
-                        log.MakeLog("P" + packageparsecount + " - OBJD filesize is: " + cFileSize, true);
-                        cTypeID = readFile.ReadUInt16().ToString("X4");
-                        log.MakeLog("P" + packageparsecount + " - OBJD ctypeID is: " + cTypeID, true);
-                        if (cTypeID == "FB10")
-                        {
-                            log.MakeLog("P" + packageparsecount + " - OBJD ctypeID confirmed as: " + cTypeID, true);
-                            byte[] tempBytes = readFile.ReadBytes(3);
-                            log.MakeLog("P" + packageparsecount + " - OBJD temp bytes are: " + tempBytes, true);
-                            uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
-                            log.MakeLog("P" + packageparsecount + " - OBJD size is: " + cFullSize, true);
-                            DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-                            infovar = readentries.readOBJDchunk(decompressed);
-                        } else { 
-                            dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
-						    infovar = readentries.readOBJDchunk(readFile);
-                        }
+                log.MakeLog("P" + packageparsecount + " - OBJDs are at entries:",true);
+                foreach (int objloc in objdnum) {
+                    log.MakeLog("---------- [" + objloc + "]", true);               
+                    
+                    dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
+                    cFileSize = readFile.ReadInt32();
+                    log.MakeLog("P" + packageparsecount + " - OBJD filesize is: " + cFileSize, true);
+                    cTypeID = readFile.ReadUInt16().ToString("X4");
+                    log.MakeLog("P" + packageparsecount + " - OBJD ctypeID is: " + cTypeID, true);
+                    if (cTypeID == "FB10")
+                    {
+                        log.MakeLog("P" + packageparsecount + " - OBJD ctypeID confirmed as: " + cTypeID, true);
+                        byte[] tempBytes = readFile.ReadBytes(3);
+                        log.MakeLog("P" + packageparsecount + " - OBJD temp bytes are: " + tempBytes, true);
+                        uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
+                        log.MakeLog("P" + packageparsecount + " - OBJD size is: " + cFullSize, true);
+                        DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+                        infovar = readentries.readOBJDchunk(decompressed);
+                        log.MakeLog("Infovar arrived in Package_Search containing: ", true);
+                        log.MakeLog(infovar.Function + " & " + infovar.FunctionSubcategory, true);
+                    } else { 
+                        dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
+                        infovar = readentries.readOBJDchunk(readFile);
+                        log.MakeLog("Infovar arrived in Package_Search containing: ", true);
+                        log.MakeLog(infovar.Function + " & " + infovar.FunctionSubcategory, true);
                     }
-                   
-                   
-                   entrynum++;
                 }
             }
-            
 
-            
+            if ((!fileHas.Exists(x => x.term == "OBJD")) && (!fileHas.Exists(x => x.term == "DIR")) && (fileHas.Exists(x => x.term == "STR#"))) {
+                int fh = 0;
+                foreach (fileHasList item in fileHas) {
+                    if (item.term == "STR#"){
+                        strnm.Add(fh);
+                    }
+                    fh++;
+                }
+                dbpfFile.Seek(chunkOffset + indexData[strnm].offset, SeekOrigin.Begin);
+                int cFileSize = readFile.ReadInt32();
+                string cTypeID = readFile.ReadUInt16().ToString("X4");
+                if (cTypeID == "FB10")
+                {
+                    byte[] tempBytes = readFile.ReadBytes(3);
+                    uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
 
+                    DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
+                    infovar = readentries.readSTRchunk(decompressed);
+                } 
+                else 
+                {
+                    infovar = readentries.readSTRchunk(readFile);
+                }
+                thisPackage.Title = infovar.Title;
+                thisPackage.Description = infovar.Description;
+                log.MakeLog("infovar: " + infovar.Description, true);
+                log.MakeLog("infovar: " + infovar.Title, true);
+                if (infovar.Title != null) {
+                    log.MakeLog("Title is not null!", true);
+                    thisPackage.Title = infovar.Title;
+                    break;
+                }
+                if (infovar.Description != null) {
+                    log.MakeLog("Description is not null!", true);
+                    thisPackage.Description = infovar.Description;
+                    break;
+                }
+            }            
 
-            log.MakeLog("P" + packageparsecount + " - Infovar Title: " + infovar.Title, true);
-            log.MakeLog("P" + packageparsecount + " - Infovar Desc: " + infovar.Description, true);
+            thisPackage.DateCreated = infovar.DateCreated;
+            thisPackage.DateModified = infovar.DateModified;
+            thisPackage.Title = infovar.Title;
+            thisPackage.XMLCategory = infovar.XMLCategory;
+            thisPackage.Function = infovar.Function;
+            thisPackage.FunctionSubcategory = infovar.FunctionSubcategory;
+
+            log.MakeLog("P" + packageparsecount + " - infovar Title: " + infovar.Title, true);
+            log.MakeLog("P" + packageparsecount + " - infovar Desc: " + infovar.Description, true);
+            log.MakeLog("P" + packageparsecount + " - infovar Function: " + infovar.Function, true);
+            log.MakeLog("P" + packageparsecount + " - infovar Function Subcategory: " + infovar.FunctionSubcategory, true);
             log.MakeLog("P" + packageparsecount + " - This Package Location: " + thisPackage.Location, true);
             log.MakeLog("P" + packageparsecount + " - This Package Title: " + thisPackage.Title, true);
             log.MakeLog("P" + packageparsecount + " - This Package Desc: " + thisPackage.Description, true);
             
+            Containers.Containers.allSims2Packages.Add(thisPackage);
+
             readFile.Close();
         }
     }
