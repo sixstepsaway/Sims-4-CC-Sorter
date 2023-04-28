@@ -15,6 +15,14 @@ using SimsCCManager.Packages.Decryption;
 
 namespace SimsCCManager.Packages.Search
 {    
+    public static class extensions {
+        public static void Increment<T>(this Dictionary<T, int> dictionary, T key)
+        {
+            int count;
+            dictionary.TryGetValue(key, out count);
+            dictionary[key] = count + 1;
+        }
+    }
     public class indexEntry
     {
         public string typeID;
@@ -29,6 +37,7 @@ namespace SimsCCManager.Packages.Search
     }	
     class PackageSearch
     {
+        
         // References
         LoggingGlobals log = new LoggingGlobals();
         ReadEntries readentries = new ReadEntries();   
@@ -37,8 +46,8 @@ namespace SimsCCManager.Packages.Search
         uint chunkOffset = 0;        
 
         
-        public static SimsPackage thisPackage = new SimsPackage();
-        public static SimsPackage infovar = new SimsPackage();
+        private SimsPackage thisPackage = new SimsPackage();
+        private SimsPackage infovar = new SimsPackage();
 
         public void SearchS2Packages(string file) {
             var packageparsecount = GlobalVariables.packagesRead;   
@@ -81,7 +90,7 @@ namespace SimsCCManager.Packages.Search
             
 
             //start actually reading the package 
-            Console.WriteLine("Reading Package #" + packageparsecount + ": " + packageinfo.Name);           
+            Console.WriteLine("Reading Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
             log.MakeLog("Logged Package #" + packageparsecount + " as " + packageinfo.FullName, true);
             thisPackage.Location = packageinfo.FullName;
             thisPackage.Game = 2;
@@ -219,7 +228,7 @@ namespace SimsCCManager.Packages.Search
                 }
                 
                 foreach (typeList type in TypeListings.AllTypesS2) {
-                    log.MakeLog("P" + packageparsecount + " - Checking entry " + entrynum + " (type ID: " + iEntry.typeID + ") for: " + type.desc, true);
+                    //log.MakeLog("P" + packageparsecount + " - Checking entry " + entrynum + " (type ID: " + iEntry.typeID + ") for: " + type.desc, true);
                     if (iEntry.typeID == type.typeID) {
                         log.MakeLog("P" + packageparsecount + " - Found: " + type.desc, true);
                         typefound = type.desc;
@@ -367,9 +376,9 @@ namespace SimsCCManager.Packages.Search
                             if (cTypeID == "FB10") 
 							{
 								byte[] tempBytes = readFile.ReadBytes(3);
-								uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
+								uint cFullSize = readentries.QFSLengthToInt(tempBytes);
 
-								DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+								DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
 								infovar = readentries.readCTSSchunk(decompressed);
                                 if (infovar.Title != null) thisPackage.Title = infovar.Title;
@@ -415,7 +424,7 @@ namespace SimsCCManager.Packages.Search
                             if (cTypeID == "FB10"){
                                 log.MakeLog("FB10 confirmed.", true);
                                 byte[] tempBytes = readFile.ReadBytes(3);
-                                uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
+                                uint cFullSize = readentries.QFSLengthToInt(tempBytes);
                                 log.MakeLog("cFullSize is: " + cFileSize, true);
                                 string cpfTypeID = readFile.ReadUInt32().ToString("X8");
                                 log.MakeLog("cpfTypeID is: " + cpfTypeID, true);
@@ -425,7 +434,7 @@ namespace SimsCCManager.Packages.Search
                                 } else {
                                     log.MakeLog("Not a real CPF. Searching for more information.", true);
                                     dbpfFile.Seek(this.chunkOffset + idx.offset + 9, SeekOrigin.Begin);
-                                    DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+                                    DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
                                     if (cpfTypeID == "E750E0E2")
                                     {
                                         // Read first four bytes
@@ -505,9 +514,9 @@ namespace SimsCCManager.Packages.Search
                         log.MakeLog("P" + packageparsecount + " - OBJD ctypeID confirmed as: " + cTypeID, true);
                         byte[] tempBytes = readFile.ReadBytes(3);
                         log.MakeLog("P" + packageparsecount + " - OBJD temp bytes are: " + tempBytes, true);
-                        uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
+                        uint cFullSize = readentries.QFSLengthToInt(tempBytes);
                         log.MakeLog("P" + packageparsecount + " - OBJD size is: " + cFullSize, true);
-                        DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+                        DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
                         infovar = readentries.readOBJDchunk(decompressed);
                         if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
                         if (thisPackage.Description == null) thisPackage.Description = infovar.Description;                        if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
@@ -565,9 +574,9 @@ namespace SimsCCManager.Packages.Search
                     if (cTypeID == "FB10")
                     {
                         byte[] tempBytes = readFile.ReadBytes(3);
-                        uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
+                        uint cFullSize = readentries.QFSLengthToInt(tempBytes);
 
-                        DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+                        DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
                         infovar = readentries.readSTRchunk(decompressed);
                         if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
@@ -584,15 +593,76 @@ namespace SimsCCManager.Packages.Search
                 
             }
 
+            TypeCounter typecount = new TypeCounter();
+            var typeDict = new Dictionary<string, int>();
 
+            foreach (fileHasList item in fileHas){
+                foreach (typeList type in TypeListings.AllTypesS2){
+                    if (type.desc == item.term){
+                        typeDict.Increment(type.desc);
+                    }
+                }
+            }
 
+            foreach (KeyValuePair<string, int> type in typeDict){
+                var ky = type.Key;
+                var vl = type.Value;
+                typecount.Type = type.Key;
+                typecount.Count = type.Value;
+                log.MakeLog("There are " + vl + " of " + ky + " in this package.", true);
+            }
+            //thisPackage.Entries.AddRange(typecount);
 
-
-
+            if ((typeDict.TryGetValue("TXTR", out int txtr_0) && txtr_0 >= 1) && (typeDict.TryGetValue("STR#", out int str_0) && str_0 >= 1) && (typeDict.TryGetValue("DIR", out int dir_0) && dir_0 >= 1) && (typeDict.TryGetValue("TXMT", out int txmt_0) && txmt_0 >= 1) && (typeDict.TryGetValue("SHPE", out int shpe_0) && shpe_0 <= 0) && (typeDict.TryGetValue("BCON", out int bcon_0) && bcon_0 <= 0) && (typeDict.TryGetValue("BHAV", out int bhav_0) && bhav_0 <= 0) && (typeDict.TryGetValue("MMAT", out int mmat_0) && mmat_0 <= 0) && (typeDict.TryGetValue("OBJF", out int objf_0) && objf_0 <= 0) && (typeDict.TryGetValue("OBJD", out int objd_0) && objd_0 <= 0) && (typeDict.TryGetValue("CLST", out int clst_0) && clst_0 <= 0)){
+                thisPackage.Type = "Floor";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("TXTR", out int txtr_1) && txtr_1 >= 1) && (typeDict.TryGetValue("STR#", out int str_1) && str_1 >= 1) && (typeDict.TryGetValue("DIR", out int dir_1) && dir_1 >= 1) && (typeDict.TryGetValue("SHPE", out int shpe_1) && shpe_1 <= 0) && (typeDict.TryGetValue("BCON", out int bcon_1) && bcon_1 <= 0) && (typeDict.TryGetValue("BHAV", out int bhav_1) && bhav_1 <= 0) && (typeDict.TryGetValue("MMAT", out int mmat_1) && mmat_1 <= 0) && (typeDict.TryGetValue("OBJF", out int objf_1) && objf_1 <= 0) && (typeDict.TryGetValue("OBJD", out int objd_1) && objd_1 <= 0) && (typeDict.TryGetValue("CLST", out int clst_1) && clst_1 <= 0) && (typeDict.TryGetValue("XOBJ", out int xobj_0) && xobj_0 <= 0)){
+                thisPackage.Type = "Terrain Paint";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("BCON", out int bcon_2) && bcon_2 >= 1) && (typeDict.TryGetValue("BHAV", out int bhav_2) && bhav_2 >= 1) && (typeDict.TryGetValue("CRES", out int cres_0) && cres_0 >= 1) && (typeDict.TryGetValue("CTSS", out int ctss_0) && ctss_0 >= 1)){
+                thisPackage.Type = "Functional Object";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("COLL", out int coll_0) && coll_0 >= 1)){
+                thisPackage.Type = "Collection";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("BCON", out int bcon_3) && bcon_3 >= 1) && (typeDict.TryGetValue("TRCN", out int trcn_0) && trcn_0 >= 1) && (typeDict.TryGetValue("BHAV", out int bhav_3) && bhav_3 <= 0) && (typeDict.TryGetValue("TTAB", out int ttab_0) && ttab_0 <= 0)){
+                thisPackage.Type = "Tuning Mod";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("BHAV", out int bhav_4) && bhav_4 >= 1) && (typeDict.TryGetValue("GLOB", out int glob_0) && glob_0 >= 1) && (typeDict.TryGetValue("OBJD", out int objd_2) && objd_2 >= 1) && (typeDict.TryGetValue("GMDC", out int gmdc_0) && gmdc_0 <= 0) && (typeDict.TryGetValue("GMND", out int gmnd_0) && gmnd_0 <= 0)){
+                thisPackage.Type = "Mod";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("MMAT", out int mmat_2) && mmat_2 >= 1) && (typeDict.TryGetValue("DIR", out int dir_2) && dir_2 >= 1) && (typeDict.TryGetValue("TXTR", out int txtr_2) && txtr_2 >= 1) && (typeDict.TryGetValue("GMDC", out int gmdc_1) && gmdc_1 <= 0) && (typeDict.TryGetValue("GMND", out int gmnd_1) && gmnd_1 <= 0)){
+                thisPackage.Type = "Object Recolor";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("BHAV", out int bhav_5) && bhav_5 >= 1) && (typeDict.TryGetValue("GMND", out int gmnd_2) && gmnd_2 >= 1) && (typeDict.TryGetValue("GMDC", out int gmdc_2) && gmdc_2 >= 1) && (typeDict.TryGetValue("SHPE", out int shpe_2) && shpe_2 >= 1)){
+                thisPackage.Type = "Object Mesh";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("BHAV", out int bhav_6) && bhav_6 >= 1) && (typeDict.TryGetValue("GMND", out int gmnd_3) && gmnd_3 >= 1) && (typeDict.TryGetValue("GMDC", out int gmdc_3) && gmdc_3 >= 1) && (typeDict.TryGetValue("CTSS", out int ctss_1) && ctss_1 >= 1)){
+                thisPackage.Type = "Object";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("TXMT", out int txmt_1) && txmt_1 >= 1) && (typeDict.TryGetValue("TXTR", out int txtr_3) && txtr_3 >= 1) && (typeDict.TryGetValue("GZPS", out int gzps_0) && gzps_0 >= 1) && (typeDict.TryGetValue("GMND", out int gmnd_4) && gmnd_4 <= 0) && (typeDict.TryGetValue("GMDC", out int gmdc_4) && gmdc_4 <= 0) && (typeDict.TryGetValue("CRES", out int cres_1) && cres_1 <= 0)){
+                thisPackage.Type = "Clothing Recolor";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("SHPE", out int shpe_3) && shpe_3 >= 1) && (typeDict.TryGetValue("CRES", out int cres_2) && cres_2 >= 1) && (typeDict.TryGetValue("GMDC", out int gmdc_5) && gmdc_5 >= 1) && (typeDict.TryGetValue("OBJD", out int objd_3) && objd_3 <= 0)){
+                thisPackage.Type = "Body Mesh";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("XHTN", out int xhtn_0) && xhtn_0 >= 1) && (typeDict.TryGetValue("SHPE", out int shpe_4) && shpe_4 >= 1)){
+                thisPackage.Type = "Hair";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
+            } else if ((typeDict.TryGetValue("XHTN", out int xhtn_1) && xhtn_1 >= 1) && (typeDict.TryGetValue("SHPE", out int shpe_5) && shpe_5 == 0)){
+                thisPackage.Type = "Hair Recolor";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);           
+            } else if ((typeDict.TryGetValue("GMDC", out int gmdc_6) && gmdc_6 >= 1) && (typeDict.TryGetValue("GMND", out int gmnd_5) && gmnd_5 >= 1) && (typeDict.TryGetValue("SHPE", out int shpe_6) && shpe_6 >= 1)) {
+                thisPackage.Type = "Misc Mesh";
+                log.MakeLog("This is some kind of mesh!!", true);
+            }
+        
+           
 
             
             
-                
+
+                           
             
 
             //if (fileHas.ExistsExists(x => x.term == "OBJD"))
@@ -600,13 +670,13 @@ namespace SimsCCManager.Packages.Search
             distinctGUIDS = allGUIDS.Distinct().ToList();
             thisPackage.ObjectGUID.AddRange(distinctGUIDS);
             log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
-
+            log.MakeLog(thisPackage.ToString(), false);
             Containers.Containers.allSims2Packages.Add(thisPackage);
             thisPackage = new SimsPackage();
             infovar = new SimsPackage();
 
             readFile.Close();
-            Console.WriteLine("Closing Package #" + packageparsecount + ": " + packageinfo.Name);
+            Console.WriteLine("Closing Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
             
         }
     }

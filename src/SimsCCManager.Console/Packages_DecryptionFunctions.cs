@@ -137,22 +137,22 @@ namespace SimsCCManager.Packages.Decryption
 		public string xmlAge = "";
 		public string xmlGender = "";
 		public string xmlCatalog = "";
-		public List<string> objectGUID = new List<string>();
+		private List<string> objectGUID = new List<string>();
 		public string xmlCreator = "";
 
         public string title = "";
 		public string description = "";
 		public string pkgType = "";
 		public uint pkgTypeInt = 0;
-        public ArrayList guidData = new ArrayList();
+        private  ArrayList guidData = new ArrayList();
 
         public bool debugMode = false;
 
-        SimsPackage infovar = new SimsPackage();
+        private SimsPackage infovar = new SimsPackage();
 		LoggingGlobals log = new LoggingGlobals();
 
 
-        public static uint QFSLengthToInt(Byte[] data)
+        public uint QFSLengthToInt(Byte[] data)
         {
 			
 			
@@ -168,7 +168,7 @@ namespace SimsCCManager.Packages.Decryption
             return result;
         }
 
-        public static Byte[] Uncompress(Byte[] data, uint targetSize, int offset)
+        public Byte[] Uncompress(Byte[] data, uint targetSize, int offset)
 		{
 			
 			
@@ -1030,8 +1030,9 @@ namespace SimsCCManager.Packages.Decryption
 				}
 			}
             log.MakeLog("guids in infovar:", true);
-            foreach (var guid in infovar.ObjectGUID) {
-                log.MakeLog(guid, true);
+            for (int i = 0; i < infovar.ObjectGUID.Count(); i++)
+            {
+                log.MakeLog(infovar.ObjectGUID[i], true);
             }
             return infovar;
 		}

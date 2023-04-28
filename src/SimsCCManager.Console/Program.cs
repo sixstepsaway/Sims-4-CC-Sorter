@@ -12,21 +12,25 @@ using System.Runtime.CompilerServices;
 using SSAGlobals;
 using SimsCCManager.Packages.Search;
 using SimsCCManager.Packages.Containers;
+using Newtonsoft.Json;
 
 namespace SimsCCManager.CMD
 {     
     class Program { 
+        
         static void Main(string[] args)
         {
             GlobalVariables globals = new GlobalVariables();
             TypeListings typeListings = new TypeListings();
             PackageSearch searcher = new PackageSearch();
             LoggingGlobals log = new LoggingGlobals();
+            ParallelOptions parallelSettings = new ParallelOptions() { MaxDegreeOfParallelism = 200};
             TypeListings.AllTypesS2 = typeListings.createS2TypeList();
             TypeListings.AllTypesS3 = typeListings.createS3TypeList();
             TypeListings.AllTypesS4 = typeListings.createS4TypeList();
             TypeListings.S2BuyFunctionSort = typeListings.createS2buyfunctionsortlist();
             TypeListings.S2BuildFunctionSort = typeListings.createS2buildfunctionsortlist();
+            
 
             //Console.Write("File Location:   ");
             //string file = Console.ReadLine();
@@ -35,7 +39,10 @@ namespace SimsCCManager.CMD
 
             string location = "M:\\The Sims 4 (Documents)\\TESTING FOLDER\\currenttest\\";
             string[] files = Directory.GetFiles(location, "*.package", SearchOption.AllDirectories);
-
+            
+            var sw = Stopwatch.StartNew(); 
+            
+            GlobalVariables.PackageCount = files.Length;
             if (GlobalVariables.debugMode == true)
             {
                 foreach (string file in files) {
@@ -44,14 +51,16 @@ namespace SimsCCManager.CMD
             }
             else 
             {
-                Parallel.ForEach (files, file => 
+                Parallel.ForEach(files, parallelSettings, file => 
                 {
                     searcher.SearchS2Packages(file);
                 });
             }
-
+            sw.Stop();
+            log.MakeLog("Processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"), true);
             log.MakeLog("Packages in array:", true);
             //Containers.allSims2Packages.ForEach(i => log.MakeLog("{0}\t", i));
+
             foreach (SimsPackage pack in Containers.allSims2Packages){
                 log.MakeLog(pack.ToString(), false);
             }

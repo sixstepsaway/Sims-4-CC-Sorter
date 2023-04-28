@@ -19,16 +19,6 @@ namespace SSAGlobals {
         string name {set; get;}        
     }
 
-    public class ContentTypeHolder {
-        string Type {set; get;}
-        string req1 {set; get;}
-        string req2 {set; get;}
-        string req3 {set; get;}
-        string req4 {set; get;}
-        string req5 {set; get;}
-        string req6 {set; get;}
-    }
-
     public class TypeListings {
 
         public static List<typeList> AllTypesS2;
@@ -156,6 +146,7 @@ namespace SSAGlobals {
             AllTypes.Add(new typeList{typeID="9D796DB4", desc="UNK", info="Unknown"});
             AllTypes.Add(new typeList{typeID="CC2A6A34", desc="UNK", info="Unknown"});
             AllTypes.Add(new typeList{typeID="CC8A6A69", desc="UNK", info="Unknown"});            
+            AllTypes.Add(new typeList{typeID="6C4F359D", desc="COLL", info="Collection"});    
             return AllTypes;
         }
 
@@ -532,6 +523,7 @@ namespace SSAGlobals {
             AllTypes.Add(new typeList{typeID="0xFA25B7DE", desc="", info=""});
             AllTypes.Add(new typeList{typeID="0xFCB1A1E4", desc="", info=""});
             AllTypes.Add(new typeList{typeID="0xFD04E3BE", desc="PRPX ", info="propx "});
+            AllTypes.Add(new typeList{typeID="0x7FB6AD8A", desc="S4SM ", info="Sims 4 Studio Merged Package Manifest"});
 
             return AllTypes;
         }
@@ -717,12 +709,6 @@ namespace SSAGlobals {
             return s2fs;
         }
         
-        public List<ContentTypeHolder> createS2ContentTypes(){
-            List<ContentTypeHolder> holder = new List<ContentTypeHolder>();
-            //holder.Add(new ContentTypeHolder{Type = "", req1 = "", req2 = "", req3 = "", req4 = "", req5 = "", req6 = ""});
-            return holder;   
-        }
-        
         /*public List<FunctionSortList> createS3functionsortlist(){
             //List<FunctionSortList> s3fs = new List<FunctionSortList>()            
             //return s2fs;
@@ -735,18 +721,18 @@ namespace SSAGlobals {
     
 
     public class GlobalVariables {
-        public static bool debugMode = true;
-        public static string logfile = "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.Console\\log\\mainlog.log";
+        public static bool debugMode = false;
+        public static string logfile = "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.Console\\log\\SimsCCManager.log";
         public static string ModFolder;
         public static int gameVer;  
-
+        public static int PackageCount = 0;       
         public static int packagesRead = 1;
 
 
         public void Initialize(int gameNum, string modLocation){
             gameVer = gameNum;
             ModFolder = modLocation;
-            logfile = modLocation + ".\\SimsCCSorter.log";
+            logfile = modLocation + "\\SimsCCSorter.log";
             StreamWriter putContentsIntoTxt = new StreamWriter(logfile);
             putContentsIntoTxt.Close();
         }
