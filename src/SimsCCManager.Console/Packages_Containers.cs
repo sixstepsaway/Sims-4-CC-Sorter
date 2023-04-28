@@ -4,6 +4,7 @@ using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace SimsCCManager.Packages.Containers
 {    
@@ -13,6 +14,10 @@ namespace SimsCCManager.Packages.Containers
         public int Number {get; set;}        
         public int Game {get; set;}
         public bool Broken {get; set;}
+    }
+
+    public class ThingHolder<T> : List<T> {
+        public string ID {get; set;}
     }
 
     public class SimsPackage { // A more in depth package file.
@@ -41,18 +46,39 @@ namespace SimsCCManager.Packages.Containers
         public string XMLSubtype {get; set;}
         public string XMLCategory {get; set;}
         public string XMLModelName {get; set;}
-        public ArrayList ObjectGUID {get; set;}
+        public List<string> ObjectGUID {get; set;}
         public string XMLCreator {get; set;}
         public string XMLAge {get; set;}
         public string XMLGender {get; set;}
-        public string[] RequiredEPs {get; set;}
+        public List<string> RequiredEPs {get; set;}
         public string Function {get; set;}
         public string FunctionSubcategory {get; set;}
-        public string[] RoomSort {get; set;}
+        public List<string> RoomSort {get; set;}
+
+        public SimsPackage() {
+            InstanceIDs = new List<string>();
+            ObjectGUID = new List<string>();
+            RequiredEPs = new List<string>();
+            RoomSort = new List<string>();
+        }
+
+        public static string GetFormatListString(List<string> words){
+            string retVal = string.Empty;
+            foreach (string word in words){
+                if (string.IsNullOrEmpty(retVal)){
+                    retVal += word.ToString();
+                } else {
+                    retVal += string.Format(", {0}", word);
+                }
+                
+            }
+            return retVal;
+        }
 
         public override string ToString()
         {
-            return string.Format("Title: {0} \n Description: {1} \n Type: {2} \n InstanceID: {3} \n Location: {4} \n PackageName: {5} \n Game: {6} \n DBPF: {7} \n Major: {8} \n Minor: {9} \n DateCreated: {10} \n DateModified: {11} \n IndexMajorVersion: {12} \n IndexCount: {13} \n IndexOffset: {14} \n IndexSize: {15} \n HolesCount: {16} \n HolesOffset: {17} \n HolesSize: {18} \n IndexMinorVersion: {19} \n XMLType: {20} \n XMLSubtype: {21} \n XMLCategory: {22} \n XMLModelName: {23} \n ObjectGUID: {24} \n XMLCreator: {25} \n XMLAge: {26} \n XMLGender: {27} \n RequiredEPs: {28} \n Function: {29} \n FunctionSubcategory: {30} \n RoomSort: {31}", this.Title, this.Description, this.Type, this.InstanceIDs, this.Location, this.PackageName, this.Game, this.DBPF, this.Major, this.Minor, this.DateCreated, this.DateModified, this.IndexMajorVersion, this.IndexCount, this.IndexOffset, this.IndexSize, this.HolesCount, this.HolesOffset, this.HolesSize, this.IndexMinorVersion, this.XMLType, this.XMLSubtype, this.XMLCategory, this.XMLModelName, this.ObjectGUID, this.XMLCreator, this.XMLAge, this.XMLGender, this.RequiredEPs, this.Function, this.FunctionSubcategory, this.RoomSort);
+            
+            return string.Format("Title: {0} \n Description: {1} \n Type: {2} \n InstanceID: {3} \n Location: {4} \n PackageName: {5} \n Game: {6} \n DBPF: {7} \n Major: {8} \n Minor: {9} \n Date Created: {10} \n Date Modified: {11} \n Index Major Version: {12} \n Index Count: {13} \n Index Offset: {14} \n Index Size: {15} \n Holes Count: {16} \n Holes Offset: {17} \n Holes Size: {18} \n Index Minor Version: {19} \n XML Type: {20} \n XML Subtype: {21} \n XML Category: {22} \n XML Model Name: {23} \n Object GUIDs: {24} \n XML Creator: {25} \n XML Age: {26} \n XML Gender: {27} \n Required EPs: {28} \n Function: {29} \n Function Subcategory: {30} \n Room Sort: {31}", this.Title, this.Description, this.Type, GetFormatListString(this.InstanceIDs), this.Location, this.PackageName, this.Game, this.DBPF, this.Major, this.Minor, this.DateCreated, this.DateModified, this.IndexMajorVersion, this.IndexCount, this.IndexOffset, this.IndexSize, this.HolesCount, this.HolesOffset, this.HolesSize, this.IndexMinorVersion, this.XMLType, this.XMLSubtype, this.XMLCategory, this.XMLModelName, GetFormatListString(this.ObjectGUID), this.XMLCreator, this.XMLAge, this.XMLGender, GetFormatListString(this.RequiredEPs), this.Function, this.FunctionSubcategory, GetFormatListString(this.RoomSort));
         }
 
     }

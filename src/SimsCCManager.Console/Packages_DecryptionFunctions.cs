@@ -137,7 +137,7 @@ namespace SimsCCManager.Packages.Decryption
 		public string xmlAge = "";
 		public string xmlGender = "";
 		public string xmlCatalog = "";
-		public ArrayList objectGUID = new ArrayList();
+		public List<string> objectGUID = new List<string>();
 		public string xmlCreator = "";
 
         public string title = "";
@@ -239,7 +239,7 @@ namespace SimsCCManager.Packages.Decryption
 			} //try
 			catch(Exception ex)
 			{
-				//Helper.ExceptionMessage("", ex);
+				//log.MakeLog("Exception thrown trying to uncompress bytes.", true);
 				throw ex;
 			} 
 			
@@ -332,7 +332,8 @@ namespace SimsCCManager.Packages.Decryption
 						break;
 					case "objectGUID":
 						this.objectGUID.Add(fieldValueInt.ToString("X8"));
-						if (infovar.ObjectGUID == null) infovar.ObjectGUID = this.objectGUID;
+						infovar.ObjectGUID.Add(fieldValueInt.ToString("X8"));
+                        log.MakeLog("GUID: " + fieldValueInt.ToString("X8"), true);
 						break;
 					case "creator":
 						this.xmlCreator = fieldValueString;
@@ -428,7 +429,8 @@ namespace SimsCCManager.Packages.Decryption
 						break;
 					case "objectGUID":
 						this.objectGUID.Add(fieldValueInt.ToString("X8"));
-						if (infovar.ObjectGUID == null) infovar.ObjectGUID = this.objectGUID;
+						infovar.ObjectGUID.Add(fieldValueInt.ToString("X8"));
+                        log.MakeLog("GUID: " + fieldValueInt.ToString("X8"), true);
 						break;
 					case "creator":
 						this.xmlCreator = fieldValueString;
@@ -737,8 +739,8 @@ namespace SimsCCManager.Packages.Decryption
 				}
 
 			}
-            if (infovar.Description == null) infovar.Description = this.description;
-            if (infovar.Title == null) infovar.Title = this.title;
+            infovar.Description = this.description;
+            infovar.Title = this.title;
             return infovar;
 		}
 
@@ -765,12 +767,8 @@ namespace SimsCCManager.Packages.Decryption
 				}
 
 			}
-            if (infovar.Description == null) {
-                infovar.Description = this.description;
-            }
-            if (infovar.Title == null) {
-                infovar.Title = this.title;
-            }
+            infovar.Description = this.description;
+            infovar.Title = this.title;
             
             return infovar;
 		}
@@ -795,9 +793,12 @@ namespace SimsCCManager.Packages.Decryption
 			// Only check further if this is a Master ID or single id
 			if ((masterTileSubIndex == 65535) || (masterTileMasterId == 0))
 			{
+                log.MakeLog("This is a MasterID.", true);
 				readFile.ReadUInt16(); // Use Default Placement Flags
 				readFile.ReadUInt16(); // Look at Score
 				uint objectGUID = readFile.ReadUInt32();
+                log.MakeLog("GUID: " + objectGUID, true);
+                infovar.ObjectGUID.Add(objectGUID.ToString("X8"));
 				this.objectGUID.Add(objectGUID.ToString("X8"));
 				//this.objectGUID = objectGUID.ToString("X8");
 				this.guidData.Add(this.objectGUID);
@@ -886,6 +887,10 @@ namespace SimsCCManager.Packages.Decryption
 
 				if (this.debugMode) Console.WriteLine(functionSortFlag);*/
 			} 
+            log.MakeLog("guids in infovar:", true);
+            foreach (var guid in infovar.ObjectGUID) {
+                log.MakeLog(guid, true);
+            }
             return infovar;
 		}
 
@@ -921,11 +926,14 @@ namespace SimsCCManager.Packages.Decryption
 			// Only check further if this is a Master ID or single id
 			if ((masterTileSubIndex == 65535) || (masterTileMasterId == 0))
 			{
+                log.MakeLog("This is a Master ID", true);
 				test = readFile.ReadUInt16(); // Use Default Placement Flags
                 log.MakeLog("Use Default Placement Flags: " + test, true);
 				test = readFile.ReadUInt16(); // Look at Score
                 log.MakeLog("Score: " + test, true);
-				uint objectGUID = readFile.ReadUInt32();                
+				uint objectGUID = readFile.ReadUInt32();
+                log.MakeLog("GUID: " + objectGUID, true);
+                infovar.ObjectGUID.Add(objectGUID.ToString("X8"));              
 				this.objectGUID.Add(objectGUID.ToString("X8"));
                 log.MakeLog("ObjectGUID: " + objectGUID, true);
 				//this.objectGUID = objectGUID.ToString("X8");
@@ -1021,6 +1029,10 @@ namespace SimsCCManager.Packages.Decryption
                     }                    
 				}
 			}
+            log.MakeLog("guids in infovar:", true);
+            foreach (var guid in infovar.ObjectGUID) {
+                log.MakeLog(guid, true);
+            }
             return infovar;
 		}
     }

@@ -19,6 +19,16 @@ namespace SSAGlobals {
         string name {set; get;}        
     }
 
+    public class ContentTypeHolder {
+        string Type {set; get;}
+        string req1 {set; get;}
+        string req2 {set; get;}
+        string req3 {set; get;}
+        string req4 {set; get;}
+        string req5 {set; get;}
+        string req6 {set; get;}
+    }
+
     public class TypeListings {
 
         public static List<typeList> AllTypesS2;
@@ -707,7 +717,11 @@ namespace SSAGlobals {
             return s2fs;
         }
         
-        
+        public List<ContentTypeHolder> createS2ContentTypes(){
+            List<ContentTypeHolder> holder = new List<ContentTypeHolder>();
+            //holder.Add(new ContentTypeHolder{Type = "", req1 = "", req2 = "", req3 = "", req4 = "", req5 = "", req6 = ""});
+            return holder;   
+        }
         
         /*public List<FunctionSortList> createS3functionsortlist(){
             //List<FunctionSortList> s3fs = new List<FunctionSortList>()            

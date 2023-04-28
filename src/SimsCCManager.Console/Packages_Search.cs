@@ -49,7 +49,6 @@ namespace SimsCCManager.Packages.Search
             string typeID;
             string groupID;
             string instanceID;
-            string title;
             uint compfilesize;
             uint numRecords;
             string cTypeID;
@@ -70,7 +69,9 @@ namespace SimsCCManager.Packages.Search
             ArrayList linkData = new ArrayList();
             List<indexEntry> indexData = new List<indexEntry>();
             FileInfo packageinfo = new FileInfo(file); 
-            List<string> iids = new List<string>();
+            //List<string> iids = new List<string>();
+            List<string> allGUIDS = new List<string>();      
+            List<string> distinctGUIDS = new List<string>();  
 
             //create readers  
             FileStream dbpfFile = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -91,12 +92,12 @@ namespace SimsCCManager.Packages.Search
             
             uint major = readFile.ReadUInt32();
             test = major.ToString();  
-            thisPackage.major = test;
+            thisPackage.Major = major;
             log.MakeLog("P" + packageparsecount + " - Major: " + test, true);
 
             uint minor = readFile.ReadUInt32();
             test = minor.ToString();
-            thisPackage.minor = test;
+            thisPackage.Minor = minor;
             log.MakeLog("P" + packageparsecount + " - Minor: " + test, true);
             
             string reserved = Encoding.UTF8.GetString(readFile.ReadBytes(12));
@@ -105,52 +106,52 @@ namespace SimsCCManager.Packages.Search
             
             uint dateCreated = readFile.ReadUInt32();
             test = dateCreated.ToString();
-            thisPackage.dateCreated = test;
+            thisPackage.DateCreated = dateCreated;
             log.MakeLog("P" + packageparsecount + " - Date created: " + test, true);
             
             uint dateModified = readFile.ReadUInt32();
             test = dateModified.ToString();
-            thisPackage.dateModified = test;
+            thisPackage.DateModified = dateModified;
             log.MakeLog("P" + packageparsecount + " - Date modified: " + test, true);
             
             uint indexMajorVersion = readFile.ReadUInt32();
             test = indexMajorVersion.ToString();
-            thisPackage.indexMajorVersion = test;
+            thisPackage.IndexMajorVersion = indexMajorVersion;
             log.MakeLog("P" + packageparsecount + " - Index Major: " + test, true);
             
             uint indexCount = readFile.ReadUInt32();
             test = indexCount.ToString();
-            thisPackage.indexCount = test;
+            thisPackage.IndexCount = indexCount;
             log.MakeLog("P" + packageparsecount + " - Index Count: " + test, true);
             
             uint indexOffset = readFile.ReadUInt32();
             test = indexOffset.ToString();
-            thisPackage.indexOffset = test;
+            thisPackage.IndexOffset = indexOffset;
             log.MakeLog("P" + packageparsecount + " - Index Offset: " + test, true);
             
             uint indexSize = readFile.ReadUInt32();
             test = indexSize.ToString();
-            thisPackage.indexSize = test;
+            thisPackage.IndexSize = indexSize;
             log.MakeLog("P" + packageparsecount + " - Index Size: " + test, true);
             
             uint holesCount = readFile.ReadUInt32();
             test = holesCount.ToString();
-            thisPackage.holesCount = test;
+            thisPackage.HolesCount = holesCount;
             log.MakeLog("P" + packageparsecount + " - Holes Count: " + test, true);
 
             uint holesOffset = readFile.ReadUInt32();
             test = holesOffset.ToString();
-            thisPackage.holesOffset = test;
+            thisPackage.HolesOffset = holesOffset;
             log.MakeLog("P" + packageparsecount + " - Holes Offset: " + test, true);
             
             uint holesSize = readFile.ReadUInt32();
             test = holesSize.ToString();
-            thisPackage.holesSize = test;
+            thisPackage.HolesSize = holesSize;
             log.MakeLog("P" + packageparsecount + " - Holes Size: " + test, true);
             
             uint indexMinorVersion = readFile.ReadUInt32() -1;
             test = indexMinorVersion.ToString();
-            thisPackage.indexMinorVersion = test;
+            thisPackage.IndexMinorVersion = indexMinorVersion;
             log.MakeLog("P" + packageparsecount + " - Index Minor Version: " + test, true);
             
             string reserved2 = Encoding.UTF8.GetString(readFile.ReadBytes(32));
@@ -169,7 +170,7 @@ namespace SimsCCManager.Packages.Search
                 log.MakeLog("P" + packageparsecount + " - Index Entry GroupID: " + holderEntry.groupID, true);
                 holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                 //Console.WriteLine(holderEntry.instanceID);
-                iids.Add(holderEntry.instanceID.ToString());
+                thisPackage.InstanceIDs.Add(holderEntry.instanceID.ToString());
                 log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
 
                 if ((indexMajorVersion == 7) && (indexMinorVersion == 1)) {
@@ -199,6 +200,9 @@ namespace SimsCCManager.Packages.Search
                 }
                 
             }
+
+
+            
 
 
             //Console.WriteLine(indexData[0].typeID);
@@ -234,46 +238,6 @@ namespace SimsCCManager.Packages.Search
             log.MakeLog("P" + packageparsecount + " - This file has:", true);
             foreach (fileHasList item in fileHas) {
                 log.MakeLog("--- " + item.term + " at: " + item.location, true);
-            }
-
-            if (fileHas.Exists(x => x.term == "STR#"))
-            {
-                int fh = 0;
-                foreach (fileHasList item in fileHas) {
-                    if (item.term == "STR#"){
-                        strnm.Add(fh);
-                    }
-                    fh++;
-                }
-                
-                foreach (int strloc in strnm) {
-                    log.MakeLog("P" + packageparsecount + " - STR entry confirmation: ", true);
-                    log.MakeLog(indexData[strloc].typeID, true);
-                    dbpfFile.Seek(chunkOffset + indexData[strloc].offset, SeekOrigin.Begin);
-                    cFileSize = readFile.ReadInt32();
-                    log.MakeLog("P" + packageparsecount + " - STR entry size: " + cFileSize, true);
-                    cTypeID = readFile.ReadUInt16().ToString("X4");
-                    log.MakeLog("P" + packageparsecount + " - STR entry typeid: " + cTypeID, true);
-                    if (cTypeID == "FB10")
-                    {
-                        byte[] tempBytes = readFile.ReadBytes(3);
-                        uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
-
-                        DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-
-                        infovar = readentries.readSTRchunk(decompressed);
-                        if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
-                    } 
-                    else 
-                    {
-                        infovar = readentries.readSTRchunk(readFile);
-                        if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
-                        
-                    }                    
-                }
-                
             }
 
             if (fileHas.Exists(x => x.term == "DIR")) {       
@@ -408,29 +372,13 @@ namespace SimsCCManager.Packages.Search
 								DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
 								infovar = readentries.readCTSSchunk(decompressed);
-                                if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                                if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
-                                if (thisPackage.Location == null) thisPackage.Location = infovar.Location;
-                                if (thisPackage.PackageName == null) thisPackage.PackageName = infovar.PackageName;
-                                if (thisPackage.Game == null) thisPackage.Game = infovar.Game;
-                                if (thisPackage.DBPF == null) thisPackage.DBPF = infovar.DBPF;
-                                if (thisPackage.Major == null) thisPackage.Major = infovar.Major;
-                                if (thisPackage.Minor == null) thisPackage.Minor = infovar.Minor;
-                                if (thisPackage.DateCreated == null) thisPackage.DateCreated = infovar.DateCreated;
-                                if (thisPackage.DateModified == null) thisPackage.DateModified = infovar.DateModified;
-                                if (thisPackage.IndexMajorVersion == null) thisPackage.IndexMajorVersion = infovar.IndexMajorVersion;
-                                if (thisPackage.IndexCount == null) thisPackage.IndexCount = infovar.IndexCount;
-                                if (thisPackage.IndexOffset == null) thisPackage.IndexOffset = infovar.IndexOffset;
-                                if (thisPackage.IndexSize == null) thisPackage.IndexSize = infovar.IndexSize;
-                                if (thisPackage.HolesCount == null) thisPackage.HolesCount = infovar.HolesCount;
-                                if (thisPackage.HolesOffset == null) thisPackage.HolesOffset = infovar.HolesOffset;
-                                if (thisPackage.HolesSize == null) thisPackage.HolesSize = infovar.HolesSize;
-                                if (thisPackage.IndexMinorVersion == null) thisPackage.IndexMinorVersion = infovar.IndexMinorVersion;
+                                if (infovar.Title != null) thisPackage.Title = infovar.Title;
+                                if (infovar.Description != null) thisPackage.Description = infovar.Description;                                
                                 if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
                                 if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
                                 if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
                                 if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                                if (thisPackage.ObjectGUID == null) thisPackage.ObjectGUID = infovar.ObjectGUID;
+                                allGUIDS.AddRange(infovar.ObjectGUID);
                                 if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
                                 if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
                                 if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
@@ -443,29 +391,13 @@ namespace SimsCCManager.Packages.Search
 							{
 								dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
 								infovar = readentries.readCTSSchunk(readFile);
-                                if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                                if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
-                                if (thisPackage.Location == null) thisPackage.Location = infovar.Location;
-                                if (thisPackage.PackageName == null) thisPackage.PackageName = infovar.PackageName;
-                                if (thisPackage.Game == null) thisPackage.Game = infovar.Game;
-                                if (thisPackage.DBPF == null) thisPackage.DBPF = infovar.DBPF;
-                                if (thisPackage.Major == null) thisPackage.Major = infovar.Major;
-                                if (thisPackage.Minor == null) thisPackage.Minor = infovar.Minor;
-                                if (thisPackage.DateCreated == null) thisPackage.DateCreated = infovar.DateCreated;
-                                if (thisPackage.DateModified == null) thisPackage.DateModified = infovar.DateModified;
-                                if (thisPackage.IndexMajorVersion == null) thisPackage.IndexMajorVersion = infovar.IndexMajorVersion;
-                                if (thisPackage.IndexCount == null) thisPackage.IndexCount = infovar.IndexCount;
-                                if (thisPackage.IndexOffset == null) thisPackage.IndexOffset = infovar.IndexOffset;
-                                if (thisPackage.IndexSize == null) thisPackage.IndexSize = infovar.IndexSize;
-                                if (thisPackage.HolesCount == null) thisPackage.HolesCount = infovar.HolesCount;
-                                if (thisPackage.HolesOffset == null) thisPackage.HolesOffset = infovar.HolesOffset;
-                                if (thisPackage.HolesSize == null) thisPackage.HolesSize = infovar.HolesSize;
-                                if (thisPackage.IndexMinorVersion == null) thisPackage.IndexMinorVersion = infovar.IndexMinorVersion;
+                                if (infovar.Title != null) thisPackage.Title = infovar.Title;
+                                if (infovar.Description != null) thisPackage.Description = infovar.Description; 
                                 if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
                                 if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
                                 if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
                                 if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                                if (thisPackage.ObjectGUID == null) thisPackage.ObjectGUID = infovar.ObjectGUID;
+                                allGUIDS.AddRange(infovar.ObjectGUID);
                                 if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
                                 if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
                                 if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
@@ -504,28 +436,11 @@ namespace SimsCCManager.Packages.Search
                                             log.MakeLog("Real CPF. Decompressing.", true);
                                             infovar = readentries.readCPFchunk(decompressed);
                                             if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                                            if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
-                                            if (thisPackage.Location == null) thisPackage.Location = infovar.Location;
-                                            if (thisPackage.PackageName == null) thisPackage.PackageName = infovar.PackageName;
-                                            if (thisPackage.Game == null) thisPackage.Game = infovar.Game;
-                                            if (thisPackage.DBPF == null) thisPackage.DBPF = infovar.DBPF;
-                                            if (thisPackage.Major == null) thisPackage.Major = infovar.Major;
-                                            if (thisPackage.Minor == null) thisPackage.Minor = infovar.Minor;
-                                            if (thisPackage.DateCreated == null) thisPackage.DateCreated = infovar.DateCreated;
-                                            if (thisPackage.DateModified == null) thisPackage.DateModified = infovar.DateModified;
-                                            if (thisPackage.IndexMajorVersion == null) thisPackage.IndexMajorVersion = infovar.IndexMajorVersion;
-                                            if (thisPackage.IndexCount == null) thisPackage.IndexCount = infovar.IndexCount;
-                                            if (thisPackage.IndexOffset == null) thisPackage.IndexOffset = infovar.IndexOffset;
-                                            if (thisPackage.IndexSize == null) thisPackage.IndexSize = infovar.IndexSize;
-                                            if (thisPackage.HolesCount == null) thisPackage.HolesCount = infovar.HolesCount;
-                                            if (thisPackage.HolesOffset == null) thisPackage.HolesOffset = infovar.HolesOffset;
-                                            if (thisPackage.HolesSize == null) thisPackage.HolesSize = infovar.HolesSize;
-                                            if (thisPackage.IndexMinorVersion == null) thisPackage.IndexMinorVersion = infovar.IndexMinorVersion;
-                                            if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
+                                            if (thisPackage.Description == null) thisPackage.Description = infovar.Description;                                            if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
                                             if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
                                             if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
                                             if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                                            if (thisPackage.ObjectGUID == null) thisPackage.ObjectGUID = infovar.ObjectGUID;
+                                            allGUIDS.AddRange(infovar.ObjectGUID);
                                             if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
                                             if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
                                             if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
@@ -539,28 +454,11 @@ namespace SimsCCManager.Packages.Search
                                         log.MakeLog("Actually an XML. Reading.", true);
                                         infovar = readentries.readXMLchunk(decompressed);
                                         if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
-                                        if (thisPackage.Location == null) thisPackage.Location = infovar.Location;
-                                        if (thisPackage.PackageName == null) thisPackage.PackageName = infovar.PackageName;
-                                        if (thisPackage.Game == null) thisPackage.Game = infovar.Game;
-                                        if (thisPackage.DBPF == null) thisPackage.DBPF = infovar.DBPF;
-                                        if (thisPackage.Major == null) thisPackage.Major = infovar.Major;
-                                        if (thisPackage.Minor == null) thisPackage.Minor = infovar.Minor;
-                                        if (thisPackage.DateCreated == null) thisPackage.DateCreated = infovar.DateCreated;
-                                        if (thisPackage.DateModified == null) thisPackage.DateModified = infovar.DateModified;
-                                        if (thisPackage.IndexMajorVersion == null) thisPackage.IndexMajorVersion = infovar.IndexMajorVersion;
-                                        if (thisPackage.IndexCount == null) thisPackage.IndexCount = infovar.IndexCount;
-                                        if (thisPackage.IndexOffset == null) thisPackage.IndexOffset = infovar.IndexOffset;
-                                        if (thisPackage.IndexSize == null) thisPackage.IndexSize = infovar.IndexSize;
-                                        if (thisPackage.HolesCount == null) thisPackage.HolesCount = infovar.HolesCount;
-                                        if (thisPackage.HolesOffset == null) thisPackage.HolesOffset = infovar.HolesOffset;
-                                        if (thisPackage.HolesSize == null) thisPackage.HolesSize = infovar.HolesSize;
-                                        if (thisPackage.IndexMinorVersion == null) thisPackage.IndexMinorVersion = infovar.IndexMinorVersion;
-                                        if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
+                                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;                                        if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
                                         if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
                                         if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
                                         if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                                        if (thisPackage.ObjectGUID == null) thisPackage.ObjectGUID = infovar.ObjectGUID;
+                                        allGUIDS.AddRange(infovar.ObjectGUID);
                                         if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
                                         if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
                                         if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
@@ -581,8 +479,11 @@ namespace SimsCCManager.Packages.Search
 
                 }
             }
+            
 
-            if (fileHas.Exists(x => x.term == "OBJD")) {       
+            if (fileHas.Exists(x => x.term == "OBJD")) {
+                
+                    
                 int fh = 0;
                 foreach (fileHasList item in fileHas) {
                     if (item.term == "OBJD"){
@@ -609,28 +510,11 @@ namespace SimsCCManager.Packages.Search
                         DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
                         infovar = readentries.readOBJDchunk(decompressed);
                         if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
-                        if (thisPackage.Location == null) thisPackage.Location = infovar.Location;
-                        if (thisPackage.PackageName == null) thisPackage.PackageName = infovar.PackageName;
-                        if (thisPackage.Game == null) thisPackage.Game = infovar.Game;
-                        if (thisPackage.DBPF == null) thisPackage.DBPF = infovar.DBPF;
-                        if (thisPackage.Major == null) thisPackage.Major = infovar.Major;
-                        if (thisPackage.Minor == null) thisPackage.Minor = infovar.Minor;
-                        if (thisPackage.DateCreated == null) thisPackage.DateCreated = infovar.DateCreated;
-                        if (thisPackage.DateModified == null) thisPackage.DateModified = infovar.DateModified;
-                        if (thisPackage.IndexMajorVersion == null) thisPackage.IndexMajorVersion = infovar.IndexMajorVersion;
-                        if (thisPackage.IndexCount == null) thisPackage.IndexCount = infovar.IndexCount;
-                        if (thisPackage.IndexOffset == null) thisPackage.IndexOffset = infovar.IndexOffset;
-                        if (thisPackage.IndexSize == null) thisPackage.IndexSize = infovar.IndexSize;
-                        if (thisPackage.HolesCount == null) thisPackage.HolesCount = infovar.HolesCount;
-                        if (thisPackage.HolesOffset == null) thisPackage.HolesOffset = infovar.HolesOffset;
-                        if (thisPackage.HolesSize == null) thisPackage.HolesSize = infovar.HolesSize;
-                        if (thisPackage.IndexMinorVersion == null) thisPackage.IndexMinorVersion = infovar.IndexMinorVersion;
-                        if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
+                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;                        if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
                         if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
                         if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
                         if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                        if (thisPackage.ObjectGUID == null) thisPackage.ObjectGUID = infovar.ObjectGUID;
+                        allGUIDS.AddRange(infovar.ObjectGUID);
                         if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
                         if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
                         if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
@@ -642,28 +526,11 @@ namespace SimsCCManager.Packages.Search
                         dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
                         infovar = readentries.readOBJDchunk(readFile);
                         if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
-                        if (thisPackage.Location == null) thisPackage.Location = infovar.Location;
-                        if (thisPackage.PackageName == null) thisPackage.PackageName = infovar.PackageName;
-                        if (thisPackage.Game == null) thisPackage.Game = infovar.Game;
-                        if (thisPackage.DBPF == null) thisPackage.DBPF = infovar.DBPF;
-                        if (thisPackage.Major == null) thisPackage.Major = infovar.Major;
-                        if (thisPackage.Minor == null) thisPackage.Minor = infovar.Minor;
-                        if (thisPackage.DateCreated == null) thisPackage.DateCreated = infovar.DateCreated;
-                        if (thisPackage.DateModified == null) thisPackage.DateModified = infovar.DateModified;
-                        if (thisPackage.IndexMajorVersion == null) thisPackage.IndexMajorVersion = infovar.IndexMajorVersion;
-                        if (thisPackage.IndexCount == null) thisPackage.IndexCount = infovar.IndexCount;
-                        if (thisPackage.IndexOffset == null) thisPackage.IndexOffset = infovar.IndexOffset;
-                        if (thisPackage.IndexSize == null) thisPackage.IndexSize = infovar.IndexSize;
-                        if (thisPackage.HolesCount == null) thisPackage.HolesCount = infovar.HolesCount;
-                        if (thisPackage.HolesOffset == null) thisPackage.HolesOffset = infovar.HolesOffset;
-                        if (thisPackage.HolesSize == null) thisPackage.HolesSize = infovar.HolesSize;
-                        if (thisPackage.IndexMinorVersion == null) thisPackage.IndexMinorVersion = infovar.IndexMinorVersion;
-                        if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
+                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;                        if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
                         if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
                         if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
                         if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                        if (thisPackage.ObjectGUID == null) thisPackage.ObjectGUID = infovar.ObjectGUID;
+                        allGUIDS.AddRange(infovar.ObjectGUID);
                         if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
                         if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
                         if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
@@ -674,6 +541,47 @@ namespace SimsCCManager.Packages.Search
 
                     }
                 }
+                
+            }
+
+            if (fileHas.Exists(x => x.term == "STR#"))
+            {
+                int fh = 0;
+                foreach (fileHasList item in fileHas) {
+                    if (item.term == "STR#"){
+                        strnm.Add(fh);
+                    }
+                    fh++;
+                }
+                
+                foreach (int strloc in strnm) {
+                    log.MakeLog("P" + packageparsecount + " - STR entry confirmation: ", true);
+                    log.MakeLog(indexData[strloc].typeID, true);
+                    dbpfFile.Seek(chunkOffset + indexData[strloc].offset, SeekOrigin.Begin);
+                    cFileSize = readFile.ReadInt32();
+                    log.MakeLog("P" + packageparsecount + " - STR entry size: " + cFileSize, true);
+                    cTypeID = readFile.ReadUInt16().ToString("X4");
+                    log.MakeLog("P" + packageparsecount + " - STR entry typeid: " + cTypeID, true);
+                    if (cTypeID == "FB10")
+                    {
+                        byte[] tempBytes = readFile.ReadBytes(3);
+                        uint cFullSize = ReadEntries.QFSLengthToInt(tempBytes);
+
+                        DecryptByteStream decompressed = new DecryptByteStream(ReadEntries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+
+                        infovar = readentries.readSTRchunk(decompressed);
+                        if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
+                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
+                    } 
+                    else 
+                    {
+                        infovar = readentries.readSTRchunk(readFile);
+                        if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
+                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
+                        
+                    }                    
+                }
+                
             }
 
 
@@ -685,40 +593,12 @@ namespace SimsCCManager.Packages.Search
             
             
                 
-            if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-            if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
-            if (thisPackage.Location == null) thisPackage.Location = infovar.Location;
-            if (thisPackage.PackageName == null) thisPackage.PackageName = infovar.PackageName;
-            if (thisPackage.Game == null) thisPackage.Game = infovar.Game;
-            if (thisPackage.DBPF == null) thisPackage.DBPF = infovar.DBPF;
-            if (thisPackage.Major == null) thisPackage.Major = infovar.Major;
-            if (thisPackage.Minor == null) thisPackage.Minor = infovar.Minor;
-            if (thisPackage.DateCreated == null) thisPackage.DateCreated = infovar.DateCreated;
-            if (thisPackage.DateModified == null) thisPackage.DateModified = infovar.DateModified;
-            if (thisPackage.IndexMajorVersion == null) thisPackage.IndexMajorVersion = infovar.IndexMajorVersion;
-            if (thisPackage.IndexCount == null) thisPackage.IndexCount = infovar.IndexCount;
-            if (thisPackage.IndexOffset == null) thisPackage.IndexOffset = infovar.IndexOffset;
-            if (thisPackage.IndexSize == null) thisPackage.IndexSize = infovar.IndexSize;
-            if (thisPackage.HolesCount == null) thisPackage.HolesCount = infovar.HolesCount;
-            if (thisPackage.HolesOffset == null) thisPackage.HolesOffset = infovar.HolesOffset;
-            if (thisPackage.HolesSize == null) thisPackage.HolesSize = infovar.HolesSize;
-            if (thisPackage.IndexMinorVersion == null) thisPackage.IndexMinorVersion = infovar.IndexMinorVersion;
-            if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
-            if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
-            if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
-            if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-            if (thisPackage.ObjectGUID == null) thisPackage.ObjectGUID = infovar.ObjectGUID;
-            if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
-            if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
-            if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
-            if (thisPackage.RequiredEPs == null) thisPackage.RequiredEPs = infovar.RequiredEPs;
-            if (thisPackage.Function == null) thisPackage.Function = infovar.Function;
-            if (thisPackage.FunctionSubcategory == null) thisPackage.FunctionSubcategory = infovar.FunctionSubcategory;
-            if (thisPackage.RoomSort == null) thisPackage.RoomSort = infovar.RoomSort;
+            
 
             //if (fileHas.ExistsExists(x => x.term == "OBJD"))
 
-
+            distinctGUIDS = allGUIDS.Distinct().ToList();
+            thisPackage.ObjectGUID.AddRange(distinctGUIDS);
             log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
 
             Containers.Containers.allSims2Packages.Add(thisPackage);
