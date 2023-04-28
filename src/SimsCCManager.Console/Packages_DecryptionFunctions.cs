@@ -307,11 +307,11 @@ namespace SimsCCManager.Packages.Decryption
 				switch (fieldName)
 				{
 					case "name":
-						if (this.title == "") this.title = fieldValueString;
+						if (this.title == null) this.title = fieldValueString;
 						if (infovar.Title == null) infovar.Title = this.title;
 						break;
 					case "description":
-						if (this.description == "") this.description = fieldValueString;
+						if (this.description == null) this.description = fieldValueString;
 						if (infovar.Description == null) infovar.Description = this.description;
 						break;
 					case "type":
@@ -404,11 +404,11 @@ namespace SimsCCManager.Packages.Decryption
 				switch (fieldName)
 				{
 					case "name":
-						if (this.title == "") this.title = fieldValueString;
+						if (this.title == null) this.title = fieldValueString;
 						if (infovar.Title == null) infovar.Title = this.title;
 						break;
 					case "description":
-						if (this.description == "") this.description = fieldValueString;
+						if (this.description == null) this.description = fieldValueString;
 						if (infovar.Description == null) infovar.Description = this.description;
 						break;
 					case "type":
@@ -532,7 +532,7 @@ namespace SimsCCManager.Packages.Decryption
 					if (lineNum == 1) 
 					{ 
 						tempString = readFile.GetNullString().Replace("\n", " ");
-						if ((infovar.Title != "") && (infovar.Description == "")) 
+						if ((infovar.Title != "") && (infovar.Description == null)) 
 						{
 							infovar.Title += tempString;
 						} 
@@ -612,11 +612,11 @@ namespace SimsCCManager.Packages.Decryption
 						switch (inAttrDesc)
 						{
 							case "name":
-								if (this.title == "") this.title = fieldValueString;
+								if (this.title == null) this.title = fieldValueString;
 								if (infovar.Title == null) infovar.Title = this.title;
 								break;
 							case "description":
-								if (this.description == "") this.description = fieldValueString;
+								if (this.description == null) this.description = fieldValueString;
 								if (infovar.Description == null) infovar.Description = this.description;
                                 break;
 							case "type":
@@ -689,11 +689,11 @@ namespace SimsCCManager.Packages.Decryption
 						switch (inAttrDesc)
 						{
 							case "name":
-								if (this.title == "") this.title = fieldValueString;
+								if (this.title == null) this.title = fieldValueString;
 								if (infovar.Title == null) infovar.Title = this.title;
 								break;
 							case "description":
-								if (this.description == "") this.description = fieldValueString;
+								if (this.description == null) this.description = fieldValueString;
 								if (infovar.Description == null) infovar.Description = this.description;
                                 break;
 							case "type":
@@ -993,7 +993,7 @@ namespace SimsCCManager.Packages.Decryption
 					// Set the xmlCategory to Object
                     infovar.XMLCategory = "Object";
 					
-                    //if (this.xmlCategory == "") this.xmlCategory = this.xmlCategoryTypes[1];
+                    //if (this.xmlCategory == null) this.xmlCategory = this.xmlCategoryTypes[1];
 					// Also, get the catalog placement for this object
 					readFile.SkipAhead(46);
 					uint expansionFlag = readFile.ReadUInt16();
