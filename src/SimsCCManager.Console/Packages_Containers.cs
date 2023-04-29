@@ -87,7 +87,7 @@ namespace SimsCCManager.Packages.Containers
                 if (string.IsNullOrEmpty(retVal)){
                     retVal += mystring.ToString();
                 } else {
-                    retVal += string.Format("{0} \n", mystring);
+                    retVal += string.Format("\n {0}", mystring);
                 }
             }
             return retVal;

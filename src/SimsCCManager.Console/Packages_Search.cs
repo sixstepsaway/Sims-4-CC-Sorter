@@ -46,12 +46,7 @@ namespace SimsCCManager.Packages.Search
         uint chunkOffset = 0;        
 
         
-        private SimsPackage thisPackage = new SimsPackage();
-        private SimsPackage infovar = new SimsPackage();
-        private SimsPackage dirvar = new SimsPackage();
-        private SimsPackage strvar = new SimsPackage();
-        private SimsPackage objdvar = new SimsPackage();
-        private SimsPackage mmatvar = new SimsPackage();
+        
 
         public void SearchS2Packages(string file) {
             var packageparsecount = GlobalVariables.packagesRead;   
@@ -73,12 +68,16 @@ namespace SimsCCManager.Packages.Search
             int dirnum = 0;
             List<int> objdnum = new List<int>();   
             List<int> strnm = new List<int>();
-            infovar = new SimsPackage();
-            objdvar = new SimsPackage();
-            mmatvar = new SimsPackage();
-            dirvar = new SimsPackage();
-            strvar = new SimsPackage();
-            thisPackage = new SimsPackage();
+            int mmatloc = 0;
+
+            SimsPackage thisPackage = new SimsPackage();
+            SimsPackage infovar = new SimsPackage();
+            SimsPackage ctssvar = new SimsPackage();
+            SimsPackage dirvar = new SimsPackage();
+            SimsPackage strvar = new SimsPackage();
+            SimsPackage objdvar = new SimsPackage();
+            SimsPackage mmatvar = new SimsPackage();
+            
 
             //Lists 
             
@@ -95,12 +94,13 @@ namespace SimsCCManager.Packages.Search
             BinaryReader readFile = new BinaryReader(dbpfFile);
 
             thisPackage.PackageName = packageinfo.Name;
+            thisPackage.Game = 2;
             
 
             //start actually reading the package 
             Console.WriteLine("Reading Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
             log.MakeLog("Logged Package #" + packageparsecount + " as " + packageinfo.FullName, true);
-            thisPackage.Location = packageinfo.FullName;
+            thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 2;
             log.MakeLog("Logged Package #" + packageparsecount + " as meant for The Sims " + thisPackage.Game, true);           
             test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
@@ -294,6 +294,7 @@ namespace SimsCCManager.Packages.Search
                 
                 for (int c = 0; c < numRecords; c++)
                 {
+                    indexEntry holderEntry = new indexEntry();
                     log.MakeLog("P" + packageparsecount + " - Reading compressed record #" + c, true);
                     typeID = readFile.ReadUInt32().ToString("X8");
                     log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Type ID is " + typeID, true);
@@ -301,6 +302,10 @@ namespace SimsCCManager.Packages.Search
                     log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Group ID is " + groupID, true);
                     instanceID = readFile.ReadUInt32().ToString("X8");
                     log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Instance ID is " + instanceID, true);
+                    holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
+                    //Console.WriteLine(holderEntry.instanceID);
+                    thisPackage.InstanceIDs.Add(holderEntry.instanceID.ToString());
+                    log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
                     if (indexMajorVersion == 7 && indexMinorVersion == 1) instanceID2 = readFile.ReadUInt32().ToString("X8");
                     log.MakeLog("P" + packageparsecount + " - CR#" + c + ": InstanceID2 is " + instanceID2, true);
                     myFilesize = readFile.ReadUInt32();
@@ -346,6 +351,7 @@ namespace SimsCCManager.Packages.Search
                 log.MakeLog("Number of records: " + numRecords, true);
                 
                 for (int j = 0; j < numRecords; j++) {
+                    indexEntry holderEntry = new indexEntry();
                     log.MakeLog("", true);
                     log.MakeLog("Compressed Entry #" + j, true);
                     typeID = readFile.ReadUInt32().ToString("X8");
@@ -354,6 +360,10 @@ namespace SimsCCManager.Packages.Search
                     log.MakeLog("GroupID: "+ groupID, true);
                     instanceID = readFile.ReadUInt32().ToString("X8");
                     log.MakeLog("InstanceID: "+ instanceID, true);
+                    holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
+                    //Console.WriteLine(holderEntry.instanceID);
+                    thisPackage.InstanceIDs.Add(holderEntry.instanceID.ToString());
+                    log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
                     if (indexMajorVersion == 7 && indexMinorVersion == 1) {
                         instanceID2 = readFile.ReadUInt32().ToString("X8");
                         log.MakeLog("InstanceID2: "+ instanceID2, true);
@@ -388,15 +398,15 @@ namespace SimsCCManager.Packages.Search
 
 								DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
-								dirvar = readentries.readCTSSchunk(decompressed);
+								ctssvar = readentries.readCTSSchunk(decompressed);
                                 
 							} 
 							else 
 							{
 								dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
-								dirvar = readentries.readCTSSchunk(readFile);
+								ctssvar = readentries.readCTSSchunk(readFile);
 							}
-                        } else if (typefound == "XOBJ" || typefound == "XFNC" || typefound == "XFLR" || typefound == "XMOL" || typefound == "XROF"  || typefound == "XTOL"  || typefound == "MMAT" || typefound == "XHTN"){
+                        } else if (typefound == "XOBJ" || typefound == "XFNC" || typefound == "XFLR" || typefound == "XMOL" || typefound == "XROF"  || typefound == "XTOL"  || typefound == "XHTN"){
                             log.MakeLog("Confirming found " + typefound + " and moving forward.", true);
                             dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
                             cFileSize = readFile.ReadInt32();
@@ -425,11 +435,13 @@ namespace SimsCCManager.Packages.Search
                                         {
                                             log.MakeLog("Real CPF. Decompressing.", true);
                                             dirvar = readentries.readCPFchunk(decompressed);
+                                            log.MakeLog("dirvar returned with: " + dirvar.ToString(), true);
                                         } 
                                     } else 
                                     {
                                         log.MakeLog("Actually an XML. Reading.", true);
                                         dirvar = readentries.readXMLchunk(decompressed);
+                                        log.MakeLog("dirvar returned with: " + dirvar.ToString(), true);
                                     }
                                 }
 
@@ -473,9 +485,11 @@ namespace SimsCCManager.Packages.Search
                         log.MakeLog("P" + packageparsecount + " - OBJD size is: " + cFullSize, true);
                         DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
                         objdvar = readentries.readOBJDchunk(decompressed);
+                        log.MakeLog("objdvar returned with: " + objdvar.ToString(), true);
                     } else { 
                         dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
                         objdvar = readentries.readOBJDchunk(readFile);
+                        log.MakeLog("objdvar returned with: " + objdvar.ToString(), true);
                     }
                 }
                 
@@ -507,16 +521,92 @@ namespace SimsCCManager.Packages.Search
                         DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
                         strvar = readentries.readSTRchunk(decompressed);
+                        log.MakeLog("strvar returned with: " + strvar.ToString(), true);
                     } 
                     else 
                     {
-                        objdvar = readentries.readSTRchunk(readFile);                        
+                        objdvar = readentries.readSTRchunk(readFile);
+                        log.MakeLog("strvar returned with: " + strvar.ToString(), true);
                     }                    
                 }
                 
             }
+            if (fileHas.Exists(x => x.term == "MMAT"))
+            {
+                int fh = 0;
+                foreach (fileHasList item in fileHas) {
+                    if (item.term == "MMAT"){
+                        mmatloc = fh;
+                    }
+                    fh++;
+                }
+                dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+                cFileSize = readFile.ReadInt32();
+                cTypeID = readFile.ReadUInt16().ToString("X4");
+                
+                if (cTypeID == "FB10") 
+                {
+                    byte[] tempBytes = readFile.ReadBytes(3);
+                    uint cFullSize = readentries.QFSLengthToInt(tempBytes);
 
-            TypeCounter typecount = new TypeCounter();
+                    string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                    if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
+                    {
+                        mmatvar = readentries.readCPFchunk(readFile);
+                    } 
+                    else 
+                    {
+                        dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset + 9, SeekOrigin.Begin);
+                        DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+
+                        if (cpfTypeID == "E750E0E2") 
+                        {
+
+                            cpfTypeID = decompressed.ReadUInt32().ToString("X8");
+
+                            if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
+                            {
+                                mmatvar = readentries.readCPFchunk(decompressed);
+                            }
+
+                        } 
+                        else 
+                        {
+                            mmatvar = readentries.readXMLchunk(decompressed);
+                        }
+                    }
+                } 
+                else 
+                {
+                    dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+
+                    string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                    if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
+                    {
+                        mmatvar = readentries.readCPFchunk(readFile);
+                    }
+
+                    if  (cpfTypeID == "6D783F3C")
+                    {
+                        dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+
+                        string xmlData = Encoding.UTF8.GetString(readFile.ReadBytes((int)indexData[mmatloc].filesize));
+                        mmatvar = readentries.readXMLchunk(xmlData);
+
+                    }
+                }                   
+
+                
+            }
+
+            log.MakeLog("All methods complete, moving on to getting info.", true);
+            log.MakeLog("Dirvar contains: " + dirvar.ToString(), true);
+            log.MakeLog("Ctssvar contains: " + ctssvar.ToString(), true);
+            log.MakeLog("Mmatvar contains: " + mmatvar.ToString(), true);
+            log.MakeLog("Objdvar contains: " + objdvar.ToString(), true);
+            log.MakeLog("Strvar contains: " + strvar.ToString(), true);
+
+            List<TypeCounter> typecount = new List<TypeCounter>();
             var typeDict = new Dictionary<string, int>();
 
             foreach (fileHasList item in fileHas){
@@ -528,14 +618,19 @@ namespace SimsCCManager.Packages.Search
             }
 
             foreach (KeyValuePair<string, int> type in typeDict){
-                var ky = type.Key;
-                var vl = type.Value;
-                typecount.Type = type.Key;
-                typecount.Count = type.Value;
-                log.MakeLog("There are " + vl + " of " + ky + " in this package.", true);
+                TypeCounter tc = new TypeCounter();
+                tc.Type = type.Key;
+                tc.Count = type.Value;
+                log.MakeLog("There are " + tc.Type + " of " + tc.Count + " in this package.", true);
+                typecount.Add(tc);
             }
             
-            thisPackage.Entries.Add(typecount);
+            thisPackage.Entries.AddRange(typecount);
+
+            /*foreach (TypeCounter item in typecount) {
+                thisPackage.Entries.Add(typecount);
+            }*/
+            
             
             
 
@@ -589,123 +684,109 @@ namespace SimsCCManager.Packages.Search
            
             #region Get Title & Description 
             
-            if (dirvar != null){
-                Console.WriteLine("Dirvar has content.");
-                if ((dirvar.Title != null) && (dirvar.Title != " ")){                   
-                    log.MakeLog("Getting title " + dirvar.Title + " from dirvar.", true);
-                    infovar.Title = dirvar.Title;
-                }
-                if ((dirvar.Description != null) && (dirvar.Description != " ")){
-                    log.MakeLog("Getting description " + dirvar.Description + " from dirvar.", true);
-                    infovar.Description = dirvar.Description;
-                }
-            } else if (objdvar != null) {
-                Console.WriteLine("Objdvar has content.");
-                if ((objdvar.Title != null) && (objdvar.Title != " ")){
-                    log.MakeLog("Getting title " + objdvar.Title + " from objdvar.", true);
-                    infovar.Title = objdvar.Title;
-                }
-                if ((objdvar.Description != null) && (objdvar.Description != " ")){
-                    log.MakeLog("Getting title " + objdvar.Title + " from objdvar.", true);
-                    infovar.Description = objdvar.Description;
-                }
-            } else if (strvar != null) {
-                Console.WriteLine("Strvar has content.");
-                if ((strvar.Title != null) && (strvar.Title != " ")){
-                    log.MakeLog("Getting title " + strvar.Title + " from strvar.", true);
-                    infovar.Title = strvar.Title;
-                }
-                if ((strvar.Description != null) && (strvar.Description != " ")){
-                    log.MakeLog("Getting title " + strvar.Title + " from strvar.", true);
-                    infovar.Description = strvar.Description;
-                }
+            if (!String.IsNullOrWhiteSpace(ctssvar.Title)) {
+                log.MakeLog("Getting title " + ctssvar.Title + " from ctssvar.", true);
+                thisPackage.Title = ctssvar.Title;
+            } else if (!String.IsNullOrWhiteSpace(dirvar.Title)){
+                log.MakeLog("Getting title " + dirvar.Title + " from dirvar.", true);
+                thisPackage.Title = dirvar.Title;
+            } else if (!String.IsNullOrWhiteSpace(objdvar.Title)) {
+                log.MakeLog("Getting title " + objdvar.Title + " from objdvar.", true);
+                thisPackage.Title = objdvar.Title;
+            } else if (!String.IsNullOrWhiteSpace(strvar.Title)) {
+                log.MakeLog("Getting title " + strvar.Title + " from strvar.", true);
+                thisPackage.Title = strvar.Title;
+            } else if (!String.IsNullOrWhiteSpace(mmatvar.Title)) {
+                Console.WriteLine("Mmatvar has content.");
+                log.MakeLog("Getting title " + mmatvar.Title + " from mmatvar.", true);
+            }
+
+
+            if (!String.IsNullOrWhiteSpace(ctssvar.Description)){
+                log.MakeLog("Getting description " + ctssvar.Description + " from ctssvar.", true);
+                thisPackage.Description = ctssvar.Description;
+            } else if (!String.IsNullOrWhiteSpace(dirvar.Description)) {
+                log.MakeLog("Getting description " + dirvar.Description + " from dirvar.", true);
+                thisPackage.Description = dirvar.Description;
+            } else if (!String.IsNullOrWhiteSpace(objdvar.Description)) {
+                log.MakeLog("Getting title " + objdvar.Title + " from objdvar.", true);
+                thisPackage.Description = objdvar.Description;
+            } else if (!String.IsNullOrWhiteSpace(strvar.Description)) {
+                log.MakeLog("Getting title " + strvar.Title + " from strvar.", true);
+                thisPackage.Description = strvar.Description;
+            } else if (!String.IsNullOrWhiteSpace(mmatvar.Description)) {
+                thisPackage.Title = mmatvar.Title;
+                log.MakeLog("Getting title " + mmatvar.Title + " from mmatvar.", true);
+                thisPackage.Description = mmatvar.Description;
             }
 
             #endregion
 
             #region Get Info
 
-            if (dirvar != null){
-                Console.WriteLine("Dirvar has content.");
-                if ((dirvar.XMLSubtype != null) && (dirvar.XMLSubtype != " ")){
+                if (!String.IsNullOrWhiteSpace(dirvar.XMLSubtype)){
                     log.MakeLog("Getting XMLSubtype " + dirvar.XMLSubtype + " from dirvar.", true);
-                    infovar.XMLSubtype = dirvar.XMLSubtype;
+                    thisPackage.XMLSubtype = dirvar.XMLSubtype;
                 }
-                if ((dirvar.XMLCategory != null) && (dirvar.XMLCategory != " ")){
+                if (!String.IsNullOrWhiteSpace(dirvar.XMLType)){
+                    log.MakeLog("Getting Type " + dirvar.XMLType + " from dirvar.", true);
+                    thisPackage.XMLType = dirvar.XMLType;
+                }
+                if (!String.IsNullOrWhiteSpace(dirvar.XMLCategory)){
                     log.MakeLog("Getting xmlCategory " + dirvar.XMLCategory + " from dirvar.", true);
-                    infovar.XMLCategory = dirvar.XMLCategory;
+                    thisPackage.XMLCategory = dirvar.XMLCategory;
                 }
-                if ((dirvar.XMLModelName != null) && (dirvar.XMLModelName != " ")){
+                if (!String.IsNullOrWhiteSpace(dirvar.XMLModelName)){
                     log.MakeLog("Getting XMLModelName " + dirvar.XMLModelName + " from dirvar.", true);
-                    infovar.XMLModelName = dirvar.XMLModelName;
+                    thisPackage.XMLModelName = dirvar.XMLModelName;
                 }
-                if ((!dirvar.ObjectGUID?.Any() != true)){
+                if (dirvar.ObjectGUID?.Any() != true){
                     log.MakeLog("Getting ObjectGUID " + dirvar.ObjectGUID.ToString() + " from dirvar.", true);
                     allGUIDS.AddRange(objdvar.ObjectGUID);
                 }
-                if ((dirvar.XMLCreator != null) && (dirvar.XMLCreator != " ")){
+                if (!String.IsNullOrWhiteSpace(dirvar.XMLCreator)){
                     log.MakeLog("Getting XMLCreator " + dirvar.XMLCreator + " from dirvar.", true);
-                    infovar.XMLCreator = dirvar.XMLCreator;
+                    thisPackage.XMLCreator = dirvar.XMLCreator;
                 }
-                if ((dirvar.XMLAge != null) && (dirvar.XMLAge != " ")){
+                if (!String.IsNullOrWhiteSpace(dirvar.XMLAge)){
                     log.MakeLog("Getting XMLAge " + dirvar.XMLAge + " from dirvar.", true);
-                    infovar.XMLAge = dirvar.XMLAge;
+                    thisPackage.XMLAge = dirvar.XMLAge;
                 }
-                if ((dirvar.XMLGender != null) && (dirvar.XMLGender != " ")){
+                if (!String.IsNullOrWhiteSpace(dirvar.XMLGender)){
                     log.MakeLog("Getting XMLGender " + dirvar.XMLGender + " from dirvar.", true);
-                    infovar.XMLGender = dirvar.XMLGender;
+                    thisPackage.XMLGender = dirvar.XMLGender;
                 }
-            }
 
             #endregion
             
             #region Get Function
 
-            if (objdvar != null){
-                Console.WriteLine("OBJDvar has content.");
-                if ((objdvar.Function != null) && (objdvar.Function != " ")){
+                if (!String.IsNullOrWhiteSpace(objdvar.Function)){
                     log.MakeLog("Getting Function " + objdvar.Function + " from objdvar.", true);
-                    infovar.Function = objdvar.Function;
+                    thisPackage.Function = objdvar.Function;
                 }
-                if ((objdvar.FunctionSubcategory != null) && (objdvar.FunctionSubcategory != " ")){
+                if (!String.IsNullOrWhiteSpace(objdvar.Function)){
                     log.MakeLog("Getting FunctionSubcategory " + objdvar.FunctionSubcategory + " from objdvar.", true);
-                    infovar.FunctionSubcategory = objdvar.FunctionSubcategory;
+                    thisPackage.FunctionSubcategory = objdvar.FunctionSubcategory;
                 }
-                if ((!objdvar.RequiredEPs?.Any() != true)){
-                    log.MakeLog("Getting RequiredEPs " + objdvar.RequiredEPs.ToString() + " from objdvar.", true);
-                    infovar.RequiredEPs = objdvar.RequiredEPs;
-                }
-                if ((!objdvar.RoomSort?.Any() != true)){
-                    log.MakeLog("Getting RoomSort " + objdvar.RoomSort.ToString() + " from objdvar.", true);
-                    infovar.RoomSort = objdvar.RoomSort;
-                }
-                if ((!objdvar.ObjectGUID?.Any() != true)){
-                    log.MakeLog("Getting ObjectGUID " + objdvar.ObjectGUID.ToString() + " from objdvar.", true);
-                    allGUIDS.AddRange(objdvar.ObjectGUID);
-                }
+                log.MakeLog("Getting RequiredEPs " + objdvar.RequiredEPs.ToString() + " from objdvar.", true);
+                thisPackage.RequiredEPs = objdvar.RequiredEPs;
+                log.MakeLog("Getting RoomSort " + objdvar.RoomSort.ToString() + " from objdvar.", true);
+                thisPackage.RoomSort = objdvar.RoomSort;                
+                log.MakeLog("Getting ObjectGUID " + objdvar.ObjectGUID.ToString() + " from objdvar.", true);
+                allGUIDS.AddRange(objdvar.ObjectGUID);
+
+            if ((thisPackage.XMLType == "floor" || thisPackage.XMLType == "wallpaper")) {
+                thisPackage.FunctionSubcategory = thisPackage.XMLSubtype;
+            }
+            if (!String.IsNullOrWhiteSpace(thisPackage.XMLType)){
+                thisPackage.Function = thisPackage.XMLType;
+                thisPackage.Type = thisPackage.XMLType;
             }
 
-            log.MakeLog("In infovar: " + infovar.ToString(), true);
+            //log.MakeLog("In infovar: " + infovar.ToString(), true);
 
             #endregion
-                           
-            thisPackage.Title = infovar.Title;
-            thisPackage.Description = infovar.Description;
-            thisPackage.Game = infovar.Game;
-            thisPackage.DBPF = infovar.DBPF;
-            thisPackage.InstanceIDs = infovar.InstanceIDs;
-            thisPackage.XMLType = infovar.XMLType;
-            thisPackage.XMLSubtype = infovar.XMLSubtype;
-            thisPackage.XMLCategory = infovar.XMLCategory;
-            thisPackage.XMLModelName = infovar.XMLModelName;
-            thisPackage.ObjectGUID = infovar.ObjectGUID;
-            thisPackage.XMLCreator = infovar.XMLCreator;
-            thisPackage.XMLAge = infovar.XMLAge;
-            thisPackage.XMLGender = infovar.XMLGender;
-            thisPackage.RequiredEPs = infovar.RequiredEPs;
-            thisPackage.Function = infovar.Function;
-            thisPackage.FunctionSubcategory = infovar.FunctionSubcategory;
-            thisPackage.RoomSort = infovar.RoomSort;
 
             //if (fileHas.ExistsExists(x => x.term == "OBJD"))
 
@@ -714,8 +795,22 @@ namespace SimsCCManager.Packages.Search
             log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
             log.MakeLog(thisPackage.ToString(), false);
             Containers.Containers.allSims2Packages.Add(thisPackage);
+
+            objdnum = new List<int>();   
+            strnm = new List<int>();
             thisPackage = new SimsPackage();
             infovar = new SimsPackage();
+            ctssvar = new SimsPackage();
+            dirvar = new SimsPackage();
+            strvar = new SimsPackage();
+            objdvar = new SimsPackage();
+            mmatvar = new SimsPackage();
+            fileHas = new List<fileHasList>();
+            linkData = new ArrayList();
+            indexData = new List<indexEntry>();
+            packageinfo = new FileInfo(file); 
+            allGUIDS = new List<string>();      
+            distinctGUIDS = new List<string>();  
 
             readFile.Close();
             Console.WriteLine("Closing Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);

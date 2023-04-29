@@ -58,9 +58,10 @@ namespace SimsCCManager.CMD
             }
             sw.Stop();
             log.MakeLog("Processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"), true);
-            log.MakeLog("Packages in array:", true);
-            //Containers.allSims2Packages.ForEach(i => log.MakeLog("{0}\t", i));
+            
 
+            //searcher.SearchS2Packages("M:\\The Sims 4 (Documents)\\TESTING FOLDER\\currenttest\\2f3d15de07c65f913156f5198f226ab60001.package");
+            
             foreach (SimsPackage pack in Containers.allSims2Packages){
                 log.MakeLog(pack.ToString(), false);
             }
