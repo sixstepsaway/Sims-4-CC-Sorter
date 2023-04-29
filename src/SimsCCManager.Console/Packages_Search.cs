@@ -48,6 +48,10 @@ namespace SimsCCManager.Packages.Search
         
         private SimsPackage thisPackage = new SimsPackage();
         private SimsPackage infovar = new SimsPackage();
+        private SimsPackage dirvar = new SimsPackage();
+        private SimsPackage strvar = new SimsPackage();
+        private SimsPackage objdvar = new SimsPackage();
+        private SimsPackage mmatvar = new SimsPackage();
 
         public void SearchS2Packages(string file) {
             var packageparsecount = GlobalVariables.packagesRead;   
@@ -70,6 +74,10 @@ namespace SimsCCManager.Packages.Search
             List<int> objdnum = new List<int>();   
             List<int> strnm = new List<int>();
             infovar = new SimsPackage();
+            objdvar = new SimsPackage();
+            mmatvar = new SimsPackage();
+            dirvar = new SimsPackage();
+            strvar = new SimsPackage();
             thisPackage = new SimsPackage();
 
             //Lists 
@@ -380,40 +388,13 @@ namespace SimsCCManager.Packages.Search
 
 								DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
-								infovar = readentries.readCTSSchunk(decompressed);
-                                if (infovar.Title != null) thisPackage.Title = infovar.Title;
-                                if (infovar.Description != null) thisPackage.Description = infovar.Description;                                
-                                if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
-                                if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
-                                if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
-                                if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                                allGUIDS.AddRange(infovar.ObjectGUID);
-                                if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
-                                if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
-                                if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
-                                if (thisPackage.RequiredEPs == null) thisPackage.RequiredEPs = infovar.RequiredEPs;
-                                if (thisPackage.Function == null) thisPackage.Function = infovar.Function;
-                                if (thisPackage.FunctionSubcategory == null) thisPackage.FunctionSubcategory = infovar.FunctionSubcategory;
-                                if (thisPackage.RoomSort == null) thisPackage.RoomSort = infovar.RoomSort;
+								dirvar = readentries.readCTSSchunk(decompressed);
+                                
 							} 
 							else 
 							{
 								dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
-								infovar = readentries.readCTSSchunk(readFile);
-                                if (infovar.Title != null) thisPackage.Title = infovar.Title;
-                                if (infovar.Description != null) thisPackage.Description = infovar.Description; 
-                                if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
-                                if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
-                                if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
-                                if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                                allGUIDS.AddRange(infovar.ObjectGUID);
-                                if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
-                                if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
-                                if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
-                                if (thisPackage.RequiredEPs == null) thisPackage.RequiredEPs = infovar.RequiredEPs;
-                                if (thisPackage.Function == null) thisPackage.Function = infovar.Function;
-                                if (thisPackage.FunctionSubcategory == null) thisPackage.FunctionSubcategory = infovar.FunctionSubcategory;
-                                if (thisPackage.RoomSort == null) thisPackage.RoomSort = infovar.RoomSort;
+								dirvar = readentries.readCTSSchunk(readFile);
 							}
                         } else if (typefound == "XOBJ" || typefound == "XFNC" || typefound == "XFLR" || typefound == "XMOL" || typefound == "XROF"  || typefound == "XTOL"  || typefound == "MMAT" || typefound == "XHTN"){
                             log.MakeLog("Confirming found " + typefound + " and moving forward.", true);
@@ -429,7 +410,7 @@ namespace SimsCCManager.Packages.Search
                                 string cpfTypeID = readFile.ReadUInt32().ToString("X8");
                                 log.MakeLog("cpfTypeID is: " + cpfTypeID, true);
                                 if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")){
-                                    infovar = readentries.readCPFchunk(readFile);
+                                    dirvar = readentries.readCPFchunk(readFile);
                                     log.MakeLog("Real CPF file. Processing as CPF chunk.",true);
                                 } else {
                                     log.MakeLog("Not a real CPF. Searching for more information.", true);
@@ -443,38 +424,12 @@ namespace SimsCCManager.Packages.Search
                                         if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
                                         {
                                             log.MakeLog("Real CPF. Decompressing.", true);
-                                            infovar = readentries.readCPFchunk(decompressed);
-                                            if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                                            if (thisPackage.Description == null) thisPackage.Description = infovar.Description;                                            if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
-                                            if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
-                                            if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
-                                            if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                                            allGUIDS.AddRange(infovar.ObjectGUID);
-                                            if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
-                                            if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
-                                            if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
-                                            if (thisPackage.RequiredEPs == null) thisPackage.RequiredEPs = infovar.RequiredEPs;
-                                            if (thisPackage.Function == null) thisPackage.Function = infovar.Function;
-                                            if (thisPackage.FunctionSubcategory == null) thisPackage.FunctionSubcategory = infovar.FunctionSubcategory;
-                                            if (thisPackage.RoomSort == null) thisPackage.RoomSort = infovar.RoomSort;
+                                            dirvar = readentries.readCPFchunk(decompressed);
                                         } 
                                     } else 
                                     {
                                         log.MakeLog("Actually an XML. Reading.", true);
-                                        infovar = readentries.readXMLchunk(decompressed);
-                                        if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;                                        if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
-                                        if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
-                                        if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
-                                        if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                                        allGUIDS.AddRange(infovar.ObjectGUID);
-                                        if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
-                                        if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
-                                        if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
-                                        if (thisPackage.RequiredEPs == null) thisPackage.RequiredEPs = infovar.RequiredEPs;
-                                        if (thisPackage.Function == null) thisPackage.Function = infovar.Function;
-                                        if (thisPackage.FunctionSubcategory == null) thisPackage.FunctionSubcategory = infovar.FunctionSubcategory;
-                                        if (thisPackage.RoomSort == null) thisPackage.RoomSort = infovar.RoomSort;
+                                        dirvar = readentries.readXMLchunk(decompressed);
                                     }
                                 }
 
@@ -517,37 +472,10 @@ namespace SimsCCManager.Packages.Search
                         uint cFullSize = readentries.QFSLengthToInt(tempBytes);
                         log.MakeLog("P" + packageparsecount + " - OBJD size is: " + cFullSize, true);
                         DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-                        infovar = readentries.readOBJDchunk(decompressed);
-                        if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;                        if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
-                        if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
-                        if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
-                        if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                        allGUIDS.AddRange(infovar.ObjectGUID);
-                        if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
-                        if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
-                        if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
-                        if (thisPackage.RequiredEPs == null) thisPackage.RequiredEPs = infovar.RequiredEPs;
-                        if (thisPackage.Function == null) thisPackage.Function = infovar.Function;
-                        if (thisPackage.FunctionSubcategory == null) thisPackage.FunctionSubcategory = infovar.FunctionSubcategory;
-                        if (thisPackage.RoomSort == null) thisPackage.RoomSort = infovar.RoomSort;
+                        objdvar = readentries.readOBJDchunk(decompressed);
                     } else { 
                         dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
-                        infovar = readentries.readOBJDchunk(readFile);
-                        if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;                        if (thisPackage.XMLType == null) thisPackage.XMLType = infovar.XMLType;
-                        if (thisPackage.XMLSubtype == null) thisPackage.XMLSubtype = infovar.XMLSubtype;
-                        if (thisPackage.XMLCategory == null) thisPackage.XMLCategory = infovar.XMLCategory;
-                        if (thisPackage.XMLModelName == null) thisPackage.XMLModelName = infovar.XMLModelName;
-                        allGUIDS.AddRange(infovar.ObjectGUID);
-                        if (thisPackage.XMLCreator == null) thisPackage.XMLCreator = infovar.XMLCreator;
-                        if (thisPackage.XMLAge == null) thisPackage.XMLAge = infovar.XMLAge;
-                        if (thisPackage.XMLGender == null) thisPackage.XMLGender = infovar.XMLGender;
-                        if (thisPackage.RequiredEPs == null) thisPackage.RequiredEPs = infovar.RequiredEPs;
-                        if (thisPackage.Function == null) thisPackage.Function = infovar.Function;
-                        if (thisPackage.FunctionSubcategory == null) thisPackage.FunctionSubcategory = infovar.FunctionSubcategory;
-                        if (thisPackage.RoomSort == null) thisPackage.RoomSort = infovar.RoomSort;
-
+                        objdvar = readentries.readOBJDchunk(readFile);
                     }
                 }
                 
@@ -578,16 +506,11 @@ namespace SimsCCManager.Packages.Search
 
                         DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
-                        infovar = readentries.readSTRchunk(decompressed);
-                        if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
+                        strvar = readentries.readSTRchunk(decompressed);
                     } 
                     else 
                     {
-                        infovar = readentries.readSTRchunk(readFile);
-                        if (thisPackage.Title == null) thisPackage.Title = infovar.Title;
-                        if (thisPackage.Description == null) thisPackage.Description = infovar.Description;
-                        
+                        objdvar = readentries.readSTRchunk(readFile);                        
                     }                    
                 }
                 
@@ -611,7 +534,10 @@ namespace SimsCCManager.Packages.Search
                 typecount.Count = type.Value;
                 log.MakeLog("There are " + vl + " of " + ky + " in this package.", true);
             }
-            //thisPackage.Entries.AddRange(typecount);
+            
+            thisPackage.Entries.Add(typecount);
+            
+            
 
             if ((typeDict.TryGetValue("TXTR", out int txtr_0) && txtr_0 >= 1) && (typeDict.TryGetValue("STR#", out int str_0) && str_0 >= 1) && (typeDict.TryGetValue("DIR", out int dir_0) && dir_0 >= 1) && (typeDict.TryGetValue("TXMT", out int txmt_0) && txmt_0 >= 1) && (typeDict.TryGetValue("SHPE", out int shpe_0) && shpe_0 <= 0) && (typeDict.TryGetValue("BCON", out int bcon_0) && bcon_0 <= 0) && (typeDict.TryGetValue("BHAV", out int bhav_0) && bhav_0 <= 0) && (typeDict.TryGetValue("MMAT", out int mmat_0) && mmat_0 <= 0) && (typeDict.TryGetValue("OBJF", out int objf_0) && objf_0 <= 0) && (typeDict.TryGetValue("OBJD", out int objd_0) && objd_0 <= 0) && (typeDict.TryGetValue("CLST", out int clst_0) && clst_0 <= 0)){
                 thisPackage.Type = "Floor";
@@ -655,15 +581,131 @@ namespace SimsCCManager.Packages.Search
             } else if ((typeDict.TryGetValue("GMDC", out int gmdc_6) && gmdc_6 >= 1) && (typeDict.TryGetValue("GMND", out int gmnd_5) && gmnd_5 >= 1) && (typeDict.TryGetValue("SHPE", out int shpe_6) && shpe_6 >= 1)) {
                 thisPackage.Type = "Misc Mesh";
                 log.MakeLog("This is some kind of mesh!!", true);
+            } else {
+                thisPackage.Type = "Currently Unknown";
+                log.MakeLog("Logging as currently unknown.", true);
             }
         
            
-
+            #region Get Title & Description 
             
-            
+            if (dirvar != null){
+                Console.WriteLine("Dirvar has content.");
+                if ((dirvar.Title != null) && (dirvar.Title != " ")){                   
+                    log.MakeLog("Getting title " + dirvar.Title + " from dirvar.", true);
+                    infovar.Title = dirvar.Title;
+                }
+                if ((dirvar.Description != null) && (dirvar.Description != " ")){
+                    log.MakeLog("Getting description " + dirvar.Description + " from dirvar.", true);
+                    infovar.Description = dirvar.Description;
+                }
+            } else if (objdvar != null) {
+                Console.WriteLine("Objdvar has content.");
+                if ((objdvar.Title != null) && (objdvar.Title != " ")){
+                    log.MakeLog("Getting title " + objdvar.Title + " from objdvar.", true);
+                    infovar.Title = objdvar.Title;
+                }
+                if ((objdvar.Description != null) && (objdvar.Description != " ")){
+                    log.MakeLog("Getting title " + objdvar.Title + " from objdvar.", true);
+                    infovar.Description = objdvar.Description;
+                }
+            } else if (strvar != null) {
+                Console.WriteLine("Strvar has content.");
+                if ((strvar.Title != null) && (strvar.Title != " ")){
+                    log.MakeLog("Getting title " + strvar.Title + " from strvar.", true);
+                    infovar.Title = strvar.Title;
+                }
+                if ((strvar.Description != null) && (strvar.Description != " ")){
+                    log.MakeLog("Getting title " + strvar.Title + " from strvar.", true);
+                    infovar.Description = strvar.Description;
+                }
+            }
 
+            #endregion
+
+            #region Get Info
+
+            if (dirvar != null){
+                Console.WriteLine("Dirvar has content.");
+                if ((dirvar.XMLSubtype != null) && (dirvar.XMLSubtype != " ")){
+                    log.MakeLog("Getting XMLSubtype " + dirvar.XMLSubtype + " from dirvar.", true);
+                    infovar.XMLSubtype = dirvar.XMLSubtype;
+                }
+                if ((dirvar.XMLCategory != null) && (dirvar.XMLCategory != " ")){
+                    log.MakeLog("Getting xmlCategory " + dirvar.XMLCategory + " from dirvar.", true);
+                    infovar.XMLCategory = dirvar.XMLCategory;
+                }
+                if ((dirvar.XMLModelName != null) && (dirvar.XMLModelName != " ")){
+                    log.MakeLog("Getting XMLModelName " + dirvar.XMLModelName + " from dirvar.", true);
+                    infovar.XMLModelName = dirvar.XMLModelName;
+                }
+                if ((!dirvar.ObjectGUID?.Any() != true)){
+                    log.MakeLog("Getting ObjectGUID " + dirvar.ObjectGUID.ToString() + " from dirvar.", true);
+                    allGUIDS.AddRange(objdvar.ObjectGUID);
+                }
+                if ((dirvar.XMLCreator != null) && (dirvar.XMLCreator != " ")){
+                    log.MakeLog("Getting XMLCreator " + dirvar.XMLCreator + " from dirvar.", true);
+                    infovar.XMLCreator = dirvar.XMLCreator;
+                }
+                if ((dirvar.XMLAge != null) && (dirvar.XMLAge != " ")){
+                    log.MakeLog("Getting XMLAge " + dirvar.XMLAge + " from dirvar.", true);
+                    infovar.XMLAge = dirvar.XMLAge;
+                }
+                if ((dirvar.XMLGender != null) && (dirvar.XMLGender != " ")){
+                    log.MakeLog("Getting XMLGender " + dirvar.XMLGender + " from dirvar.", true);
+                    infovar.XMLGender = dirvar.XMLGender;
+                }
+            }
+
+            #endregion
+            
+            #region Get Function
+
+            if (objdvar != null){
+                Console.WriteLine("OBJDvar has content.");
+                if ((objdvar.Function != null) && (objdvar.Function != " ")){
+                    log.MakeLog("Getting Function " + objdvar.Function + " from objdvar.", true);
+                    infovar.Function = objdvar.Function;
+                }
+                if ((objdvar.FunctionSubcategory != null) && (objdvar.FunctionSubcategory != " ")){
+                    log.MakeLog("Getting FunctionSubcategory " + objdvar.FunctionSubcategory + " from objdvar.", true);
+                    infovar.FunctionSubcategory = objdvar.FunctionSubcategory;
+                }
+                if ((!objdvar.RequiredEPs?.Any() != true)){
+                    log.MakeLog("Getting RequiredEPs " + objdvar.RequiredEPs.ToString() + " from objdvar.", true);
+                    infovar.RequiredEPs = objdvar.RequiredEPs;
+                }
+                if ((!objdvar.RoomSort?.Any() != true)){
+                    log.MakeLog("Getting RoomSort " + objdvar.RoomSort.ToString() + " from objdvar.", true);
+                    infovar.RoomSort = objdvar.RoomSort;
+                }
+                if ((!objdvar.ObjectGUID?.Any() != true)){
+                    log.MakeLog("Getting ObjectGUID " + objdvar.ObjectGUID.ToString() + " from objdvar.", true);
+                    allGUIDS.AddRange(objdvar.ObjectGUID);
+                }
+            }
+
+            log.MakeLog("In infovar: " + infovar.ToString(), true);
+
+            #endregion
                            
-            
+            thisPackage.Title = infovar.Title;
+            thisPackage.Description = infovar.Description;
+            thisPackage.Game = infovar.Game;
+            thisPackage.DBPF = infovar.DBPF;
+            thisPackage.InstanceIDs = infovar.InstanceIDs;
+            thisPackage.XMLType = infovar.XMLType;
+            thisPackage.XMLSubtype = infovar.XMLSubtype;
+            thisPackage.XMLCategory = infovar.XMLCategory;
+            thisPackage.XMLModelName = infovar.XMLModelName;
+            thisPackage.ObjectGUID = infovar.ObjectGUID;
+            thisPackage.XMLCreator = infovar.XMLCreator;
+            thisPackage.XMLAge = infovar.XMLAge;
+            thisPackage.XMLGender = infovar.XMLGender;
+            thisPackage.RequiredEPs = infovar.RequiredEPs;
+            thisPackage.Function = infovar.Function;
+            thisPackage.FunctionSubcategory = infovar.FunctionSubcategory;
+            thisPackage.RoomSort = infovar.RoomSort;
 
             //if (fileHas.ExistsExists(x => x.term == "OBJD"))
 
