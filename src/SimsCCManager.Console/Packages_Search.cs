@@ -67,7 +67,8 @@ namespace SimsCCManager.Packages.Search
             string test = "";        
             int dirnum = 0;
             List<int> objdnum = new List<int>();   
-            List<int> strnm = new List<int>();
+            List<int> strnm = new List<int>();  
+            List<int> imgnm = new List<int>();
             int mmatloc = 0;
 
             SimsPackage thisPackage = new SimsPackage();
@@ -88,6 +89,8 @@ namespace SimsCCManager.Packages.Search
             //List<string> iids = new List<string>();
             List<string> allGUIDS = new List<string>();      
             List<string> distinctGUIDS = new List<string>();  
+            List<string> allInstanceIDs = new List<string>();      
+            List<string> distinctInstanceIDs = new List<string>();  
 
             //create readers  
             FileStream dbpfFile = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -187,7 +190,7 @@ namespace SimsCCManager.Packages.Search
                 log.MakeLog("P" + packageparsecount + " - Index Entry GroupID: " + holderEntry.groupID, true);
                 holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                 //Console.WriteLine(holderEntry.instanceID);
-                thisPackage.InstanceIDs.Add(holderEntry.instanceID.ToString());
+                allInstanceIDs.Add(holderEntry.instanceID.ToString());
                 log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
 
                 if ((indexMajorVersion == 7) && (indexMinorVersion == 1)) {
@@ -304,7 +307,7 @@ namespace SimsCCManager.Packages.Search
                     log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Instance ID is " + instanceID, true);
                     holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                     //Console.WriteLine(holderEntry.instanceID);
-                    thisPackage.InstanceIDs.Add(holderEntry.instanceID.ToString());
+                    allInstanceIDs.Add(holderEntry.instanceID.ToString());
                     log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
                     if (indexMajorVersion == 7 && indexMinorVersion == 1) instanceID2 = readFile.ReadUInt32().ToString("X8");
                     log.MakeLog("P" + packageparsecount + " - CR#" + c + ": InstanceID2 is " + instanceID2, true);
@@ -362,7 +365,7 @@ namespace SimsCCManager.Packages.Search
                     log.MakeLog("InstanceID: "+ instanceID, true);
                     holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                     //Console.WriteLine(holderEntry.instanceID);
-                    thisPackage.InstanceIDs.Add(holderEntry.instanceID.ToString());
+                    allInstanceIDs.Add(holderEntry.instanceID.ToString());
                     log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
                     if (indexMajorVersion == 7 && indexMinorVersion == 1) {
                         instanceID2 = readFile.ReadUInt32().ToString("X8");
@@ -594,10 +597,78 @@ namespace SimsCCManager.Packages.Search
                         mmatvar = readentries.readXMLchunk(xmlData);
 
                     }
-                }                   
-
-                
+                }
             }
+
+            /*if (fileHas.Exists(x => x.term == "IMG"))
+            {
+                int fh = 0;
+                foreach (fileHasList item in fileHas) {
+                    if (item.term == "IMG"){
+                        imgnm.Add(fh);
+                    }
+                    fh++;
+                }
+
+                dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+                cFileSize = readFile.ReadInt32();
+                cTypeID = readFile.ReadUInt16().ToString("X4");
+
+
+
+
+                if (cTypeID == "FB10") 
+                {
+                    byte[] tempBytes = readFile.ReadBytes(3);
+                    uint cFullSize = readentries.QFSLengthToInt(tempBytes);
+
+                    string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                    if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
+                    {
+                        imgvar = readentries.readCPFchunk(readFile);
+                    } 
+                    else 
+                    {
+                        dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset + 9, SeekOrigin.Begin);
+                        DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+
+                        if (cpfTypeID == "E750E0E2") 
+                        {
+
+                            cpfTypeID = decompressed.ReadUInt32().ToString("X8");
+
+                            if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
+                            {
+                                mmatvar = readentries.readCPFchunk(decompressed);
+                            }
+
+                        } 
+                        else 
+                        {
+                            mmatvar = readentries.readXMLchunk(decompressed);
+                        }
+                    }
+                } 
+                else 
+                {
+                    dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+
+                    string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                    if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
+                    {
+                        mmatvar = readentries.readCPFchunk(readFile);
+                    }
+
+                    if  (cpfTypeID == "6D783F3C")
+                    {
+                        dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+
+                        string xmlData = Encoding.UTF8.GetString(readFile.ReadBytes((int)indexData[mmatloc].filesize));
+                        mmatvar = readentries.readXMLchunk(xmlData);
+
+                    }
+                }
+            }*/
 
             log.MakeLog("All methods complete, moving on to getting info.", true);
             log.MakeLog("Dirvar contains: " + dirvar.ToString(), true);
@@ -627,9 +698,6 @@ namespace SimsCCManager.Packages.Search
             
             thisPackage.Entries.AddRange(typecount);
 
-            /*foreach (TypeCounter item in typecount) {
-                thisPackage.Entries.Add(typecount);
-            }*/
             
             
             
@@ -790,6 +858,8 @@ namespace SimsCCManager.Packages.Search
 
             //if (fileHas.ExistsExists(x => x.term == "OBJD"))
 
+            distinctInstanceIDs = allInstanceIDs.Distinct().ToList();
+            thisPackage.InstanceIDs.AddRange(distinctInstanceIDs);
             distinctGUIDS = allGUIDS.Distinct().ToList();
             thisPackage.ObjectGUID.AddRange(distinctGUIDS);
             log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
@@ -811,6 +881,8 @@ namespace SimsCCManager.Packages.Search
             packageinfo = new FileInfo(file); 
             allGUIDS = new List<string>();      
             distinctGUIDS = new List<string>();  
+            allInstanceIDs = new List<string>();      
+            distinctInstanceIDs = new List<string>();  
 
             readFile.Close();
             Console.WriteLine("Closing Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
