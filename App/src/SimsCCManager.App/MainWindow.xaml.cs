@@ -50,6 +50,7 @@ namespace Sims_CC_Sorter
     public partial class MainWindow : Window    
 
     {
+        ResultsWindow resultsWindow = new ResultsWindow();
         LoggingGlobals log = new LoggingGlobals();
         GlobalVariables globalVars = new GlobalVariables();
         InitialProcessing initialprocess = new InitialProcessing();
@@ -194,6 +195,7 @@ namespace Sims_CC_Sorter
                 log.MakeLog("Sims 2 package processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"), true);
                 sw.Reset();
                 mainProgressBar.Value = 100;
+                resultsWindow.Show();
             }
         }
 
@@ -225,6 +227,7 @@ namespace Sims_CC_Sorter
             catch
             {
                 i = 0;
+                log.MakeLog("Cancelling async.", true);
                 s2worker.CancelAsync();
             }
         }
