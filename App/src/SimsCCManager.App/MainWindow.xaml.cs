@@ -1,4 +1,12 @@
-﻿using System;
+﻿/*
+
+Code cannibalized and learned from has been acquired in a number of places. Top credits:
+
+- TASKS: https://stackoverflow.com/questions/1333058/how-to-wait-correctly-until-backgroundworker-completes/41765420#41765420
+
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -107,18 +115,12 @@ namespace Sims_CC_Sorter
         }        
 
         public void IdentifyPacks(){
-            if (GlobalVariables.debugMode == true)
-            {                        
-                foreach (FileInfo file in GlobalVariables.PackageFiles) {
-                    initialprocess.IdentifyGames(file);
-                }
-            }
-            else 
-            {
-                Parallel.ForEach(GlobalVariables.PackageFiles, parallelSettings, file => 
-                {
+            foreach (FileInfo file in GlobalVariables.PackageFiles) {
+                Task t = new Task(() => {
+                    log.MakeLog("Adding identification task to tasks.", true);
                     initialprocess.IdentifyGames(file);
                 });
+                s2tasks.Add(t);
             }
         }
 
@@ -175,6 +177,7 @@ namespace Sims_CC_Sorter
                 s2worker.ProgressChanged += s2worker_ProgressChanged;
                 s2worker.DoWork += s2worker_DoWork;
                 s2worker.RunWorkerCompleted += s2worker_RunWorkerCompleted;
+                IdentifyPacks();
                 s2gothroughpackages();
             }
         }
@@ -190,20 +193,21 @@ namespace Sims_CC_Sorter
                 completionAlertValue("Sims 2 package processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"));
                 log.MakeLog("Sims 2 package processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"), true);
                 sw.Reset();
-                mainProgressBar.Value = 0;
+                mainProgressBar.Value = 100;
             }
         }
 
         private void s2gothroughpackages(){
-            foreach (PackageFile package in GlobalVariables.AllPackages){
+            foreach (PackageFile package in GlobalVariables.AllPackages)
+            {
                 if (package.Game == 2){
                     Task t = new Task(() => {
-                        log.MakeLog("Adding task to tasks.", true);
+                        log.MakeLog("Adding sims 2 parse task to tasks.", true);
                         s2packs.SearchS2Packages(package.Location);
                     });
                     s2tasks.Add(t);
                 }
-            }            
+            }          
         }
         
         private void s2worker_DoWork(object sender, DoWorkEventArgs e){  
@@ -275,19 +279,6 @@ namespace Sims_CC_Sorter
             statement = "Dev test button clicked.";
             log.MakeLog(statement, true);
             
-        }
-
-        public static void GlobalHandler(ThreadStart threadStartTarget)
-        {
-            LoggingGlobals log = new LoggingGlobals();
-            try
-            {
-                threadStartTarget.Invoke();
-            }
-            catch (Exception ex)
-            {
-                log.MakeLog("Thread ran into an exception.", true);
-            }
-        }
+        }        
     }
 }
