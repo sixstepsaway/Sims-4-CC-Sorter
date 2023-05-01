@@ -5,81 +5,94 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Sims_CC_Sorter"
         mc:Ignorable="d"
-        Title="Sims CC Sorter" Height="650" Width="1000"
-        Loaded="App_Loaded">
-    <Grid Background="#FF231636" Visibility="Visible"> 
+        Title="Sims CC Sorter" Height="750" Width="600"
+        WindowState="Normal"
+        WindowStartupLocation="CenterScreen"
+        Loaded="App_Loaded"
+        Background="#212a3e">
+    <Grid Background="#212a3e" Visibility="Visible" Width="500" Height="650"> 
 
-        <StackPanel Orientation="Vertical">
+        <StackPanel Orientation="Vertical" Visibility="Visible">
             <Rectangle Height = "50" Width = "5"/>
-            <TextBlock Text = "Sims CC Sorter" Height = "75" Width = "800" FontSize="50" Foreground="#FF7CC96D" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-            <TextBlock Text = "Welcome to the Sims CC Sorter app." Height = "20" Width = "800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
-            <TextBlock Text = "Results will output into a 'SimsCCSorter.log' file in the folder you choose below." Height = "20" Width = "800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
+            <TextBlock Text = "Sims CC Manager" Height = "75" Width = "800" FontSize="50" Foreground="#FF7CC96D" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+            <TextBlock Text = "Welcome to the Sims CC Manager." Height = "20" Width = "800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
+            <TextBlock Text = "Pick the folder you want to manage below." Height = "20" Width = "800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <StackPanel.Resources>
+                    <Style TargetType="Button">                        
+                        <Setter Property="Width" Value="150"/>  
+                        <Setter Property="Height" Value="30"/>
+                        <Setter Property="Margin" Value="10"/> 
+                        <Setter Property="Background" Value="#f1f6f9"/>
+                        <Setter Property="Foreground" Value="#FF5F646E"/>
+                    </Style>
+                </StackPanel.Resources>
                 <TextBox x:Name="PickedLocation" Height = "35" Width="300" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
                 <Button x:Name="BrowseForLocation" Click = "browseLocation_Click" Content = "Browse" Width = "100" Height = "35" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </StackPanel> 
-            <Grid>        
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0" Orientation="Vertical">
-                <TextBlock Text = "Game" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="25"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <RadioButton x:Name="radioButton_Sims2" IsChecked="False" GroupName="GameSelect" Content="Sims 2" Margin="5" Foreground="AliceBlue"/>
-                    <RadioButton x:Name="radioButton_Sims3" IsChecked="False" GroupName="GameSelect" Content="Sims 3" Margin="5" Foreground="AliceBlue"/>
-                    <RadioButton x:Name="radioButton_Sims4" IsChecked="False" GroupName="GameSelect" Content="Sims 4" Margin="5" Foreground="AliceBlue"/>
-                </StackPanel>
             </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Vertical">
-                <TextBlock Text = "Actions" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="25"/>
-                <Rectangle Height="10" Width="100"/>
-                <TextBlock Text="Find Broken Packages" Foreground="AliceBlue" Margin="5" TextAlignment="Left" FontSize="18"/>
-                <StackPanel Orientation="Horizontal">
-                    <StackPanel Orientation="Vertical">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <TextBlock Text="Move Packages Automatically" Foreground="AliceBlue" Margin="5"/>
-                            <CheckBox x:Name="MoveBrokenPackages" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <TextBlock Text="Don't Show Results Screen" Foreground="AliceBlue" Margin="5" HorizontalAlignment="Right"/>
-                            <CheckBox x:Name="DontShowResults" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </StackPanel>
-                    
-                    <Button x:Name = "findBrokenButton" Click = "findBroken_Click" Content = "Start" Height = "40" Width = "70" FontSize="13"/>
-                </StackPanel>
-                <TextBlock Text="Rename Sims 2 Packages" Foreground="AliceBlue" Margin="5" TextAlignment="Left" FontSize="18"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">                    
-                    <Button x:Name = "renameSims2Packages" Click = "renameSims2Packages_Click" Content = "Start" Height = "40" Width = "70" FontSize="13" HorizontalAlignment="Right"/>
-                </StackPanel>
-            </StackPanel>                
-            </Grid>
-            <TextBlock x:Name="completionAlert" Text="Waiting..." Foreground="AliceBlue" TextAlignment="Center"/>
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Width="400">
+                <TextBlock Foreground="AliceBlue" TextAlignment="Left" TextWrapping="Wrap">
+                    <TextBlock.Inlines>
+                        <Run Text="If you have a folder full of package files loose or in weird subfolders, and you're unsure of whether your download spree accidentally brought packages for the wrong game with it or even if you like what you downloaded, you'll want to use"/>
+                        <Run FontWeight="Bold" FontSize="16" Text="Sort New Folder"/>
+                    </TextBlock.Inlines>
+                </TextBlock>
+                <Rectangle Height="10"/>
+                <TextBlock Foreground="AliceBlue" TextAlignment="Left" TextWrapping="Wrap">
+                    <TextBlock.Inlines>
+                        <Run Text="If you want to manage your current folder, find overrides, delete things you don't like, rename packages to internal references, you want"/>
+                        <Run FontWeight="Bold" FontSize="16" Text="Manage Old Folder"/>
+                    </TextBlock.Inlines>
+                </TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel.Resources>
+                    <Style TargetType="Button">                        
+                        <Setter Property="Width" Value="150"/>  
+                        <Setter Property="Height" Value="30"/>
+                        <Setter Property="Margin" Value="10"/> 
+                        <Setter Property="Background" Value="#f1f6f9"/>
+                        <Setter Property="Foreground" Value="#FF5F646E"/>
+                    </Style>
+                </StackPanel.Resources>
+                <Button x:Name="NewFolder" Content="Sort New Folder" Click="SortNewFolder_Click"/>
+                <Button x:Name="OldFolder" Content="Manage Old Folder" Click="ManageOldFolder_Click"/>
+            </StackPanel>
+            
             <Rectangle Height="5"/>
-            <ProgressBar x:Name="mainProgressBar" Width="400" Height="15"/>
+            <TextBlock x:Name="completionAlert" Text="Waiting for Input" Foreground="AliceBlue" TextAlignment="Center" Visibility="Hidden"/>
+            <Rectangle Height="10"/>
+            <ProgressBar x:Name="mainProgressBar" Width="400" Height="25" Visibility="Hidden"/>
         </StackPanel>
         <StackPanel Orientation="Vertical" Visibility="Visible">
+            <StackPanel.Resources>
+                <Style TargetType="Button">                        
+                    <Setter Property="Width" Value="150"/>  
+                    <Setter Property="Height" Value="30"/>
+                    <Setter Property="Margin" Value="10"/> 
+                    <Setter Property="Background" Value="#f1f6f9"/>
+                    <Setter Property="Foreground" Value="#FF5F646E"/>
+                </Style>
+            </StackPanel.Resources>
             <Rectangle Height = "470" Width = "5"/>
-            <Rectangle Height = "20" Width = "5"/>
+            <Rectangle Height = "60" Width = "5"/>
             <Button x:Name = "exitButton" Click = "exitButton_Click" Content = "Exit" Height = "40" Width = "350" Margin = "5"/>
             <Button x:Name = "testButton" Click = "testbutton_Click" Content = "Dev Test Button" Height = "35" Width = "127" Margin = "5" Visibility="Hidden"/>
-        </StackPanel>
-        
+        </StackPanel>        
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="100"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Column="1">
-                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="AliceBlue">Sims CC Sorter developed by sixstepsaway/sinfulsimming</TextBlock>
-                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="AliceBlue">Development Alpha</TextBlock>
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" TextAlignment="Right" Foreground="AliceBlue">Sims CC Sorter developed by sixstepsaway/sinfulsimming</TextBlock>
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" TextAlignment="Right" Foreground="AliceBlue">Development Alpha</TextBlock>
             </StackPanel>
             <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Column="0">
-                <Image Source="img/ko-fi_logo-2039355488.png" Height="40" Margin="15"/>
+                <Button Name="KofiButton" Height="50" Width="70" Margin="15" Padding="0" Background="Transparent" Click="Kofi_Click">
+                    <Image Source="pack://application:,,,/img/ko-fi_logo-2039355488.png"/>
+                </Button>                
             </StackPanel>
         </Grid>
-        
-
     </Grid> 
 </Window>

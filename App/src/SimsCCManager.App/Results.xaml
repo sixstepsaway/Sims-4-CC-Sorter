@@ -17,7 +17,7 @@
             <Image Source="img/ko-fi_logo-2039355488.png" Width="45" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal">
-            <DataGrid x:Name="ResultsDataGrid" ItemsSource="{Binding resultspackages}" AutoGenerateColumns="True"/>
+            <DataGrid Name="ResultsDataGrid" ItemsSource="{Binding resultspackageslist}" AutoGenerateColumns="True"/>
         </StackPanel>
         </Grid> 
         

@@ -70,20 +70,7 @@ namespace SimsCCManager.Search_All
             }
 
             return gameVer;
-        }
-        public void FindPackagesToRemove(){
-            int packageCount = GlobalVariables.PackageFiles.Count;
-            var statement = "Checking " + packageCount + " package files. Larger numbers will take a while and I don't know how to do progress bars yet, so please be patient.";
-            log.MakeLog(statement, false);
-            foreach (FileInfo item in GlobalVariables.PackageFiles) {
-                statement = "Processing " + item.Name + ".";
-                log.MakeLog(statement, true);
-                initialProcessing.FindBrokenPackages(item);
-                initialProcessing.IdentifyGames(item);
-            }
-            statement = "Checked all package files.";
-            log.MakeLog(statement, false);
-        }    
+        }     
 
     }
 }

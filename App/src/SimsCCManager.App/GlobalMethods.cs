@@ -731,8 +731,10 @@ namespace SSAGlobals {
         public static int packagesRead = 1;
         
         public static List<PackageFile> AllPackages = new List<PackageFile>();
+        public static List<PackageFile> AllPackagesGames = new List<PackageFile>();
         public static List<FileInfo> NotPackages = new List<FileInfo>();
         public static List<FileInfo> PackageFiles = new List<FileInfo>();
+        public static List<SimsPackage> BrokenFiles = new List<SimsPackage>();
         LoggingGlobals log = new LoggingGlobals();
 
 

@@ -50,13 +50,16 @@ namespace Sims_CC_Sorter
     public partial class MainWindow : Window    
 
     {
+        private IProgress<double> _progress;
+        private int _jobsFinished = 0;
+        private int _totalJobs = 1000;
         ResultsWindow resultsWindow = new ResultsWindow();
+        S2PackageSearch s2packs = new S2PackageSearch();
         LoggingGlobals log = new LoggingGlobals();
         GlobalVariables globalVars = new GlobalVariables();
         InitialProcessing initialprocess = new InitialProcessing();
         ParallelOptions parallelSettings = new ParallelOptions() { MaxDegreeOfParallelism = 200};
-        private ObservableCollection<Task> s2tasks = new ObservableCollection<Task>();
-        S2PackageSearch s2packs = new S2PackageSearch();
+        List<Task> TaskList = new List<Task>();
         public Stopwatch sw = new Stopwatch();
         string SelectedFolder = "";
         string statement = "";
@@ -70,10 +73,33 @@ namespace Sims_CC_Sorter
             } else {
                 testButton.Visibility = Visibility.Hidden;
             }
+            
         }
 
+        #region Taskworkers 
+
+        
+
+        #endregion   
+        
         private void App_Loaded(object sender, RoutedEventArgs e){
              
+        }
+
+        private void Kofi_Click(object sender, EventArgs e){
+            if (System.Windows.Forms.MessageBox.Show
+            ("Are you sure you want to go to Kofi?", "Opening External URL",
+            System.Windows.Forms.MessageBoxButtons.YesNo, 
+            System.Windows.Forms.MessageBoxIcon.Question)
+            ==System.Windows.Forms.DialogResult.Yes)
+                {
+                    Process.Start(new ProcessStartInfo("http://ko-fi.com/sinfulsimming") { UseShellExecute = true });
+                }
+
+            else
+                {
+                //React as needed.
+                }
         }
 
         private void exitButton_Click(object sender, EventArgs e)
@@ -90,6 +116,105 @@ namespace Sims_CC_Sorter
         public void completionAlertValue(string value) {
             completionAlert.Text = value;
         }
+
+
+
+
+        #region Management Area
+
+        private void ManageOldFolder_Click(object sender, EventArgs e) {
+            if (SelectedFolder == "") {
+                System.Windows.Forms.MessageBox.Show("Please select the folder containing your package files.");
+            } else {
+                log.MakeLog("Managing old folder.", true);
+                ManageOldFolder();
+            }            
+        }
+
+        private void SortNewFolder_Click(object sender, EventArgs e) {
+            if (SelectedFolder == "") {
+                System.Windows.Forms.MessageBox.Show("Please select the folder containing your package files.");
+            } else {
+                log.MakeLog("Sorting new folder.", true);
+                //ManageOldFolder();
+            }   
+        }
+
+        public static int progresstracker = 0;
+
+        private async Task ManageOldFolder(){
+            MainWindow window = new MainWindow();
+            log.MakeLog("Checking for broken packages.", true);
+            completionAlert.Visibility = Visibility.Visible;
+            completionAlertValue("Checking for broken packages.");
+            int i = 0;
+            mainProgressBar.Visibility = Visibility.Visible;
+            int maxi = GlobalVariables.PackageFiles.Count; 
+            mainProgressBar.Maximum = maxi;            
+            Task task1 = Task.Run(() => Parallel.For(0, GlobalVariables.PackageFiles.Count, i => {                
+                var file = (GlobalVariables.PackageFiles[i]).FullName;
+                log.MakeLog("Checking " + file, true);
+                progresstracker++;
+                initialprocess.FindBrokenPackages(file);  
+                window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+            }));
+            mainProgressBar.Value = maxi;
+            await(task1);
+            log.MakeLog("Broken check complete.", true);
+            mainProgressBar.Value = 0;
+            completionAlertValue("Identifying package versions.");
+            log.MakeLog("Identifying game.", true);
+            maxi = GlobalVariables.AllPackages.Count;
+            mainProgressBar.Maximum = maxi;
+            Task task2 = Task.Run(() => Parallel.For(0, GlobalVariables.AllPackages.Count, i => {                
+                var file = (GlobalVariables.AllPackages[i]).Location;
+                log.MakeLog("Checking " + file, true);
+                initialprocess.IdentifyGames(file);
+                window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+            }));
+            await(task2);
+            log.MakeLog("Game identification complete.", true); 
+            mainProgressBar.Value = 0;
+            completionAlertValue("Searching packages for details.");
+            log.MakeLog("Parsing Sims 2 packages.", true);
+            maxi = GlobalVariables.AllPackagesGames.Count;
+            mainProgressBar.Maximum = maxi;
+            Task task3 = Task.Run(() => Parallel.For(0, GlobalVariables.AllPackagesGames.Count, i => {
+                var file = (GlobalVariables.AllPackagesGames[i]).Location;
+                log.MakeLog("Checking " + file, true);
+                if (GlobalVariables.AllPackagesGames[i].Game == 2) {
+                    s2packs.SearchS2Packages(file);
+                }                
+                window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+            }));
+            await(task3);
+            mainProgressBar.Value = maxi;
+            resultsWindow.Show();
+            window.Hide();
+        }
+        
+        private void SortNewFolder(){
+            
+        }
+
+        #endregion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         private void browseLocation_Click(object sender, EventArgs e) {
             using(var GetFolder = new FolderBrowserDialog())
@@ -113,175 +238,16 @@ namespace Sims_CC_Sorter
                     LocationBoxValue(SelectedFolder);
                 }
             }
-        }        
-
-        public void IdentifyPacks(){
-            foreach (FileInfo file in GlobalVariables.PackageFiles) {
-                Task t = new Task(() => {
-                    log.MakeLog("Adding identification task to tasks.", true);
-                    initialprocess.IdentifyGames(file);
-                });
-                s2tasks.Add(t);
-            }
         }
 
-        private void findBroken_Click(object sender, EventArgs e) {            
-            if (SelectedFolder == "") {
-                System.Windows.Forms.MessageBox.Show("Please select the folder containing your package files.");
-            } else {                
-                checkGame();
-                if (gameNum is 0){
-                    System.Windows.Forms.MessageBox.Show("Please specify the game you are running and try again.");
-                    statement = "Game not specified.";
-                    log.MakeLog(statement, false);
-                } else {
-                    statement = "Searching for broken and incorrect packages packages.";
-                    log.MakeLog(statement, false);
-                    string[] files = Directory.GetFiles(GlobalVariables.ModFolder, "*.*", SearchOption.AllDirectories);
-                    var sw = Stopwatch.StartNew();
-                    IdentifyPacks();
-                    if (GlobalVariables.debugMode == true)
-                    {                        
-                        foreach (string file in files) {
-                            FileInfo package = new FileInfo(file);
-                            initialprocess.FindBrokenPackages(package);
-                        }
-                    }
-                    else 
-                    {
-                        Parallel.ForEach(files, parallelSettings, file => 
-                        {
-                            FileInfo package = new FileInfo(file);
-                            initialprocess.FindBrokenPackages(package);
-                        });
-                    }
-                    sw.Stop();                    
-                    log.MakeLog("Processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"), true);
-                    completionAlertValue("Processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"));
-                }
-            }
-            statement = "Search for broken packages complete.";
-            log.MakeLog(statement, false);
-            completionAlertValue("Search completed."); 
-        }
-        private BackgroundWorker s2worker = new BackgroundWorker();
-        private void renameSims2Packages_Click(object sender, EventArgs e) {
-            if (SelectedFolder == "") {
-                System.Windows.Forms.MessageBox.Show("Please select the folder containing your package files.");
-            } else {
-                sw.Start();
-                log.MakeLog("Searching through Sims 2 packages.", false);                
-                completionAlertValue("Searching for sims 2 packages.");
-                s2tasks.CollectionChanged += s2tasks_CollectionChanged;
-                s2worker.WorkerReportsProgress = true;
-                s2worker.WorkerSupportsCancellation = true;
-                s2worker.ProgressChanged += s2worker_ProgressChanged;
-                s2worker.DoWork += s2worker_DoWork;
-                s2worker.RunWorkerCompleted += s2worker_RunWorkerCompleted;
-                IdentifyPacks();
-                s2gothroughpackages();
-            }
-        }
-
-        void s2worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (s2tasks.Count != 0)
-            {   
-                log.MakeLog("Running tasks.", true);
-                s2worker.RunWorkerAsync();
-            } else {
-                sw.Stop();
-                completionAlertValue("Sims 2 package processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"));
-                log.MakeLog("Sims 2 package processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"), true);
-                sw.Reset();
-                mainProgressBar.Value = 100;
-                resultsWindow.Show();
-            }
-        }
-
-        private void s2gothroughpackages(){
-            foreach (PackageFile package in GlobalVariables.AllPackages)
-            {
-                if (package.Game == 2){
-                    Task t = new Task(() => {
-                        log.MakeLog("Adding sims 2 parse task to tasks.", true);
-                        s2packs.SearchS2Packages(package.Location);
-                    });
-                    s2tasks.Add(t);
-                }
-            }          
-        }
         
-        private void s2worker_DoWork(object sender, DoWorkEventArgs e){  
-            log.MakeLog("Doing work.", true); 
-            int i = 0;         
-            try
-            {
-                foreach (Task t in s2tasks)
-                {                    
-                    t.RunSynchronously();
-                    s2tasks.Remove(t);
-                    i++;
-                }
-            }
-            catch
-            {
-                i = 0;
-                log.MakeLog("Cancelling async.", true);
-                s2worker.CancelAsync();
-            }
-        }
-        void s2tasks_CollectionChanged(object sender,
-        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            log.MakeLog("Collection has changed.", true);
-            if (!s2worker.IsBusy)
-            {
-                s2worker.RunWorkerAsync();
-            }
-        }
-
-        private void s2worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            log.MakeLog("Progress has changed.", true);
-            mainProgressBar.Value = e.ProgressPercentage;
-        }
-
-        private void checkGame() {
-            statement = "Checking which game is ticked.";
-            log.MakeLog(statement, true);
-            if ((bool)radioButton_Sims2.IsChecked) {
-                statement = "Sims 2 picked.";
-                log.MakeLog(statement, true);
-                gameNum = 2;
-                //get info
-            } else if ((bool)radioButton_Sims3.IsChecked) {
-                statement = "Sims 3 picked.";
-                log.MakeLog(statement, true);
-                gameNum = 3;
-                //get info
-            } else if ((bool)radioButton_Sims4.IsChecked) {
-                statement = "Sims 4 picked.";
-                log.MakeLog(statement, true);
-                gameNum = 4;
-                //get info
-            } else {
-                System.Windows.Forms.MessageBox.Show("Please select a game.");
-                statement = "No game picked.";
-                log.MakeLog(statement, true);
-            }
-        }
-
-        public void changeTestText(string text){
-            statement = "Changing the report text box.";
-            log.MakeLog(statement, true);
-            completionAlertValue(text);
-        }
-
+              
+        
+        
+        
         private void testbutton_Click(object sender, EventArgs e) {
             statement = "Dev test button clicked.";
-            log.MakeLog(statement, true);
-            
+            log.MakeLog(statement, true);            
         }        
     }
 }

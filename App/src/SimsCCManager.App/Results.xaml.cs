@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,16 +25,14 @@ using SimsCCManager.Packages.Containers;
 
 namespace SimsCCManager.SortingUIFunctions {
 
-    public partial class ResultsWindow : Window {
+        public partial class ResultsWindow : Window {
         
         public ResultsWindow() 
         {
             InitializeComponent(); 
             ResultsDataGrid.ItemsSource = resultspackages.populateResultsList(); 
         }
-
     }
-
     public class resultspackages : INotifyPropertyChanged {
         public static SynchronizedCollection<SimsPackage> resultspackageslist = new SynchronizedCollection<SimsPackage>();
         private bool selected; 
@@ -60,7 +60,6 @@ namespace SimsCCManager.SortingUIFunctions {
             }
             return resultspackageslist;
         }
-
         public event PropertyChangedEventHandler PropertyChanged; 
 	
         private void RaiseProperChanged([CallerMemberName] string caller = "") { 
