@@ -14,6 +14,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Forms;
+using System.ComponentModel;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Diagnostics;
 using SSAGlobals;
@@ -22,6 +25,7 @@ using SimsCCManager.Search_All;
 using SimsCCManager.App.Controls;
 using SimsCCManager.Packages.Sims2Search;
 using SimsCCManager.Packages.Containers;
+using SimsCCManager.SortingUIFunctions;
 
 namespace Sims_CC_Sorter
 {
@@ -34,6 +38,7 @@ namespace Sims_CC_Sorter
         
 
     }
+
     public partial class MainWindow : Window    
 
     {
@@ -41,7 +46,9 @@ namespace Sims_CC_Sorter
         GlobalVariables globalVars = new GlobalVariables();
         InitialProcessing initialprocess = new InitialProcessing();
         ParallelOptions parallelSettings = new ParallelOptions() { MaxDegreeOfParallelism = 200};
+        private ObservableCollection<Task> s2tasks = new ObservableCollection<Task>();
         S2PackageSearch s2packs = new S2PackageSearch();
+        public Stopwatch sw = new Stopwatch();
         string SelectedFolder = "";
         string statement = "";
         int gameNum = 0;
@@ -154,39 +161,83 @@ namespace Sims_CC_Sorter
             log.MakeLog(statement, false);
             completionAlertValue("Search completed."); 
         }
-
+        private BackgroundWorker s2worker = new BackgroundWorker();
         private void renameSims2Packages_Click(object sender, EventArgs e) {
             if (SelectedFolder == "") {
                 System.Windows.Forms.MessageBox.Show("Please select the folder containing your package files.");
             } else {
+                sw.Start();
+                log.MakeLog("Searching through Sims 2 packages.", false);                
                 completionAlertValue("Searching for sims 2 packages.");
-                Thread t = new Thread( S2PackThread );
-                t.IsBackground = true;
-                t.Start();
+                s2tasks.CollectionChanged += s2tasks_CollectionChanged;
+                s2worker.WorkerReportsProgress = true;
+                s2worker.WorkerSupportsCancellation = true;
+                s2worker.ProgressChanged += s2worker_ProgressChanged;
+                s2worker.DoWork += s2worker_DoWork;
+                s2worker.RunWorkerCompleted += s2worker_RunWorkerCompleted;
+                s2gothroughpackages();
             }
         }
 
-        private void S2PackThread(){
-            log.MakeLog("Searching through Sims 2 packages.", false);
-            var sw = Stopwatch.StartNew();
-            IdentifyPacks();
-            if (GlobalVariables.debugMode) {
-                foreach (PackageFile package in GlobalVariables.AllPackages){
-                    if (package.Game == 2){
-                        s2packs.SearchS2Packages(package.Location);
-                    }
-                }
+        void s2worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (s2tasks.Count != 0)
+            {   
+                log.MakeLog("Running tasks.", true);
+                s2worker.RunWorkerAsync();
             } else {
-                Parallel.ForEach(GlobalVariables.AllPackages, parallelSettings, package =>
-                {
-                    if (package.Game == 2){
-                        s2packs.SearchS2Packages(package.Location);
-                    }
-                });                    
+                sw.Stop();
+                completionAlertValue("Sims 2 package processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"));
+                log.MakeLog("Sims 2 package processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"), true);
+                sw.Reset();
+                mainProgressBar.Value = 0;
             }
-            sw.Stop();                    
-            log.MakeLog("Sims 2 package processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"), true);
-            completionAlertValue("Sims 2 package processing took " + sw.Elapsed.TotalSeconds.ToString("#,##0.00 'seconds'"));
+        }
+
+        private void s2gothroughpackages(){
+            foreach (PackageFile package in GlobalVariables.AllPackages){
+                if (package.Game == 2){
+                    Task t = new Task(() => {
+                        log.MakeLog("Adding task to tasks.", true);
+                        s2packs.SearchS2Packages(package.Location);
+                    });
+                    s2tasks.Add(t);
+                }
+            }            
+        }
+        
+        private void s2worker_DoWork(object sender, DoWorkEventArgs e){  
+            log.MakeLog("Doing work.", true); 
+            int i = 0;         
+            try
+            {
+                foreach (Task t in s2tasks)
+                {                    
+                    t.RunSynchronously();
+                    s2tasks.Remove(t);
+                    i++;
+                }
+            }
+            catch
+            {
+                i = 0;
+                s2worker.CancelAsync();
+            }
+        }
+        void s2tasks_CollectionChanged(object sender,
+        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            log.MakeLog("Collection has changed.", true);
+            if (!s2worker.IsBusy)
+            {
+                s2worker.RunWorkerAsync();
+            }
+        }
+
+        private void s2worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            log.MakeLog("Progress has changed.", true);
+            mainProgressBar.Value = e.ProgressPercentage;
         }
 
         private void checkGame() {
@@ -223,6 +274,20 @@ namespace Sims_CC_Sorter
         private void testbutton_Click(object sender, EventArgs e) {
             statement = "Dev test button clicked.";
             log.MakeLog(statement, true);
+            
+        }
+
+        public static void GlobalHandler(ThreadStart threadStartTarget)
+        {
+            LoggingGlobals log = new LoggingGlobals();
+            try
+            {
+                threadStartTarget.Invoke();
+            }
+            catch (Exception ex)
+            {
+                log.MakeLog("Thread ran into an exception.", true);
+            }
         }
     }
 }

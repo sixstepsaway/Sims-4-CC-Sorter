@@ -6,8 +6,6 @@
         xmlns:local="clr-namespace:Sims_CC_Sorter"
         mc:Ignorable="d"
         Title="Sims CC Sorter" Height="650" Width="1000"
-        WindowStyle="None"
-        WindowStartupLocation="CenterScreen"
         Loaded="App_Loaded">
     <Grid Background="#FF231636" Visibility="Visible"> 
 
@@ -58,6 +56,8 @@
             </StackPanel>                
             </Grid>
             <TextBlock x:Name="completionAlert" Text="Waiting..." Foreground="AliceBlue" TextAlignment="Center"/>
+            <Rectangle Height="5"/>
+            <ProgressBar x:Name="mainProgressBar" Width="400" Height="15"/>
         </StackPanel>
         <StackPanel Orientation="Vertical" Visibility="Visible">
             <Rectangle Height = "470" Width = "5"/>
@@ -78,6 +78,8 @@
             <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Column="0">
                 <Image Source="img/ko-fi_logo-2039355488.png" Height="40" Margin="15"/>
             </StackPanel>
-        </Grid>        
+        </Grid>
+        
+
     </Grid> 
 </Window>

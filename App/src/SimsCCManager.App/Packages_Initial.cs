@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using SSAGlobals;
-using ResultsWindow;
 using System.Threading.Tasks;
 using SimsCCManager.Packages.Containers;
 

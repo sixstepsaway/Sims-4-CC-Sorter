@@ -11,6 +11,8 @@ using SimsCCManager.Packages.Containers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+
+
 namespace SSAGlobals {
 
     public class typeList {
@@ -862,7 +864,7 @@ namespace SSAGlobals {
 
         public void ReadJSON()
         {
-            string fileName = LoggingGlobals.myDocs + "\\data\\Sorting.json";
+            string fileName = LoggingGlobals.mydocs + "\\data\\Sorting.json";
             string jsonString = File.ReadAllText(fileName);
             SortingGroupsJSON SortingGroups = JsonSerializer.Deserialize<SortingGroupsJSON>(jsonString)!;
 
