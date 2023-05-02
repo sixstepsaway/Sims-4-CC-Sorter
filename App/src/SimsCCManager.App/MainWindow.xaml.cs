@@ -160,7 +160,7 @@ namespace Sims_CC_Sorter
                 initialprocess.FindBrokenPackages(file);  
                 window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
             }));
-            mainProgressBar.Value = maxi;
+            log.MakeLog("Awaiting finding broken packages to finish.", true);
             await(task1);
             log.MakeLog("Broken check complete.", true);
             mainProgressBar.Value = 0;
@@ -174,6 +174,7 @@ namespace Sims_CC_Sorter
                 initialprocess.IdentifyGames(file);
                 window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
             }));
+            log.MakeLog("Awaiting game ID to finish.", true);
             await(task2);
             log.MakeLog("Game identification complete.", true); 
             mainProgressBar.Value = 0;
@@ -189,6 +190,7 @@ namespace Sims_CC_Sorter
                 }                
                 window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
             }));
+            log.MakeLog("Awaiting Sims 2 package reading to finish.", true);
             await(task3);
             mainProgressBar.Value = maxi;
             resultsWindow.Show();
