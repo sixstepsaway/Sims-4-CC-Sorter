@@ -730,11 +730,19 @@ namespace SSAGlobals {
         public static int PackageCount = 0;       
         public static int packagesRead = 1;
         
-        public static List<PackageFile> AllPackages = new List<PackageFile>();
-        public static List<PackageFile> AllPackagesGames = new List<PackageFile>();
-        public static List<FileInfo> NotPackages = new List<FileInfo>();
-        public static List<FileInfo> PackageFiles = new List<FileInfo>();
-        public static List<SimsPackage> BrokenFiles = new List<SimsPackage>();
+        //vars that hold package files 
+        public static List<FileInfo> justPackageFiles = new List<FileInfo>();
+                    //this one holds every file in the folder that ends with .package
+        public static List<FileInfo> notPackageFiles = new List<FileInfo>();
+                    //this one holds every file in the folder that DOESN'T end with .package, except for--
+        public static List<FileInfo> ts4scriptFiles = new List<FileInfo>();                    
+                    //this one holds ts4script files
+        public static List<PackageFile> workingPackageFiles = new List<PackageFile>();
+                    //this one holds all .package files that came back from being tested as not broken
+        public static List<SimsPackage> brokenFiles = new List<SimsPackage>();
+                    //this one holds the broken packages
+        public static List<PackageFile> gamesPackages = new List<PackageFile>();
+                    //this one holds all the working packages that have been assigned a game
         LoggingGlobals log = new LoggingGlobals();
 
 
@@ -845,7 +853,7 @@ namespace SSAGlobals {
     }
 
     public class OutsideInformation {
-        /*public void WriteJSON()
+        public void WriteJSON()
         {
             var weatherForecast = new WeatherForecast
             {
@@ -859,15 +867,14 @@ namespace SSAGlobals {
             File.WriteAllText(fileName, jsonString);
 
             Console.WriteLine(File.ReadAllText(fileName));
-        }*/
+        }
 
         public void ReadJSON()
         {
             string fileName = LoggingGlobals.mydocs + "\\data\\Sorting.json";
             string jsonString = File.ReadAllText(fileName);
             SortingGroupsJSON SortingGroups = JsonSerializer.Deserialize<SortingGroupsJSON>(jsonString)!;
-
-            
+           
         }
 
     }

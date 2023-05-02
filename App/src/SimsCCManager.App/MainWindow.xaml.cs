@@ -149,10 +149,10 @@ namespace Sims_CC_Sorter
             completionAlertValue("Checking for broken packages.");
             int i = 0;
             mainProgressBar.Visibility = Visibility.Visible;
-            int maxi = GlobalVariables.PackageFiles.Count; 
+            int maxi = GlobalVariables.justPackageFiles.Count; 
             mainProgressBar.Maximum = maxi;            
-            Task task1 = Task.Run(() => Parallel.For(0, GlobalVariables.PackageFiles.Count, i => {                
-                var file = (GlobalVariables.PackageFiles[i]).FullName;
+            Task task1 = Task.Run(() => Parallel.For(0, GlobalVariables.justPackageFiles.Count, i => {                
+                var file = (GlobalVariables.justPackageFiles[i]).FullName;
                 log.MakeLog("Checking " + file, true);
                 progresstracker++;
                 initialprocess.FindBrokenPackages(file);  
@@ -164,10 +164,10 @@ namespace Sims_CC_Sorter
             mainProgressBar.Value = 0;
             completionAlertValue("Identifying package versions.");
             log.MakeLog("Identifying game.", true);
-            maxi = GlobalVariables.AllPackages.Count;
+            maxi = GlobalVariables.justPackageFiles.Count;
             mainProgressBar.Maximum = maxi;
-            Task task2 = Task.Run(() => Parallel.For(0, GlobalVariables.AllPackages.Count, i => {                
-                var file = (GlobalVariables.AllPackages[i]).Location;
+            Task task2 = Task.Run(() => Parallel.For(0, GlobalVariables.workingPackageFiles.Count, i => {                
+                var file = (GlobalVariables.workingPackageFiles[i]).Location;
                 log.MakeLog("Checking " + file, true);
                 initialprocess.IdentifyGames(file);
                 window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
@@ -177,12 +177,12 @@ namespace Sims_CC_Sorter
             mainProgressBar.Value = 0;
             completionAlertValue("Searching packages for details.");
             log.MakeLog("Parsing Sims 2 packages.", true);
-            maxi = GlobalVariables.AllPackagesGames.Count;
+            maxi = GlobalVariables.gamesPackages.Count;
             mainProgressBar.Maximum = maxi;
-            Task task3 = Task.Run(() => Parallel.For(0, GlobalVariables.AllPackagesGames.Count, i => {
-                var file = (GlobalVariables.AllPackagesGames[i]).Location;
+            Task task3 = Task.Run(() => Parallel.For(0, GlobalVariables.gamesPackages.Count, i => {
+                var file = (GlobalVariables.gamesPackages[i]).Location;
                 log.MakeLog("Checking " + file, true);
-                if (GlobalVariables.AllPackagesGames[i].Game == 2) {
+                if (GlobalVariables.gamesPackages[i].Game == 2) {
                     s2packs.SearchS2Packages(file);
                 }                
                 window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));

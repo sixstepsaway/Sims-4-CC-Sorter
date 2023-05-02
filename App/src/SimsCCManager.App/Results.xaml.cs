@@ -34,7 +34,7 @@ namespace SimsCCManager.SortingUIFunctions {
         }
     }
     public class resultspackages : INotifyPropertyChanged {
-        public static SynchronizedCollection<SimsPackage> resultspackageslist = new SynchronizedCollection<SimsPackage>();
+        public static ObservableCollection<SimsPackage> resultspackageslist = new ObservableCollection<SimsPackage>();
         private bool selected; 
         
         public bool Selected { 
@@ -45,7 +45,7 @@ namespace SimsCCManager.SortingUIFunctions {
             } 
         }  
         
-       public static SynchronizedCollection<SimsPackage> populateResultsList() 
+       public static ObservableCollection<SimsPackage> populateResultsList() 
         {
             
             

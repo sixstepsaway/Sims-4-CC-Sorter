@@ -30,18 +30,18 @@ namespace SimsCCManager.Packages.Initial {
                 if (packageExtension.Any(packageFile.Extension.Contains)) {
                     statement = "This file is a package file.";
                     log.MakeLog(statement, true);
-                    GlobalVariables.PackageFiles.Add(packageFile);
-                    statement = "Items in PackageFiles array: " + GlobalVariables.PackageFiles.Count;
+                    GlobalVariables.justPackageFiles.Add(packageFile);
+                    statement = "Items in justPackageFiles array: " + GlobalVariables.justPackageFiles.Count;
                     log.MakeLog(statement, true);
                 } else {
                     statement = "This file is not a package file.";
                     log.MakeLog(statement, true);
-                    GlobalVariables.NotPackages.Add(packageFile);
-                    statement = "Items in notPackages array: " + GlobalVariables.NotPackages;
+                    GlobalVariables.notPackageFiles.Add(packageFile);
+                    statement = "Items in notPackages array: " + GlobalVariables.notPackageFiles;
                     log.MakeLog(statement, true);
                 }
             }
-            GlobalVariables.PackageCount = GlobalVariables.AllPackagesGames.Count;
+            GlobalVariables.PackageCount = GlobalVariables.gamesPackages.Count;
             statement = "Checked all packages, returning.";
             log.MakeLog(statement, true);
         }
@@ -73,13 +73,13 @@ namespace SimsCCManager.Packages.Initial {
             if (test != "DBPF") {
                 packagereader.Close();
                 var statement = pack.FullName + " is either not a package or is broken.";
-                GlobalVariables.BrokenFiles.Add(new SimsPackage{ Title = pack.Name, Location = pack.FullName, Broken = true});
+                GlobalVariables.brokenFiles.Add(new SimsPackage{ Title = pack.Name, Location = pack.FullName, Broken = true});
                 log.MakeLog(statement, false);
                 return;
             } else {
                 packagereader.Close();
                 log.MakeLog(pack.FullName + " is a package.", true);                
-                GlobalVariables.AllPackages.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Broken = false});
+                GlobalVariables.workingPackageFiles.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Broken = false});
                 return;
             }
         }
@@ -112,23 +112,23 @@ namespace SimsCCManager.Packages.Initial {
             if (major is 1 && minor is 1) {
                 statement = pack.FullName + " is a sims 2 file.";
                 log.MakeLog(statement, false);
-                GlobalVariables.AllPackagesGames.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Number = counter, Game = 2, Broken = false});  
+                GlobalVariables.gamesPackages.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Number = counter, Game = 2, Broken = false});  
             } else if (major is 2 && minor is 0) {
                 statement = pack.FullName + " is a sims 3 file.";
                 log.MakeLog(statement, false);
-                GlobalVariables.AllPackagesGames.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Number = counter, Game = 3, Broken = false});
+                GlobalVariables.gamesPackages.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Number = counter, Game = 3, Broken = false});
             } else if (major is 2 && minor is 1) {
                 statement = pack.FullName + " is a sims 4 file.";
                 log.MakeLog(statement, false);
-                GlobalVariables.AllPackagesGames.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Number = counter, Game = 3, Broken = false});            
+                GlobalVariables.gamesPackages.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Number = counter, Game = 3, Broken = false});            
             } else if (major is 3 && minor is 0) {
                 statement = pack.FullName + " is a Sim City 5 file.";
                 log.MakeLog(statement, false);
-                GlobalVariables.AllPackagesGames.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Number = counter, Game = 12, Broken = false});  
+                GlobalVariables.gamesPackages.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Number = counter, Game = 12, Broken = false});  
             } else { 
                 statement = pack.FullName + " was unidentifiable.";
                 log.MakeLog(statement, false);
-                GlobalVariables.NotPackages.Add(pack);
+                GlobalVariables.notPackageFiles.Add(pack);
             }
         }
     }

@@ -1,0 +1,6 @@
+today:
+- copy working cs files back to console
+- set up auto-moving in console (move each game type into own folder)
+- finish setting up which game is which
+- try finding out what sims 4 packages are which?
+- get data grid working -.-
