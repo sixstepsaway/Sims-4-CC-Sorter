@@ -1,7 +1,15 @@
 Next steps:
 
-- Integrate into App
+- Integrate into App -- done 
 - make it auto rename
 - fill the rest of the types in
 - see how moving files is set up
 - compare guids for missing meshes
+
+today:
+- copy working cs files back to console
+- set up auto-moving in console (move each game type into own folder)
+- finish setting up which game is which
+- try finding out what sims 4 packages are which?
+
+- get data grid working -.- - DONE
