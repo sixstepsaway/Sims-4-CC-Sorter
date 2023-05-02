@@ -143,100 +143,56 @@ namespace Sims_CC_Sorter
         public static int progresstracker = 0;
 
         public static int maxi = 0;
-        //MainWindow window = new MainWindow();
 
-        public void ManageOldFolder(){
+        private async Task ManageOldFolder(){
+            MainWindow window = new MainWindow();
             log.MakeLog("Checking for broken packages.", true);
             completionAlert.Visibility = Visibility.Visible;
             completionAlertValue("Checking for broken packages.");
+            int i = 0;
             mainProgressBar.Visibility = Visibility.Visible;
-            BrokenChecks();
-            log.MakeLog("Broken check complete.", true);
-            mainProgressBar.Value = 0;
-            
-            completionAlertValue("Identifying package versions.");
-            log.MakeLog("Identifying game.", true);
-            GameChecks();
-            log.MakeLog("Matched all packages to games.", true);
-            mainProgressBar.Value = 0;
-
-            completionAlertValue("Searching Sims 2 packages for details.");
-            log.MakeLog("Parsing Sims 2 packages.", true);
-            Sims2Info();
-            log.MakeLog("Done parsing Sims 2 packages.", true);     
-            mainProgressBar.Value = 0;   
-
-
-            //await Task.WhenAll(brokenPacks, packagesGames, sims2checker);
-            completionAlertValue("Done!");
-            mainProgressBar.Value = maxi;
-            //resultsWindow.Show();
-            //this.Hide();
-            
-        }
-
-        public async void BrokenChecks(){
-            log.MakeLog("Running FindBrokenPackageFiles", true);
-            await Task.Run(new Action(FindBrokenPackageFiles));
-        }
-
-        public async void GameChecks(){
-            log.MakeLog("Running MatchPackagesToGames", true);
-            await Task.Run(new Action(MatchPackagesToGames));
-        }
-
-        public async void Sims2Info(){
-            log.MakeLog("Running GoThroughSims2Packages", true);
-            await Task.Run(new Action(GoThroughSims2Packages));
-        }
-
-        public void FindBrokenPackageFiles(){        
-            log.MakeLog("[FBPF] Setting maximum.", true);         
-            maxi = GlobalVariables.justPackageFiles.Count;
-            log.MakeLog("[FBPF] Setting progress bar maximum.", true); 
-            mainProgressBar.Maximum = maxi;    
-            log.MakeLog("[FBPF] Running through files.", true);        
+            int maxi = GlobalVariables.justPackageFiles.Count; 
+            mainProgressBar.Maximum = maxi;            
             Task task1 = Task.Run(() => Parallel.For(0, GlobalVariables.justPackageFiles.Count, i => {                
                 var file = (GlobalVariables.justPackageFiles[i]).FullName;
-                log.MakeLog("[FBPF] Checking " + file, true);
+                log.MakeLog("Checking " + file, true);
                 progresstracker++;
                 initialprocess.FindBrokenPackages(file);  
-                this.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
             }));
-            log.MakeLog("[FBPF] Done! Maxing out progress bar.", true);
             mainProgressBar.Value = maxi;
-        }
-
-        public void MatchPackagesToGames(){
-            log.MakeLog("[MPTG] Setting maximum.", true);         
-            maxi = GlobalVariables.workingPackageFiles.Count;
-            log.MakeLog("[MPTG] Setting progress bar maximum.", true); 
-            mainProgressBar.Maximum = maxi;    
-            log.MakeLog("[MPTG] Running through files.", true);     
-            Task task1 = Task.Run(() => Parallel.For(0, GlobalVariables.workingPackageFiles.Count, i => {                
-                var file = (GlobalVariables.workingPackageFiles[i]).Location;
-                log.MakeLog("[MPTG] Checking " + file, true);
-                initialprocess.IdentifyGames(file);
-                this.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
-            }));
-            log.MakeLog("[MPTG] Game identification complete.", true); 
+            await(task1);
+            log.MakeLog("Broken check complete.", true);
             mainProgressBar.Value = 0;
-        }
-
-        public void GoThroughSims2Packages(){
-            log.MakeLog("[GTS2] Setting maximum.", true);         
+            completionAlertValue("Identifying package versions.");
+            log.MakeLog("Identifying game.", true);
+            maxi = GlobalVariables.workingPackageFiles.Count;
+            mainProgressBar.Maximum = maxi;
+            Task task2 = Task.Run(() => Parallel.For(0, GlobalVariables.workingPackageFiles.Count, i => {                
+                var file = (GlobalVariables.workingPackageFiles[i]).Location;
+                log.MakeLog("Checking " + file, true);
+                initialprocess.IdentifyGames(file);
+                window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+            }));
+            await(task2);
+            log.MakeLog("Game identification complete.", true); 
+            mainProgressBar.Value = 0;
+            completionAlertValue("Searching packages for details.");
+            log.MakeLog("Parsing Sims 2 packages.", true);
             maxi = GlobalVariables.gamesPackages.Count;
-            log.MakeLog("[GTS2] Setting progress bar maximum.", true); 
-            mainProgressBar.Maximum = maxi;    
-            log.MakeLog("[GTS2] Running through files.", true);     
-            Task task1 = Task.Run(() => Parallel.For(0, GlobalVariables.gamesPackages.Count, i => {
+            mainProgressBar.Maximum = maxi;
+            Task task3 = Task.Run(() => Parallel.For(0, GlobalVariables.gamesPackages.Count, i => {
                 var file = (GlobalVariables.gamesPackages[i]).Location;
-                log.MakeLog("[GTS2] Checking " + file, true);
+                log.MakeLog("Checking " + file, true);
                 if (GlobalVariables.gamesPackages[i].Game == 2) {
                     s2packs.SearchS2Packages(file);
                 }                
-                this.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
             }));
+            await(task3);
+            mainProgressBar.Value = maxi;
+            resultsWindow.Show();
+            window.Hide();
         }
         
         private void SortNewFolder(){
