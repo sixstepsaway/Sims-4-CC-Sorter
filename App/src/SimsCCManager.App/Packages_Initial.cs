@@ -22,7 +22,9 @@ namespace SimsCCManager.Packages.Initial {
         public void IdentifyPackages(){
             statement = "Running Identify Packages.";
             log.MakeLog(statement, true);
-            string[] files = Directory.GetFiles(GlobalVariables.ModFolder, "*." + packageExtension, SearchOption.AllDirectories);
+            string ts3pack = "sims3pack";
+            string ts2pack = "sims2pack";
+            string[] files = Directory.GetFiles(GlobalVariables.ModFolder, "*", SearchOption.AllDirectories);
             foreach (string file in files) {
                 FileInfo packageFile = new FileInfo(file);
                 statement = "Found " + packageFile.FullName;
@@ -33,11 +35,21 @@ namespace SimsCCManager.Packages.Initial {
                     GlobalVariables.justPackageFiles.Add(packageFile);
                     statement = "Items in justPackageFiles array: " + GlobalVariables.justPackageFiles.Count;
                     log.MakeLog(statement, true);
+                } else if (ts3pack.Any(packageFile.Extension.Contains)) {
+                    log.MakeLog("This is a Sims3package.", true);
+                    GlobalVariables.sims3packfiles.Add(packageFile);
+                    statement = "Items in sims3package array: " + GlobalVariables.sims3packfiles.Count;
+                    log.MakeLog(statement, true);
+                } else if (ts2pack.Any(packageFile.Extension.Contains)) {
+                    log.MakeLog("This is a Sims2package.", true);
+                    GlobalVariables.sims3packfiles.Add(packageFile);
+                    statement = "Items in sims2package array: " + GlobalVariables.sims3packfiles.Count;
+                    log.MakeLog(statement, true);
                 } else {
                     statement = "This file is not a package file.";
                     log.MakeLog(statement, true);
                     GlobalVariables.notPackageFiles.Add(packageFile);
-                    statement = "Items in notPackages array: " + GlobalVariables.notPackageFiles;
+                    statement = "Items in notPackages array: " + GlobalVariables.notPackageFiles.Count;
                     log.MakeLog(statement, true);
                 }
             }
