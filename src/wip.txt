@@ -1,0 +1,7 @@
+Next steps:
+
+- Integrate into App
+- make it auto rename
+- fill the rest of the types in
+- see how moving files is set up
+- compare guids for missing meshes

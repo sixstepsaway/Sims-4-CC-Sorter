@@ -845,6 +845,9 @@ namespace SSAGlobals {
             finally {}
             }
     }
+    /*
+
+    work in progress dont look at me
 
     public class SortingGroupsJSON {
         public string type {get; set;}
@@ -876,6 +879,6 @@ namespace SSAGlobals {
             SortingGroupsJSON SortingGroups = JsonSerializer.Deserialize<SortingGroupsJSON>(jsonString)!;
            
         }
-
-    }
+        
+    }*/
 }
