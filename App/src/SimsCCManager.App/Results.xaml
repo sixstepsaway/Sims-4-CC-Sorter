@@ -9,15 +9,20 @@
         WindowStartupLocation="CenterScreen">
         <Grid Background="#FF231636">
             <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="50"/> 
+            <ColumnDefinition Width="60"/> 
             <ColumnDefinition Width="Auto"/>   
             </Grid.ColumnDefinitions>
                   
-        <StackPanel x:Name="MenuBar" Grid.Column="0" Orientation="Horizontal">
-            <Image Source="img/ko-fi_logo-2039355488.png" Width="45" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+        <StackPanel x:Name="MenuBar" Grid.Column="0" Orientation="Vertical" VerticalAlignment="Bottom">
+            <Button Click="menu_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
+                <Image Source="I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\img\icons\headline_gears 2d62d7495b01c1a8.png"/>
+            </Button>
+            <Button Click="Kofi_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
+                <Image Source="img/ko-fi_logo-2039355488.png"/>
+            </Button>
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal">
-            <DataGrid Name="ResultsDataGrid" ItemsSource="{Binding resultspackageslist}" AutoGenerateColumns="True"/>
+            <DataGrid x:Name="ResultsDataGrid" AutoGenerateColumns="True" ItemsSource="{Binding resultspackageslist}"/>
         </StackPanel>
         </Grid> 
         
