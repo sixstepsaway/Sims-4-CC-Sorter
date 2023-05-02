@@ -724,6 +724,7 @@ namespace SSAGlobals {
 
     public class GlobalVariables {
         public static bool debugMode = true;
+        public static bool loadedSaveData = false;
         public static string ModFolder;
         public static string logfile;
         public static int gameVer;  
@@ -743,6 +744,7 @@ namespace SSAGlobals {
                     //this one holds the broken packages
         public static List<PackageFile> gamesPackages = new List<PackageFile>();
                     //this one holds all the working packages that have been assigned a game
+        public static List<SimsPackage> loadedData = new List<SimsPackage>();
         LoggingGlobals log = new LoggingGlobals();
 
 
@@ -773,17 +775,26 @@ namespace SSAGlobals {
         }       
     }
 
+    public class SaveData {
+        public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        public static string saveDataFolder = mydocs + "\\Sims CC Manager\\data";
+        public static string mainSaveData = saveDataFolder + "\\PackageCache.data";
+
+
+    }
+
     public class LoggingGlobals
     {
         public static bool firstrunmain = true;
         public static bool firstrundebug = true;
         public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         private static string internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
-        private static string debuglog = internalLogFolder + "\\debug.log";        
+        private static string debuglog = internalLogFolder + "\\debug.log";
         static ReaderWriterLock locker = new ReaderWriterLock();
         //Function for logging to the logfile set at the start of the program
         public void InitializeLog() {
             Methods.MakeFolder(internalLogFolder);
+            Methods.MakeFolder(mydocs + "\\Sims CC Manager\\data");
             StreamWriter addToInternalLog = new StreamWriter (debuglog, append: false);
             addToInternalLog.WriteLine("Initializing internal log file.");
             addToInternalLog.Close();

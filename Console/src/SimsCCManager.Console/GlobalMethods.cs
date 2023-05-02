@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Threading;
 using System.Runtime.CompilerServices;
+using System.Reflection;
 using SimsCCManager.Packages.Containers;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+
 
 namespace SSAGlobals {
 
@@ -714,19 +719,31 @@ namespace SSAGlobals {
             //return s2fs;
         }*/
     
-    
-    
-    
     }
     
 
     public class GlobalVariables {
         public static bool debugMode = true;
-        public static string logfile = "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.Console\\log\\SimsCCManager.log";
         public static string ModFolder;
+        public static string logfile;
         public static int gameVer;  
         public static int PackageCount = 0;       
         public static int packagesRead = 1;
+        
+        //vars that hold package files 
+        public static List<FileInfo> justPackageFiles = new List<FileInfo>();
+                    //this one holds every file in the folder that ends with .package
+        public static List<FileInfo> notPackageFiles = new List<FileInfo>();
+                    //this one holds every file in the folder that DOESN'T end with .package, except for--
+        public static List<FileInfo> ts4scriptFiles = new List<FileInfo>();                    
+                    //this one holds ts4script files
+        public static List<PackageFile> workingPackageFiles = new List<PackageFile>();
+                    //this one holds all .package files that came back from being tested as not broken
+        public static List<SimsPackage> brokenFiles = new List<SimsPackage>();
+                    //this one holds the broken packages
+        public static List<PackageFile> gamesPackages = new List<PackageFile>();
+                    //this one holds all the working packages that have been assigned a game
+        LoggingGlobals log = new LoggingGlobals();
 
 
         public void Initialize(int gameNum, string modLocation){
@@ -735,17 +752,38 @@ namespace SSAGlobals {
             logfile = modLocation + "\\SimsCCSorter.log";
             StreamWriter putContentsIntoTxt = new StreamWriter(logfile);
             putContentsIntoTxt.Close();
+            InitializeVariables(); 
         }
-    }          
+
+        TypeListings typeListings = new TypeListings();
+        public void InitializeVariables(){
+            log.InitializeLog();
+            log.MakeLog("Initializing application.", true);
+            TypeListings.AllTypesS2 = typeListings.createS2TypeList();
+            log.MakeLog("Created sims 2 type list.", true);
+            TypeListings.AllTypesS3 = typeListings.createS3TypeList();
+            log.MakeLog("Created sims 3 type list.", true);
+            TypeListings.AllTypesS4 = typeListings.createS4TypeList();
+            log.MakeLog("Created sims 4 type list.", true);
+            TypeListings.S2BuyFunctionSort = typeListings.createS2buyfunctionsortlist();
+            log.MakeLog("Created sims 2 buy function sort list.", true);
+            TypeListings.S2BuildFunctionSort = typeListings.createS2buildfunctionsortlist();
+            log.MakeLog("Created sims 2 build function sort.", true);            
+            log.MakeLog("Finished initializing.", true);
+        }       
+    }
 
     public class LoggingGlobals
     {
         public static bool firstrunmain = true;
         public static bool firstrundebug = true;
-        private string debuglog = "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.Console\\log\\debug.log";
+        public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        private static string internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
+        private static string debuglog = internalLogFolder + "\\debug.log";        
         static ReaderWriterLock locker = new ReaderWriterLock();
         //Function for logging to the logfile set at the start of the program
         public void InitializeLog() {
+            Methods.MakeFolder(internalLogFolder);
             StreamWriter addToInternalLog = new StreamWriter (debuglog, append: false);
             addToInternalLog.WriteLine("Initializing internal log file.");
             addToInternalLog.Close();
@@ -784,5 +822,63 @@ namespace SSAGlobals {
                 }
             }            
         }
-    } 
+    }
+
+    public class Methods {
+        public static void MakeFolder (string directory)
+        {
+            try
+            {
+                // Determine whether the directory exists.
+                if (Directory.Exists(directory))
+                {
+                    return;
+                }
+
+                // Try to create the directory.
+                DirectoryInfo di = Directory.CreateDirectory(directory);
+            }
+            catch (Exception e)
+            {
+                
+            }
+            finally {}
+            }
+    }
+    /*
+
+    work in progress dont look at me
+
+    public class SortingGroupsJSON {
+        public string type {get; set;}
+        public string folder {get; set;}
+        public string matches {get; set;}
+    }
+
+    public class OutsideInformation {
+        public void WriteJSON()
+        {
+            var weatherForecast = new WeatherForecast
+            {
+                Date = DateTime.Parse("2019-08-01"),
+                TemperatureCelsius = 25,
+                Summary = "Hot"
+            };
+
+            string fileName = "WeatherForecast.json"; 
+            string jsonString = JsonSerializer.Serialize(weatherForecast);
+            File.WriteAllText(fileName, jsonString);
+
+            Console.WriteLine(File.ReadAllText(fileName));
+        }
+
+        public void ReadJSON()
+        {
+            string fileName = LoggingGlobals.mydocs + "\\data\\Sorting.json";
+            string jsonString = File.ReadAllText(fileName);
+            SortingGroupsJSON SortingGroups = JsonSerializer.Deserialize<SortingGroupsJSON>(jsonString)!;
+           
+        }
+        
+    }*/
 }

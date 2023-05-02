@@ -5,25 +5,98 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimsCCManager.SortingUIFunctions"
         mc:Ignorable="d"
-        Title="Results" Height="450" Width="700"
-        WindowStartupLocation="CenterScreen">
+        Title="Results" Height="Auto" Width="Auto" SizeToContent="Manual"
+        WindowStartupLocation="CenterOwner">
+        <Window.Resources>
+            <Style x:Key="ResultsDataGridStyle">                        
+                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Visible" />
+                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Visible" />
+                <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
+            </Style>
+        </Window.Resources>        
+
         <Grid Background="#FF231636">
             <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="60"/> 
-            <ColumnDefinition Width="Auto"/>   
+            <ColumnDefinition Width="60" /> 
+            <ColumnDefinition/>   
+            <ColumnDefinition Width="10"/> 
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
+                <RowDefinition Height="150"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Grid.Column="0"  Background="#FFBABFEC" />
+            <Border Grid.Row="1" Grid.Column="0"  Background="#FFBABFEC" />
+            <Border Grid.Row="2" Grid.Column="0"  Background="#FFBABFEC" />
+            <Border Grid.Row="3" Grid.Column="2"  Background="#FFBABFEC" />
+            <Border Grid.Row="1" Grid.Column="2"  Background="#FFBABFEC" />
+            <Border Grid.Row="0" Grid.Column="2"  Background="#FFBABFEC" />
+            <Border Grid.Row="2" Grid.Column="1"  Background="#FFBABFEC" />
                   
-        <StackPanel x:Name="MenuBar" Grid.Column="0" Orientation="Vertical" VerticalAlignment="Bottom">
-            <Button Click="menu_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
-                <Image Source="I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\img\icons\headline_gears 2d62d7495b01c1a8.png"/>
-            </Button>
-            <Button Click="Kofi_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
-                <Image Source="img/ko-fi_logo-2039355488.png"/>
-            </Button>
-        </StackPanel>
-        <StackPanel Grid.Column="1" Orientation="Horizontal">
-            <DataGrid x:Name="ResultsDataGrid" AutoGenerateColumns="True" ItemsSource="{Binding resultspackageslist}"/>
-        </StackPanel>
+            <StackPanel x:Name="MenuBar" Grid.Column="0" Orientation="Vertical" VerticalAlignment="Bottom" Grid.Row="1">
+                <Button Click="menu_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
+                    <Image Source="I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\img\icons\headline_gears 2d62d7495b01c1a8.png"/>
+                </Button>
+                <Button Click="Kofi_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
+                    <Image Source="img/ko-fi_logo-2039355488.png"/>
+                </Button>
+            </StackPanel>
+                   
+            <DataGrid x:Name="ResultsDataGrid" Style="{StaticResource ResultsDataGridStyle}" ItemsSource="{Binding resultspackageslist}" AutoGenerateColumns="false" Grid.Column="1" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible" VirtualizingStackPanel.IsVirtualizing="true" VirtualizingStackPanel.VirtualizationMode="Recycling" VirtualizingPanel.IsVirtualizingWhenGrouping="True" MaxHeight="999999999" MaxWidth="999999999" Grid.Row="1">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="" Binding="{Binding selected}" Width="5"/>
+                    <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>                     
+                    <DataGridTextColumn Header="Package Name" Binding="{Binding Name}" Width="*"/> 
+                    
+                </DataGrid.Columns>        
+            </DataGrid>
+            <Grid Grid.Column="1" VerticalAlignment="Bottom" Margin="15, 15, 0, 10" Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Vertical" Grid.Column="0" VerticalAlignment="Bottom">
+                    <TextBlock Text="Current Game: " Foreground="#FF183046"/>
+                    <Rectangle Height="10"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                        <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <RadioButton UseLayoutRounding="True" />
+                        </Viewbox>                        
+                        <TextBlock Text="Sims 2" Foreground="#FF183046"/>
+                    </StackPanel>
+                    <Rectangle Height="15"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                        <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <RadioButton UseLayoutRounding="True" />
+                        </Viewbox>                        
+                        <TextBlock Text="Sims 2" Foreground="#FF183046"/>
+                    </StackPanel>
+                    <Rectangle Height="15"/>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" Grid.Column="1" VerticalAlignment="Bottom">
+                    <StackPanel Orientation="Horizontal">
+                        <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <RadioButton UseLayoutRounding="True"/>
+                        </Viewbox>                        
+                        <TextBlock Text="Sims 2" Foreground="#FF183046"/>
+                    </StackPanel>
+                    <Rectangle Height="15"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <RadioButton UseLayoutRounding="True" IsChecked="True"/>
+                        </Viewbox>                        
+                        <TextBlock Text="None" Foreground="#FF183046"/>
+                    </StackPanel>
+                    <Rectangle Height="15"/>
+                </StackPanel>
+                
+            </Grid>
+            
         </Grid> 
         
 </Window>

@@ -34,6 +34,8 @@ using SimsCCManager.App.Controls;
 using SimsCCManager.Packages.Sims2Search;
 using SimsCCManager.Packages.Containers;
 using SimsCCManager.SortingUIFunctions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Sims_CC_Sorter
 {
@@ -50,10 +52,6 @@ namespace Sims_CC_Sorter
     public partial class MainWindow : Window    
 
     {
-        private IProgress<double> _progress;
-        private int _jobsFinished = 0;
-        private int _totalJobs = 1000;
-        ResultsWindow resultsWindow = new ResultsWindow();
         S2PackageSearch s2packs = new S2PackageSearch();
         LoggingGlobals log = new LoggingGlobals();
         GlobalVariables globalVars = new GlobalVariables();
@@ -73,14 +71,31 @@ namespace Sims_CC_Sorter
             } else {
                 testButton.Visibility = Visibility.Hidden;
             }
-            
+            if (File.Exists(SaveData.mainSaveData)) 
+            {
+                LoadButton.Visibility = Visibility.Visible;
+            } else {
+                LoadButton.Visibility = Visibility.Collapsed;
+            }
+
         }
 
-        #region Taskworkers 
+        #region Load 
 
-        
+        private void loadData_Click(object sender, RoutedEventArgs e){
+            
+            using (StreamReader file = File.OpenText(SaveData.mainSaveData))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                GlobalVariables.loadedData = (List<SimsPackage>)serializer.Deserialize(file, typeof(List<SimsPackage>));
+            }
+            GlobalVariables.loadedSaveData = true;
+            GetResults();
+        }
 
         #endregion   
+
+        
         
         private void App_Loaded(object sender, RoutedEventArgs e){
              
@@ -148,17 +163,20 @@ namespace Sims_CC_Sorter
             MainWindow window = new MainWindow();
             log.MakeLog("Checking for broken packages.", true);
             completionAlert.Visibility = Visibility.Visible;
+            
             completionAlertValue("Checking for broken packages.");
             int i = 0;
             mainProgressBar.Visibility = Visibility.Visible;
             int maxi = GlobalVariables.justPackageFiles.Count; 
-            mainProgressBar.Maximum = maxi;            
+            mainProgressBar.Maximum = maxi;     
+            textCurrentPk.Visibility = Visibility.Visible;
             Task task1 = Task.Run(() => Parallel.For(0, GlobalVariables.justPackageFiles.Count, i => {                
                 var file = (GlobalVariables.justPackageFiles[i]).FullName;
                 log.MakeLog("Checking " + file, true);
                 progresstracker++;
                 initialprocess.FindBrokenPackages(file);  
                 window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = "Reading " + GlobalVariables.justPackageFiles[i].Name));
             }));
             log.MakeLog("Awaiting finding broken packages to finish.", true);
             await(task1);
@@ -173,6 +191,7 @@ namespace Sims_CC_Sorter
                 log.MakeLog("Checking " + file, true);
                 initialprocess.IdentifyGames(file);
                 window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = "Reading " + GlobalVariables.workingPackageFiles[i].Name));
             }));
             log.MakeLog("Awaiting game ID to finish.", true);
             await(task2);
@@ -187,14 +206,23 @@ namespace Sims_CC_Sorter
                 log.MakeLog("Checking " + file, true);
                 if (GlobalVariables.gamesPackages[i].Game == 2) {
                     s2packs.SearchS2Packages(file);
-                }                
+                }
                 window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = "Reading " + GlobalVariables.gamesPackages[i].Name));
             }));
+            
             log.MakeLog("Awaiting Sims 2 package reading to finish.", true);
             await(task3);
+            completionAlertValue("Done!");
+            textCurrentPk.Text = "";
             mainProgressBar.Value = maxi;
+            GetResults();
+        }
+
+        private void GetResults(){
+            ResultsWindow resultsWindow = new ResultsWindow();
             resultsWindow.Show();
-            window.Hide();
+            //this.Hide();
         }
         
         private void SortNewFolder(){

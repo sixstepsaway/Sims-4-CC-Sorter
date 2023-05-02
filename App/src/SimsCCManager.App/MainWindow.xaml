@@ -16,7 +16,8 @@
             <Rectangle Height = "50" Width = "5"/>
             <TextBlock Text = "Sims CC Manager" Height = "75" Width = "800" FontSize="50" Foreground="#FF7CC96D" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
             <TextBlock Text = "Welcome to the Sims CC Manager." Height = "20" Width = "800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
-            <TextBlock Text = "Pick the folder you want to manage below." Height = "20" Width = "800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
+            <TextBlock Text = "Pick the folder you want to manage below, or load prior data." Height = "20" Width = "800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
+            <Button x:Name="LoadButton" Click="loadData_Click" Content="Load Data" Height = "35" Width = "127" Margin = "5" Visibility="Hidden"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <StackPanel.Resources>
                     <Style TargetType="Button">                        
@@ -59,10 +60,14 @@
                 <Button x:Name="OldFolder" Content="Manage Old Folder" Click="ManageOldFolder_Click"/>
             </StackPanel>
             
-            <Rectangle Height="5"/>
+            <Rectangle Height="0"/>
             <TextBlock x:Name="completionAlert" Text="Waiting for Input" Foreground="AliceBlue" TextAlignment="Center" Visibility="Hidden"/>
-            <Rectangle Height="10"/>
-            <ProgressBar x:Name="mainProgressBar" Width="400" Height="25" Visibility="Hidden"/>
+            <Rectangle Height="5"/>
+            <Grid>
+                <ProgressBar x:Name="mainProgressBar" Width="400" Height="25" Visibility="Hidden" Maximum="100" Value="100" Foreground="#FF5CACD1"/>
+                <TextBlock x:Name="textCurrentPk" Foreground="#FF122C42" FontSize="9" Visibility="Hidden" TextAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+            
         </StackPanel>
         <StackPanel Orientation="Vertical" Visibility="Visible">
             <StackPanel.Resources>
@@ -74,7 +79,7 @@
                     <Setter Property="Foreground" Value="#FF5F646E"/>
                 </Style>
             </StackPanel.Resources>
-            <Rectangle Height = "470" Width = "5"/>
+            <Rectangle Height = "465" Width = "5"/>
             <Rectangle Height = "60" Width = "5"/>
             <Button x:Name = "exitButton" Click = "exitButton_Click" Content = "Exit" Height = "40" Width = "350" Margin = "5"/>
             <Button x:Name = "testButton" Click = "testbutton_Click" Content = "Dev Test Button" Height = "35" Width = "127" Margin = "5" Visibility="Hidden"/>
@@ -89,8 +94,8 @@
                 <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" TextAlignment="Right" Foreground="AliceBlue">Development Alpha</TextBlock>
             </StackPanel>
             <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Column="0">
-                <Button Name="KofiButton" Height="50" Width="70" Margin="15" Padding="0" Background="Transparent" Click="Kofi_Click">
-                    <Image Source="pack://application:,,,/img/ko-fi_logo-2039355488.png"/>
+                <Button Name="KofiButton" Height="50" Width="70" Margin="15" Padding="0" Click="Kofi_Click">
+                    <Image Source="img/ko-fi_logo-2039355488.png"/>
                 </Button>                
             </StackPanel>
         </Grid>

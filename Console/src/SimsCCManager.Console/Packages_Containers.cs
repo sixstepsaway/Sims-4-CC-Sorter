@@ -55,6 +55,7 @@ namespace SimsCCManager.Packages.Containers
         public string FunctionSubcategory {get; set;}
         public List<string> RoomSort {get; set;}
         public List<TypeCounter> Entries {get; set;}
+        public bool Broken {get; set;}
         public bool Mesh {get; set;}
         public bool Recolor {get; set;}
         public bool Orphan {get; set;}
