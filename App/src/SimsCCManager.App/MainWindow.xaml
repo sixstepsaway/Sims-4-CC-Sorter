@@ -95,7 +95,7 @@
             </StackPanel>
             <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Column="0">
                 <Button Name="KofiButton" Height="50" Width="70" Margin="15" Padding="0" Click="Kofi_Click">
-                    <Image Source="img/ko-fi_logo-2039355488.png"/>
+                    <Image Source="img\ko-fi_logo-2039355488.png"/>
                 </Button>                
             </StackPanel>
         </Grid>

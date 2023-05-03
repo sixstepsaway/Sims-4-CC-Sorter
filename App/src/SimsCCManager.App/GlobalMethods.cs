@@ -781,10 +781,17 @@ namespace SSAGlobals {
 
     public class SaveData {
         public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        public static string SimsCCManagerFolder = mydocs + "\\Sims CC Manager";
         public static string saveDataFolder = mydocs + "\\Sims CC Manager\\data";
         public static string mainSaveData = saveDataFolder + "\\PackageCache.data";
+        public static string cacheFolder = SimsCCManagerFolder + "\\Cache";
 
+    }
 
+    public class CacheLocations {
+        public string CacheName {get; set;}
+        public string CacheLocation {get; set;}
+        public string CacheRename {get; set;}
     }
 
     public class LoggingGlobals
@@ -798,6 +805,7 @@ namespace SSAGlobals {
         //Function for logging to the logfile set at the start of the program
         public void InitializeLog() {
             Methods.MakeFolder(internalLogFolder);
+            Methods.MakeFolder(SaveData.cacheFolder);
             Methods.MakeFolder(mydocs + "\\Sims CC Manager\\data");
             StreamWriter addToInternalLog = new StreamWriter (debuglog, append: false);
             addToInternalLog.WriteLine("Initializing internal log file.");

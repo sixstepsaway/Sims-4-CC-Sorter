@@ -36,10 +36,10 @@
                   
             <StackPanel x:Name="MenuBar" Grid.Column="0" Orientation="Vertical" VerticalAlignment="Center" Grid.Row="1">
                 <Button Click="menu_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
-                    <Image Source="I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\img\icons\headline_gears 2d62d7495b01c1a8.png"/>
+                    <Image Source="img\icons\headline_gears 2d62d7495b01c1a8.png"/>
                 </Button>
                 <Button Click="Kofi_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
-                    <Image Source="img/ko-fi_logo-2039355488.png"/>
+                    <Image Source="img\ko-fi_logo-2039355488.png"/>
                 </Button>
             </StackPanel>
                    
@@ -47,7 +47,11 @@
                 <DataGrid.Columns>
                     <DataGridCheckBoxColumn Header="" Binding="{Binding selected}" Width="5"/>
                     <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>                     
-                    <DataGridTextColumn Header="Package Name" Binding="{Binding Name}" Width="*"/> 
+                    <DataGridTextColumn Header="Package Name" Binding="{Binding PackageName}" Width="*"/> 
+                    <DataGridTextColumn Header="Package Name" Binding="{Binding Type}" Width="*"/>
+                    <DataGridTextColumn Header="Package Name" Binding="{Binding Game}" Width="*"/>
+                    <DataGridTextColumn Header="Package Name" Binding="{Binding InstanceIDs}" Width="*"/>
+                    <DataGridTextColumn Header="Package Name" Binding="{Binding ObjectGUID}" Width="*"/>
                     
                 </DataGrid.Columns>        
             </DataGrid>

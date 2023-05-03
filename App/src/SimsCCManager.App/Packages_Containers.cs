@@ -21,8 +21,8 @@ namespace SimsCCManager.Packages.Containers
     }
 
     public class NotPackage {
-        bool notPackage {get; set;}
-        string actualType {get; set;}
+        public bool notPackage {get; set;}
+        public string actualType {get; set;}
     }
 
     public class SimsPackage { // A more in depth package file.
@@ -75,6 +75,7 @@ namespace SimsCCManager.Packages.Containers
             RequiredEPs = new List<string>();
             RoomSort = new List<string>();
             Entries = new List<TypeCounter>();
+            NotAPackage = new NotPackage();
         }
 
         public static string GetFormatListString(List<string> words){

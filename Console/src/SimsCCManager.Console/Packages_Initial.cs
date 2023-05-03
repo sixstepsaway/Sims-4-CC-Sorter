@@ -22,7 +22,10 @@ namespace SimsCCManager.Packages.Initial {
         public void IdentifyPackages(){
             statement = "Running Identify Packages.";
             log.MakeLog(statement, true);
-            string[] files = Directory.GetFiles(GlobalVariables.ModFolder, "*." + packageExtension, SearchOption.AllDirectories);
+            string ts3pack = "sims3pack";
+            string ts2pack = "sims2pack";
+            string ts4script = "ts4script";
+            string[] files = Directory.GetFiles(GlobalVariables.ModFolder, "*", SearchOption.AllDirectories);
             foreach (string file in files) {
                 FileInfo packageFile = new FileInfo(file);
                 statement = "Found " + packageFile.FullName;
@@ -33,11 +36,33 @@ namespace SimsCCManager.Packages.Initial {
                     GlobalVariables.justPackageFiles.Add(packageFile);
                     statement = "Items in justPackageFiles array: " + GlobalVariables.justPackageFiles.Count;
                     log.MakeLog(statement, true);
+                } else if (ts3pack.Any(packageFile.Extension.Contains)) {
+                    log.MakeLog("This is a Sims3package.", true);
+                    NotPackage notpack = new NotPackage();
+                    notpack.notPackage = true;
+                    notpack.actualType = "sims3pack";
+                    GlobalVariables.sims3packfiles.Add(new SimsPackage{ Location = packageFile.FullName, PackageName = packageFile.Name, NotAPackage = notpack});
+                    statement = "Items in sims3package array: " + GlobalVariables.sims3packfiles.Count;
+                    log.MakeLog(statement, true);
+                } else if (ts2pack.Any(packageFile.Extension.Contains)) {
+                    NotPackage notpack = new NotPackage();
+                    notpack.notPackage = true;
+                    notpack.actualType = "sims2pack";
+                    GlobalVariables.sims2packfiles.Add(new SimsPackage{ Location = packageFile.FullName, PackageName = packageFile.Name, NotAPackage = notpack});
+                    statement = "Items in sims2package array: " + GlobalVariables.sims3packfiles.Count;
+                    log.MakeLog(statement, true);
+                } else if (ts4script.Any(packageFile.Extension.Contains)) {
+                    NotPackage notpack = new NotPackage();
+                    notpack.notPackage = true;
+                    notpack.actualType = "ts4script";
+                    GlobalVariables.ts4scriptFiles.Add(new SimsPackage{ Location = packageFile.FullName, PackageName = packageFile.Name, NotAPackage = notpack});
+                    statement = "Items in sims2package array: " + GlobalVariables.sims3packfiles.Count;
+                    log.MakeLog(statement, true);
                 } else {
                     statement = "This file is not a package file.";
                     log.MakeLog(statement, true);
                     GlobalVariables.notPackageFiles.Add(packageFile);
-                    statement = "Items in notPackages array: " + GlobalVariables.notPackageFiles;
+                    statement = "Items in notPackages array: " + GlobalVariables.notPackageFiles.Count;
                     log.MakeLog(statement, true);
                 }
             }

@@ -36,6 +36,7 @@ using SimsCCManager.Packages.Containers;
 using SimsCCManager.SortingUIFunctions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Microsoft.VisualBasic;
 
 namespace Sims_CC_Sorter
 {
@@ -98,6 +99,28 @@ namespace Sims_CC_Sorter
 
         private void CollectCaches() {
             //if file exists, get it. if we already have it, delete it then and replace it
+            List<CacheLocations> caches = new List<CacheLocations>();
+            caches.Add(new CacheLocations{ CacheName = "localthumbcache.package", CacheLocation = LoggingGlobals.mydocs + "\\Electronic Arts\\The Sims 4\\localthumbcache.package", CacheRename = "S4_localthumbcache.package" });
+            caches.Add(new CacheLocations{ CacheName = "CASThumbnails.package", CacheLocation = LoggingGlobals.mydocs + "\\Electronic Arts\\The Sims 3\\Thumbnails\\CASThumbnails.package", CacheRename = "S3_CASThumbnails.package" });
+            caches.Add(new CacheLocations{ CacheName = "ObjectThumbnails.package", CacheLocation = LoggingGlobals.mydocs + "\\Electronic Arts\\The Sims 3\\Thumbnails\\ObjectThumbnails.package", CacheRename = "S3_ObjectThumbnails.package" });
+            caches.Add(new CacheLocations{ CacheName = "CASThumbnails.package", CacheLocation = LoggingGlobals.mydocs + "\\EA Games\\The Sims 2 Ultimate Collection\\Thumbnails\\BuildModeThumbnails.package", CacheRename = "S2_CASThumbnails.package" });
+            caches.Add(new CacheLocations{ CacheName = "ObjectThumbnails.package", CacheLocation = LoggingGlobals.mydocs + "\\EA Games\\The Sims 2 Ultimate Collection\\Thumbnails\\CASThumbnails.package", CacheRename = "S2_ObjectThumbnails.package" });
+            caches.Add(new CacheLocations{ CacheName = "BuildModeThumbnails.package", CacheLocation = LoggingGlobals.mydocs + "\\EA Games\\The Sims 2 Ultimate Collection\\Thumbnails\\ObjectThumbnails.package", CacheRename = "S2_BuildModeThumbnails.package" });
+
+            foreach (CacheLocations cache in caches){
+                string cachefolder = LoggingGlobals.mydocs + "\\Sims CC Manager\\cache";
+                string location = LoggingGlobals.mydocs + "\\Sims CC Manager\\cache\\" + cache.CacheRename;
+                string unnamedversion = LoggingGlobals.mydocs + "\\Sims CC Manager\\cache\\" + cache.CacheName;
+                if (File.Exists(cache.CacheLocation)) {
+                    if (File.Exists(location)){
+                        File.Delete(location);
+                        File.Copy(cache.CacheLocation, cachefolder);
+                        Microsoft.VisualBasic.FileIO.FileSystem.RenameFile(unnamedversion, cache.CacheRename);
+                    }
+                } else {
+                    //do nothing, there's no cache to get
+                }
+            }            
         }
         
         

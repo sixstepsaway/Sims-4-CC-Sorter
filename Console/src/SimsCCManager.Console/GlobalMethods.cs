@@ -724,6 +724,7 @@ namespace SSAGlobals {
 
     public class GlobalVariables {
         public static bool debugMode = true;
+        public static bool loadedSaveData = false;
         public static string ModFolder;
         public static string logfile;
         public static int gameVer;  
@@ -735,14 +736,19 @@ namespace SSAGlobals {
                     //this one holds every file in the folder that ends with .package
         public static List<FileInfo> notPackageFiles = new List<FileInfo>();
                     //this one holds every file in the folder that DOESN'T end with .package, except for--
-        public static List<FileInfo> ts4scriptFiles = new List<FileInfo>();                    
+        public static List<SimsPackage> ts4scriptFiles = new List<SimsPackage>();                    
                     //this one holds ts4script files
+        public static List<SimsPackage> sims2packfiles = new List<SimsPackage>();                    
+                    //this one holds sims2pack files
+        public static List<SimsPackage> sims3packfiles = new List<SimsPackage>();                    
+                    //this one holds sims3pack files
         public static List<PackageFile> workingPackageFiles = new List<PackageFile>();
                     //this one holds all .package files that came back from being tested as not broken
         public static List<SimsPackage> brokenFiles = new List<SimsPackage>();
                     //this one holds the broken packages
         public static List<PackageFile> gamesPackages = new List<PackageFile>();
                     //this one holds all the working packages that have been assigned a game
+        public static List<SimsPackage> loadedData = new List<SimsPackage>();
         LoggingGlobals log = new LoggingGlobals();
 
 
@@ -773,17 +779,34 @@ namespace SSAGlobals {
         }       
     }
 
+    public class SaveData {
+        public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        public static string SimsCCManagerFolder = mydocs + "\\Sims CC Manager";
+        public static string saveDataFolder = mydocs + "\\Sims CC Manager\\data";
+        public static string mainSaveData = saveDataFolder + "\\PackageCache.data";
+        public static string cacheFolder = SimsCCManagerFolder + "\\Cache";
+
+    }
+
+    public class CacheLocations {
+        public string CacheName {get; set;}
+        public string CacheLocation {get; set;}
+        public string CacheRename {get; set;}
+    }
+
     public class LoggingGlobals
     {
         public static bool firstrunmain = true;
         public static bool firstrundebug = true;
         public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         private static string internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
-        private static string debuglog = internalLogFolder + "\\debug.log";        
+        private static string debuglog = internalLogFolder + "\\debug.log";
         static ReaderWriterLock locker = new ReaderWriterLock();
         //Function for logging to the logfile set at the start of the program
         public void InitializeLog() {
             Methods.MakeFolder(internalLogFolder);
+            Methods.MakeFolder(SaveData.cacheFolder);
+            Methods.MakeFolder(mydocs + "\\Sims CC Manager\\data");
             StreamWriter addToInternalLog = new StreamWriter (debuglog, append: false);
             addToInternalLog.WriteLine("Initializing internal log file.");
             addToInternalLog.Close();
