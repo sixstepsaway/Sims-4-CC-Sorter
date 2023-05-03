@@ -30,6 +30,7 @@ namespace SimsCCManager.SortingUIFunctions {
 
         public partial class ResultsWindow : Window {
         LoggingGlobals log = new LoggingGlobals();
+        public int gameNum = 0;
         
         public ResultsWindow() 
         {
@@ -72,6 +73,52 @@ namespace SimsCCManager.SortingUIFunctions {
                 //React as needed.
                 }
         }
+
+        private void loadErrorFix_Click(object sender, EventArgs e){
+            
+            bool gameChecked = checkGame();
+            if (gameChecked == true){
+                if (System.Windows.Forms.MessageBox.Show
+                ("There is no guarantee this will fix all load errors, but it should. This will move all incorrect (wrong for your game version) or broken packages to a separate folder. Nothing will be deleted. Should we go ahead?", "Fix Load Errors",
+                System.Windows.Forms.MessageBoxButtons.YesNo, 
+                System.Windows.Forms.MessageBoxIcon.Question)
+                ==System.Windows.Forms.DialogResult.Yes) {
+                    //fix load errors o.o
+                }
+            } else {
+                //do nothing, a message will have done the job
+            }
+            
+        }
+
+        private bool checkGame() {
+            bool gamepicked = false;
+
+            log.MakeLog("Checking which game is ticked.", true);
+            if ((bool)radioButton_Sims2.IsChecked) {
+                log.MakeLog("Sims 2 picked.", true);
+                gameNum = 2;
+                gamepicked = true;
+                return gamepicked;
+            } else if ((bool)radioButton_Sims3.IsChecked) {
+                log.MakeLog("Sims 3 picked.", true);
+                gameNum = 3;
+                gamepicked = true;
+                return gamepicked;
+            } else if ((bool)radioButton_Sims4.IsChecked) {
+                log.MakeLog("Sims 4 picked.", true);
+                gameNum = 4;
+                gamepicked = true;
+                return gamepicked;
+            } else {
+                System.Windows.Forms.MessageBox.Show("Please select a game.");
+                log.MakeLog("No game picked.", true);
+                gamepicked = false;
+                return gamepicked;
+            }
+        }
+
+
     }
 
         

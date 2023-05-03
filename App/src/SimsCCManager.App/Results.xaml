@@ -65,34 +65,37 @@
                     <Rectangle Height="10"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
                         <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <RadioButton UseLayoutRounding="True" />
+                            <RadioButton x:Name="radioButton_Sims2" GroupName="GameSelect" UseLayoutRounding="True" />
                         </Viewbox>                        
                         <TextBlock Text="Sims 2" Foreground="#FF183046"/>
                     </StackPanel>
                     <Rectangle Height="15"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
                         <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <RadioButton UseLayoutRounding="True" />
+                            <RadioButton x:Name="radioButton_Sims3" GroupName="GameSelect" UseLayoutRounding="True" />
                         </Viewbox>                        
-                        <TextBlock Text="Sims 2" Foreground="#FF183046"/>
+                        <TextBlock Text="Sims 3" Foreground="#FF183046"/>
                     </StackPanel>
                     <Rectangle Height="15"/>
                 </StackPanel>
                 <StackPanel Orientation="Vertical" Grid.Column="1" VerticalAlignment="Bottom">
                     <StackPanel Orientation="Horizontal">
                         <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <RadioButton UseLayoutRounding="True"/>
+                            <RadioButton x:Name="radioButton_Sims4" GroupName="GameSelect" UseLayoutRounding="True"/>
                         </Viewbox>                        
-                        <TextBlock Text="Sims 2" Foreground="#FF183046"/>
+                        <TextBlock Text="Sims 4" Foreground="#FF183046"/>
                     </StackPanel>
                     <Rectangle Height="15"/>
                     <StackPanel Orientation="Horizontal">
                         <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <RadioButton UseLayoutRounding="True" IsChecked="True"/>
+                            <RadioButton x:Name="radioButton_None" UseLayoutRounding="True" GroupName="GameSelect" IsChecked="True"/>
                         </Viewbox>                        
                         <TextBlock Text="None" Foreground="#FF183046"/>
                     </StackPanel>
                     <Rectangle Height="15"/>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" Grid.Column="2" VerticalAlignment="Center">
+                    <Button Content="Fix Load Errors" Click="loadErrorFix_Click" FontSize="14" Padding="4"/>
                 </StackPanel>
                 
             </Grid>

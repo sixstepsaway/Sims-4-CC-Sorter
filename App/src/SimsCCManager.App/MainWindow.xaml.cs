@@ -77,6 +77,7 @@ namespace Sims_CC_Sorter
             } else {
                 LoadButton.Visibility = Visibility.Collapsed;
             }
+            CollectCaches();
 
         }
 
@@ -95,6 +96,9 @@ namespace Sims_CC_Sorter
 
         #endregion   
 
+        private void CollectCaches() {
+            //if file exists, get it. if we already have it, delete it then and replace it
+        }
         
         
         private void App_Loaded(object sender, RoutedEventArgs e){

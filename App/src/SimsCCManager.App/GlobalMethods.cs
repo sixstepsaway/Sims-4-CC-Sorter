@@ -736,11 +736,11 @@ namespace SSAGlobals {
                     //this one holds every file in the folder that ends with .package
         public static List<FileInfo> notPackageFiles = new List<FileInfo>();
                     //this one holds every file in the folder that DOESN'T end with .package, except for--
-        public static List<FileInfo> ts4scriptFiles = new List<FileInfo>();                    
+        public static List<SimsPackage> ts4scriptFiles = new List<SimsPackage>();                    
                     //this one holds ts4script files
-        public static List<FileInfo> sims2packfiles = new List<FileInfo>();                    
+        public static List<SimsPackage> sims2packfiles = new List<SimsPackage>();                    
                     //this one holds sims2pack files
-        public static List<FileInfo> sims3packfiles = new List<FileInfo>();                    
+        public static List<SimsPackage> sims3packfiles = new List<SimsPackage>();                    
                     //this one holds sims3pack files
         public static List<PackageFile> workingPackageFiles = new List<PackageFile>();
                     //this one holds all .package files that came back from being tested as not broken

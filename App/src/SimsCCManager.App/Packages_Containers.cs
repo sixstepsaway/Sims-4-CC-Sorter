@@ -20,6 +20,11 @@ namespace SimsCCManager.Packages.Containers
         public string ID {get; set;}
     }
 
+    public class NotPackage {
+        bool notPackage {get; set;}
+        string actualType {get; set;}
+    }
+
     public class SimsPackage { // A more in depth package file.
         
         public string Title {get; set;}        
@@ -59,6 +64,10 @@ namespace SimsCCManager.Packages.Containers
         public bool Mesh {get; set;}
         public bool Recolor {get; set;}
         public bool Orphan {get; set;}
+        public string MatchingMesh {get; set;}
+        public List<string> MatchingRecolors {get; set;}
+        public List<string> MatchingConflicts {get; set;}
+        public NotPackage NotAPackage {get; set;}
 
         public SimsPackage() {
             InstanceIDs = new List<string>();
