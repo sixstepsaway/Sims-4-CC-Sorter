@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Tk1SX2Pt6zrNoLWYJAHaCN5Z/k/R3T4T5MIOCYc981Ysl7e0ASonccpjM+xQIQOsrZbirhfG7p2YXxJhHAbUtg==",
+  "dgSpecHash": "rsnlsXP+w3+CaPRuzqX4YXrGeGju2He2kTfRJvOh7LFD9Ao5fcNnJ6qJdJh6zJq2tJmoIge2UnKf+G2LfHHAkQ==",
   "success": true,
-  "projectFilePath": "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.Console\\SimsCCManager.Terminal.csproj",
+  "projectFilePath": "I:\\Code\\C#\\Sims-CC-Sorter\\Console\\src\\SimsCCManager.Console\\SimsCCManager.Terminal.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\conta\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\5.0.0\\microsoft.bcl.asyncinterfaces.5.0.0.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\microsoft.extensions.objectpool\\5.0.10\\microsoft.extensions.objectpool.5.0.10.nupkg.sha512",

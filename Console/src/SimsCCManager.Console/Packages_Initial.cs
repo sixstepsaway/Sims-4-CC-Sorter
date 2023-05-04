@@ -72,7 +72,7 @@ namespace SimsCCManager.Packages.Initial {
         }
 
         void GetTypeOf<T>(T LineType) {
-            Console.WriteLine(typeof(T));
+            //Console.WriteLine(typeof(T));
         }
 
         private FileStream Packagefs(FileInfo package)

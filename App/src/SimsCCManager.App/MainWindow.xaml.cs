@@ -33,7 +33,7 @@ using SimsCCManager.Search_All;
 using SimsCCManager.App.Controls;
 using SimsCCManager.Packages.Sims2Search;
 using SimsCCManager.Packages.Containers;
-using SimsCCManager.SortingUIFunctions;
+using SimsCCManager.SortingUIResults;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Microsoft.VisualBasic;

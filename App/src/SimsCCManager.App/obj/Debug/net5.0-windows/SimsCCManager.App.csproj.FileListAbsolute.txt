@@ -1,6 +1,7 @@
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App.csproj.AssemblyReference.cache
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\MainWindow.g.cs
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\Results.g.cs
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\SortFolderOptions.g.cs
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\App.g.cs
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App_MarkupCompile.cache
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App_MarkupCompile.lref
@@ -37,6 +38,7 @@ I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net5.0-windows\run
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net5.0-windows\runtimes\win\lib\netcoreapp3.1\System.Security.Cryptography.Pkcs.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\MainWindow.baml
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\Results.baml
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\SortFolderOptions.baml
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App.g.resources
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App.GeneratedMSBuildEditorConfig.editorconfig
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App.AssemblyInfoInputs.cache

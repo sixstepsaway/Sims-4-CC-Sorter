@@ -39,7 +39,13 @@ namespace SimsCCManager.Packages.Containers
         public uint Minor {get; set;}
         public uint DateCreated {get; set;}
         public uint DateModified {get; set;}
+        public uint mnFileVersion {get; set;}
+        public uint mnUserVersion {get; set;}
         public uint IndexMajorVersion {get; set;}
+        public uint mnIndexRecordEntryCount {get; set;}
+        public uint mnIndexRecordPositionLow {get; set;}
+        public uint mnIndexRecordSize {get; set;}
+        public ulong mnIndexRecordPosition {get; set;}
         public uint IndexCount {get; set;}
         public uint IndexOffset {get; set;}
         public uint IndexSize {get; set;}

@@ -26,9 +26,9 @@ using SimsCCManager.Packages.Containers;
 
 
 
-namespace SimsCCManager.SortingUIFunctions {
+namespace SimsCCManager.SortingUIResults {
 
-        public partial class ResultsWindow : Window {
+    public partial class ResultsWindow : Window {
         LoggingGlobals log = new LoggingGlobals();
         public int gameNum = 0;
         
