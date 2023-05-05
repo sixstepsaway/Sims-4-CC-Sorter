@@ -13,6 +13,8 @@ using SSAGlobals;
 using SimsCCManager.Packages.Containers;
 using SimsCCManager.Packages.Decryption;
 
+///disabled until i can work out how to do this myself >:(
+
 namespace SimsCCManager.Packages.Sims4Search
 {
     public static class extensions {
@@ -202,36 +204,15 @@ namespace SimsCCManager.Packages.Sims4Search
             log.MakeLog("Unused, 3 for historical reasons: " + test, true);
             
             ulong indexRecordPosition = readFile.ReadUInt64();
-            test = testint.ToString();
+            test = indexRecordPosition.ToString();
             log.MakeLog("Index Record Position: " + test, true);
             
             //unused six bytes
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("1: " + test, true);
-
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("2: " + test, true);
-
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("3: " + test, true);
-            
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("4: " + test, true);
-
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("5: " + test, true);
-
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("6: " + test, true);
+            test = Encoding.ASCII.GetString(readFile.ReadBytes(24));
+            log.MakeLog("Unused: " + test, true);
 
             if ((long)indexRecordPosition != 0){
-                dbpfFile.Seek((long)indexRecordPosition, SeekOrigin.Current);
+                dbpfFile.Seek((long)indexRecordPosition, SeekOrigin.Begin);
             } else {
                 dbpfFile.Seek(indexRecordPositionLow, SeekOrigin.Current);
             }
@@ -241,8 +222,6 @@ namespace SimsCCManager.Packages.Sims4Search
             for (int i = 0; i < entrycount; i++){
                 indexEntry holderEntry = new indexEntry();
                 log.MakeLog("P" + packageparsecount + "Reading index entries.", true);
-                test = readFile.ReadUInt32().ToString("X4");
-                log.MakeLog("Compressed: " + test, true);                
                 holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
                 log.MakeLog("P" + packageparsecount + " - Index Entry TypeID: " + holderEntry.typeID, true);
                 holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
@@ -252,16 +231,19 @@ namespace SimsCCManager.Packages.Sims4Search
                 allInstanceIDs.Add(holderEntry.instanceID.ToString());
                 log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
                 
-                test = readFile.ReadUInt32().ToString("X8");
-                log.MakeLog("Instance " + test, true);
                 testint = readFile.ReadUInt32();
                 log.MakeLog("Position " + testint, true);
                 testint = readFile.ReadUInt32();
-                log.MakeLog("Size " + testint, true);
-                testint = readFile.ReadUInt32();
-                log.MakeLog("Extended Compression Type " + testint, true);
+                log.MakeLog("Size " + testint, true);    
+                test = readFile.ReadUInt16().ToString("X4");          
+                log.MakeLog("Compression Type: " + test, true);                
+                test = readFile.ReadUInt16().ToString("X4");
+                log.MakeLog("Committed: " + test, true);
                 testint = readFile.ReadUInt32();
                 log.MakeLog("Size Decompressed " + testint, true);
+                
+                
+                
                 
             }
 

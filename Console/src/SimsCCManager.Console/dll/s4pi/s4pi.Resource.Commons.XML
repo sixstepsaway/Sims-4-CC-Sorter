@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>s4pi.Resource.Commons</name>
+    </assembly>
+    <members>
+        <member name="T:s4pi.Resource.Commons.CatalogTags.CompoundTag">
+            <summary>
+            A compound tag that consists of category and value tag.
+            </summary>
+        </member>
+        <member name="P:s4pi.Resource.Commons.CatalogTags.CompoundTag.Category">
+            <summary>
+            Gets or sets the category this compound tag belongs to.
+            </summary>
+        </member>
+        <member name="P:s4pi.Resource.Commons.CatalogTags.CompoundTag.Value">
+            <summary>
+            Gets or sets the value of this compound tag.
+            </summary>
+        </member>
+        <member name="T:s4pi.Resource.Commons.CatalogTags.Tag">
+            <summary>
+            Represents a category tag that contains index and value.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.CatalogTags.Tag.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:s4pi.Resource.Commons.CatalogTags.Tag"/> class.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.CatalogTags.Tag.ToUInt32">
+            <summary>
+            Converts the index of this tag to uint.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.CatalogTags.Tag.ToUInt16">
+            <summary>
+            Converts the index of this tag to ushort.
+            </summary>
+        </member>
+        <member name="P:s4pi.Resource.Commons.CatalogTags.Tag.Index">
+            <summary>
+            Gets or sets the index of this tag.
+            </summary>
+        </member>
+        <member name="P:s4pi.Resource.Commons.CatalogTags.Tag.Value">
+            <summary>
+            Gets or sets the human-readable value of this tag.
+            </summary>
+        </member>
+        <member name="T:s4pi.Resource.Commons.Forms.DoubleListBox">
+            <summary>
+            <see cref="T:System.Windows.Forms.UserControl"/> implementation with two <see cref="T:System.Windows.Forms.ListBox"/> instances, e.g. for two step selections.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.Forms.DoubleListBox.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:s4pi.Resource.Commons.Forms.DoubleListBox"/> class.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.Forms.DoubleListBox.AssignPrimaryList(System.Object[])">
+            <summary>
+            Assigns the content of the primary list box.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.Forms.DoubleListBox.AssignSecondaryList(System.Object[])">
+            <summary>
+            Assigns the content of the secondary list box.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.Forms.DoubleListBox.AssignFlattenedSecondaryList(System.Object[])">
+            <summary>
+            Assigns the flattened lookup list that contains all secondary items for each primary item.
+            The lookup will be used to match inputs against that have no direct matches in the current
+            secondary list.
+            </summary>
+        </member>
+        <member name="E:s4pi.Resource.Commons.Forms.DoubleListBox.PrimaryItemSelected">
+            <summary>
+            Occurs when an element from the primary list gets selected.
+            </summary>
+        </member>
+        <member name="E:s4pi.Resource.Commons.Forms.DoubleListBox.SecondaryItemSelected">
+            <summary>
+            Occurs when an element from the secondary list gets selected.
+            </summary>
+        </member>
+        <member name="P:s4pi.Resource.Commons.Forms.DoubleListBox.PrimarySelectedIndex">
+            <summary>
+            Gets or sets the index of the selected item of the primary list box.
+            </summary>
+        </member>
+        <member name="P:s4pi.Resource.Commons.Forms.DoubleListBox.PrimarySelectedItem">
+            <summary>
+            Gets the selected item of the primary list box.
+            </summary>
+        </member>
+        <member name="P:s4pi.Resource.Commons.Forms.DoubleListBox.SecondarySelectedIndex">
+            <summary>
+            Gets or sets the index of the selected item of the secondary list box.
+            </summary>
+        </member>
+        <member name="P:s4pi.Resource.Commons.Forms.DoubleListBox.SecondarySelectedItem">
+            <summary>
+            Gets the selected item of the secondary list box.
+            </summary>
+        </member>
+        <member name="T:s4pi.Resource.Commons.CatalogTags.CatalogTagRegistry">
+            <summary>
+            Registry class that manages known catalog categories and tags.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.CatalogTags.CatalogTagRegistry.FetchTag(System.UInt32)">
+            <summary>
+            Fetches the matching tag for the specified <paramref name="index"/>.
+            </summary>
+            <returns>A <see cref="T:s4pi.Resource.Commons.CatalogTags.Tag"/> instance containing the matching value, or a default if no match was found.</returns>
+        </member>
+        <member name="M:s4pi.Resource.Commons.CatalogTags.CatalogTagRegistry.FetchCategory(System.UInt32)">
+            <summary>
+            Fetches the matching category for the specified <paramref name="index"/>.
+            </summary>
+            <returns>A <see cref="T:s4pi.Resource.Commons.CatalogTags.Tag"/> instance containing the matching value, or a default if no match was found.</returns>
+        </member>
+        <member name="M:s4pi.Resource.Commons.CatalogTags.CatalogTagRegistry.AllTags">
+            <summary>
+            Returns a collection of all known <see cref="T:s4pi.Resource.Commons.CatalogTags.Tag"/>s.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.CatalogTags.CatalogTagRegistry.AllCategories">
+            <summary>
+            Returns a collection of all known category <see cref="T:s4pi.Resource.Commons.CatalogTags.Tag"/>s.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.CatalogTags.CatalogTagRegistry.AllCategoriesWithDummiesForUnpairedTags">
+            <summary>
+            Returns a collection of all know category <see cref="T:s4pi.Resource.Commons.CatalogTags.Tag"/>s and additional 
+            dummy <see cref="T:s4pi.Resource.Commons.CatalogTags.Tag"/>s for tags that have no matching categories.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.CatalogTags.CatalogTagRegistry.GetCategoryFor(s4pi.Resource.Commons.CatalogTags.Tag)">
+            <summary>
+            Gets the matching category for the specified <see cref="T:s4pi.Resource.Commons.CatalogTags.Tag"/>. Will return a dummy if no match was found.
+            </summary>
+        </member>
+        <member name="M:s4pi.Resource.Commons.CatalogTags.CatalogTagRegistry.FetchTagsForCategory(System.String)">
+            <summary>
+            Returns a collection of all known <see cref="T:s4pi.Resource.Commons.CatalogTags.Tag"/> instances that match the
+            given <paramref name="category"/>.
+            </summary>
+        </member>
+    </members>
+</doc>

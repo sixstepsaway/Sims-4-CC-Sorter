@@ -10,6 +10,30 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.2" />
-  </ItemGroup>
+     <Reference Include="s4pi.Package">
+       <HintPath>..\dll\s4pi\s4pi.Package.dll</HintPath>
+     </Reference>
+     <Reference Include="s4pi.Interfaces">
+       <HintPath>..\dll\s4pi\s4pi.Interfaces.dll</HintPath>
+     </Reference>
+     <Reference Include="s4pi.Helpers">
+       <HintPath>..\dll\s4pi\s4pi.Helpers.dll</HintPath>
+     </Reference>
+     <Reference Include="s3pi.Package">
+       <HintPath>..\dll\s3pi\s3pi.Package.dll</HintPath>
+     </Reference>
+     <Reference Include="s3pi.Interfaces">
+       <HintPath>..\dll\s3pi\s3pi.Interfaces.dll</HintPath>
+     </Reference>
+     <Reference Include="s3pi.Helpers">
+       <HintPath>..\dll\s3pi\s3pi.Helpers.dll</HintPath>
+     </Reference>
+     <Reference Include="s4pi.Settings">
+       <HintPath>..\dll\s4pi\s4pi.Settings.dll</HintPath>
+     </Reference>
+     <Reference Include="s3pi.Settings">
+       <HintPath>..\dll\s3pi\s3pi.Settings.dll</HintPath>
+     </Reference>
+    </ItemGroup>
 
 </Project>
