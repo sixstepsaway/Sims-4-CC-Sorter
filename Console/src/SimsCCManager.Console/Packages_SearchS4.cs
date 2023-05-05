@@ -42,6 +42,8 @@ namespace SimsCCManager.Packages.Sims4Search
         public uint truesize;
         public bool compressed;
         public string unused;
+        public string compressionType;
+
     }	
     class S4PackageSearch
     {
@@ -51,186 +53,9 @@ namespace SimsCCManager.Packages.Sims4Search
         ReadEntries readentries = new ReadEntries();   
 
         //Vars
+        uint chunkOffset = 0;
         
         public void SearchS4Packages(string file) {
-            /*var packageparsecount = GlobalVariables.packagesRead;   
-            GlobalVariables.packagesRead++;         
-            //Vars for Package Info
-            string typefound = "";
-            string instanceID2;
-            string typeID;
-            string groupID;
-            string instanceID;            
-        
-            //Misc Vars
-            string test = "";
-
-            SimsPackage thisPackage = new SimsPackage();
-            
-            //Vars for sizes and such
-            int ContentCount = 36;
-            int ContentPosition = 64;
-            int ContentPositionAlternate = 40;
-            byte[] HeaderID = new byte[96];
-            int MajorStart = 4;
-            int MinorStart = 8;
-            int Fields = 9;
-            int InstanceStart = 12;
-            int InstanceStartAlternate = 16;
-            int ResourceGroupStart = 8;
-            int ResourceTypeStart = 4;
-
-
-            //Lists 
-            
-            List<fileHasList> fileHas = new List<fileHasList>();
-            List<string> allGUIDS = new List<string>();      
-            List<string> distinctGUIDS = new List<string>();  
-            List<string> allInstanceIDs = new List<string>();      
-            List<string> distinctInstanceIDs = new List<string>();  
-
-            //create readers  
-            FileInfo packageinfo = new FileInfo(file);
-            FileStream dbpfFile = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-            BinaryReader readFile = new BinaryReader(dbpfFile);    
-            Byte[] allbytes = File.ReadAllBytes(file);
-            MemoryStream ms = new MemoryStream(allbytes);       
-            BinaryReader br = new BinaryReader(ms);
-
-            //log opening file
-            Console.WriteLine("Reading Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
-            log.MakeLog("Logged Package #" + packageparsecount + " as " + packageinfo.FullName, true);
-            thisPackage.Location = packageinfo.FullName;            
-            thisPackage.Game = 4;
-            log.MakeLog("Logged Package #" + packageparsecount + " as meant for The Sims " + thisPackage.Game, true);           
-            
-            //start actually reading the package 
-            int counter = 0;
-            //dbpf
-            test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
-            log.MakeLog("DBPF: " + test, true);
-            
-            //major
-            uint testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Major :" + test, true);
-            
-            //minor
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Minor : " + test, true);
-            
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Unknown : " + test, true);
-            
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Unknown : " + test, true);
-            
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Unknown : " + test, true);
-            
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Created : " + test, true);
-
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Modified : " + test, true);
-            
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Index Major : " + test, true);
-            
-            //entrycount
-            uint entrycount = readFile.ReadUInt32();
-            test = entrycount.ToString();
-            log.MakeLog("Entry Count: " + test, true);
-            
-            //record position low
-            uint indexRecordPositionLow = readFile.ReadUInt32();
-            test = indexRecordPositionLow.ToString();
-            log.MakeLog("indexRecordPositionLow: " + test, true);
-            
-            //index record size
-            uint indexRecordSize = readFile.ReadUInt32();
-            test = indexRecordSize.ToString();
-            log.MakeLog("indexRecordSize: " + test, true);
-
-            //unused
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Unused Trash Index offset: " + test, true);
-            
-            //unused
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Unused Trash Index size: " + test, true);
-            
-            //unused
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Unused Index Minor Version: " + test, true);
-            
-            //unused but 3 for historical reasons
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Unused, 3 for historical reasons: " + test, true);
-            
-            ulong indexRecordPosition = readFile.ReadUInt64();
-            test = indexRecordPosition.ToString();
-            log.MakeLog("Index Record Position: " + test, true);
-
-            //unused
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Unused Unknown:" + test, true);
-            
-            //unused six bytes
-            test = Encoding.ASCII.GetString(readFile.ReadBytes(24));
-            log.MakeLog("Unused: " + test, true);
-
-            ms.Position = 0;
-            var reader = new BinaryReader(ms);
-            ms.Position = ContentPosition;
-            var type = readFile.ReadUInt32();
-            log.MakeLog("Type: " + type, true);
-            
-            var headerSize = 1;
-            for (var i = 1; i < sizeof(uint); i++)
-            {
-                if ((type & (1 << i)) != 0)
-                {
-                    headerSize++;
-                }
-            }
-            log.MakeLog("Header Size: " + headerSize, true);
-            
-            var header = new int[headerSize];
-            header[0] = (int) type;
-            for (var i = 1; i < header.Length; i++)
-            {
-                header[i] = readFile.ReadInt32();
-            }
-
-            log.MakeLog("Header Items: ", true);
-            foreach (var item in header){
-                log.MakeLog(item.ToString("X4"), true);
-            }
-
-            log.MakeLog("Content: ", true);
-
-            var entry = new int[Fields - headerSize];
-            for (var i = 0; i < ContentCount; i++){
-                for (var j = 0; j < entry.Length; j++){
-                    entry[j] = readFile.ReadInt32();
-                    log.MakeLog(header.ToString(), true);
-                    log.MakeLog(entry[j].ToString("X4"), true);
-                }
-            }*/
-
             var packageparsecount = GlobalVariables.packagesRead;   
             GlobalVariables.packagesRead++;         
             //Vars for Package Info
@@ -414,20 +239,22 @@ namespace SimsCCManager.Packages.Sims4Search
                 allInstanceIDs.Add(holderEntry.instanceID);
                 log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
                 
-                test = readFile.ReadUInt32().ToString("X8");
-                log.MakeLog("Position " + test, true);
-                test = readFile.ReadUInt32().ToString("X4");
-                log.MakeLog("Size " + test, true);    
-                test = readFile.ReadUInt16().ToString("X8");          
-                log.MakeLog("Memsize: " + test, true);                
+                testint = readFile.ReadUInt32();
+                holderEntry.offset = testint;
+                log.MakeLog("Position " + testint.ToString("X8"), true);
+                testint = readFile.ReadUInt32();
+                holderEntry.filesize = testint;
+                log.MakeLog("Size: " + testint.ToString(), true);                    
+                testint = readFile.ReadUInt16();   
+                holderEntry.truesize = testint;       
+                log.MakeLog("Memsize: " + testint.ToString(), true);                
                 test = readFile.ReadUInt16().ToString("X4");
                 log.MakeLog("???: " + test, true);
                 test = readFile.ReadUInt16().ToString("X4");
+                holderEntry.compressionType = test;  
                 log.MakeLog("Compression Type: " + test, true);
-                test = readFile.ReadUInt16().ToString("X4");
-                log.MakeLog("Committed: " + test, true);
-
-                
+                test = readFile.ReadUInt16().ToString("X4");                
+                log.MakeLog("Committed: " + test, true);                
                 
                 indexData.Add(holderEntry);
 
@@ -441,13 +268,52 @@ namespace SimsCCManager.Packages.Sims4Search
                 log.MakeLog(type.term + " at location " + type.location, true);
             }
 
+            //everything before this works perfectly
+
+            if (fileHas.Exists(x => x.term == "RMAP")){
+                int entryspot = 0;
+                int fh = 0;
+                foreach (fileHasList item in fileHas) {
+                    if (item.term == "RMAP"){
+                        entryspot = fh;
+                    }
+                    fh++;
+                }
+            
+                log.MakeLog("P" + packageparsecount + " - RMAP is at entry [" + entryspot + "]", true);
+
+                numRecords = 0;
+                typeID = "";
+                groupID = "";
+                instanceID = "";
+                instanceID2 = "";
+                myFilesize = 0;
+
+                log.MakeLog("P" + packageparsecount + " - RMAP entry confirmation: ", true);
+                log.MakeLog(indexData[entryspot].typeID, true);
+
+                dbpfFile.Seek(this.chunkOffset + indexData[entryspot].offset, SeekOrigin.Begin);
+                log.MakeLog("Entry offset: " + indexData[entryspot].offset, true);
+                
+                testint = readFile.ReadUInt32();
+                
+                log.MakeLog("Magic?: " + testint.ToString("X4"), true);
+
+                testint = readFile.ReadUInt16();
+                log.MakeLog("Version?: " + testint.ToString("X2"), true);
+                
+                testint = readFile.ReadByte();
+                testint = (uint)readFile.ReadUInt64();
+                log.MakeLog("Numentries?: " + testint.ToString("X4"), true);
+
+            }
 
 
 
 
 
 
-
+            //everything after this works perfectly
 
             log.MakeLog("All methods complete, moving on to getting info.", true);
             /*log.MakeLog("Dirvar contains: " + dirvar.ToString(), true);
@@ -480,14 +346,30 @@ namespace SimsCCManager.Packages.Sims4Search
 
             thisPackage.Entries.AddRange(typecount);
 
-            if ((typeDict.TryGetValue("CASP", out int casp_0) && casp_0 >= 1) && (typeDict.TryGetValue("GEOM", out int geom_0) && geom_0 >= 1) && (typeDict.TryGetValue("RLE2", out int rle_0) && rle_0 >= 1) && (typeDict.TryGetValue("RMAP", out int rmap_0) && rmap_0 >= 1) && (typeDict.TryGetValue("THUM", out int thum_0) && thum_0 >= 1) && (typeDict.TryGetValue("_IMG", out int img_0) && img_0 >= 1)){
+            //ifs
+
+            int casp;int geom;int rle;int rmap;int thum;int img;int xml;int clhd;int clip;int stbl;int cobj;int ftpt;int lite;int thm;int mlod;int modl;int mtbl;int objd;int rslt;int tmlt;int ssm;int lrle;
+
+            if ((typeDict.TryGetValue("S4SM", out ssm) && ssm >= 1)){
+                thisPackage.Type = "Merged Package";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+            } else if ((typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0)){
+                thisPackage.Type = "CAS Recolor";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+            } else if ((typeDict.TryGetValue("LRLE", out lrle) && lrle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0)){
+                thisPackage.Type = "Makeup";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+            } else if ((typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1) && (typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("RMAP", out rmap) && rmap >= 1) && (typeDict.TryGetValue("_IMG", out img) && img >= 1)){
                 thisPackage.Type = "Hair Mesh";
                 log.MakeLog("This is a " + thisPackage.Type + "!!", true);
-            } else if ((typeDict.TryGetValue("_IMG", out img_0) && img_0 >= 1) && (typeDict.TryGetValue("_XML", out int xml_0) && xml_0 >= 1) && (typeDict.TryGetValue("CLHD", out int clhd_0) && clhd_0 >= 1) && (typeDict.TryGetValue("CLIP", out int clip_0) && clip_0 >= 1) && (typeDict.TryGetValue("STBL", out int stbl_0) && stbl_0 >= 1)){
+            } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("_XML", out xml) && xml >= 1) && (typeDict.TryGetValue("CLHD", out clhd) && clhd >= 1) && (typeDict.TryGetValue("CLIP", out clip) && clip >= 1) && (typeDict.TryGetValue("STBL", out stbl) && stbl >= 1)){
                 thisPackage.Type = "Pose Pack";
                 log.MakeLog("This is a " + thisPackage.Type + "!!", true);
-            }  else if ((typeDict.TryGetValue("_IMG", out img_0) && img_0 >= 1) && (typeDict.TryGetValue("_THM", out int thm_0) && thm_0 >= 1) && (typeDict.TryGetValue("COBJ", out int cobj_0) && cobj_0 >= 1) && (typeDict.TryGetValue("FTPT", out int ftpt_0) && ftpt_0 >= 1) && (typeDict.TryGetValue("LITE", out int lite_0) && lite_0 >= 1)){
+            } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("COBJ", out cobj) && cobj >= 1) && (typeDict.TryGetValue("FTPT", out ftpt) && ftpt >= 1) && (typeDict.TryGetValue("LITE", out lite) && lite >= 1) && (typeDict.TryGetValue("MLOD", out mlod) && mlod >= 1) && (typeDict.TryGetValue("MODL", out modl) && modl >= 1) && (typeDict.TryGetValue("MTBL", out mtbl) && mtbl >= 1) && (typeDict.TryGetValue("OBJD", out objd) && objd >= 1) && (typeDict.TryGetValue("RSLT", out rslt) && rslt >= 1) && (typeDict.TryGetValue("STBL", out stbl) && stbl >= 1) && (typeDict.TryGetValue("TMLT", out tmlt) && tmlt >= 1)){
                 thisPackage.Type = "Object Mesh";
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+            } else if ((typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1)){
+                thisPackage.Type = "CAS Part";
                 log.MakeLog("This is a " + thisPackage.Type + "!!", true);
             } else {
                 log.MakeLog("Unable to identify package.", true);
