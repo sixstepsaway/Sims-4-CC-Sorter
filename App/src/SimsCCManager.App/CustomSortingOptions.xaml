@@ -1,0 +1,16 @@
+<Window x:Class="SimsCCManager.App.CustomSortingOptions.SortingOptionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SimsCCManager.App.CustomSortingOptions"
+        mc:Ignorable="d"
+        Title="Results" Height="Auto" Width="Auto" SizeToContent="Manual"
+        WindowStartupLocation="CenterOwner">
+        <Grid>
+          <ListView>
+            
+          </ListView>
+        </Grid>
+        
+</Window>

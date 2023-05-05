@@ -2,7 +2,7 @@
 
 Code cannibalized and learned from has been acquired in a number of places. Top credits:
 
-- TASKS: https://stackoverflow.com/questions/1333058/how-to-wait-correctly-until-backgroundworker-completes/41765420#41765420
+- Delphy's Download Organizer
 
 */
 
