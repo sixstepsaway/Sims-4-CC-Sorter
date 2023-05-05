@@ -192,13 +192,13 @@ namespace SimsCCManager.Packages.Sims4Search
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Trash Index size: " + test, true);
-            
-            //unused
+
+            //unused but 3 for historical reasons
             testint = readFile.ReadUInt32();
             test = testint.ToString();
-            log.MakeLog("Unused Index Minor Version: " + test, true);
-            
-            //unused but 3 for historical reasons
+            log.MakeLog("Unused Trash Size: " + test, true);
+
+           //unused but 3 for historical reasons
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused, 3 for historical reasons: " + test, true);
@@ -207,11 +207,13 @@ namespace SimsCCManager.Packages.Sims4Search
             test = indexRecordPosition.ToString();
             log.MakeLog("Index Record Position: " + test, true);
 
+                        
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
-            log.MakeLog("Unused Unknown:" + test, true);
-            
+            log.MakeLog("Garbage: " + test, true);
+
+
             //unused six bytes
             test = Encoding.ASCII.GetString(readFile.ReadBytes(24));
             log.MakeLog("Unused: " + test, true);
@@ -219,7 +221,7 @@ namespace SimsCCManager.Packages.Sims4Search
             if ((long)indexRecordPosition != 0){
                 dbpfFile.Seek((long)indexRecordPosition, SeekOrigin.Current);
                  } else {
-                dbpfFile.Seek(indexRecordPositionLow, SeekOrigin.Begin);
+                dbpfFile.Seek((long)indexRecordPositionLow, SeekOrigin.Current);
             }
             
             //dont know what this is
@@ -247,6 +249,8 @@ namespace SimsCCManager.Packages.Sims4Search
                 log.MakeLog("Committed: " + test, true);
                 testint = readFile.ReadUInt32();
                 log.MakeLog("Size Decompressed " + testint, true);
+
+                log.MakeLog("Entry Count is " + i, true);
 
                 packageparsecount++;
                 
