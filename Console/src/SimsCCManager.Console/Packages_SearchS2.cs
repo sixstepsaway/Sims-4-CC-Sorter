@@ -182,7 +182,7 @@ namespace SimsCCManager.Packages.Sims2Search
                 indexEntry holderEntry = new indexEntry();
                 log.MakeLog("P" + packageparsecount + " - Made index entry.", true);
                 holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
-                log.MakeLog("P" + packageparsecount + " - Index Entry TypeID: " + holderEntry.typeID, true);
+                log.MakeLog("P" + packageparsecount + "/E" + i + " - Index Entry TypeID: " + holderEntry.typeID, true);
                 
                 holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
                 log.MakeLog("P" + packageparsecount + " - Index Entry GroupID: " + holderEntry.groupID, true);

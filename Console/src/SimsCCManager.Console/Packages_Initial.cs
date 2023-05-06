@@ -145,7 +145,7 @@ namespace SimsCCManager.Packages.Initial {
             } else if (major is 2 && minor is 1) {
                 statement = pack.FullName + " is a sims 4 file.";
                 log.MakeLog(statement, false);
-                GlobalVariables.gamesPackages.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Number = counter, Game = 3, Broken = false});            
+                GlobalVariables.gamesPackages.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Number = counter, Game = 4, Broken = false});            
             } else if (major is 3 && minor is 0) {
                 statement = pack.FullName + " is a Sim City 5 file.";
                 log.MakeLog(statement, false);

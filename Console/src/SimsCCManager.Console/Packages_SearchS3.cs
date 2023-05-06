@@ -1,9 +1,3 @@
-/* 
-    Credits:
-        - WandaSoule who helped me crack getting into the S4 entries of it all. 
-*/
-
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +14,7 @@ using SimsCCManager.Packages.Containers;
 using SimsCCManager.Packages.Decryption;
 
 
-namespace SimsCCManager.Packages.Sims4Search
+namespace SimsCCManager.Packages.Sims3Search
 {
     public static class extensions {
         public static void Increment<T>(this Dictionary<T, int> dictionary, T key)
@@ -50,7 +44,7 @@ namespace SimsCCManager.Packages.Sims4Search
         public string compressionType;
 
     }	
-    class S4PackageSearch
+    class S3PackageSearch
     {
         
         // Class References
@@ -60,7 +54,7 @@ namespace SimsCCManager.Packages.Sims4Search
         //Vars
         uint chunkOffset = 0;
         
-        public void SearchS4Packages(string file) {
+        public void SearchS3Packages(string file) {
             var packageparsecount = GlobalVariables.packagesRead;   
             GlobalVariables.packagesRead++;         
             //Vars for Package Info
@@ -120,7 +114,7 @@ namespace SimsCCManager.Packages.Sims4Search
             Console.WriteLine("Reading Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
             log.MakeLog("Logged Package #" + packageparsecount + " as " + packageinfo.FullName, true);
             thisPackage.Location = packageinfo.FullName;            
-            thisPackage.Game = 4;
+            thisPackage.Game = 3;
             log.MakeLog("Logged Package #" + packageparsecount + " as meant for The Sims " + thisPackage.Game, true);           
             
             //start actually reading the package 
@@ -229,7 +223,7 @@ namespace SimsCCManager.Packages.Sims4Search
                 holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
                 log.MakeLog("P" + packageparsecount + "/E" + i + " - Index Entry TypeID: " + holderEntry.typeID, true);
 
-                foreach (typeList type in TypeListings.AllTypesS4){
+                foreach (typeList type in TypeListings.AllTypesS3){
                     if (type.typeID == holderEntry.typeID){
                         fileHas.Add(new fileHasList() { term = type.desc, location = i});
                     }
@@ -263,8 +257,7 @@ namespace SimsCCManager.Packages.Sims4Search
                 
                 indexData.Add(holderEntry);
 
-                holderEntry = null;
-                
+                holderEntry = null;              
             }
 
             log.MakeLog("This package contains: ", true);
@@ -274,43 +267,11 @@ namespace SimsCCManager.Packages.Sims4Search
 
             //everything before this works perfectly
 
-            if (fileHas.Exists(x => x.term == "RMAP")){
-                int entryspot = 0;
-                int fh = 0;
-                foreach (fileHasList item in fileHas) {
-                    if (item.term == "RMAP"){
-                        entryspot = fh;
-                    }
-                    fh++;
-                }
             
-                log.MakeLog("P" + packageparsecount + " - RMAP is at entry [" + entryspot + "]", true);
 
-                numRecords = 0;
-                typeID = "";
-                groupID = "";
-                instanceID = "";
-                instanceID2 = "";
-                myFilesize = 0;
 
-                log.MakeLog("P" + packageparsecount + " - RMAP entry confirmation: ", true);
-                log.MakeLog(indexData[entryspot].typeID, true);
 
-                dbpfFile.Seek(this.chunkOffset + indexData[entryspot].offset, SeekOrigin.Begin);
-                log.MakeLog("Entry offset: " + indexData[entryspot].offset, true);
-                
-                testint = readFile.ReadUInt32();
-                
-                log.MakeLog("Magic?: " + testint.ToString("X4"), true);
 
-                testint = readFile.ReadUInt16();
-                log.MakeLog("Version?: " + testint.ToString("X2"), true);
-                
-                testint = readFile.ReadByte();
-                testint = (uint)readFile.ReadUInt64();
-                log.MakeLog("Numentries?: " + testint.ToString("X4"), true);
-
-            }
 
 
 
@@ -332,7 +293,7 @@ namespace SimsCCManager.Packages.Sims4Search
             log.MakeLog("Making dictionary.", true);
 
             foreach (fileHasList item in fileHas){
-                foreach (typeList type in TypeListings.AllTypesS4){
+                foreach (typeList type in TypeListings.AllTypesS3){
                     if (type.desc == item.term){
                         log.MakeLog("Added " + type.desc + " to dictionary.", true);
                         typeDict.Increment(type.desc);
@@ -380,6 +341,11 @@ namespace SimsCCManager.Packages.Sims4Search
                 thisPackage.Type = "UNKNOWN";
             }
             
+            
+
+
+
+
 
 
             distinctInstanceIDs = allInstanceIDs.Distinct().ToList();
@@ -388,7 +354,7 @@ namespace SimsCCManager.Packages.Sims4Search
             thisPackage.ObjectGUID.AddRange(distinctGUIDS);
             log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
             log.MakeLog(thisPackage.ToString(), false);
-            Containers.Containers.allSims4Packages.Add(thisPackage);
+            Containers.Containers.allSims3Packages.Add(thisPackage);
 
             readFile.Close();
             Console.WriteLine("Closing Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);

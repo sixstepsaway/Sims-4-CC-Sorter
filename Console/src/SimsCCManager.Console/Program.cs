@@ -13,6 +13,7 @@ using SSAGlobals;
 using SimsCCManager.Packages.Containers;
 using Newtonsoft.Json;
 using SimsCCManager.Packages.Initial;
+using SimsCCManager.Packages.Sims3Search;
 using SimsCCManager.Packages.Sims4Search;
 
 namespace SimsCCManager.CMD
@@ -25,6 +26,7 @@ namespace SimsCCManager.CMD
             TypeListings typeListings = new TypeListings();
             InitialProcessing initial = new InitialProcessing();
             LoggingGlobals log = new LoggingGlobals();
+            S3PackageSearch sims3s = new S3PackageSearch();
             S4PackageSearch sims4s = new S4PackageSearch();
             ParallelOptions parallelSettings = new ParallelOptions() { MaxDegreeOfParallelism = 200};
             TypeListings.AllTypesS2 = typeListings.createS2TypeList();
@@ -53,13 +55,13 @@ namespace SimsCCManager.CMD
                 initial.IdentifyGames(file.Location);
             });
 
-            Parallel.ForEach(GlobalVariables.gamesPackages, parallelSettings, file => 
-            {
-                initial.IdentifyGames(file.Location);
-            });
-
             foreach (PackageFile package in GlobalVariables.gamesPackages){
-                sims4s.SearchS4Packages(package.Location);
+                if (package.Game == 3){
+                    sims3s.SearchS3Packages(package.Location);
+                } else if (package.Game == 4){
+                    sims4s.SearchS4Packages(package.Location);
+                }
+                
             }
 
             
