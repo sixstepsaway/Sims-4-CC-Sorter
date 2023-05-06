@@ -43,6 +43,10 @@ namespace SimsCCManager.Packages.Sims4Search
         public string instanceID;
         public string instanceID2;
         public uint offset;
+        public uint position;
+        public uint fileSize;
+        public uint memSize;
+        
         public uint filesize;
         public uint truesize;
         public bool compressed;
@@ -59,6 +63,9 @@ namespace SimsCCManager.Packages.Sims4Search
 
         //Vars
         uint chunkOffset = 0;
+        int contentposition = 64;
+        int contentpositionalt = 40;
+        int contentcount = 36;
         
         public void SearchS4Packages(string file) {
             var packageparsecount = GlobalVariables.packagesRead;   
@@ -233,7 +240,7 @@ namespace SimsCCManager.Packages.Sims4Search
                     if (type.typeID == holderEntry.typeID){
                         fileHas.Add(new fileHasList() { term = type.desc, location = i});
                     }
-                }
+                }               
 
                 holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
                 log.MakeLog("P" + packageparsecount + " - Index Entry GroupID: " + holderEntry.groupID, true);
@@ -245,13 +252,13 @@ namespace SimsCCManager.Packages.Sims4Search
                 log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
                 
                 testint = readFile.ReadUInt32();
-                holderEntry.offset = testint;
-                log.MakeLog("Position " + testint.ToString("X8"), true);
+                holderEntry.position = testint;
+                log.MakeLog("Position " + testint.ToString(), true);
                 testint = readFile.ReadUInt32();
                 holderEntry.filesize = testint;
                 log.MakeLog("Size: " + testint.ToString(), true);                    
                 testint = readFile.ReadUInt16();   
-                holderEntry.truesize = testint;       
+                holderEntry.memSize = testint;       
                 log.MakeLog("Memsize: " + testint.ToString(), true);                
                 test = readFile.ReadUInt16().ToString("X4");
                 log.MakeLog("???: " + test, true);
@@ -273,42 +280,58 @@ namespace SimsCCManager.Packages.Sims4Search
             }
 
             //everything before this works perfectly
-
+            dbpfFile.Seek(0, SeekOrigin.Begin);
+            
             if (fileHas.Exists(x => x.term == "CASP")){
-                int entryspot = 0;
+                List<int> entryspots = new List<int>();
                 int fh = 0;
                 foreach (fileHasList item in fileHas) {
                     if (item.term == "CASP"){
-                        entryspot = fh;                       
+                        entryspots.Add(fh);                       
                     }
                     fh++;
                 }
-            
-                log.MakeLog("P" + packageparsecount + " - CASP is at entry [" + entryspot + "]", true);
 
-                numRecords = 0;
-                typeID = "";
-                groupID = "";
-                instanceID = "";
-                instanceID2 = "";
-                myFilesize = 0;
+                foreach (int spot in entryspots){
+                    dbpfFile.Seek(0, SeekOrigin.Begin);
+                    dbpfFile.Seek(headersize.Length + indexRecordSize, SeekOrigin.Begin);
+                    log.MakeLog("P" + packageparsecount + " - CASP is at entry [" + spot + "]", true);
 
-                long loco = ((uint)indexData[entryspot].offset) - headersize.Length;
+                    numRecords = 0;
+                    typeID = "";
+                    groupID = "";
+                    instanceID = "";
+                    instanceID2 = "";
+                    myFilesize = 0;
 
-                log.MakeLog("P" + packageparsecount + " - CASP entry confirmation: ", true);
-                log.MakeLog(indexData[entryspot].typeID, true);
+                    long locoMinus = ((uint)indexData[spot].position) - headersize.Length;
+                    long locoPlus = ((uint)indexData[spot].position) + indexRecordSize + headersize.Length;
+                    uint locoSet = ((uint)indexData[spot].fileSize);
 
-                dbpfFile.Seek(this.chunkOffset + loco, SeekOrigin.Begin);
-                log.MakeLog("Entry offset: " + indexData[entryspot].offset, true);
-                log.MakeLog("Adjusted entry offset: " + loco, true);
+                    log.MakeLog("P" + packageparsecount + " - CASP entry confirmation: ", true);
+                    log.MakeLog(indexData[spot].typeID, true);
+                    log.MakeLog(indexData[spot].instanceID, true);
 
-                for (int o = 0; o < 50000; o++){
-                    testint = readFile.ReadByte();
-                    log.MakeLog("testcount " + o + ": " + testint.ToString(), 
-                    true);       
-                    log.MakeLog("testcount " + o + ": " + testint.ToString("X4"), 
-                    true);                
+                    dbpfFile.Seek(indexData[spot].position, SeekOrigin.Begin);
+                    log.MakeLog("Entry offset: " + indexData[spot].position, true);
+                    //log.MakeLog("Adjusted entry offset: " + locoMinus, true);
+                                        
+                    uint version = readFile.ReadUInt32();
+                    log.MakeLog("Version? " + version.ToString("X8"), true);
+                    uint TGIoffset = readFile.ReadUInt32() + 8;
+                    log.MakeLog("TGI Offset? " + TGIoffset.ToString("X8"), true);
+                    uint presetCount = readFile.ReadUInt32();
+                    log.MakeLog("Preset Count? " + presetCount.ToString("X8"), true);
+
+                    for (int o = 0; o < 5000; o++){
+                        testint = readFile.ReadUInt32();  
+                        log.MakeLog("Test " + o + ": " + testint, true);               
+                        log.MakeLog("Test " + o + ": " + testint.ToString("X8"), true);             
+                    }
                 }
+
+                
+                
 
                 
 
