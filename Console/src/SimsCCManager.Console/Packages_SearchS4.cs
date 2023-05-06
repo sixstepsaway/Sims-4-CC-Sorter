@@ -213,12 +213,12 @@ namespace SimsCCManager.Packages.Sims4Search
 
             byte[] headersize = new byte[96];
 
-            long indexseek = (long)indexRecordPosition - headersize.Length;
-
-            if (indexseek != 0){
+            if (indexRecordPosition != 0){
+                long indexseek = (long)indexRecordPosition - headersize.Length;
                 dbpfFile.Seek(indexseek, SeekOrigin.Current);
-                 } else {
-                dbpfFile.Seek(indexRecordPositionLow, SeekOrigin.Begin);
+            } else {
+                long indexseek = indexRecordPositionLow - headersize.Length;    
+                dbpfFile.Seek(indexRecordPositionLow, SeekOrigin.Current);
             }
             
             //dont know what this is
@@ -274,17 +274,17 @@ namespace SimsCCManager.Packages.Sims4Search
 
             //everything before this works perfectly
 
-            if (fileHas.Exists(x => x.term == "RMAP")){
+            if (fileHas.Exists(x => x.term == "CASP")){
                 int entryspot = 0;
                 int fh = 0;
                 foreach (fileHasList item in fileHas) {
-                    if (item.term == "RMAP"){
-                        entryspot = fh;
+                    if (item.term == "CASP"){
+                        entryspot = fh;                       
                     }
                     fh++;
                 }
             
-                log.MakeLog("P" + packageparsecount + " - RMAP is at entry [" + entryspot + "]", true);
+                log.MakeLog("P" + packageparsecount + " - CASP is at entry [" + entryspot + "]", true);
 
                 numRecords = 0;
                 typeID = "";
@@ -293,23 +293,26 @@ namespace SimsCCManager.Packages.Sims4Search
                 instanceID2 = "";
                 myFilesize = 0;
 
-                log.MakeLog("P" + packageparsecount + " - RMAP entry confirmation: ", true);
+                long loco = ((uint)indexData[entryspot].offset) - headersize.Length;
+
+                log.MakeLog("P" + packageparsecount + " - CASP entry confirmation: ", true);
                 log.MakeLog(indexData[entryspot].typeID, true);
 
-                dbpfFile.Seek(this.chunkOffset + indexData[entryspot].offset, SeekOrigin.Begin);
+                dbpfFile.Seek(this.chunkOffset + loco, SeekOrigin.Begin);
                 log.MakeLog("Entry offset: " + indexData[entryspot].offset, true);
-                
-                testint = readFile.ReadUInt32();
-                
-                log.MakeLog("Magic?: " + testint.ToString("X4"), true);
+                log.MakeLog("Adjusted entry offset: " + loco, true);
 
-                testint = readFile.ReadUInt16();
-                log.MakeLog("Version?: " + testint.ToString("X2"), true);
-                
-                testint = readFile.ReadByte();
-                testint = (uint)readFile.ReadUInt64();
-                log.MakeLog("Numentries?: " + testint.ToString("X4"), true);
+                for (int o = 0; o < 50000; o++){
+                    testint = readFile.ReadByte();
+                    log.MakeLog("testcount " + o + ": " + testint.ToString(), 
+                    true);       
+                    log.MakeLog("testcount " + o + ": " + testint.ToString("X4"), 
+                    true);                
+                }
 
+                
+
+                
             }
 
 
