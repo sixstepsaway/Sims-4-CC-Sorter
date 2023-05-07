@@ -50,3 +50,5 @@ I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\ref
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App.pdb
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\SimsCCManager.App.genruntimeconfig.cache
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\ref\SimsCCManager.App.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\CustomSortingOptions.g.cs
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net5.0-windows\CustomSortingOptions.baml

@@ -889,15 +889,15 @@ namespace SimsCCManager.Packages.Sims2Search
 
         public void S2FindOrphans(SimsPackage package) {  
             List<string> guids = new List<string>();  
-            log.MakeLog("Reading " + package.Name + " and checking for orphaned recolors.", true);        
+            log.MakeLog("Reading " + package.PackageName + " and checking for orphaned recolors.", true);        
             if ((package.Mesh == false) && (package.Recolor == true)){
-                log.MakeLog(package.Name + ": Package has no mesh.", true);                
+                log.MakeLog(package.PackageName + ": Package has no mesh.", true);                
                 foreach (string guid in package.ObjectGUID) {
 
                 }
             }
             if ((package.Mesh == true) && (package.Recolor == false)){
-                log.MakeLog(package.Name + ": Package has a mesh and no recolor.", true);  
+                log.MakeLog(package.PackageName + ": Package has a mesh and no recolor.", true);  
                 foreach (string guid in package.ObjectGUID) {
                     
                 }

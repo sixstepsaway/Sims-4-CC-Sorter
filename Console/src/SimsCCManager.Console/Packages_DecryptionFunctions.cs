@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Collections;
 using System.Xml;
+using ICSharpCode.SharpZipLib;
+using ICSharpCode.SharpZipLib.Zip;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using System.Security.Cryptography;
 using SimsCCManager.Packages.Containers;
 using SSAGlobals;
@@ -1196,4 +1199,18 @@ namespace SimsCCManager.Packages.Decryption
             return infovar;
 		}
     }
+
+	public class S4Decryption {
+		public static Stream Decompress(byte[] data)
+		{
+			var outputStream = new MemoryStream();
+			using (var compressedStream = new MemoryStream(data))
+			using (var inputStream = new InflaterInputStream(compressedStream))
+			{
+				inputStream.CopyTo(outputStream);
+				outputStream.Position = 0;
+				return outputStream;
+			}
+		}
+	}
 }
