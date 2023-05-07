@@ -886,5 +886,32 @@ namespace SimsCCManager.Packages.Sims2Search
             Console.WriteLine("Closing Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
             
         }
+
+        public void S2FindOrphans(SimsPackage package) {  
+            List<string> guids = new List<string>();  
+            log.MakeLog("Reading " + package.Name + " and checking for orphaned recolors.", true);        
+            if ((package.Mesh == false) && (package.Recolor == true)){
+                log.MakeLog(package.Name + ": Package has no mesh.", true);                
+                foreach (string guid in package.ObjectGUID) {
+
+                }
+            }
+            if ((package.Mesh == true) && (package.Recolor == false)){
+                log.MakeLog(package.Name + ": Package has a mesh and no recolor.", true);  
+                foreach (string guid in package.ObjectGUID) {
+                    
+                }
+            }
+        }
+
+        public void S2RenamePackages(SimsPackage package){
+            FileInfo og = new FileInfo(package.Location);
+            string newlocation = og.Directory + "\\" + package.Title + ".package";
+            if (File.Exists(newlocation)){
+                //do nothing, throw an error at some point
+            } else {
+                System.IO.File.Move(package.Location, newlocation);
+            }
+        }
     }
 }

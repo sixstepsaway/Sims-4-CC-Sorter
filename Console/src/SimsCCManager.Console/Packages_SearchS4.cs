@@ -140,83 +140,119 @@ namespace SimsCCManager.Packages.Sims4Search
             uint testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Major :" + test, true);
+            long position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             //minor
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Minor : " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unknown : " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unknown : " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unknown : " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Created : " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
 
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Modified : " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Index Major : " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             //entrycount
             uint entrycount = readFile.ReadUInt32();
             test = entrycount.ToString();
             log.MakeLog("Entry Count: " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             //record position low
             uint indexRecordPositionLow = readFile.ReadUInt32();
             test = indexRecordPositionLow.ToString();
             log.MakeLog("indexRecordPositionLow: " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             //index record size
             uint indexRecordSize = readFile.ReadUInt32();
             test = indexRecordSize.ToString();
             log.MakeLog("indexRecordSize: " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
 
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Trash Index offset: " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Trash Index size: " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Index Minor Version: " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             //unused but 3 for historical reasons
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused, 3 for historical reasons: " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             ulong indexRecordPosition = readFile.ReadUInt64();
             test = indexRecordPosition.ToString();
             log.MakeLog("Index Record Position: " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
 
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Unknown:" + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             
             //unused six bytes
             test = Encoding.ASCII.GetString(readFile.ReadBytes(24));
             log.MakeLog("Unused: " + test, true);
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
 
             byte[] headersize = new byte[96];
 
@@ -228,6 +264,8 @@ namespace SimsCCManager.Packages.Sims4Search
                 dbpfFile.Seek(indexRecordPositionLow, SeekOrigin.Current);
             }
             
+            position = readFile.BaseStream.Position;
+            log.MakeLog("Reader is at: " + position, true);
             //dont know what this is
             
             for (int i = 0; i < entrycount; i++){
@@ -235,6 +273,8 @@ namespace SimsCCManager.Packages.Sims4Search
 
                 holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
                 log.MakeLog("P" + packageparsecount + "/E" + i + " - Index Entry TypeID: " + holderEntry.typeID, true);
+                position = readFile.BaseStream.Position;
+                log.MakeLog("Reader is at: " + position, true);
 
                 foreach (typeList type in TypeListings.AllTypesS4){
                     if (type.typeID == holderEntry.typeID){
@@ -244,29 +284,47 @@ namespace SimsCCManager.Packages.Sims4Search
 
                 holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
                 log.MakeLog("P" + packageparsecount + " - Index Entry GroupID: " + holderEntry.groupID, true);
+                position = readFile.BaseStream.Position;
+                log.MakeLog("Reader is at: " + position, true);
 
-                string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");                
+                string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
+                position = readFile.BaseStream.Position;
+                log.MakeLog("Reader is at: " + position, true);
                 string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
                 holderEntry.instanceID = instanceid1 + instanceid2;
                 allInstanceIDs.Add(holderEntry.instanceID);
                 log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
+                position = readFile.BaseStream.Position;
+                log.MakeLog("Reader is at: " + position, true);
                 
                 testint = readFile.ReadUInt32();
                 holderEntry.position = testint;
                 log.MakeLog("Position " + testint.ToString(), true);
+                position = readFile.BaseStream.Position;
+                log.MakeLog("Reader is at: " + position, true);
                 testint = readFile.ReadUInt32();
                 holderEntry.filesize = testint;
-                log.MakeLog("Size: " + testint.ToString(), true);                    
+                log.MakeLog("Size: " + testint.ToString(), true);
+                position = readFile.BaseStream.Position;
+                log.MakeLog("Reader is at: " + position, true);
                 testint = readFile.ReadUInt16();   
                 holderEntry.memSize = testint;       
-                log.MakeLog("Memsize: " + testint.ToString(), true);                
+                log.MakeLog("Memsize: " + testint.ToString(), true);
+                position = readFile.BaseStream.Position;
+                log.MakeLog("Reader is at: " + position, true);
                 test = readFile.ReadUInt16().ToString("X4");
                 log.MakeLog("???: " + test, true);
+                position = readFile.BaseStream.Position;
+                log.MakeLog("Reader is at: " + position, true);
                 test = readFile.ReadUInt16().ToString("X4");
                 holderEntry.compressionType = test;  
                 log.MakeLog("Compression Type: " + test, true);
+                position = readFile.BaseStream.Position;
+                log.MakeLog("Reader is at: " + position, true);
                 test = readFile.ReadUInt16().ToString("X4");                
-                log.MakeLog("Committed: " + test, true);                
+                log.MakeLog("Committed: " + test, true);
+                position = readFile.BaseStream.Position;
+                log.MakeLog("Reader is at: " + position, true);         
                 
                 indexData.Add(holderEntry);
 
@@ -296,6 +354,8 @@ namespace SimsCCManager.Packages.Sims4Search
                     dbpfFile.Seek(0, SeekOrigin.Begin);
                     dbpfFile.Seek(headersize.Length + indexRecordSize, SeekOrigin.Begin);
                     log.MakeLog("P" + packageparsecount + " - CASP is at entry [" + spot + "]", true);
+                    position = readFile.BaseStream.Position;
+                    log.MakeLog("Reader is at: " + position, true);
 
                     numRecords = 0;
                     typeID = "";
@@ -312,21 +372,31 @@ namespace SimsCCManager.Packages.Sims4Search
                     log.MakeLog(indexData[spot].typeID, true);
                     log.MakeLog(indexData[spot].instanceID, true);
 
-                    dbpfFile.Seek(indexData[spot].position, SeekOrigin.Begin);
+                    dbpfFile.Seek((indexData[spot].position + indexRecordSize + headersize.Length), SeekOrigin.Begin);
                     log.MakeLog("Entry offset: " + indexData[spot].position, true);
                     //log.MakeLog("Adjusted entry offset: " + locoMinus, true);
+                    position = readFile.BaseStream.Position;
+                    log.MakeLog("Reader is at: " + position, true);
                                         
                     uint version = readFile.ReadUInt32();
                     log.MakeLog("Version? " + version.ToString("X8"), true);
+                    position = readFile.BaseStream.Position;
+                    log.MakeLog("Reader is at: " + position, true);
                     uint TGIoffset = readFile.ReadUInt32() + 8;
                     log.MakeLog("TGI Offset? " + TGIoffset.ToString("X8"), true);
+                    position = readFile.BaseStream.Position;
+                    log.MakeLog("Reader is at: " + position, true);
                     uint presetCount = readFile.ReadUInt32();
                     log.MakeLog("Preset Count? " + presetCount.ToString("X8"), true);
+                    position = readFile.BaseStream.Position;
+                    log.MakeLog("Reader is at: " + position, true);
 
                     for (int o = 0; o < 5000; o++){
                         testint = readFile.ReadUInt32();  
                         log.MakeLog("Test " + o + ": " + testint, true);               
-                        log.MakeLog("Test " + o + ": " + testint.ToString("X8"), true);             
+                        log.MakeLog("Test " + o + ": " + testint.ToString("X8"), true);
+                        position = readFile.BaseStream.Position;
+                        log.MakeLog("Reader is at: " + position, true);
                     }
                 }
 
