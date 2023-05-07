@@ -67,6 +67,7 @@ namespace SimsCCManager.Packages.Sims4Search
         // Class References
         LoggingGlobals log = new LoggingGlobals();
         ReadEntries readentries = new ReadEntries();   
+        System.Text.Encoding encoding = System.Text.Encoding.BigEndianUnicode;
 
         //Vars
         uint chunkOffset = 0;
@@ -279,22 +280,66 @@ namespace SimsCCManager.Packages.Sims4Search
                 foreach (int e in entryspots){
                     log.MakeLog("Opening CASP #" + caspc, true);
                     if (indexData[e].compressionType == "5A42"){
-                           dbpfFile.Seek(indexData[e].position, SeekOrigin.Begin);
-                           long entryEnd = indexData[e].position + indexData[e].memSize;
-                           log.MakeLog("Position: " + indexData[e].position, true);
-                           log.MakeLog("Filesize: " + indexData[e].fileSize, true);
-                           log.MakeLog("Memsize: " + indexData[e].memSize, true);
-                           log.MakeLog("Entry ends at " + entryEnd, true);
-                           byte[] entry = readFile.ReadBytes((int)indexData[e].memSize);
-                           Stream decomps = S4Decryption.Decompress(entry);
-                           
-                           BinaryReader decompbr = new BinaryReader(decomps);
+                            dbpfFile.Seek(indexData[e].position, SeekOrigin.Begin);
+                            long entryEnd = indexData[e].position + indexData[e].memSize;
+                            log.MakeLog("Position: " + indexData[e].position, true);
+                            log.MakeLog("Filesize: " + indexData[e].fileSize, true);
+                            log.MakeLog("Memsize: " + indexData[e].memSize, true);
+                            log.MakeLog("Entry ends at " + entryEnd, true);
+                            byte[] entry = readFile.ReadBytes((int)indexData[e].memSize);
+                            Stream decomps = S4Decryption.Decompress(entry);
+                            
+                            BinaryReader decompbr = new BinaryReader(decomps);
 
-                           testint = decompbr.ReadUInt32();
-                           log.MakeLog("First decompressed int: " + testint, true);
-                           log.MakeLog("As hex: " + testint.ToString("X4"), true);
+                            uint version = decompbr.ReadUInt32();
+                            log.MakeLog("Version: " + version, true);
+                            log.MakeLog("-- As hex: " + version.ToString("X8"), true);
+                            uint datasize = decompbr.ReadUInt32();
+                            log.MakeLog("Datasize: " + datasize, true);
+                            log.MakeLog("-- As hex: " + datasize.ToString("X8"), true);
+                            uint numPresets = decompbr.ReadUInt32();
+                            log.MakeLog("Presets: " + numPresets, true);
+                            log.MakeLog("-- As hex: " + numPresets.ToString("X8"), true);
 
-                           
+                            using (var reader = new BinaryReader(decomps, Encoding.BigEndianUnicode, true))
+                            {
+                                thisPackage.Title = reader.ReadString();
+                            }
+                            log.MakeLog("Name: " + thisPackage.Title, true);
+                            float catalogSort = decompbr.ReadSingle();
+                            log.MakeLog("Catalog Sort: " + catalogSort, true);
+                            uint secondaryDisplayIndex = decompbr.ReadUInt16();
+                            log.MakeLog("Secondary Display Index: " + secondaryDisplayIndex.ToString("X4"), true);
+                            uint propertyID = decompbr.ReadUInt32();
+                            log.MakeLog("Property ID: " + propertyID.ToString("X8"), true);
+                            
+                            testint = decompbr.ReadUInt32();
+                            log.MakeLog("Test: " + testint.ToString("X8"), true);
+                            //testint = decompbr.ReadUInt16();
+                            //log.MakeLog("Struct?: " + testint.ToString("X8"), true);
+
+                            int[] parameterFlag = new int[1];
+                            parameterFlag[0] = (int)decompbr.ReadUInt16();
+                            BitArray parameterFlags = new BitArray(parameterFlag);
+
+                            int pfc = 0;
+                            foreach (var pf in parameterFlags){
+                                log.MakeLog("Function Sort Flag [" + pfc + "] is: " + parameterFlags[pfc].ToString(), true);                    
+                                pfc++;
+                            }      
+
+                            /*
+                                [7-6]    not_used
+                                [5]      ShowInCasDemo
+                                [4]      ShowInSimInfoPanel
+                                [3]      ShowInUI
+                                [2]      AllowForRandom
+                                [1]      DefaultThumnailPart
+                                [0]      DefaultForBodyType 
+                            */
+
+                            ulong testlong = decompbr.ReadUInt64();
+                            log.MakeLog("Test: " + testlong.ToString("X8"), true);                           
                     }
 
 
@@ -308,7 +353,65 @@ namespace SimsCCManager.Packages.Sims4Search
 
             }
 
+            if (fileHas.Exists(x => x.term == "COBJ")){
+                List<int> entryspots = new List<int>();
+                int fh = 0;
+                foreach (fileHasList item in fileHas) {
+                    if (item.term == "COBJ"){
+                        entryspots.Add(fh);                       
+                    }
+                    fh++;
+                }    
+                int cobjc = 0;
+                foreach (int e in entryspots){
+                    log.MakeLog("Opening COBJ #" + cobjc, true);
+                    if (indexData[e].compressionType == "5A42"){
+                            dbpfFile.Seek(indexData[e].position, SeekOrigin.Begin);
+                            long entryEnd = indexData[e].position + indexData[e].memSize;
+                            log.MakeLog("Position: " + indexData[e].position, true);
+                            log.MakeLog("Filesize: " + indexData[e].fileSize, true);
+                            log.MakeLog("Memsize: " + indexData[e].memSize, true);
+                            log.MakeLog("Entry ends at " + entryEnd, true);
+                            byte[] entry = readFile.ReadBytes((int)indexData[e].memSize);
+                            Stream decomps = S4Decryption.Decompress(entry);
+                            
+                            BinaryReader decompbr = new BinaryReader(decomps);
 
+                            uint version = decompbr.ReadUInt32();
+                            log.MakeLog("Version: " + version, true);
+                            log.MakeLog("-- As hex: " + version.ToString("X8"), true);
+                            uint namehash = decompbr.ReadUInt32();
+                            log.MakeLog("NameHash: " + namehash, true);
+                            log.MakeLog("-- As hex: " + namehash.ToString("X8"), true);
+                            uint descriptionhash = decompbr.ReadUInt32();
+                            log.MakeLog("DescriptionHash: " + descriptionhash, true);
+                            log.MakeLog("-- As hex: " + descriptionhash.ToString("X8"), true);                            
+                            uint price = decompbr.ReadUInt32();
+                            log.MakeLog("Price: " + price, true);
+                            log.MakeLog("-- As hex: " + price.ToString("X8"), true);
+                            //bunch of stuff i dont need rn
+                            decompbr.ReadBytes(12);
+                            decompbr.ReadBytes(14);
+                            decompbr.ReadBytes(2);
+                            decompbr.ReadBytes(32);
+
+                            uint thumbhash = decompbr.ReadUInt32();
+                            log.MakeLog("Thumbnail Hash: " + thumbhash, true);
+                            log.MakeLog("-- As hex: " + thumbhash.ToString("X8"), true);
+
+                            
+                    }
+
+
+
+                    cobjc++;
+                }         
+                
+                            
+
+             
+
+            }
 
 
 
