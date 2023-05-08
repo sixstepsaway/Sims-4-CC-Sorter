@@ -16,6 +16,8 @@ using System.Collections;
 using System.Xml;
 using System.Security.Cryptography;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using SSAGlobals;
 using SimsCCManager.Packages.Containers;
 using SimsCCManager.Packages.Decryption;
@@ -43,6 +45,63 @@ namespace SimsCCManager.Packages.Sims4Search
         public IReadOnlyList<int> header {get; set;}        
     }
 
+    public struct ResourceKey {
+        public ulong instance;
+        public uint type;
+        public uint group;
+        
+        public ResourceKey(BinaryReader reader){
+            this.instance = reader.ReadUInt64(); 
+            this.type = reader.ReadUInt32(); 
+            this.group = reader.ReadUInt32();       
+        }
+
+        public override string ToString() => $"{type.ToString("X8")}-{group.ToString("X8")}-{instance.ToString("X16")}";
+    }
+
+    public struct Tag {
+        public int[] tagKey;  
+        public int[] empty; 
+
+        public Tag(BinaryReader reader, uint count){
+            if (count == 1){
+                this.tagKey = new int[count];
+                this.empty = new int[count];
+                this.tagKey[0] = reader.ReadUInt16();
+                this.empty[0] = 0;
+            } else {
+                this.tagKey = new int[count];
+                this.empty = new int[count];
+                for (int i = 0; i < count; i++){
+                    this.tagKey[i] = reader.ReadUInt16(); 
+                    this.empty[i] = reader.ReadUInt16(); 
+                }
+            }
+        }
+    }
+    
+    public struct ReadOBJDIndex {
+        public int version;
+        public uint refposition;
+        public int count;
+        public uint[] entrytype;
+        public uint[] position;
+
+        public ReadOBJDIndex(BinaryReader reader){
+            this.version = reader.ReadUInt16();
+            this.refposition = reader.ReadUInt32();
+            reader.BaseStream.Position = refposition;
+            this.count = reader.ReadUInt16();
+            this.entrytype = new uint[count];
+            this.position = new uint[count];
+            for (int i = 0; i < count; i++){
+                this.entrytype[i] = reader.ReadUInt32();
+                this.position[i] = reader.ReadUInt32();
+            }
+        }
+    }
+
+
     public class indexEntry
     {
         public string typeID;
@@ -68,6 +127,7 @@ namespace SimsCCManager.Packages.Sims4Search
         LoggingGlobals log = new LoggingGlobals();
         ReadEntries readentries = new ReadEntries();   
         System.Text.Encoding encoding = System.Text.Encoding.BigEndianUnicode;
+        GlobalVariables globals = new GlobalVariables();
 
         //Vars
         uint chunkOffset = 0;
@@ -98,7 +158,14 @@ namespace SimsCCManager.Packages.Sims4Search
             ArrayList linkData = new ArrayList();
             List<indexEntry> indexData = new List<indexEntry>();
             FileInfo packageinfo = new FileInfo(file); 
-            //List<string> iids = new List<string>();
+
+            List<TagsList> itemtags = new List<TagsList>();
+            List<TagsList> styletags = new List<TagsList>();
+            List<TagsList> sellingpointlist = new List<TagsList>();
+            List<TagsList> distinctItemTags = new List<TagsList>();
+            List<TagsList> distinctSellingPointTags = new List<TagsList>();
+            List<TagsList> distinctStyleTags = new List<TagsList>();
+
             List<string> allGUIDS = new List<string>();      
             List<string> distinctGUIDS = new List<string>();  
             List<string> allInstanceIDs = new List<string>();      
@@ -353,6 +420,8 @@ namespace SimsCCManager.Packages.Sims4Search
 
             }
 
+            long location;
+
             if (fileHas.Exists(x => x.term == "COBJ")){
                 List<int> entryspots = new List<int>();
                 int fh = 0;
@@ -366,8 +435,8 @@ namespace SimsCCManager.Packages.Sims4Search
                 foreach (int e in entryspots){
                     log.MakeLog("Opening COBJ #" + cobjc, true);
                     if (indexData[e].compressionType == "5A42"){
-                            dbpfFile.Seek(indexData[e].position, SeekOrigin.Begin);
-                            long entryEnd = indexData[e].position + indexData[e].memSize;
+                            dbpfFile.Seek(indexData[e].position, SeekOrigin.Begin);                            
+                            int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
                             log.MakeLog("Position: " + indexData[e].position, true);
                             log.MakeLog("Filesize: " + indexData[e].fileSize, true);
                             log.MakeLog("Memsize: " + indexData[e].memSize, true);
@@ -377,9 +446,15 @@ namespace SimsCCManager.Packages.Sims4Search
                             
                             BinaryReader decompbr = new BinaryReader(decomps);
 
+                            
+                            
+                            
                             uint version = decompbr.ReadUInt32();
                             log.MakeLog("Version: " + version, true);
                             log.MakeLog("-- As hex: " + version.ToString("X8"), true);
+                            uint commonblockversion = decompbr.ReadUInt32();
+                            log.MakeLog("Common Block Version: " + commonblockversion, true);
+                            log.MakeLog("-- As hex: " + commonblockversion.ToString("X8"), true);
                             uint namehash = decompbr.ReadUInt32();
                             log.MakeLog("NameHash: " + namehash, true);
                             log.MakeLog("-- As hex: " + namehash.ToString("X8"), true);
@@ -389,28 +464,220 @@ namespace SimsCCManager.Packages.Sims4Search
                             uint price = decompbr.ReadUInt32();
                             log.MakeLog("Price: " + price, true);
                             log.MakeLog("-- As hex: " + price.ToString("X8"), true);
-                            //bunch of stuff i dont need rn
-                            decompbr.ReadBytes(12);
-                            decompbr.ReadBytes(14);
-                            decompbr.ReadBytes(2);
-                            decompbr.ReadBytes(32);
 
-                            uint thumbhash = decompbr.ReadUInt32();
+                            ulong thumbhash = decompbr.ReadUInt64();
                             log.MakeLog("Thumbnail Hash: " + thumbhash, true);
                             log.MakeLog("-- As hex: " + thumbhash.ToString("X8"), true);
 
+                            uint devcatflags = decompbr.ReadUInt32();
+                            log.MakeLog("Dev Category Flags: " + devcatflags, true);
+                            log.MakeLog("-- As hex: " + devcatflags.ToString("X8"), true);
+                            
+                            int tgicount = decompbr.ReadByte();
+                            log.MakeLog("TGI Count: " + tgicount, true);
+
+                            ResourceKey resourcekey = new ResourceKey(decompbr);
+                            log.MakeLog(resourcekey.ToString(), true);
+                            
+                            if (commonblockversion >= 10)
+                            {
+                                int packId = decompbr.ReadInt16();
+                                log.MakeLog("Pack ID: " + packId, true);
+                                int packFlags = decompbr.ReadByte();
+                                log.MakeLog("Pack Flags: " + packFlags, true);
+                                byte[] reservedBytes = decompbr.ReadBytes(9);
+                            } else {
+                                int unused2 = decompbr.ReadByte();
+                                if (unused2 > 0)
+                                {
+                                    int unused3 = decompbr.ReadByte();
+                                }
+                            }
+                            
+                            uint count = decompbr.ReadUInt32();
+                            log.MakeLog("Tags Count: " + count, true);
+                            Tag tags = new Tag(decompbr, count);
+                            for (int i = 0; i < count; i++){
+                                log.MakeLog("Tag " + i + " value is: " + tags.tagKey[i], true);
+                                
+                                if (tags.tagKey[i] != 0){
+                                    if (TypeListings.S4BBFunctionTags.Exists(x => x.typeID == tags.tagKey[i].ToString())) {
+                                        foreach (typeList item in TypeListings.S4BBFunctionTags){
+                                            if (item.typeID == tags.tagKey[i].ToString()){
+                                                if ((itemtags.Exists(x => x.shortval == tags.tagKey[i])) || (itemtags.Exists(x => x.stringval == tags.tagKey[i].ToString()))){
+
+                                                } else {
+                                                    itemtags.Add(new TagsList{ shortval = (short)tags.tagKey[i], stringval = item.info});
+                                                    log.MakeLog("Tag " + i + " matched to " + item.info, true);
+                                                }
+                                                                                                
+                                            }
+                                        }
+                                    } else {
+                                        if ((itemtags.Exists(x => x.shortval == tags.tagKey[i])) || (itemtags.Exists(x => x.stringval == tags.tagKey[i].ToString()))){
+
+                                        } else {
+                                            itemtags.Add(new TagsList{ shortval = (short)tags.tagKey[i], stringval = "Needs Identification"});
+                                            TypeListings.S4BBFunctionTags.Add(new typeList{ typeID = tags.tagKey[i].ToString(), info = "Needs Identification" });
+                                            log.MakeLog("Tag " + i + " has no match, adding it to json.", true);
+                                            globals.UpdateBBTags();
+                                        }
+                                    }
+                                } else {
+                                    if ((itemtags.Exists(x => x.shortval == tags.tagKey[i])) || (itemtags.Exists(x => x.stringval == tags.tagKey[i].ToString()))){
+
+                                    } else {
+                                        itemtags.Add(new TagsList{ shortval = (short)tags.tagKey[i]});
+                                    }
+                                }
+                            }
+                            location = decompbr.BaseStream.Position;
+                            log.MakeLog("Reader location: " + location, true);
+                            count = decompbr.ReadUInt32();
+                            log.MakeLog("Selling Point Count: " + count, true);
+                            Tag sellingtags = new Tag(decompbr, count);
+                            for (int i = 0; i < count; i++){
+                                log.MakeLog("Tag " + i + " value is: " + sellingtags.tagKey[i], true);
+                                
+                                if (sellingtags.tagKey[i] != 0){
+                                    if (TypeListings.S4BBFunctionTags.Exists(x => x.typeID == sellingtags.tagKey[i].ToString())) {
+                                        foreach (typeList item in TypeListings.S4BBFunctionTags){
+                                            if (item.typeID == sellingtags.tagKey[i].ToString()){
+                                                if ((sellingpointlist.Exists(x => x.shortval == tags.tagKey[i])) || (sellingpointlist.Exists(x => x.stringval == tags.tagKey[i].ToString()))){
+
+                                                } else {
+                                                sellingpointlist.Add(new TagsList{ shortval = (short)sellingtags.tagKey[i], stringval = item.info});
+                                                log.MakeLog("Tag " + i + " matched to " + item.info, true);
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        if ((sellingpointlist.Exists(x => x.shortval == tags.tagKey[i])) || (sellingpointlist.Exists(x => x.stringval == tags.tagKey[i].ToString()))){
+
+                                        } else {
+                                            sellingpointlist.Add(new TagsList{ shortval = (short)sellingtags.tagKey[i], stringval = "Needs Identification"});
+                                            TypeListings.S4BBFunctionTags.Add(new typeList{ typeID = sellingtags.tagKey[i].ToString(), info = "Needs Identification" });
+                                            log.MakeLog("Tag " + i + " has no match, adding it to json.", true);
+                                            globals.UpdateBBTags();
+                                        }
+                                    }
+                                } else {
+                                    if ((sellingpointlist.Exists(x => x.shortval == tags.tagKey[i])) || (sellingpointlist.Exists(x => x.stringval == tags.tagKey[i].ToString()))){
+
+                                    } else {
+                                        sellingpointlist.Add(new TagsList{ shortval = (short)sellingtags.tagKey[i]});
+                                    }
+                                }
+
+                            }
+
+                            uint unlockByHash = decompbr.ReadUInt32();
+                            log.MakeLog("UnlockBy Hash: " + unlockByHash, true);
+                            
+                            uint unlockedByHash = decompbr.ReadUInt32();
+                            log.MakeLog("UnlockedBy Hash: " + unlockedByHash, true);
+
+                            int swatchColorSortPriority = decompbr.ReadUInt16();
+                            log.MakeLog("Swatch Sort Priority: " + swatchColorSortPriority, true);
+
+                            ulong varientThumbImageHash = decompbr.ReadUInt64();
+                            log.MakeLog("Varient Thumb Image Hash: " + varientThumbImageHash, true);
+                            /*
+                            uint auralMaterialsVersion = decompbr.ReadUInt32();
+                            log.MakeLog("Aural Materials Version: " + auralMaterialsVersion.ToString("X8"), true);
+                            uint auralMaterials1 = decompbr.ReadUInt32();
+                            log.MakeLog("Aural Materials 1: " + auralMaterials1.ToString("X8"), true);
+                            uint auralMaterials2 = decompbr.ReadUInt32();
+                            log.MakeLog("Aural Materials 2: " + auralMaterials2.ToString("X8"), true);
+                            uint auralMaterials3 = decompbr.ReadUInt32();
+                            log.MakeLog("Aural Materials 3: " + auralMaterials3.ToString("X8"), true);
+                            uint auralMaterialsPropertiesVersion = decompbr.ReadUInt32();
+                            log.MakeLog("Aural Materials Properties Version: " + auralMaterialsPropertiesVersion.ToString("X8"), true);
+                            uint auralQuality = decompbr.ReadUInt32();
+                            log.MakeLog("Aural Quality: " + auralQuality.ToString("X8"), true);
+                            uint auralAmbient = decompbr.ReadUInt32();
+                            log.MakeLog("Aural Ambient Object: " + auralAmbient.ToString("X8"), true);
+                            int unknown02 = decompbr.ReadUInt16();
+                            log.MakeLog("Unknown: " + unknown02.ToString("X4"), true);                            
+                            uint unused0 = decompbr.ReadUInt32();
+                            log.MakeLog("Unused0: " + unused0.ToString("X8"), true);
+                            uint unused1 = decompbr.ReadUInt32();
+                            log.MakeLog("Unused1: " + unused1.ToString("X8"), true);
+                            uint unused02 = decompbr.ReadUInt32();
+                            log.MakeLog("Unused2: " + unused02.ToString("X8"), true);
+                            uint placementflagshigh = decompbr.ReadUInt32();
+                            log.MakeLog("Placement Flags High: " + placementflagshigh.ToString("X8"), true);
+                            uint placementflagslow = decompbr.ReadUInt32();
+                            log.MakeLog("Placement Flags Low: " + placementflagslow.ToString("X8"), true);
+                            ulong slottypeset = decompbr.ReadUInt64();
+                            log.MakeLog("Slot Type Set: " + slottypeset.ToString("X16"), true);
+                            int slotdecosize = decompbr.ReadUInt16();
+                            log.MakeLog("Slot Deco Size: " + slotdecosize.ToString("X4"), true);   
+                            ulong cataloggroup = decompbr.ReadUInt64();
+                            log.MakeLog("Catalog Group: " + cataloggroup.ToString("X16"), true);         
+                            */
                             
                     }
-
-
-
                     cobjc++;
-                }         
-                
+                }
+            }
+
+            if (fileHas.Exists(x => x.term == "OBJD")){
+                List<int> entryspots = new List<int>();
+                int fh = 0;
+                foreach (fileHasList item in fileHas) {
+                    if (item.term == "OBJD"){
+                        entryspots.Add(fh);                       
+                    }
+                    fh++;
+                }    
+                int objdc = 0;
+                foreach (int e in entryspots){
+                    log.MakeLog("Opening OBJD #" + objdc, true);
+                    if (indexData[e].compressionType == "5A42"){
+                            dbpfFile.Seek(indexData[e].position, SeekOrigin.Begin);                            
+                            int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
+                            log.MakeLog("Position: " + indexData[e].position, true);
+                            log.MakeLog("Filesize: " + indexData[e].fileSize, true);
+                            log.MakeLog("Memsize: " + indexData[e].memSize, true);
+                            log.MakeLog("Entry ends at " + entryEnd, true);
+                            byte[] entry = readFile.ReadBytes((int)indexData[e].memSize);
+                            Stream decomps = S4Decryption.Decompress(entry);
+                            
+                            BinaryReader decompbr = new BinaryReader(decomps);
+
+                            ReadOBJDIndex readOBJD = new ReadOBJDIndex(decompbr);
+                            for (int m = 0; m < readOBJD.count; m++){
+                                log.MakeLog(readOBJD.entrytype[m].ToString("X8") + " is at " + readOBJD.position[m], true);
+                                decompbr.BaseStream.Position = readOBJD.position[m];
+                                decompbr.ReadBytes(4);
+                                byte[] somebytes = decompbr.ReadBytes(16);
+                                string name = System.Text.Encoding.UTF8.GetString(somebytes);
+                                log.MakeLog("String: " + name, true);
+                                somebytes = decompbr.ReadBytes(16);
+                                string desc = System.Text.Encoding.UTF8.GetString(somebytes);
+                                log.MakeLog("Desc: " + desc, true);
+                                ulong tuningid = decompbr.ReadUInt64();
+                                log.MakeLog("Tuning ID: " + tuningid.ToString("X16"), true);
+                                
+                            }
+
+                             
+                            
+                            /*int version = decompbr.ReadUInt16();
+                            log.MakeLog("Version: " + version.ToString("X4"), true);
+                            decompbr.ReadBytes(89);
+                            ulong tuningid = decompbr.ReadUInt64();
+                            /*string tuningid1 = (readFile.ReadUInt32() << 32).ToString("X8");
+                            string tuningid2 = (readFile.ReadUInt32() << 32).ToString("X8");
+                            string tuningid = tuningid1 + tuningid2;*//*
+                            log.MakeLog("Tuning ID: " + tuningid.ToString("X8"), true);*/
                             
 
-             
-
+                    }
+                    objdc++;
+                }
+                
             }
 
 
@@ -481,10 +748,23 @@ namespace SimsCCManager.Packages.Sims4Search
             
 
 
+            distinctStyleTags = styletags.Distinct().ToList();
+            thisPackage.StyleTags.AddRange(distinctStyleTags);
+
+            distinctItemTags = itemtags.Distinct().ToList();
+            thisPackage.CatalogTags.AddRange(distinctItemTags);
+            
+            distinctSellingPointTags = sellingpointlist.Distinct().ToList();
+            thisPackage.SellingPointTags.AddRange(distinctSellingPointTags);
+
             distinctInstanceIDs = allInstanceIDs.Distinct().ToList();
             thisPackage.InstanceIDs.AddRange(distinctInstanceIDs);
+
+
             distinctGUIDS = allGUIDS.Distinct().ToList();
             thisPackage.ObjectGUID.AddRange(distinctGUIDS);
+
+
             log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
             log.MakeLog(thisPackage.ToString(), false);
             Containers.Containers.allSims4Packages.Add(thisPackage);
@@ -495,7 +775,7 @@ namespace SimsCCManager.Packages.Sims4Search
 
             packageparsecount++;
 
-        }
+        }        
 
         public static String hexToASCII(String hex)
         {

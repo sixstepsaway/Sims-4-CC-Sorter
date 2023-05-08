@@ -48,10 +48,8 @@
                     <DataGridCheckBoxColumn Header="" Binding="{Binding selected}" Width="5"/>
                     <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>                     
                     <DataGridTextColumn Header="Package Name" Binding="{Binding PackageName}" Width="*"/> 
-                    <DataGridTextColumn Header="Package Name" Binding="{Binding Type}" Width="*"/>
-                    <DataGridTextColumn Header="Package Name" Binding="{Binding Game}" Width="*"/>
-                    <DataGridTextColumn Header="Package Name" Binding="{Binding InstanceIDs}" Width="*"/>
-                    <DataGridTextColumn Header="Package Name" Binding="{Binding ObjectGUID}" Width="*"/>
+                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*"/>
+                    <DataGridTextColumn Header="Game" Binding="{Binding GameVersion}" Width="*"/>
                     
                 </DataGrid.Columns>        
             </DataGrid>

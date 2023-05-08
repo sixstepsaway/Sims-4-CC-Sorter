@@ -8,8 +8,8 @@ using System.Threading;
 using System.Runtime.CompilerServices;
 using System.Reflection;
 using SimsCCManager.Packages.Containers;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 
 
@@ -25,10 +25,12 @@ namespace SSAGlobals {
     }
 
     public class TypeListings {
+        JsonSerializer serializer = new JsonSerializer();
 
         public static List<typeList> AllTypesS2;
         public static List<typeList> AllTypesS3;
         public static List<typeList> AllTypesS4;
+        public static List<typeList> S4BBFunctionTags;
         public static List<FunctionSortList> S2BuyFunctionSort;
         public static List<FunctionSortList> S2BuildFunctionSort;
         public static List<FunctionSortList> S3BuyFunctionSort;
@@ -532,6 +534,128 @@ namespace SSAGlobals {
             return AllTypes;
         }
     
+        
+        public void creates4functagsList(){
+            /*List<typeList> s4fl = new List<typeList>();
+            s4fl.Add(new typeList { typeID="0x0041", info="Color_Red" });
+            s4fl.Add(new typeList { typeID="0x0044", info="Color_Blue" });
+            s4fl.Add(new typeList { typeID="0x005A", info="Color_DarkBrown" });
+            s4fl.Add(new typeList { typeID="0x005B", info="Color_Brown" });
+            s4fl.Add(new typeList { typeID="0x005C", info="Color_Gray" });
+            s4fl.Add(new typeList { typeID="0x005D", info="Color_Black" });
+            s4fl.Add(new typeList { typeID="0x005F", info="Color_Orange" });
+            s4fl.Add(new typeList { typeID="0x0068", info="Color_Yellow" });
+            s4fl.Add(new typeList { typeID="0x0069", info="Color_White" });
+            s4fl.Add(new typeList { typeID="0x006B", info="Color_Purple" });
+            s4fl.Add(new typeList { typeID="0x00B0", info="BuyCatEE_Bar" });
+            s4fl.Add(new typeList { typeID="0x00B4", info="BuyCatPA_Sink" });
+            s4fl.Add(new typeList { typeID="0x00B6", info="BuyCatPA_SinkFreestanding" });
+            s4fl.Add(new typeList { typeID="0x00C5", info="BuyCatLD_WindowTreatment" });
+            s4fl.Add(new typeList { typeID="0x00C8", info="BuyCatLD_Sculpture" });
+            s4fl.Add(new typeList { typeID="0x00C9", info="BuyCatLD_WallDecoration" });
+            s4fl.Add(new typeList { typeID="0x00CB", info="BuyCatLD_TableLamp" });
+            s4fl.Add(new typeList { typeID="0x00CD", info="BuyCatLD_CeilingLight" });
+            s4fl.Add(new typeList { typeID="0x00CE", info="BuyCatLD_OutdoorLight" });
+            s4fl.Add(new typeList { typeID="0x00CF", info="BuyCatLD_Mirror" });
+            s4fl.Add(new typeList { typeID="0x00D0", info="BuyCatLD_MiscLight" });
+            s4fl.Add(new typeList { typeID="0x00D4", info="BuyCatSS_DiningTable" });
+            s4fl.Add(new typeList { typeID="0x00D5", info="BuyCatSS_EndTable" });
+            s4fl.Add(new typeList { typeID="0x00D6", info="BuyCatSS_CoffeeTable" });
+            s4fl.Add(new typeList { typeID="0x00D9", info="BuyCatSS_DiningChair" });
+            s4fl.Add(new typeList { typeID="0x00DA", info="BuyCatSS_Sofa" });
+            s4fl.Add(new typeList { typeID="0x00DB", info="BuyCatSS_LoveSeat" });
+            s4fl.Add(new typeList { typeID="0x00E0", info="BuyCatSS_Barstool" });
+            s4fl.Add(new typeList { typeID="0x00E3", info="BuyCatSS_Dresser" });
+            s4fl.Add(new typeList { typeID="0x00E4", info="BuyCatSS_MiscSurface" });
+            s4fl.Add(new typeList { typeID="0x00E5", info="BuyCatSS_MiscComfort" });
+            s4fl.Add(new typeList { typeID="0x0125", info="Color_BrownLight" });
+            s4fl.Add(new typeList { typeID="0x0136", info="BuyCatLD_WallLight" });
+            s4fl.Add(new typeList { typeID="0x01BE", info="BuyCat_Painting" });
+            s4fl.Add(new typeList { typeID="0x01E4", info="Func_Art" });
+            s4fl.Add(new typeList { typeID="0x01E6", info="Func_Table" });
+            s4fl.Add(new typeList { typeID="0x01F2", info="Func_Bar" });
+            s4fl.Add(new typeList { typeID="0x01F3", info="Func_Drink" });
+            s4fl.Add(new typeList { typeID="0x01F4", info="Func_Beverage" });
+            s4fl.Add(new typeList { typeID="0x0211", info="Func_Party" });
+            s4fl.Add(new typeList { typeID="0x021B", info="Build_RoofAttachment" });
+            s4fl.Add(new typeList { typeID="0x025A", info="Venue_Object_PatioTable" });
+            s4fl.Add(new typeList { typeID="0x0313", info="Build_Buy_World_Objects" });
+            s4fl.Add(new typeList { typeID="0x037E", info="Func_Painting" });
+            s4fl.Add(new typeList { typeID="0x0395", info="BuyCatSS_OutdoorTable" });
+            s4fl.Add(new typeList { typeID="0x0397", info="Build_RoofChimney" });
+            s4fl.Add(new typeList { typeID="0x03C2", info="BuyCatSS_DiningTableShort" });
+            s4fl.Add(new typeList { typeID="0x03C4", info="BuyCatLD_MirrorWall" });
+            s4fl.Add(new typeList { typeID="0x03D2", info="BuyCatLD_CurtainBlind" });
+            s4fl.Add(new typeList { typeID="0x03DD", info="Func_Couch" });
+            s4fl.Add(new typeList { typeID="0x03E5", info="Func_Energy" });
+            s4fl.Add(new typeList { typeID="0x03E6", info="Func_Hygiene" });
+            s4fl.Add(new typeList { typeID="0x03EE", info="Func_DiningChair" });
+            s4fl.Add(new typeList { typeID="0x03F0", info="Func_Stool" });
+            s4fl.Add(new typeList { typeID="0x03F1", info="Func_BedsideTable" });
+            s4fl.Add(new typeList { typeID="0x03F3", info="Func_PatioFurniture" });
+            s4fl.Add(new typeList { typeID="0x03F6", info="Func_Curtain" });
+            s4fl.Add(new typeList { typeID="0x044B", info="Func_Charisma" });
+            s4fl.Add(new typeList { typeID="0x0456", info="Func_Basin" });
+            s4fl.Add(new typeList { typeID="0x0458", info="Func_WallLamp" });
+            s4fl.Add(new typeList { typeID="0x0463", info="BuyCatSS_AccentTable" });
+            s4fl.Add(new typeList { typeID="0x0472", info="Func_Faucet" });
+            s4fl.Add(new typeList { typeID="0x0481", info="Func_Blinds" });
+            s4fl.Add(new typeList { typeID="0x0482", info="Func_Shades" });
+            s4fl.Add(new typeList { typeID="0x04ED", info="BuyCat_Shareable" });
+            s4fl.Add(new typeList { typeID="0x0521", info="Func_Sink" });
+            s4fl.Add(new typeList { typeID="0x0548", info="BuyCat_Community" });
+            s4fl.Add(new typeList { typeID="0x0549", info="BuyCat_Venue_Bar" });
+            s4fl.Add(new typeList { typeID="0x054A", info="BuyCat_Venue_Club" });
+            s4fl.Add(new typeList { typeID="0x054E", info="BuyCat_Venue_Lounge" });
+            s4fl.Add(new typeList { typeID="0x054F", info="BuyCat_Venue_Museum" });
+            s4fl.Add(new typeList { typeID="0x0550", info="BuyCat_Venue_Park" });
+            s4fl.Add(new typeList { typeID="0x055E", info="Func_Light_NonElectric" });
+            s4fl.Add(new typeList { typeID="0x05A6", info="Func_Light_CandleWithAutoLights" });
+            s4fl.Add(new typeList { typeID="0x062B", info="BuyCat_Venue_Karaoke" });
+            s4fl.Add(new typeList { typeID="0x0644", info="BuyCat_Venue_ArtsCenter" });
+            s4fl.Add(new typeList { typeID="0x0665", info="Build_Buy_NoAutonomy_Lights" });
+            s4fl.Add(new typeList { typeID="0x068C", info="Func_ToddlerSeating" });
+            s4fl.Add(new typeList { typeID="0x0756", info="Func_PetScratchableFurniture" });
+            s4fl.Add(new typeList { typeID="0x0789", info="Func_Insane_TalkToObjects" });
+            s4fl.Add(new typeList { typeID="0x0803", info="Func_Archaeology_CanBeStudied_BG" });
+            s4fl.Add(new typeList { typeID="0x081C", info="Func_Lightning_CanStrike" });
+            s4fl.Add(new typeList { typeID="0x0840", info="Func_HolidayTradition_Party" });
+            s4fl.Add(new typeList { typeID="0x0855", info="Func_SnobArtAssess" });
+            s4fl.Add(new typeList { typeID="0x085B", info="Func_SwipeHouseholdInventory_Basic" });
+            s4fl.Add(new typeList { typeID="0x085C", info="Func_SwipeHouseholdInventory_MedSkill" });
+            s4fl.Add(new typeList { typeID="0x085D", info="Func_SwipeHouseholdInventory_HighSkill" });
+            s4fl.Add(new typeList { typeID="0x0875", info="Func_Mirror_NoVanity" });
+            s4fl.Add(new typeList { typeID="0x08AB", info="Func_OffTheGrid" });
+            s4fl.Add(new typeList { typeID="0x0947", info="Func_eco_ecofriendy_appliances" });
+            s4fl.Add(new typeList { typeID="0x0948", info="Func_EcoFootprint_ObjectState" });
+            s4fl.Add(new typeList { typeID="0x094E", info="BuyCat_OTG_Lighting" });
+            s4fl.Add(new typeList { typeID="0x0951", info="BuyCat_OTG_Plumbing" });
+            s4fl.Add(new typeList { typeID="0x097B", info="Func_OffTheGrid_Toggle_UtilityUsage" });
+            s4fl.Add(new typeList { typeID="0x0983", info="Func_RepairBurnt_VariableHeight_BG" });
+            s4fl.Add(new typeList { typeID="0x098D", info="Func_Dumpster_Deal_BurntAndScratched" });
+            s4fl.Add(new typeList { typeID="0x098F", info="Func_Dumpster_Deal_Plumbing" });
+            s4fl.Add(new typeList { typeID="0x0990", info="Func_Dumpster_Deal_Miscellaneous" });
+            s4fl.Add(new typeList { typeID="0x09C6", info="Func_Purchase_Vacation_Supplies" });
+            s4fl.Add(new typeList { typeID="0x09D4", info="Func_GetsDirty" });
+            s4fl.Add(new typeList { typeID="0x0A04", info="unknown" });
+            s4fl.Add(new typeList { typeID="0x0ABA", info="unknown" });
+            s4fl.Add(new typeList { typeID="0x0AD1", info="unknown" });
+            s4fl.Add(new typeList { typeID="0x0AEA", info="unknown" });
+            s4fl.Add(new typeList { typeID="0x1080C", info="Func_FreeLanceMaker_Couch" });
+            s4fl.Add(new typeList { typeID="0x1C813", info="unknown" });
+            s4fl.Add(new typeList { typeID="0x304A", info="Func_SimRay_Transform_AlienVisitor_Allow" });
+            s4fl.Add(new typeList { typeID="0x3060", info="Func_Retail_NPC_ItemForSale" });
+            s4fl.Add(new typeList { typeID="0xC00F", info="Func_Spells_Steal" });
+            s4fl.Add(new typeList { typeID="0xE018", info="Func_Scratched_Low" });
+            return s4fl;*/
+
+            using (StreamReader file = File.OpenText("data\\s4bbtags.json"))
+            {                
+                TypeListings.S4BBFunctionTags = (List<typeList>)serializer.Deserialize(file, typeof(List<typeList>));
+            }
+        }
+        
+        
         public List<FunctionSortList> createS2buyfunctionsortlist(){
             List<FunctionSortList> s2fs = new List<FunctionSortList>();
             //seating
@@ -722,6 +846,7 @@ namespace SSAGlobals {
     
 
     public class GlobalVariables {
+        JsonSerializer serializer = new JsonSerializer();
         public static bool debugMode = true;
         public static bool loadedSaveData = false;
         public static string ModFolder;
@@ -773,10 +898,20 @@ namespace SSAGlobals {
             TypeListings.S2BuyFunctionSort = typeListings.createS2buyfunctionsortlist();
             log.MakeLog("Created sims 2 buy function sort list.", true);
             TypeListings.S2BuildFunctionSort = typeListings.createS2buildfunctionsortlist();
-            log.MakeLog("Created sims 2 build function sort.", true);            
+            log.MakeLog("Created sims 2 build function sort.", true);  
+            typeListings.creates4functagsList();
+            log.MakeLog("Created sims 4 function tags list.", true);            
             log.MakeLog("Finished initializing.", true);
-        }       
+        }   
+
+        public void UpdateBBTags(){
+           using (StreamWriter file = File.CreateText("data\\s4bbtags.json"))
+            {
+                serializer.Serialize(file, TypeListings.S4BBFunctionTags);
+            } 
+        }    
     }
+
 
     public class SaveData {
         public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);

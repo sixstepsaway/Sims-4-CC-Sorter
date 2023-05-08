@@ -10,12 +10,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.2" />
+    <EmbeddedResource Include="data\s4bbtags.json"/>
   </ItemGroup>
+  <Target Name="BeforeBuild">
+    <ItemGroup>
+        <Content Include="data\*.*" />
+        <Content Include="img\*.*" />
+    </ItemGroup>
+  </Target>
+
 
 </Project>

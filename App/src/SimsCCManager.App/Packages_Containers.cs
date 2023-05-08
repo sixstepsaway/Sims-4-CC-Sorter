@@ -33,6 +33,7 @@ namespace SimsCCManager.Packages.Containers
         public string PackageName {get; set;}
         public string Type {get; set;}
         public int Game {get; set;}
+        public string GameVersion {get; set;}
         public string DBPF {get; set;}
         public List<string> InstanceIDs {get; set;}
         public uint Major {get; set;}

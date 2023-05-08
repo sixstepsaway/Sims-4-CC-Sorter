@@ -842,12 +842,19 @@ namespace SimsCCManager.Packages.Sims2Search
                 log.MakeLog("Getting ObjectGUID " + objdvar.ObjectGUID.ToString() + " from objdvar.", true);
                 allGUIDS.AddRange(objdvar.ObjectGUID);
 
-            if ((thisPackage.XMLType == "floor" || thisPackage.XMLType == "wallpaper")) {
-                thisPackage.FunctionSubcategory = thisPackage.XMLSubtype;
+            if (thisPackage.XMLType == "floor") {
+                thisPackage.Type = "Floor";
+            } else if (thisPackage.XMLType == "wallpaper") {
+                thisPackage.Type = "Wallpaper";
+            } else if (thisPackage.XMLType == "terrainPaint") {
+                thisPackage.Type = "Terrain Paint";
             }
             if (!String.IsNullOrWhiteSpace(thisPackage.XMLType)){
                 thisPackage.Function = thisPackage.XMLType;
                 thisPackage.Type = thisPackage.XMLType;
+            }
+            if (!String.IsNullOrWhiteSpace(thisPackage.XMLSubtype)){
+                thisPackage.FunctionSubcategory = thisPackage.XMLSubtype;
             }
 
             //log.MakeLog("In infovar: " + infovar.ToString(), true);
