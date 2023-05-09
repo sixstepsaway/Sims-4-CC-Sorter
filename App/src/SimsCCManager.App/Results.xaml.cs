@@ -53,6 +53,8 @@ namespace SimsCCManager.SortingUIResults {
             }
         }
 
+        //if selected --> right click "make otg > lights" --> add thing to package
+
         private void menu_Click(object sender, EventArgs e)
         {
             log.MakeLog("Closing application.", false);

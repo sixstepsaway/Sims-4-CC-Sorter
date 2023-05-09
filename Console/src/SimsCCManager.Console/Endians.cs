@@ -12,6 +12,7 @@ namespace SimsCCManager.Decryption.EndianDecoding
             Big
         }    
     public static class Endian
+
     {
         public static uint ReadValueU32(this BinaryReader stream, EndianType endian){
             var data = stream.ReadBytes(4);

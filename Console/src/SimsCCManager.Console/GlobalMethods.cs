@@ -1005,41 +1005,5 @@ namespace SSAGlobals {
             }
             finally {}
             }
-    }
-    /*
-
-    work in progress dont look at me
-
-    public class SortingGroupsJSON {
-        public string type {get; set;}
-        public string folder {get; set;}
-        public string matches {get; set;}
-    }
-
-    public class OutsideInformation {
-        public void WriteJSON()
-        {
-            var weatherForecast = new WeatherForecast
-            {
-                Date = DateTime.Parse("2019-08-01"),
-                TemperatureCelsius = 25,
-                Summary = "Hot"
-            };
-
-            string fileName = "WeatherForecast.json"; 
-            string jsonString = JsonSerializer.Serialize(weatherForecast);
-            File.WriteAllText(fileName, jsonString);
-
-            Console.WriteLine(File.ReadAllText(fileName));
-        }
-
-        public void ReadJSON()
-        {
-            string fileName = LoggingGlobals.mydocs + "\\data\\Sorting.json";
-            string jsonString = File.ReadAllText(fileName);
-            SortingGroupsJSON SortingGroups = JsonSerializer.Deserialize<SortingGroupsJSON>(jsonString)!;
-           
-        }
-        
-    }*/
+    }    
 }

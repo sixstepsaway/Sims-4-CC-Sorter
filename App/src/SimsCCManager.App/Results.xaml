@@ -55,10 +55,10 @@
             </DataGrid>
             <Grid Grid.Column="1" VerticalAlignment="Bottom" Margin="15, 15, 0, 10" Grid.Row="3">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="125"/>
+                    <ColumnDefinition Width="200"/>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
@@ -98,6 +98,10 @@
                 </StackPanel>
                 <StackPanel Orientation="Vertical" Grid.Column="2" VerticalAlignment="Center">
                     <Button Content="Fix Load Errors" Click="loadErrorFix_Click" FontSize="14" Padding="4"/>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" Grid.Column="3" VerticalAlignment="Center">
+                    <TextBlock Text="Search" Margin="25, 0, 0, 5"/>
+                    <TextBox x:Name="SearchBox" Foreground="#FF372C42" Background="#FFCCD3DA" Margin="20, 0, 0, 0"/>
                 </StackPanel>
                 
             </Grid>

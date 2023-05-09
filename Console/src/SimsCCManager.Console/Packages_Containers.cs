@@ -71,7 +71,9 @@ namespace SimsCCManager.Packages.Containers
         public string Function {get; set;}
         public string FunctionSubcategory {get; set;}
         public List<string> RoomSort {get; set;}
+        public List<string> Components {get; set;}
         public List<TypeCounter> Entries {get; set;}
+        public List<string> Flags {get; set;}
         public List<TagsList> CatalogTags {get; set;}
         public List<TagsList> SellingPointTags {get; set;}
         public List<TagsList> StyleTags {get; set;}
@@ -90,9 +92,11 @@ namespace SimsCCManager.Packages.Containers
             RequiredEPs = new List<string>();
             RoomSort = new List<string>();
             MatchingRecolors = new List<string>();
+            Components = new List<string>();
             MatchingConflicts = new List<string>();
             Entries = new List<TypeCounter>();
             NotAPackage = new NotPackage();
+            Flags = new List<string>();
             CatalogTags = new List<TagsList>();
             StyleTags = new List<TagsList>();
             SellingPointTags = new List<TagsList>();
@@ -117,7 +121,7 @@ namespace SimsCCManager.Packages.Containers
                 if (string.IsNullOrEmpty(retVal)){
                     retVal +=  tag.shortval.ToString() + ", " + tag.stringval;
                 } else {
-                    retVal += string.Format("\n " + tag.shortval.ToString() + ", " + tag.stringval);
+                    retVal += string.Format(", " + tag.shortval.ToString() + ": " + tag.stringval);
                 }
             }
             return retVal;
@@ -140,7 +144,7 @@ namespace SimsCCManager.Packages.Containers
         {
             //https://regex101.com/r/0VWSR7/1
             //https://regex101.com/r/9MiSh9/1
-            return string.Format("Title : {0} \n Description : {1} \n Location : {2} \n PackageName : {3} \n Type : {4} \n Game : {5} \n GameVersion : {6} \n DBPF : {7} \n InstanceIDs : {8} \n Major : {9} \n Minor : {10} \n DateCreated : {11} \n DateModified : {12} \n mnFileVersion : {13} \n mnUserVersion : {14} \n IndexMajorVersion : {15} \n mnIndexRecordEntryCount : {16} \n mnIndexRecordPositionLow : {17} \n mnIndexRecordSize : {18} \n mnIndexRecordPosition : {19} \n IndexCount : {20} \n IndexOffset : {21} \n IndexSize : {22} \n HolesCount : {23} \n HolesOffset : {24} \n HolesSize : {25} \n IndexMinorVersion : {26} \n XMLType : {27} \n XMLSubtype : {28} \n XMLCategory : {29} \n XMLModelName : {30} \n ObjectGUID : {31} \n XMLCreator : {32} \n XMLAge : {33} \n XMLGender : {34} \n RequiredEPs : {35} \n Function : {36} \n FunctionSubcategory : {37} \n RoomSort : {38} \n Entries : {39} \n CatalogTags : {40} \n SellingPointTags : {41} \n StyleTags : {42} \n Broken : {43} \n Mesh : {44} \n Recolor : {45} \n Orphan : {46} \n MatchingMesh : {47} \n MatchingRecolors : {48} \n MatchingConflicts : {49} \n NotAPackage : {50}", this.Title, this.Description, this.Location, this.PackageName, this.Type, this.Game, this.GameVersion, this.DBPF, GetFormatListString(this.InstanceIDs), this.Major, this.Minor, this.DateCreated, this.DateModified, this.mnFileVersion, this.mnUserVersion, this.IndexMajorVersion, this.mnIndexRecordEntryCount, this.mnIndexRecordPositionLow, this.mnIndexRecordSize, this.mnIndexRecordPosition, this.IndexCount, this.IndexOffset, this.IndexSize, this.HolesCount, this.HolesOffset, this.HolesSize, this.IndexMinorVersion, this.XMLType, this.XMLSubtype, this.XMLCategory, this.XMLModelName, GetFormatListString(this.ObjectGUID), this.XMLCreator, this.XMLAge, this.XMLGender, GetFormatListString(this.RequiredEPs), this.Function, this.FunctionSubcategory, GetFormatListString(this.RoomSort), GetFormatTypeCounter(this.Entries), GetFormatTagsList(this.CatalogTags), GetFormatTagsList(this.SellingPointTags), GetFormatTagsList(this.StyleTags), this.Broken, this.Mesh, this.Recolor, this.Orphan, this.MatchingMesh, GetFormatListString(this.MatchingRecolors), GetFormatListString(this.MatchingConflicts), this.NotAPackage);
+            return string.Format("Title : {0} \n Description : {1} \n Location : {2} \n PackageName : {3} \n Type : {4} \n Game : {5} \n GameVersion : {6} \n DBPF : {7} \n InstanceIDs : {8} \n Major : {9} \n Minor : {10} \n DateCreated : {11} \n DateModified : {12} \n mnFileVersion : {13} \n mnUserVersion : {14} \n IndexMajorVersion : {15} \n mnIndexRecordEntryCount : {16} \n mnIndexRecordPositionLow : {17} \n mnIndexRecordSize : {18} \n mnIndexRecordPosition : {19} \n IndexCount : {20} \n IndexOffset : {21} \n IndexSize : {22} \n HolesCount : {23} \n HolesOffset : {24} \n HolesSize : {25} \n IndexMinorVersion : {26} \n XMLType : {27} \n XMLSubtype : {28} \n XMLCategory : {29} \n XMLModelName : {30} \n ObjectGUID : {31} \n XMLCreator : {32} \n XMLAge : {33} \n XMLGender : {34} \n RequiredEPs : {35} \n Function : {36} \n FunctionSubcategory : {37} \n RoomSort : {38} \n Entries : {39} \n Flags: {40} \n CatalogTags : {41} \n SellingPointTags : {42} \n StyleTags : {43} \n Broken : {44} \n Mesh : {45} \n Recolor : {46} \n Orphan : {47} \n MatchingMesh : {48} \n MatchingRecolors : {49} \n MatchingConflicts : {50} \n NotAPackage : {51}", this.Title, this.Description, this.Location, this.PackageName, this.Type, this.Game, this.GameVersion, this.DBPF, GetFormatListString(this.InstanceIDs), this.Major, this.Minor, this.DateCreated, this.DateModified, this.mnFileVersion, this.mnUserVersion, this.IndexMajorVersion, this.mnIndexRecordEntryCount, this.mnIndexRecordPositionLow, this.mnIndexRecordSize, this.mnIndexRecordPosition, this.IndexCount, this.IndexOffset, this.IndexSize, this.HolesCount, this.HolesOffset, this.HolesSize, this.IndexMinorVersion, this.XMLType, this.XMLSubtype, this.XMLCategory, this.XMLModelName, GetFormatListString(this.ObjectGUID), this.XMLCreator, this.XMLAge, this.XMLGender, GetFormatListString(this.RequiredEPs), this.Function, this.FunctionSubcategory, GetFormatListString(this.RoomSort), GetFormatTypeCounter(this.Entries), GetFormatListString(this.Flags),GetFormatTagsList(this.CatalogTags), GetFormatTagsList(this.SellingPointTags), GetFormatTagsList(this.StyleTags), this.Broken, this.Mesh, this.Recolor, this.Orphan, this.MatchingMesh, GetFormatListString(this.MatchingRecolors), GetFormatListString(this.MatchingConflicts), this.NotAPackage);
         }
 
     }
