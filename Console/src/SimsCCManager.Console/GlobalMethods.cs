@@ -528,7 +528,8 @@ namespace SSAGlobals {
             AllTypes.Add(new typeList{typeID="F1EDBD86", desc="CRPT", info=""});
             AllTypes.Add(new typeList{typeID="FA25B7DE", desc="", info=""});
             AllTypes.Add(new typeList{typeID="FCB1A1E4", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="FD04E3BE", desc="PRPX", info="propx "});
+            AllTypes.Add(new typeList{typeID="FD04E3BE", desc="PRPX", info="propx "});            
+            AllTypes.Add(new typeList{typeID="07576A17", desc="MCOR", info="Model Cutout Resource"});
             AllTypes.Add(new typeList{typeID="7FB6AD8A", desc="S4SM", info="Sims 4 Studio Merged Package Manifest"});
 
             return AllTypes;
@@ -873,6 +874,7 @@ namespace SSAGlobals {
         public static List<PackageFile> gamesPackages = new List<PackageFile>();
                     //this one holds all the working packages that have been assigned a game
         public static List<SimsPackage> loadedData = new List<SimsPackage>();
+        public static List<string> S4OverrideInstances = new List<string>();
         LoggingGlobals log = new LoggingGlobals();
 
 
@@ -882,12 +884,14 @@ namespace SSAGlobals {
             logfile = modLocation + "\\SimsCCSorter.log";
             StreamWriter putContentsIntoTxt = new StreamWriter(logfile);
             putContentsIntoTxt.Close();
+            log.InitializeLog();
             InitializeVariables(); 
         }
 
         TypeListings typeListings = new TypeListings();
+        
         public void InitializeVariables(){
-            log.InitializeLog();
+            
             log.MakeLog("Initializing application.", true);
             TypeListings.AllTypesS2 = typeListings.createS2TypeList();
             log.MakeLog("Created sims 2 type list.", true);
@@ -900,8 +904,11 @@ namespace SSAGlobals {
             TypeListings.S2BuildFunctionSort = typeListings.createS2buildfunctionsortlist();
             log.MakeLog("Created sims 2 build function sort.", true);  
             typeListings.creates4functagsList();
-            log.MakeLog("Created sims 4 function tags list.", true);            
+            log.MakeLog("Created sims 4 function tags list.", true);  
+            InitializedLists.InitializeLists();          
             log.MakeLog("Finished initializing.", true);
+            GetOverrideInstances();
+
         }   
 
         public void UpdateBBTags(){
@@ -909,7 +916,15 @@ namespace SSAGlobals {
             {
                 serializer.Serialize(file, TypeListings.S4BBFunctionTags);
             } 
-        }    
+        }
+        
+        public void GetOverrideInstances(){
+                log.MakeLog("Getting S4 Override Instances from file.", true);
+                S4OverrideInstances = File.ReadAllLines("data\\overrideinstancess4.txt").ToList();
+                
+                log.MakeLog("There are " + S4OverrideInstances.Count + " items in the S4 override instances list.", true);
+                
+        }
     }
 
 

@@ -70,6 +70,8 @@ namespace SimsCCManager.Packages.Containers
         public List<string> RequiredEPs {get; set;}
         public string Function {get; set;}
         public string FunctionSubcategory {get; set;}
+        public string AGFlag {get; set;}
+        public AgeGenderFlags AgeGenderFlags {get; set;}
         public List<string> RoomSort {get; set;}
         public List<string> Components {get; set;}
         public List<TypeCounter> Entries {get; set;}
@@ -81,6 +83,7 @@ namespace SimsCCManager.Packages.Containers
         public bool Mesh {get; set;}
         public bool Recolor {get; set;}
         public bool Orphan {get; set;}
+        public bool Override {get; set;}
         public string MatchingMesh {get; set;}
         public List<string> MatchingRecolors {get; set;}
         public List<string> MatchingConflicts {get; set;}
@@ -164,7 +167,20 @@ namespace SimsCCManager.Packages.Containers
         public int functionsubsortnum {get; set;}
         public string Category {get; set;}
         public string Subcategory {get; set;}
-    }    
+    }   
+
+    public class AgeGenderFlags {
+        public bool Adult {get; set;}
+        public bool Baby {get; set;}
+        public bool Child {get; set;}
+        public bool Elder {get; set;}
+        public bool Infant {get; set;}
+        public bool Teen {get; set;}
+        public bool Toddler {get; set;}
+        public bool YoungAdult {get; set;}
+        public bool Female {get; set;}
+        public bool Male {get; set;}
+    } 
     
     public class Containers {
         public static SynchronizedCollection<PackageFile> packageFiles = new SynchronizedCollection<PackageFile>();
@@ -174,5 +190,40 @@ namespace SimsCCManager.Packages.Containers
 
     }
 
+    public class FunctionListing {
+        public uint bodytype;
+        public string Function;
+        public string Subfunction;
+    }
+
+    public class InitializedLists {
+        public static List<FunctionListing> S4BodyTypes = new List<FunctionListing>();
+        public static List<FunctionListing> S4BB = new List<FunctionListing>();
+        public static void InitializeLists(){
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 655360, Function = "Accessory", Subfunction = "Earring" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 786432, Function = "Accessory", Subfunction = "Necklace" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 917504, Function = "Accessory", Subfunction = "Bracelet" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 131072, Function = "Hair" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 458752, Function = "Clothing", Subfunction = "Bottom" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 720896, Function = "Accessory", Subfunction = "Glasses" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 393216, Function = "Clothing", Subfunction = "Top" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 65536, Function = "Accessory", Subfunction = "Hat" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 327680, Function = "Clothing", Subfunction = "Full Body" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 524288, Function = "Clothing", Subfunction = "Shoes" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 2359296, Function = "Accessory", Subfunction = "Socks" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 240, Function = "Accessory", Subfunction = "Hat" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 2162688, Function = "Face Paint"});
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 65536, Function = "Accessory", Subfunction = "Hat" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 131149, Function = "Hair"});
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 65536, Function = "Accessory", Subfunction = "Hat" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 1441792, Function = "Accessory", Subfunction = "Index Finger (L)" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 1572864, Function = "Accessory", Subfunction = "Ring Finger (L)" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 1245184, Function = "Accessory", Subfunction = "Nose Ring (R)" });
+
+
+            //S4BB.Add(new FunctionListing{ bodytype = 65536, Function = "Accessory", Subfunction = "Hat" });
+
+        }
+    }
 
 }

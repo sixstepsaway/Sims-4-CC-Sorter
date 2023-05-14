@@ -53,6 +53,19 @@ namespace SimsCCManager.SortingUIResults {
             }
         }
 
+        private void ResultsDataGrid_SelectionChanged(object sender, EventArgs e){
+            ResultsPreviewImage rpi = new ResultsPreviewImage();
+            if( ResultsDataGrid.SelectedRows.Count == 1 )
+            {                
+                DataGrid dg = sender as DataGrid;
+                ResultsDataGrid.SelectedDataKey.PackageName;
+                rpi.Show();
+            } else if ((ResultsDataGrid.SelectedRows.Count == 0) || ResultsDataGrid.SelectedRows.Count > 1)) {
+                rpi.Hide();
+            }
+        }
+        
+
         //if selected --> right click "make otg > lights" --> add thing to package
 
         private void menu_Click(object sender, EventArgs e)

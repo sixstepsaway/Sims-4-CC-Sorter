@@ -4,38 +4,65 @@ using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using SSAGlobals;
 
 namespace SimsCCManager.Decryption.EndianDecoding
 {
     public enum EndianType {
-            Little,
-            Big
-        }    
-    public static class Endian
+        Little,
+        Big
+    }    
+    public static class Endian   
 
     {
         public static uint ReadValueU32(this BinaryReader stream, EndianType endian){
-            var data = stream.ReadBytes(4);
-            var value = BitConverter.ToUInt32(data, 0);
-            if (ShouldSwap(endian) == true)
-            {
-                value = value.Swap();
+            try {
+                var data = stream.ReadBytes(4);
+                var value = BitConverter.ToUInt32(data, 0);
+                if (ShouldSwap(endian) == true)
+                {
+                    value = value.Swap();     
+                }
+                return value;
+            } catch {
+                Console.WriteLine("Exception caught at ReadValueU32. Continuing.");
+                uint value = 0;
+                return value;
             }
-            return value;
         }
 
         public static uint ReadValueU32(this BinaryReader stream)
         {
-            return stream.ReadValueU32(EndianType.Little);
+            try {
+                return stream.ReadValueU32(EndianType.Little);
+            } catch {
+                Console.WriteLine("Exception caught at ReadValueU32. Continuing.");
+                uint value = 0;
+                return value;
+            }
         }
 
         public static int ReadValueS32(this BinaryReader stream, EndianType endian)
         {
-            return (int)stream.ReadValueU32(endian);
+            try {
+               return (int)stream.ReadValueU32(endian); 
+            } catch {
+                Console.WriteLine("Exception caught at readValueU32. Continuing.");
+                int value = 0;
+                return value;
+            }
+            
         }
         public static int ReadValueS32(this BinaryReader stream)
         {
-            return (int)stream.ReadValueU32();
+            try {
+                return (int)stream.ReadValueU32();
+            } catch {
+                Console.WriteLine("Exception caught at endian swap. Continuing.");
+                int value = 0;
+                return value;
+            }
+            
         }
 
         internal static bool ShouldSwap(EndianType endian)
@@ -50,32 +77,57 @@ namespace SimsCCManager.Decryption.EndianDecoding
 
         public static ulong ReadValueU64(this BinaryReader stream, EndianType endian)
         {
-            var data = stream.ReadBytes(8);
-            var value = BitConverter.ToUInt64(data, 0);
-            if (ShouldSwap(endian) == true)
-            {
-                value = value.Swap();
+            try {
+                var data = stream.ReadBytes(8);
+                var value = BitConverter.ToUInt64(data, 0);
+                if (ShouldSwap(endian) == true)
+                {
+                    value = value.Swap();
+                }
+                return value;
+            } catch {
+                Console.WriteLine("Exception caught at ReadValueU64. Continuing.");
+                ulong value = 0;
+                return value;
             }
-            return value;
+            
         }
         public static ulong ReadValueU64(this BinaryReader stream)
         {
-            return stream.ReadValueU64(EndianType.Little);
+            try {
+                return stream.ReadValueU64(EndianType.Little);
+            } catch {
+                Console.WriteLine("Exception caught at ReadValueU64 swap. Continuing.");
+                ulong value = 0;
+                return value;
+            }            
         }
 
         public static ushort ReadValueU16(this BinaryReader stream, EndianType endian)
         {
-            var data = stream.ReadBytes(2);
-            var value = BitConverter.ToUInt16(data, 0);
-            if (ShouldSwap(endian) == true)
-            {
-                value = value.Swap();
-            }
-            return value;
+            try {
+                var data = stream.ReadBytes(2);
+                var value = BitConverter.ToUInt16(data, 0);
+                if (ShouldSwap(endian) == true)
+                {
+                    value = value.Swap();
+                }
+                return value;
+            } catch {
+                Console.WriteLine("Exception caught at ReadValueU16. Continuing.");
+                ushort value = 0;
+                return value;
+            } 
         }
         public static ushort ReadValueU16(this BinaryReader stream)
         {
-            return stream.ReadValueU16(EndianType.Little);
+            try {
+                return stream.ReadValueU16(EndianType.Little);
+            } catch {
+                Console.WriteLine("Exception caught at ReadValueU16. Continuing.");
+                ushort value = 0;
+                return value;
+            }            
         }
 
 
@@ -85,31 +137,61 @@ namespace SimsCCManager.Decryption.EndianDecoding
 
         public static short Swap(this short value)
         {
-            return (short)((ushort)value).Swap();
+            try {
+                return (short)((ushort)value).Swap();
+            } catch {
+                Console.WriteLine("Exception caught doing a swap. Continuing.");
+                return value;
+            } 
         }
         public static ushort Swap(this ushort value)
         {
-            return (ushort)((0x00FFu) & (value >> 8) |
+            try {
+                return (ushort)((0x00FFu) & (value >> 8) |
                             (0xFF00u) & (value << 8));
+            } catch {
+                Console.WriteLine("Exception caught doing a swap. Continuing.");
+                return value;
+            }
+            
         }
         public static int Swap(this int value)
         {
-            return (int)((uint)value).Swap();
+            try{
+               return (int)((uint)value).Swap(); 
+            } catch {
+                Console.WriteLine("Exception caught doing a swap. Continuing.");
+                return value;
+            }
+            
         }
         public static uint Swap(this uint value)
         {
-            return ((0x000000FFu) & (value >> 24) |
+            try {
+                return ((0x000000FFu) & (value >> 24) |
                     (0x0000FF00u) & (value >> 8) |
                     (0x00FF0000u) & (value << 8) |
                     (0xFF000000u) & (value << 24));
+            } catch {
+                Console.WriteLine("Exception caught doing a swap. Continuing.");
+                return value;
+            }
+            
         }
         public static long Swap(this long value)
         {
-            return (long)((ulong)value).Swap();
+            try {
+                return (long)((ulong)value).Swap();
+            } catch {                
+                Console.WriteLine("Exception caught doing a swap. Continuing.");
+                return value;
+            } 
+            
         }
         public static ulong Swap(this ulong value)
         {
-            return ((0x00000000000000FFu) & (value >> 56) |
+            try {
+                return ((0x00000000000000FFu) & (value >> 56) |
                     (0x000000000000FF00u) & (value >> 40) |
                     (0x0000000000FF0000u) & (value >> 24) |
                     (0x00000000FF000000u) & (value >> 8) |
@@ -117,18 +199,34 @@ namespace SimsCCManager.Decryption.EndianDecoding
                     (0x0000FF0000000000u) & (value << 24) |
                     (0x00FF000000000000u) & (value << 40) |
                     (0xFF00000000000000u) & (value << 56));
+            } catch {                
+                Console.WriteLine("Exception caught doing a swap. Continuing.");
+                return value;
+            }
+            
         }
         public static float Swap(this float value)
         {
-            var overlap = new OverlapSingle(value);
-            overlap.AsU = overlap.AsU.Swap();
-            return overlap.AsF;
+            try {
+                var overlap = new OverlapSingle(value);
+                overlap.AsU = overlap.AsU.Swap();
+                return overlap.AsF;
+            } catch {                
+                Console.WriteLine("Exception caught doing a swap. Continuing.");
+                return value;
+            }
+            
         }
         public static double Swap(this double value)
         {
-            var overlap = new OverlapDouble(value);
-            overlap.AsU = overlap.AsU.Swap();
-            return overlap.AsD;
+            try {
+                var overlap = new OverlapDouble(value);
+                overlap.AsU = overlap.AsU.Swap();
+                return overlap.AsD;
+            } catch {
+                Console.WriteLine("Exception caught doing a swap. Continuing.");
+                return value;
+            } 
         }
     }
 

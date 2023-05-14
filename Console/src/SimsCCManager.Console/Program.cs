@@ -28,7 +28,7 @@ namespace SimsCCManager.CMD
             LoggingGlobals log = new LoggingGlobals();
             S3PackageSearch sims3s = new S3PackageSearch();
             S4PackageSearch sims4s = new S4PackageSearch();
-            ParallelOptions parallelSettings = new ParallelOptions() { MaxDegreeOfParallelism = 200};
+            ParallelOptions parallelSettings = new ParallelOptions() { MaxDegreeOfParallelism = 2000};
             TypeListings.AllTypesS2 = typeListings.createS2TypeList();
             TypeListings.AllTypesS3 = typeListings.createS3TypeList();
             TypeListings.AllTypesS4 = typeListings.createS4TypeList();
@@ -39,9 +39,9 @@ namespace SimsCCManager.CMD
             
 
             string folder = "M:\\The Sims 4 (Documents)\\!UnmergedCC\\To Sort\\CURRENT TEST";
-            
-            globals.Initialize(0, folder);
-            log.InitializeLog();
+            //string folder = "M:\\The Sims 4 (Documents)\\!UnmergedCC\\To Sort";
+            //string folder = "C:\\Program Files (x86)\\Origin Games\\The Sims 4\\";
+            globals.Initialize(0, folder);            
 
             initial.IdentifyPackages();
 
@@ -57,11 +57,10 @@ namespace SimsCCManager.CMD
 
             foreach (PackageFile package in GlobalVariables.gamesPackages){
                 if (package.Game == 3){
-                    sims3s.SearchS3Packages(package.Location);
+                    //sims3s.SearchS3Packages(package.Location);
                 } else if (package.Game == 4){
-                    sims4s.SearchS4Packages(package.Location);
-                }
-                
+                    sims4s.SearchS4Packages(package.Location, false);
+                }                
             }
 
             

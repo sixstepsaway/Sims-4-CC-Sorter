@@ -13,7 +13,7 @@
                 <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Visible" />
                 <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
             </Style>
-        </Window.Resources>        
+        </Window.Resources>  
 
         <Grid Background="#FF231636">
             <Grid.ColumnDefinitions>
