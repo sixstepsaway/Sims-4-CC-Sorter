@@ -3,6 +3,7 @@ I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Sim
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SimsCCManager.App.runtimeconfig.json
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SimsCCManager.App.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SimsCCManager.App.pdb
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\LiteDB.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Microsoft.Bcl.AsyncInterfaces.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Microsoft.Extensions.ObjectPool.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Newtonsoft.Json.dll
@@ -30,6 +31,7 @@ I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\Sim
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\CustomSortingOptions.g.cs
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\MainWindow.g.cs
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\Results.g.cs
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\ResultsPreviewImage.g.cs
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\SortFolderOptions.g.cs
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\App.g.cs
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\SimsCCManager.App_MarkupCompile.cache
@@ -37,6 +39,7 @@ I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\Sim
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\CustomSortingOptions.baml
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\MainWindow.baml
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\Results.baml
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\ResultsPreviewImage.baml
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\SortFolderOptions.baml
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\SimsCCManager.App.g.resources
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\SimsCCManager.App.GeneratedMSBuildEditorConfig.editorconfig
@@ -49,3 +52,22 @@ I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\ref
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\SimsCCManager.App.pdb
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\SimsCCManager.App.genruntimeconfig.cache
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\ref\SimsCCManager.App.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\System.Data.SQLite.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-x64\native\SQLite.Interop.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\osx-x64\native\SQLite.Interop.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win-x64\native\SQLite.Interop.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win-x86\native\SQLite.Interop.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLite-net.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLitePCLRaw.batteries_v2.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLitePCLRaw.core.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-x64\native\libe_sqlite3.so
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-x86\native\libe_sqlite3.so
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\osx-x64\native\libe_sqlite3.dylib
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLiteNetExtensions.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\x86\e_sqlite3.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\x64\e_sqlite3.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLitePCLRaw.batteries_green.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLitePCLRaw.provider.e_sqlite3.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win7-x64\native\e_sqlite3.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win7-x86\native\e_sqlite3.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\SimsCCManager.App_Content.g.cs

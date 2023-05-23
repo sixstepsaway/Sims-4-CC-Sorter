@@ -43,13 +43,13 @@
                 </Button>
             </StackPanel>
                    
-            <DataGrid x:Name="ResultsDataGrid" Style="{StaticResource ResultsDataGridStyle}" ItemsSource="{Binding resultspackageslist}" AutoGenerateColumns="false" Grid.Column="1" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible" VirtualizingStackPanel.IsVirtualizing="true" VirtualizingStackPanel.VirtualizationMode="Recycling" VirtualizingPanel.IsVirtualizingWhenGrouping="True" MaxHeight="999999999" MaxWidth="999999999" Grid.Row="1">
+            <DataGrid x:Name="ResultsDataGrid" SelectionUnit="FullRow" CanUserAddRows="False" CanUserDeleteRows="False" Style="{StaticResource ResultsDataGridStyle}" ItemsSource="{Binding resultspackageslist}" AutoGenerateColumns="false" Grid.Column="1" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible" VirtualizingStackPanel.IsVirtualizing="true" VirtualizingStackPanel.VirtualizationMode="Recycling" VirtualizingPanel.IsVirtualizingWhenGrouping="True" MaxHeight="999999999" MaxWidth="999999999" Grid.Row="1">
                 <DataGrid.Columns>
                     <DataGridCheckBoxColumn Header="" Binding="{Binding selected}" Width="5"/>
                     <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>                     
                     <DataGridTextColumn Header="Package Name" Binding="{Binding PackageName}" Width="*"/> 
                     <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*"/>
-                    <DataGridTextColumn Header="Game" Binding="{Binding GameVersion}" Width="*"/>
+                    <DataGridTextColumn Header="Game" Binding="{Binding Game}" Width="*"/>
                     
                 </DataGrid.Columns>        
             </DataGrid>
@@ -101,7 +101,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Vertical" Grid.Column="3" VerticalAlignment="Center">
                     <TextBlock Text="Search" Margin="25, 0, 0, 5"/>
-                    <TextBox x:Name="SearchBox" Foreground="#FF372C42" Background="#FFCCD3DA" Margin="20, 0, 0, 0"/>
+                    <TextBox Name="SearchBox" TextChanged="SearchEntered" Foreground="#FF372C42" Background="#FFCCD3DA" Margin="20, 0, 0, 0"/>
                 </StackPanel>
                 
             </Grid>

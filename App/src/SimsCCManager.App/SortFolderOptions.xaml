@@ -37,6 +37,13 @@
             <Button Content="Custom Sorting Options" Margin="0, 0, 2, 5"/>
             <Button Content="Sort Folder" Margin="0, 0, 2, 0"/>/>            
           </StackPanel>
+          <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="2">
+            <TextBlock FontSize="10" Foreground="AliceBlue" Width="200" TextWrapping="Wrap" Text="Merged packages cannot be automatically sorted. Either they can be automatically unmerged, or moved to another folder for you to sort manually."/>
+          </StackPanel>
+          <StackPanel Orientation="Vertical" Grid.Column="2" Grid.Row="2">
+            <CheckBox x:Name="CheckBox_Unmerge" Checked="Unmerge_Check" Content="Unmerge and Sort" FontSize="12" Margin="0, 0, 0, 10" IsEnabled="False"/>
+            <CheckBox x:Name="CheckBox_MoveMerged" Checked="MoveMerged_Check" Content="Move to its own folder" FontSize="12" Margin="0, 0, 0, 10" IsEnabled="False"/> 
+          </StackPanel>
           <StackPanel Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom">
             <Button Content="Load Sorting Options" Margin="2, 0, 0, 5"/>
             <Button Content="Cancel" Margin="2, 0, 0, 0"/>/>            

@@ -16,6 +16,13 @@ using SSAGlobals;
 
 namespace SimsCCManager.Packages.Decryption
 {
+	/// <summary>
+	/// Decryption functions for Sims 2 packs. Credits to:
+	/// - https://modthesims.info/d/227925/delphy-s-download-organiser-v1-2-6365-updated-6th-june-2017.html
+	/// - https://github.com/LazyDuchess/CC-Merger/tree/master/CCMerger
+	/// - https://github.com/whoward69/Sims2Tools
+	/// for a lot of the code I cannibalized for my own uses. 
+	/// </summary>
     public class DecryptByteStream
     {
         public int currOffset = 0;

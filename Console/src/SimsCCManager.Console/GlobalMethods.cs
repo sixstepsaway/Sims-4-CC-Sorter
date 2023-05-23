@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,27 +11,38 @@ using System.Reflection;
 using SimsCCManager.Packages.Containers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using SQLite;
+using System.Data.SQLite;
 
 
 
 namespace SSAGlobals {
 
     public class typeList {
+        /// <summary>
+        /// For "types", for example Cas Parts or Geometry.
+        /// </summary>
         public string desc;
         public string typeID;
         public string info;
     }
     public class SortingValues {
+        /// <summary>
+        /// Unused rn.
+        /// </summary>
         string name {set; get;}        
     }
 
     public class TypeListings {
+        /// <summary>
+        /// A list of types and function tags and so on for each game. May later be transferred to a database.
+        /// </summary>
         JsonSerializer serializer = new JsonSerializer();
 
         public static List<typeList> AllTypesS2;
         public static List<typeList> AllTypesS3;
         public static List<typeList> AllTypesS4;
-        public static List<typeList> S4BBFunctionTags;
+        public static ConcurrentBag<typeList> S4BBFunctionTags;
         public static List<FunctionSortList> S2BuyFunctionSort;
         public static List<FunctionSortList> S2BuildFunctionSort;
         public static List<FunctionSortList> S3BuyFunctionSort;
@@ -652,7 +664,7 @@ namespace SSAGlobals {
 
             using (StreamReader file = File.OpenText("data\\s4bbtags.json"))
             {                
-                TypeListings.S4BBFunctionTags = (List<typeList>)serializer.Deserialize(file, typeof(List<typeList>));
+                TypeListings.S4BBFunctionTags = (ConcurrentBag<typeList>)serializer.Deserialize(file, typeof(ConcurrentBag<typeList>));
             }
         }
         
@@ -842,19 +854,31 @@ namespace SSAGlobals {
             //List<FunctionSortList> s3fs = new List<FunctionSortList>()            
             //return s2fs;
         }*/
-    
+
+        public static Dictionary<string,string> OverrideList = new Dictionary<string, string>();
+   
     }
     
 
     public class GlobalVariables {
+        /// <summary>
+        /// Global variables, anything used all over the program that requires easy access, like locations for databases, and global settings like debug mode.
+        /// </summary>
         JsonSerializer serializer = new JsonSerializer();
+        public static bool consolevr = false;
         public static bool debugMode = true;
         public static bool loadedSaveData = false;
         public static string ModFolder;
         public static string logfile;
-        public static int gameVer;  
         public static int PackageCount = 0;       
         public static int packagesRead = 1;
+        public static string S4_Overrides_All = @"data\S4_Instances.sqlite";
+        public static string S4_Overrides_List = @"data\S4_SpecificOverrides.sqlite";
+
+        private static string PackagesCacheLoc = @"Sims CC Manager\data\PackagesCache.sqlite";
+        public static string PackagesRead = Path.Combine(LoggingGlobals.mydocs, PackagesCacheLoc); 
+        public static string PackagesReadDS = string.Format("Data Source={0}", PackagesRead);
+        
         
         //vars that hold package files 
         public static List<FileInfo> justPackageFiles = new List<FileInfo>();
@@ -878,14 +902,14 @@ namespace SSAGlobals {
         LoggingGlobals log = new LoggingGlobals();
 
 
-        public void Initialize(int gameNum, string modLocation){
-            gameVer = gameNum;
-            ModFolder = modLocation;
-            logfile = modLocation + "\\SimsCCSorter.log";
-            StreamWriter putContentsIntoTxt = new StreamWriter(logfile);
-            putContentsIntoTxt.Close();
+        public void Initialize(string modLocation){
+            if (consolevr != true){
+                ModFolder = modLocation;
+                logfile = modLocation + "\\SimsCCSorter.log";
+                StreamWriter putContentsIntoTxt = new StreamWriter(logfile);
+                putContentsIntoTxt.Close();
+            }            
             log.InitializeLog();
-            InitializeVariables(); 
         }
 
         TypeListings typeListings = new TypeListings();
@@ -907,8 +931,7 @@ namespace SSAGlobals {
             log.MakeLog("Created sims 4 function tags list.", true);  
             InitializedLists.InitializeLists();          
             log.MakeLog("Finished initializing.", true);
-            GetOverrideInstances();
-
+            MakeDatabases();
         }   
 
         public void UpdateBBTags(){
@@ -917,30 +940,29 @@ namespace SSAGlobals {
                 serializer.Serialize(file, TypeListings.S4BBFunctionTags);
             } 
         }
-        
-        public void GetOverrideInstances(){
-                log.MakeLog("Getting S4 Override Instances from file.", true);
-                S4OverrideInstances = File.ReadAllLines("data\\overrideinstancess4.txt").ToList();
-                
-                log.MakeLog("There are " + S4OverrideInstances.Count + " items in the S4 override instances list.", true);
-                
+
+        public void MakeDatabases(){
+            
+            
         }
     }
 
-
     public class SaveData {
-        public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        /*public static string SimsCCManagerFolder = mydocs + "\\Sims CC Manager";
-        public static string saveDataFolder = mydocs + "\\Sims CC Manager\\data";
-        public static string mainSaveData = saveDataFolder + "\\PackageCache.data";
-        public static string cacheFolder = SimsCCManagerFolder + "\\Cache";*/
-        public static string SimsCCManagerFolder = "I:\\Code\\C#\\Sims-CC-Sorter\\Console\\src\\SimsCCManager.Console\\";
-        public static string saveDataFolder = "I:\\Code\\C#\\Sims-CC-Sorter\\Console\\src\\SimsCCManager.Console\\data\\";
-        public static string mainSaveData = saveDataFolder + "\\PackageCache.data";
+        /// <summary>
+        /// Cache locations. May be merged in with Globals now databases are being used.
+        /// </summary>
+        public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);        
+        public static string SimsCCManagerFolder = mydocs + "\\Sims CC Manager";
+        public static string docsDataFolder = mydocs + "\\Sims CC Manager\\data";
+        public static string mainSaveData = docsDataFolder + "\\PackageCache.db";
         public static string cacheFolder = SimsCCManagerFolder + "\\Cache";
+        public static string database = docsDataFolder + "\\packagedata.sqlite";
     }
 
     public class CacheLocations {
+        /// <summary>
+        /// Holds the location of Sims cache files for future implementation.
+        /// </summary>
         public string CacheName {get; set;}
         public string CacheLocation {get; set;}
         public string CacheRename {get; set;}
@@ -948,15 +970,24 @@ namespace SSAGlobals {
 
     public class LoggingGlobals
     {
+        /// <summary>
+        /// Synchronous log file implementation. 
+        /// </summary>
         public static bool firstrunmain = true;
         public static bool firstrundebug = true;
         public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        //private static string internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
-        private static string internalLogFolder = "I:\\Code\\C#\\Sims-CC-Sorter\\Console\\src\\SimsCCManager.Console\\log";
+        private static string internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
         private static string debuglog = internalLogFolder + "\\debug.log";
         static ReaderWriterLock locker = new ReaderWriterLock();
         //Function for logging to the logfile set at the start of the program
         public void InitializeLog() {
+            if (GlobalVariables.consolevr == true){
+                internalLogFolder = "\\log\\";
+                debuglog = internalLogFolder + "\\debug.log";
+            } else {
+                internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
+                debuglog = internalLogFolder + "\\debug.log";
+            }
             Methods.MakeFolder(internalLogFolder);
             Methods.MakeFolder(SaveData.cacheFolder);
             Methods.MakeFolder(mydocs + "\\Sims CC Manager\\data");
@@ -1001,6 +1032,9 @@ namespace SSAGlobals {
     }
 
     public class Methods {
+        /// <summary>
+        /// Repeatedly called methods like making a folder.
+        /// </summary>
         public static void MakeFolder (string directory)
         {
             try
@@ -1019,6 +1053,6 @@ namespace SSAGlobals {
                 
             }
             finally {}
-            }
+        }
     }    
 }

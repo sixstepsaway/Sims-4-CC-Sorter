@@ -1,6 +1,19 @@
 today:
-- copy working cs files back to console
 - set up auto-moving in console (move each game type into own folder)
-- finish setting up which game is which
-- try finding out what sims 4 packages are which?
-- get data grid working -.-
+- swap processing to bitarray
+
+
+
+
+TO IMPLEMENT:
+- save to database/json as it processes, remove files from "all packages" or add to "processed". then if it crashes or the computer crashes, you can pick "continue scan"
+
+
+>remove from allpackages
+>add immediately to "currently processing"
+>process
+>add to db
+>remove from "currently processing"
+
+
+also look up screwfix winsford

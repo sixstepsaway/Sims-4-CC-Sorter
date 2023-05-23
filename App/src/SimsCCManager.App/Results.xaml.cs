@@ -24,49 +24,97 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SSAGlobals;
 using SimsCCManager.Packages.Containers;
-
-
+using SimsCCManager.App.PreviewImage;
+using System.Data.SQLite;
+using System.Data;
 
 namespace SimsCCManager.SortingUIResults {
+    /// <summary>
+    /// Results window; a datagrid with all of the package files. (Later, will include ts3packs and ts2packs as well.)
+    /// </summary>
 
     public partial class ResultsWindow : Window {
         LoggingGlobals log = new LoggingGlobals();
         public int gameNum = 0;
+        //public static ObservableCollection<SimsPackage> resultspackageslist = new ObservableCollection<SimsPackage>();
         
         public ResultsWindow() 
         {
             log.MakeLog("Initializing results window.", true);
             InitializeComponent(); 
-            log.MakeLog("Running results grid method.", true);
-            ResultsDataGrid.ItemsSource = resultspackages.populateResultsList(); 
-            if (GlobalVariables.loadedSaveData == false) {
-                CacheData();
-            }  
+            log.MakeLog("Running results grid method.", true);  
+
+            var con = new SQLiteConnection(GlobalVariables.PackagesReadDS);
+            try
+            {
+                con.Open();
+                SQLiteCommand cmd = con.CreateCommand();
+                cmd.CommandText = "SELECT * FROM Packages ";
+                using (SQLiteDataAdapter dataAdapter = new SQLiteDataAdapter(cmd.CommandText, con))
+                {
+                    DataTable dataTable = new DataTable();
+                    dataAdapter.Fill(dataTable);
+
+                    ResultsDataGrid.ItemsSource =  dataTable.AsDataView();
+
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Windows.Forms.MessageBox.Show(exp.Message);
+            }
+
+            //var dbc = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead);
+            //var pquery = dbc.Query<SimsPackage>("SELECT * FROM Packages");
+
+             
+            //ResultsDataGrid.DataContext = pquery; 
+            //if (GlobalVariables.loadedSaveData == false) {
+            //    CacheData();
+            //}  
         }
 
         private void CacheData(){
             log.MakeLog("Turning data into json file.", true);
             using (StreamWriter file = File.CreateText(SaveData.mainSaveData))
             {
-                JsonSerializer serializer = new JsonSerializer();
+                Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer();
                 serializer.Serialize(file, resultspackages.resultspackageslist);
             }
         }
 
         private void ResultsDataGrid_SelectionChanged(object sender, EventArgs e){
             ResultsPreviewImage rpi = new ResultsPreviewImage();
-            if( ResultsDataGrid.SelectedRows.Count == 1 )
+            if( ResultsDataGrid.SelectedCells.Count == 1 )
             {                
                 DataGrid dg = sender as DataGrid;
-                ResultsDataGrid.SelectedDataKey.PackageName;
+                var row = ResultsDataGrid.SelectedValue;
                 rpi.Show();
-            } else if ((ResultsDataGrid.SelectedRows.Count == 0) || ResultsDataGrid.SelectedRows.Count > 1)) {
+            } else if ((ResultsDataGrid.SelectedCells.Count == 0) || (ResultsDataGrid.SelectedCells.Count > 1)) {
                 rpi.Hide();
             }
         }
         
 
         //if selected --> right click "make otg > lights" --> add thing to package
+
+        public void SearchEntered(object sender, TextChangedEventArgs args)
+        {   /*string cs = string.Format("Data Source={0}", GlobalVariables.PackagesRead);
+            using (var dataConnection = new SQLiteConnection(cs))
+            try
+            {
+                string sql = "SELECT * FROM *";
+            }
+            catch (Exception e) {
+                System.Windows.Forms.MessageBox.Show("Search Error: " + e.Message.ToString(),
+                "Error Message: Results Window Search Failure",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                dataConnection.Close();
+            }*/
+        }
 
         private void menu_Click(object sender, EventArgs e)
         {
@@ -153,7 +201,10 @@ namespace SimsCCManager.SortingUIResults {
         
        public static ObservableCollection<SimsPackage> populateResultsList() 
         {   LoggingGlobals log = new LoggingGlobals();
-            if (GlobalVariables.loadedSaveData == true) {
+            
+                
+
+            /*if (GlobalVariables.loadedSaveData == true) {
                 log.MakeLog("Retrieving save data and putting it into grid.", true);
                 foreach (SimsPackage pack in GlobalVariables.loadedData){
                     resultspackageslist.Add(new SimsPackage{ Title = pack.Title, Description = pack.Description, Location = pack.Location, PackageName = pack.PackageName, Type = pack.Type, Game = pack.Game, DBPF = pack.DBPF, InstanceIDs = pack.InstanceIDs, Major = pack.Major, Minor = pack.Minor, DateCreated = pack.DateCreated, DateModified = pack.DateModified, IndexMajorVersion = pack.IndexMajorVersion, IndexCount = pack.IndexCount, IndexOffset = pack.IndexOffset, IndexSize = pack.IndexSize, HolesCount = pack.HolesCount, HolesOffset = pack.HolesOffset, HolesSize = pack.HolesSize, IndexMinorVersion = pack.IndexMinorVersion, XMLType = pack.XMLType, XMLSubtype = pack.XMLSubtype, XMLCategory = pack.XMLCategory, XMLModelName = pack.XMLModelName, ObjectGUID = pack.ObjectGUID, XMLCreator = pack.XMLCreator, XMLAge = pack.XMLAge, XMLGender = pack.XMLGender, RequiredEPs = pack.RequiredEPs, Function = pack.Function, FunctionSubcategory = pack.FunctionSubcategory, RoomSort = pack.RoomSort, Entries = pack.Entries, Mesh = pack.Mesh, Recolor = pack.Recolor, Orphan = pack.Orphan, GameVersion = pack.GameVersion });
@@ -175,7 +226,8 @@ namespace SimsCCManager.SortingUIResults {
                 }
                 log.MakeLog("Returning.", true);
                 return resultspackageslist; 
-            }
+            }*/
+            return resultspackageslist;
             
         }
         public event PropertyChangedEventHandler PropertyChanged; 

@@ -15,6 +15,9 @@ using SimsCCManager.Packages.Decryption;
 
 namespace SimsCCManager.Packages.Sims2Search
 {    
+    /// <summary>
+    /// Sims 2 package reading. Gets all the information from inside S2 Package files and returns it for use.
+    /// </summary>
     public static class extensions {
         public static void Increment<T>(this Dictionary<T, int> dictionary, T key)
         {
@@ -46,7 +49,11 @@ namespace SimsCCManager.Packages.Sims2Search
         uint chunkOffset = 0;        
        
 
-        public void SearchS2Packages(string file) {
+        public void SearchS2Packages(string file) {            
+            FileInfo packageinfo = new FileInfo(file); 
+            using (SQLite.SQLiteConnection db = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead)){
+                db.Update(new PackageFile { Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"});
+            }
             var packageparsecount = GlobalVariables.packagesRead;   
             GlobalVariables.packagesRead++;         
             //Vars for Package Info
@@ -83,7 +90,6 @@ namespace SimsCCManager.Packages.Sims2Search
             List<fileHasList> fileHas = new List<fileHasList>();
             ArrayList linkData = new ArrayList();
             List<indexEntry> indexData = new List<indexEntry>();
-            FileInfo packageinfo = new FileInfo(file); 
             //List<string> iids = new List<string>();
             List<string> allGUIDS = new List<string>();      
             List<string> distinctGUIDS = new List<string>();  
@@ -91,7 +97,10 @@ namespace SimsCCManager.Packages.Sims2Search
             List<string> distinctInstanceIDs = new List<string>();  
 
             //create readers  
-            FileStream dbpfFile = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+            //FileStream dbpfFile = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+            
+            byte[] filebyte = File.ReadAllBytes(packageinfo.FullName);
+            MemoryStream dbpfFile = new MemoryStream(filebyte);
             BinaryReader readFile = new BinaryReader(dbpfFile);
 
             thisPackage.PackageName = packageinfo.Name;
@@ -106,16 +115,14 @@ namespace SimsCCManager.Packages.Sims2Search
             log.MakeLog("Logged Package #" + packageparsecount + " as meant for The Sims " + thisPackage.Game, true);           
             test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
             log.MakeLog("P" + packageparsecount + " - DBPF Bytes: " + test, true);
-            thisPackage.DBPF = test;
+            string DBPF = test;
             
             uint major = readFile.ReadUInt32();
             test = major.ToString();  
-            thisPackage.Major = major;
             log.MakeLog("P" + packageparsecount + " - Major: " + test, true);
 
             uint minor = readFile.ReadUInt32();
             test = minor.ToString();
-            thisPackage.Minor = minor;
             log.MakeLog("P" + packageparsecount + " - Minor: " + test, true);
             
             string reserved = Encoding.UTF8.GetString(readFile.ReadBytes(12));
@@ -124,52 +131,42 @@ namespace SimsCCManager.Packages.Sims2Search
             
             uint dateCreated = readFile.ReadUInt32();
             test = dateCreated.ToString();
-            thisPackage.DateCreated = dateCreated;
             log.MakeLog("P" + packageparsecount + " - Date created: " + test, true);
             
             uint dateModified = readFile.ReadUInt32();
             test = dateModified.ToString();
-            thisPackage.DateModified = dateModified;
             log.MakeLog("P" + packageparsecount + " - Date modified: " + test, true);
             
             uint indexMajorVersion = readFile.ReadUInt32();
             test = indexMajorVersion.ToString();
-            thisPackage.IndexMajorVersion = indexMajorVersion;
             log.MakeLog("P" + packageparsecount + " - Index Major: " + test, true);
             
             uint indexCount = readFile.ReadUInt32();
             test = indexCount.ToString();
-            thisPackage.IndexCount = indexCount;
             log.MakeLog("P" + packageparsecount + " - Index Count: " + test, true);
             
             uint indexOffset = readFile.ReadUInt32();
             test = indexOffset.ToString();
-            thisPackage.IndexOffset = indexOffset;
             log.MakeLog("P" + packageparsecount + " - Index Offset: " + test, true);
             
             uint indexSize = readFile.ReadUInt32();
             test = indexSize.ToString();
-            thisPackage.IndexSize = indexSize;
             log.MakeLog("P" + packageparsecount + " - Index Size: " + test, true);
             
             uint holesCount = readFile.ReadUInt32();
             test = holesCount.ToString();
-            thisPackage.HolesCount = holesCount;
             log.MakeLog("P" + packageparsecount + " - Holes Count: " + test, true);
 
             uint holesOffset = readFile.ReadUInt32();
             test = holesOffset.ToString();
-            thisPackage.HolesOffset = holesOffset;
             log.MakeLog("P" + packageparsecount + " - Holes Offset: " + test, true);
             
             uint holesSize = readFile.ReadUInt32();
             test = holesSize.ToString();
-            thisPackage.HolesSize = holesSize;
             log.MakeLog("P" + packageparsecount + " - Holes Size: " + test, true);
             
             uint indexMinorVersion = readFile.ReadUInt32() -1;
             test = indexMinorVersion.ToString();
-            thisPackage.IndexMinorVersion = indexMinorVersion;
             log.MakeLog("P" + packageparsecount + " - Index Minor Version: " + test, true);
             
             string reserved2 = Encoding.UTF8.GetString(readFile.ReadBytes(32));
@@ -177,7 +174,8 @@ namespace SimsCCManager.Packages.Sims2Search
 
             log.MakeLog("P" + packageparsecount + " - ChunkOffset: " + chunkOffset, true);
 
-            dbpfFile.Seek(chunkOffset + indexOffset, SeekOrigin.Begin);
+            //dbpfFile.Seek(chunkOffset + indexOffset, SeekOrigin.Begin);
+            readFile.BaseStream.Position = chunkOffset + indexOffset;
             for (int i = 0; i < indexCount; i++) {
                 indexEntry holderEntry = new indexEntry();
                 log.MakeLog("P" + packageparsecount + " - Made index entry.", true);
@@ -281,7 +279,8 @@ namespace SimsCCManager.Packages.Sims2Search
                 log.MakeLog("P" + packageparsecount + " - DIR entry confirmation: ", true);
                 log.MakeLog(indexData[dirnum].typeID, true);
 
-                dbpfFile.Seek(this.chunkOffset + indexData[dirnum].offset, SeekOrigin.Begin);
+                //dbpfFile.Seek(this.chunkOffset + indexData[dirnum].offset, SeekOrigin.Begin);
+                readFile.BaseStream.Position = this.chunkOffset + indexData[dirnum].offset;
                 if (indexMajorVersion == 7 && indexMinorVersion == 1)
                 {
                     numRecords = indexData[dirnum].filesize / 20;
@@ -339,7 +338,8 @@ namespace SimsCCManager.Packages.Sims2Search
             }
             
             if (fileHas.Exists(x => x.term == "DIR")) {
-                dbpfFile.Seek(chunkOffset + indexData[dirnum].offset, SeekOrigin.Begin);
+                //dbpfFile.Seek(chunkOffset + indexData[dirnum].offset, SeekOrigin.Begin);
+                readFile.BaseStream.Position = chunkOffset + indexData[dirnum].offset;
                 log.MakeLog("Entry offset: " + indexData[dirnum].offset, true);
                 if ((indexMajorVersion == 7) && indexMinorVersion == 1)
                 {
@@ -389,7 +389,8 @@ namespace SimsCCManager.Packages.Sims2Search
 
                         if (typefound == "CTSS"){
                             log.MakeLog("Confirming found " + typefound, true);
-                            dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                            //dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                            readFile.BaseStream.Position = this.chunkOffset + idx.offset;
                             cFileSize = readFile.ReadInt32();
 							cTypeID = readFile.ReadUInt16().ToString("X4");
                             if (cTypeID == "FB10") 
@@ -404,12 +405,14 @@ namespace SimsCCManager.Packages.Sims2Search
 							} 
 							else 
 							{
-								dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+								//dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                                readFile.BaseStream.Position = this.chunkOffset + idx.offset;
 								ctssvar = readentries.readCTSSchunk(readFile);
 							}
                         } else if (typefound == "XOBJ" || typefound == "XFNC" || typefound == "XFLR" || typefound == "XMOL" || typefound == "XROF"  || typefound == "XTOL"  || typefound == "XHTN"){
                             log.MakeLog("Confirming found " + typefound + " and moving forward.", true);
-                            dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                            //dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                            readFile.BaseStream.Position = this.chunkOffset + idx.offset;
                             cFileSize = readFile.ReadInt32();
                             cTypeID = readFile.ReadUInt16().ToString("X4");
                             log.MakeLog(typefound + " size: " + cFileSize + ", ctypeid: " + cTypeID, true);
@@ -425,7 +428,8 @@ namespace SimsCCManager.Packages.Sims2Search
                                     log.MakeLog("Real CPF file. Processing as CPF chunk.",true);
                                 } else {
                                     log.MakeLog("Not a real CPF. Searching for more information.", true);
-                                    dbpfFile.Seek(this.chunkOffset + idx.offset + 9, SeekOrigin.Begin);
+                                    //dbpfFile.Seek(this.chunkOffset + idx.offset + 9, SeekOrigin.Begin);
+                                    readFile.BaseStream.Position = this.chunkOffset + idx.offset + 9;
                                     DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
                                     if (cpfTypeID == "E750E0E2")
                                     {
@@ -472,7 +476,8 @@ namespace SimsCCManager.Packages.Sims2Search
                 foreach (int objloc in objdnum) {
                     log.MakeLog("---------- [" + objloc + "]", true);               
                     
-                    dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
+                    //dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
+                    readFile.BaseStream.Position = this.chunkOffset + indexData[objloc].offset;
                     cFileSize = readFile.ReadInt32();
                     log.MakeLog("P" + packageparsecount + " - OBJD filesize is: " + cFileSize, true);
                     cTypeID = readFile.ReadUInt16().ToString("X4");
@@ -488,7 +493,8 @@ namespace SimsCCManager.Packages.Sims2Search
                         objdvar = readentries.readOBJDchunk(decompressed);
                         log.MakeLog("objdvar returned with: " + objdvar.ToString(), true);
                     } else { 
-                        dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
+                        //dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
+                        readFile.BaseStream.Position = this.chunkOffset + indexData[objloc].offset;
                         objdvar = readentries.readOBJDchunk(readFile);
                         log.MakeLog("objdvar returned with: " + objdvar.ToString(), true);
                     }
@@ -509,7 +515,8 @@ namespace SimsCCManager.Packages.Sims2Search
                 foreach (int strloc in strnm) {
                     log.MakeLog("P" + packageparsecount + " - STR entry confirmation: ", true);
                     log.MakeLog(indexData[strloc].typeID, true);
-                    dbpfFile.Seek(chunkOffset + indexData[strloc].offset, SeekOrigin.Begin);
+                    //dbpfFile.Seek(chunkOffset + indexData[strloc].offset, SeekOrigin.Begin);
+                    readFile.BaseStream.Position = chunkOffset + indexData[strloc].offset;
                     cFileSize = readFile.ReadInt32();
                     log.MakeLog("P" + packageparsecount + " - STR entry size: " + cFileSize, true);
                     cTypeID = readFile.ReadUInt16().ToString("X4");
@@ -541,7 +548,8 @@ namespace SimsCCManager.Packages.Sims2Search
                     }
                     fh++;
                 }
-                dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+                //dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+                readFile.BaseStream.Position = this.chunkOffset + indexData[mmatloc].offset;
                 cFileSize = readFile.ReadInt32();
                 cTypeID = readFile.ReadUInt16().ToString("X4");
                 
@@ -557,7 +565,8 @@ namespace SimsCCManager.Packages.Sims2Search
                     } 
                     else 
                     {
-                        dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset + 9, SeekOrigin.Begin);
+                        //dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset + 9, SeekOrigin.Begin);
+                        readFile.BaseStream.Position = this.chunkOffset + indexData[mmatloc].offset + 9;
                         DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
                         if (cpfTypeID == "E750E0E2") 
@@ -579,7 +588,8 @@ namespace SimsCCManager.Packages.Sims2Search
                 } 
                 else 
                 {
-                    dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+                    //dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+                    readFile.BaseStream.Position = this.chunkOffset + indexData[mmatloc].offset;
 
                     string cpfTypeID = readFile.ReadUInt32().ToString("X8");
                     if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
@@ -589,7 +599,8 @@ namespace SimsCCManager.Packages.Sims2Search
 
                     if  (cpfTypeID == "6D783F3C")
                     {
-                        dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+                        //dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+                        readFile.BaseStream.Position = this.chunkOffset + indexData[mmatloc].offset;
 
                         string xmlData = Encoding.UTF8.GetString(readFile.ReadBytes((int)indexData[mmatloc].filesize));
                         mmatvar = readentries.readXMLchunk(xmlData);
@@ -869,7 +880,12 @@ namespace SimsCCManager.Packages.Sims2Search
             thisPackage.ObjectGUID.AddRange(distinctGUIDS);
             log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
             log.MakeLog(thisPackage.ToString(), false);
-            Containers.Containers.allSims2Packages.Add(thisPackage);
+            //Containers.Containers.allSims2Packages.Add(thisPackage);
+            using (SQLite.SQLiteConnection db = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead)){
+                db.Insert(thisPackage);
+                var package = db.Get<PackageFile>(packageinfo.Name);
+                db.Delete(package);
+            }
 
             objdnum = new List<int>();   
             strnm = new List<int>();

@@ -26,6 +26,9 @@ using SimsCCManager.Packages.Containers;
 
 namespace SimsCCManager.SortingUIOptions
 {
+    /// <summary>
+    /// Options window for sorting. WIP. 
+    /// </summary>
     public partial class SortingOptionsWindow : Window 
     {
 
@@ -61,6 +64,12 @@ namespace SimsCCManager.SortingUIOptions
         }
 
         private void UnpackS3_Check(object sender, RoutedEventArgs e){
+
+        }
+        private void Unmerge_Check(object sender, RoutedEventArgs e){
+
+        }
+        private void MoveMerged_Check(object sender, RoutedEventArgs e){
 
         }
         

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <RollForward>Major</RollForward>
     <Nullable>disable</Nullable>
@@ -10,17 +10,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="LiteDB" Version="5.0.16" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
+    <PackageReference Include="SQLiteNetExtensions" Version="2.1.0" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.117" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.2" />
-    <EmbeddedResource Include="data\s4bbtags.json"/>
+    <EmbeddedResource Include="data\s4bbtags.json" />
   </ItemGroup>
   <Target Name="BeforeBuild">
     <ItemGroup>
         <Content Include="data\*.*" />
         <Content Include="img\*.*" />
+        <Resource Include="fonts\*.*" />
     </ItemGroup>
   </Target>
+
+  
 
 
 </Project>

@@ -1,7 +1,7 @@
 ﻿SimsCCManager.App
 
 
-winexe
+exe
 C#
 .cs
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\
@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET6_0;NETCOREAPP
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\App.xaml
-4564272140
+5-940616582
+21913751815
+20-2118370582
+217877830397
+CustomSortingOptions.xaml;MainWindow.xaml;Results.xaml;ResultsPreviewImage.xaml;SortFolderOptions.xaml;
 
-15-1474190098
-209-1038210240
-CustomSortingOptions.xaml;MainWindow.xaml;Results.xaml;SortFolderOptions.xaml;
-
-True
+False
 

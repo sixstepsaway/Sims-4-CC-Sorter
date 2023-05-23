@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimsCCManager.App.PreviewImage"
         mc:Ignorable="d"
-        Title="Results" Height="300" Width="400" SizeToContent="Manual">
+        Title="Preview" Height="300" Width="400" SizeToContent="Manual">
 
         <Grid Background="#FF716D77" MaxHeight="300" MaxWidth="214">
           <Image x:Name="CCThumbImg" Source="//" MaxHeight="290" MaxWidth="204"/>

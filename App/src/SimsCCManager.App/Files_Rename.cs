@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SimsCCManager.App
+namespace SimsCCManager.Terminal
 {
     public class Files_Rename
     {

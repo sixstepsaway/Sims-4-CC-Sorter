@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,26 +11,38 @@ using System.Reflection;
 using SimsCCManager.Packages.Containers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using SQLite;
+using System.Data.SQLite;
 
 
 
 namespace SSAGlobals {
 
     public class typeList {
+        /// <summary>
+        /// For "types", for example Cas Parts or Geometry.
+        /// </summary>
         public string desc;
         public string typeID;
         public string info;
     }
     public class SortingValues {
+        /// <summary>
+        /// Unused rn.
+        /// </summary>
         string name {set; get;}        
     }
 
     public class TypeListings {
+        /// <summary>
+        /// A list of types and function tags and so on for each game. May later be transferred to a database.
+        /// </summary>
+        JsonSerializer serializer = new JsonSerializer();
 
         public static List<typeList> AllTypesS2;
         public static List<typeList> AllTypesS3;
         public static List<typeList> AllTypesS4;
-        public static List<typeList> S4BBFunctionTags;
+        public static ConcurrentBag<typeList> S4BBFunctionTags;
         public static List<FunctionSortList> S2BuyFunctionSort;
         public static List<FunctionSortList> S2BuildFunctionSort;
         public static List<FunctionSortList> S3BuyFunctionSort;
@@ -158,385 +171,385 @@ namespace SSAGlobals {
 
         public List<typeList> createS3TypeList(){
             List<typeList> AllTypes = new List<typeList>();
-            AllTypes.Add(new typeList{typeID="0x00AE6C67", desc="BONE", info="skcon"});
-            AllTypes.Add(new typeList{typeID="0x00B2D882", desc="_IMG", info="dds"});
-            AllTypes.Add(new typeList{typeID="0x00B552EA", desc="_SPT", info="tree"});
-            AllTypes.Add(new typeList{typeID="0x015A1849", desc="GEOM", info="geom"});
-            AllTypes.Add(new typeList{typeID="0x0166038C", desc="NMAP", info="nmap"});
-            AllTypes.Add(new typeList{typeID="0x01661233", desc="MODL", info="scene"});
-            AllTypes.Add(new typeList{typeID="0x01A527DB", desc="_AUD", info="mm"});
-            AllTypes.Add(new typeList{typeID="0x01D0E6FB", desc="VBUF", info=""});
-            AllTypes.Add(new typeList{typeID="0x01D0E70F", desc="IBUF", info=""});
-            AllTypes.Add(new typeList{typeID="0x01D0E723", desc="VRTF", info=""});
-            AllTypes.Add(new typeList{typeID="0x01D0E75D", desc="MATD", info="scene"});
-            AllTypes.Add(new typeList{typeID="0x01D0E76B", desc="SKIN", info="scene"});
-            AllTypes.Add(new typeList{typeID="0x01D10F34", desc="MLOD", info="scene"});
-            AllTypes.Add(new typeList{typeID="0x01EEF63A", desc="_AUD", info="mm"});
-            AllTypes.Add(new typeList{typeID="0x02019972", desc="MTST", info="scene"});
-            AllTypes.Add(new typeList{typeID="0x021D7E8C", desc="SPT2", info="scene"});
-            AllTypes.Add(new typeList{typeID="0x0229684B", desc="VBUF", info=""});
-            AllTypes.Add(new typeList{typeID="0x0229684F", desc="IBUF", info=""});
-            AllTypes.Add(new typeList{typeID="0x022B756C", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x025C90A6", desc="_CSS", info="css"});
-            AllTypes.Add(new typeList{typeID="0x025C95B6", desc="LAYO", info="xml"});
-            AllTypes.Add(new typeList{typeID="0x025ED6F4", desc="SIMO", info="xml"});
-            AllTypes.Add(new typeList{typeID="0x029E333B", desc="VOCE", info="voicemix"});
-            AllTypes.Add(new typeList{typeID="0x02C9EFF2", desc="MIXR", info="audmix"});
-            AllTypes.Add(new typeList{typeID="0x02D5DF13", desc="JAZZ", info="jazz"});
-            AllTypes.Add(new typeList{typeID="0x02DC343F", desc="OBJK", info="objkey"});
-            AllTypes.Add(new typeList{typeID="0x033260E3", desc="TKMK", info="trackmask"});
-            AllTypes.Add(new typeList{typeID="0x0333406C", desc="_XML", info="xml"});
-            AllTypes.Add(new typeList{typeID="0x033A1435", desc="TXTC", info="compositor"});
-            AllTypes.Add(new typeList{typeID="0x033B2B66", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x0341ACC9", desc="TXTF", info="fabric"});
-            AllTypes.Add(new typeList{typeID="0x034AEECB", desc="CASP", info="caspart"});
-            AllTypes.Add(new typeList{typeID="0x0354796A", desc="TONE", info="skintone"});
-            AllTypes.Add(new typeList{typeID="0x03555BA8", desc="TONE", info="hairtone"});
-            AllTypes.Add(new typeList{typeID="0x0355E0A6", desc="BOND", info="bonedelta"});
-            AllTypes.Add(new typeList{typeID="0x0358B08A", desc="FACE", info="faceblend"});
-            AllTypes.Add(new typeList{typeID="0x03B33DDF", desc="ITUN", info="xml"});
-            AllTypes.Add(new typeList{typeID="0x03B4C61D", desc="LITE", info="light"});
-            AllTypes.Add(new typeList{typeID="0x03D843C2", desc="CCHE", info="cacheentry"});
-            AllTypes.Add(new typeList{typeID="0x03D86EA4", desc="DETL", info=""});
-            AllTypes.Add(new typeList{typeID="0x03E80CDC", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x0418FE2A", desc="CFEN", info="fence"});
-            AllTypes.Add(new typeList{typeID="0x044735DD", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x044AE110", desc="COMP", info="xml"});
-            AllTypes.Add(new typeList{typeID="0x046A7235", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x048A166D", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x0498DA7E", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x049CA4CD", desc="CSTR", info="stairs"});
-            AllTypes.Add(new typeList{typeID="0x04A09283", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x04A4D951", desc="WDET", info=""});
-            AllTypes.Add(new typeList{typeID="0x04AC5D93", desc="CPRX", info="proxyprod"});
-            AllTypes.Add(new typeList{typeID="0x04B30669", desc="CTTL", info="terraintool"});
-            AllTypes.Add(new typeList{typeID="0x04C58103", desc="CRAL", info="railing"});
-            AllTypes.Add(new typeList{typeID="0x04D82D90", desc="CMRU", info="cachemru"});
-            AllTypes.Add(new typeList{typeID="0x04ED4BB2", desc="CTPT", info="terrainpaint"});
-            AllTypes.Add(new typeList{typeID="0x04EE6ABB", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x04F3CC01", desc="CFIR", info="fireplace"});
-            AllTypes.Add(new typeList{typeID="0x04F51033", desc="SBNO", info="binoutfit"});
-            AllTypes.Add(new typeList{typeID="0x04F66BCC", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x04F88964", desc="SIME", info="simexport"});
-            AllTypes.Add(new typeList{typeID="0x051DF2DD", desc="CBLN", info="compblend"});
-            AllTypes.Add(new typeList{typeID="0x05512255", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x553EAD4", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x0563919E", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x0580A2B4", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x0580A2B5", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x0580A2B6", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x0580A2CD", desc="SNAP", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0580A2CE", desc="SNAP", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0580A2CF", desc="SNAP", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0580A2B4", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0580A2B5", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0580A2B6", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0589DC44", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0589DC45", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0589DC46", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0589DC46", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0591B1AF", desc="UPST", info="usercastpreset"});
-            AllTypes.Add(new typeList{typeID="0x05B17698", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x05B17699", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x05B1769A", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x05B1B524", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x05B1B525", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x05B1B526", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x05CD4BB3", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x05DA8AF6", desc="WBND", info=""});
-            AllTypes.Add(new typeList{typeID="0x05E4FAF7", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x05ED1226", desc="REFS", info="references"});
-            AllTypes.Add(new typeList{typeID="0x05FF3549", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x05FF6BA4", desc="2ARY", info="bnry"});
-            AllTypes.Add(new typeList{typeID="0x0604ABDA", desc="DMTR", info="dreamtree"});
-            AllTypes.Add(new typeList{typeID="0x060B390C", desc="CWAT", info="water"});
-            AllTypes.Add(new typeList{typeID="0x060E1826", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x0611B0E7", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x062853A8", desc="FAMD", info="household"});
-            AllTypes.Add(new typeList{typeID="0x062C8204", desc="BBLN", info="filen"});
-            AllTypes.Add(new typeList{typeID="0x062E9EE0", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x06302271", desc="CINF", info="color"});
-            AllTypes.Add(new typeList{typeID="0x063261DA", desc="HINF", info="haircolor"});
-            AllTypes.Add(new typeList{typeID="0x06326213", desc="OBCI", info="objcolor"});
-            AllTypes.Add(new typeList{typeID="0x06393F5D", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x065B8B38", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x065BFCAC", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x065BFCAD", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x065BFCAE", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x0668F628", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x0668F630", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x0668F635", desc="TWNI", info="png"});
-            AllTypes.Add(new typeList{typeID="0x0668F639", desc="TWNP", info="imgpath"});
-            AllTypes.Add(new typeList{typeID="0x067CAA11", desc="BGEO", info="blendgeom"});
-            AllTypes.Add(new typeList{typeID="0x06B981ED", desc="OBJS", info="objs"});
-            AllTypes.Add(new typeList{typeID="0x06CE4804", desc="META", info=""});
-            AllTypes.Add(new typeList{typeID="0x06D6B112", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x06DC847E", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x073FAA07", desc="S3SA", info="s3sa"});
-            AllTypes.Add(new typeList{typeID="0x07046B39", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x07CD07EC", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x0A36F07A", desc="CCFP", info="fountain"});
-            AllTypes.Add(new typeList{typeID="0x0C37A5B5", desc="LOOK", info="lookuptab"});
-            AllTypes.Add(new typeList{typeID="0x0C07456D", desc="COLL", info=""});
-            AllTypes.Add(new typeList{typeID="0x11E32896", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x16B17A6C", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x1F886EAD", desc="_INI", info="ini"});
-            AllTypes.Add(new typeList{typeID="0x220557DA", desc="STBL", info="stbl"});
-            AllTypes.Add(new typeList{typeID="0x2AD195F2", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x2653E3C8", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2653E3C9", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2653E3CA", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2D4284F0", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2D4284F1", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2D4284F2", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2E75C764", desc="ICON", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2E75C765", desc="ICON", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2E75C766", desc="ICON", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2E75C767", desc="ICON", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2F7D0002", desc="IMAG", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2F7D0004", desc="IMAG", info="png"});
-            AllTypes.Add(new typeList{typeID="0x2F7D0008", desc="UITX", info="uitexture"});
-            AllTypes.Add(new typeList{typeID="0x312E7545", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x316C78F2", desc="CFND", info="foundation"});
-            AllTypes.Add(new typeList{typeID="0x319E4F1D", desc="OBJD", info="object"});
-            AllTypes.Add(new typeList{typeID="0x32C83095", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x342778A7", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x342779A7", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x34E5247C", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x35A33E29", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x3A65AF29", desc="MINF", info="makeup"});
-            AllTypes.Add(new typeList{typeID="0x3D8632D0", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x4D1A5589", desc="OBJN", info="objn"});
-            AllTypes.Add(new typeList{typeID="0x4F09F8E1", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x515CA4CD", desc="CWAL", info="wall"});
-            AllTypes.Add(new typeList{typeID="0x54372472", desc="TSNP", info="png"});
-            AllTypes.Add(new typeList{typeID="0x5DE9DBA0", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x5DE9DBA1", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x5DE9DBA2", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x626F60CC", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x626F60CD", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x626F60CE", desc="THUM", info="png"});
-            AllTypes.Add(new typeList{typeID="0x628A788F", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x63A33EA7", desc="ANIM", info="scene"});
-            AllTypes.Add(new typeList{typeID="0x6ABFAD26", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x6B20C4F3", desc="CLIP", info="animation"});
-            AllTypes.Add(new typeList{typeID="0x6B6D837D", desc="SNAP", info="png"});
-            AllTypes.Add(new typeList{typeID="0x6B6D837E", desc="SNAP", info="png"});
-            AllTypes.Add(new typeList{typeID="0x6B6D837F", desc="SNAP", info="png"});
-            AllTypes.Add(new typeList{typeID="0x72683C15", desc="STPR", info="sktonepreset"});
-            AllTypes.Add(new typeList{typeID="0x736884F1", desc="VPXY", info="vpxy"});
-            AllTypes.Add(new typeList{typeID="0x73E93EEB", desc="_XML", info="xml"});
-            AllTypes.Add(new typeList{typeID="0x7672F0C5", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x8070223D", desc="AUDT", info="audtun"});
-            AllTypes.Add(new typeList{typeID="0x82B43584", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x8EAF13DE", desc="_RIG", info="grannyrig"});
-            AllTypes.Add(new typeList{typeID="0x8FFB80F6", desc="_ADS", info="dds"});
-            AllTypes.Add(new typeList{typeID="0x90620000", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x90624C1B", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x9063660D", desc="WTXT", info=""});
-            AllTypes.Add(new typeList{typeID="0x9063660E", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x913381F2", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0x9151E6BC", desc="CWST", info="wallstyle"});
-            AllTypes.Add(new typeList{typeID="0x91EDBD3E", desc="CRST", info="roofstyle"});
-            AllTypes.Add(new typeList{typeID="0x94C5D14A", desc="SIGR", info="signature"});
-            AllTypes.Add(new typeList{typeID="0x94EC4B54", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0xA2377025", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xA5F9FE18", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0xA8D58BE5", desc="SKIL", info="xml"});
-            AllTypes.Add(new typeList{typeID="0xAE39399F", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xB074ACE6", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xB125533A", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0xB1422971", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0xB1CC1AF6", desc="_VID", info="mm"});
-            AllTypes.Add(new typeList{typeID="0xB4DD716B", desc="_INV", info="inventory"});
-            AllTypes.Add(new typeList{typeID="0xB52F5055", desc="FBLN", info="blendunit"});
-            AllTypes.Add(new typeList{typeID="0xCF84EC98", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xCF9A4ACE", desc="MDLR", info="modular"});
-            AllTypes.Add(new typeList{typeID="0xD063545B", desc="LDES", info="lotdesc"});
-            AllTypes.Add(new typeList{typeID="0xD3044521", desc="RSLT", info="scene"});
-            AllTypes.Add(new typeList{typeID="0xD382BF57", desc="FTPT", info="scene"});
-            AllTypes.Add(new typeList{typeID="0xD4D9FBE5", desc="PTRN", info="patternlist"});
-            AllTypes.Add(new typeList{typeID="0xD84E7FC5", desc="ICON", info="png"});
-            AllTypes.Add(new typeList{typeID="0xD84E7FC6", desc="ICON", info="png"});
-            AllTypes.Add(new typeList{typeID="0xD84E7FC7", desc="ICON", info="png"});
-            AllTypes.Add(new typeList{typeID="0xD9BD0909", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xDC37E964", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xDD3223A7", desc="BUFF", info="xml"});
-            AllTypes.Add(new typeList{typeID="0xDEA2951C", desc="PETB", info="breed"});
-            AllTypes.Add(new typeList{typeID="0xEA5118B0", desc="_SWB", info="effects"});
-            AllTypes.Add(new typeList{typeID="0xF0633989", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xF0FF5598", desc="", info="cam"});
-            AllTypes.Add(new typeList{typeID="0xF12E5E12", desc="UNKN", info=""});
-            AllTypes.Add(new typeList{typeID="0xF1EDBD86", desc="CRMT", info="roofmatrl"});
-            AllTypes.Add(new typeList{typeID="0xF3A38370", desc="NGMP", info="guidmap"});
-            AllTypes.Add(new typeList{typeID="0xF609FD60", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xFCEAB65B", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="00AE6C67", desc="BONE", info="skcon"});
+            AllTypes.Add(new typeList{typeID="00B2D882", desc="_IMG", info="dds"});
+            AllTypes.Add(new typeList{typeID="00B552EA", desc="_SPT", info="tree"});
+            AllTypes.Add(new typeList{typeID="015A1849", desc="GEOM", info="geom"});
+            AllTypes.Add(new typeList{typeID="0166038C", desc="NMAP", info="nmap"});
+            AllTypes.Add(new typeList{typeID="01661233", desc="MODL", info="scene"});
+            AllTypes.Add(new typeList{typeID="01A527DB", desc="_AUD", info="mm"});
+            AllTypes.Add(new typeList{typeID="01D0E6FB", desc="VBUF", info=""});
+            AllTypes.Add(new typeList{typeID="01D0E70F", desc="IBUF", info=""});
+            AllTypes.Add(new typeList{typeID="01D0E723", desc="VRTF", info=""});
+            AllTypes.Add(new typeList{typeID="01D0E75D", desc="MATD", info="scene"});
+            AllTypes.Add(new typeList{typeID="01D0E76B", desc="SKIN", info="scene"});
+            AllTypes.Add(new typeList{typeID="01D10F34", desc="MLOD", info="scene"});
+            AllTypes.Add(new typeList{typeID="01EEF63A", desc="_AUD", info="mm"});
+            AllTypes.Add(new typeList{typeID="02019972", desc="MTST", info="scene"});
+            AllTypes.Add(new typeList{typeID="021D7E8C", desc="SPT2", info="scene"});
+            AllTypes.Add(new typeList{typeID="0229684B", desc="VBUF", info=""});
+            AllTypes.Add(new typeList{typeID="0229684F", desc="IBUF", info=""});
+            AllTypes.Add(new typeList{typeID="022B756C", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="025C90A6", desc="_CSS", info="css"});
+            AllTypes.Add(new typeList{typeID="025C95B6", desc="LAYO", info="xml"});
+            AllTypes.Add(new typeList{typeID="025ED6F4", desc="SIMO", info="xml"});
+            AllTypes.Add(new typeList{typeID="029E333B", desc="VOCE", info="voicemix"});
+            AllTypes.Add(new typeList{typeID="02C9EFF2", desc="MIXR", info="audmix"});
+            AllTypes.Add(new typeList{typeID="02D5DF13", desc="JAZZ", info="jazz"});
+            AllTypes.Add(new typeList{typeID="02DC343F", desc="OBJK", info="objkey"});
+            AllTypes.Add(new typeList{typeID="033260E3", desc="TKMK", info="trackmask"});
+            AllTypes.Add(new typeList{typeID="0333406C", desc="_XML", info="xml"});
+            AllTypes.Add(new typeList{typeID="033A1435", desc="TXTC", info="compositor"});
+            AllTypes.Add(new typeList{typeID="033B2B66", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0341ACC9", desc="TXTF", info="fabric"});
+            AllTypes.Add(new typeList{typeID="034AEECB", desc="CASP", info="caspart"});
+            AllTypes.Add(new typeList{typeID="0354796A", desc="TONE", info="skintone"});
+            AllTypes.Add(new typeList{typeID="03555BA8", desc="TONE", info="hairtone"});
+            AllTypes.Add(new typeList{typeID="0355E0A6", desc="BOND", info="bonedelta"});
+            AllTypes.Add(new typeList{typeID="0358B08A", desc="FACE", info="faceblend"});
+            AllTypes.Add(new typeList{typeID="03B33DDF", desc="ITUN", info="xml"});
+            AllTypes.Add(new typeList{typeID="03B4C61D", desc="LITE", info="light"});
+            AllTypes.Add(new typeList{typeID="03D843C2", desc="CCHE", info="cacheentry"});
+            AllTypes.Add(new typeList{typeID="03D86EA4", desc="DETL", info=""});
+            AllTypes.Add(new typeList{typeID="03E80CDC", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0418FE2A", desc="CFEN", info="fence"});
+            AllTypes.Add(new typeList{typeID="044735DD", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="044AE110", desc="COMP", info="xml"});
+            AllTypes.Add(new typeList{typeID="046A7235", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="048A166D", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="0498DA7E", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="049CA4CD", desc="CSTR", info="stairs"});
+            AllTypes.Add(new typeList{typeID="04A09283", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="04A4D951", desc="WDET", info=""});
+            AllTypes.Add(new typeList{typeID="04AC5D93", desc="CPRX", info="proxyprod"});
+            AllTypes.Add(new typeList{typeID="04B30669", desc="CTTL", info="terraintool"});
+            AllTypes.Add(new typeList{typeID="04C58103", desc="CRAL", info="railing"});
+            AllTypes.Add(new typeList{typeID="04D82D90", desc="CMRU", info="cachemru"});
+            AllTypes.Add(new typeList{typeID="04ED4BB2", desc="CTPT", info="terrainpaint"});
+            AllTypes.Add(new typeList{typeID="04EE6ABB", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="04F3CC01", desc="CFIR", info="fireplace"});
+            AllTypes.Add(new typeList{typeID="04F51033", desc="SBNO", info="binoutfit"});
+            AllTypes.Add(new typeList{typeID="04F66BCC", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="04F88964", desc="SIME", info="simexport"});
+            AllTypes.Add(new typeList{typeID="051DF2DD", desc="CBLN", info="compblend"});
+            AllTypes.Add(new typeList{typeID="05512255", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="553EAD4", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="0563919E", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="0580A2B4", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0580A2B5", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0580A2B6", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0580A2CD", desc="SNAP", info="png"});
+            AllTypes.Add(new typeList{typeID="0580A2CE", desc="SNAP", info="png"});
+            AllTypes.Add(new typeList{typeID="0580A2CF", desc="SNAP", info="png"});
+            AllTypes.Add(new typeList{typeID="0580A2B4", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="0580A2B5", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="0580A2B6", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="0589DC44", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="0589DC45", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="0589DC46", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="0589DC46", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="0591B1AF", desc="UPST", info="usercastpreset"});
+            AllTypes.Add(new typeList{typeID="05B17698", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="05B17699", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="05B1769A", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="05B1B524", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="05B1B525", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="05B1B526", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="05CD4BB3", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="05DA8AF6", desc="WBND", info=""});
+            AllTypes.Add(new typeList{typeID="05E4FAF7", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="05ED1226", desc="REFS", info="references"});
+            AllTypes.Add(new typeList{typeID="05FF3549", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="05FF6BA4", desc="2ARY", info="bnry"});
+            AllTypes.Add(new typeList{typeID="0604ABDA", desc="DMTR", info="dreamtree"});
+            AllTypes.Add(new typeList{typeID="060B390C", desc="CWAT", info="water"});
+            AllTypes.Add(new typeList{typeID="060E1826", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="0611B0E7", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="062853A8", desc="FAMD", info="household"});
+            AllTypes.Add(new typeList{typeID="062C8204", desc="BBLN", info="filen"});
+            AllTypes.Add(new typeList{typeID="062E9EE0", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="06302271", desc="CINF", info="color"});
+            AllTypes.Add(new typeList{typeID="063261DA", desc="HINF", info="haircolor"});
+            AllTypes.Add(new typeList{typeID="06326213", desc="OBCI", info="objcolor"});
+            AllTypes.Add(new typeList{typeID="06393F5D", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="065B8B38", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="065BFCAC", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="065BFCAD", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="065BFCAE", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0668F628", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0668F630", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0668F635", desc="TWNI", info="png"});
+            AllTypes.Add(new typeList{typeID="0668F639", desc="TWNP", info="imgpath"});
+            AllTypes.Add(new typeList{typeID="067CAA11", desc="BGEO", info="blendgeom"});
+            AllTypes.Add(new typeList{typeID="06B981ED", desc="OBJS", info="objs"});
+            AllTypes.Add(new typeList{typeID="06CE4804", desc="META", info=""});
+            AllTypes.Add(new typeList{typeID="06D6B112", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="06DC847E", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="073FAA07", desc="S3SA", info="s3sa"});
+            AllTypes.Add(new typeList{typeID="07046B39", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="07CD07EC", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0A36F07A", desc="CCFP", info="fountain"});
+            AllTypes.Add(new typeList{typeID="0C37A5B5", desc="LOOK", info="lookuptab"});
+            AllTypes.Add(new typeList{typeID="0C07456D", desc="COLL", info=""});
+            AllTypes.Add(new typeList{typeID="11E32896", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="16B17A6C", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="1F886EAD", desc="_INI", info="ini"});
+            AllTypes.Add(new typeList{typeID="220557DA", desc="STBL", info="stbl"});
+            AllTypes.Add(new typeList{typeID="2AD195F2", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="2653E3C8", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="2653E3C9", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="2653E3CA", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="2D4284F0", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="2D4284F1", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="2D4284F2", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="2E75C764", desc="ICON", info="png"});
+            AllTypes.Add(new typeList{typeID="2E75C765", desc="ICON", info="png"});
+            AllTypes.Add(new typeList{typeID="2E75C766", desc="ICON", info="png"});
+            AllTypes.Add(new typeList{typeID="2E75C767", desc="ICON", info="png"});
+            AllTypes.Add(new typeList{typeID="2F7D0002", desc="IMAG", info="png"});
+            AllTypes.Add(new typeList{typeID="2F7D0004", desc="IMAG", info="png"});
+            AllTypes.Add(new typeList{typeID="2F7D0008", desc="UITX", info="uitexture"});
+            AllTypes.Add(new typeList{typeID="312E7545", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="316C78F2", desc="CFND", info="foundation"});
+            AllTypes.Add(new typeList{typeID="319E4F1D", desc="OBJD", info="object"});
+            AllTypes.Add(new typeList{typeID="32C83095", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="342778A7", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="342779A7", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="34E5247C", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="35A33E29", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="3A65AF29", desc="MINF", info="makeup"});
+            AllTypes.Add(new typeList{typeID="3D8632D0", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="4D1A5589", desc="OBJN", info="objn"});
+            AllTypes.Add(new typeList{typeID="4F09F8E1", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="515CA4CD", desc="CWAL", info="wall"});
+            AllTypes.Add(new typeList{typeID="54372472", desc="TSNP", info="png"});
+            AllTypes.Add(new typeList{typeID="5DE9DBA0", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="5DE9DBA1", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="5DE9DBA2", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="626F60CC", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="626F60CD", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="626F60CE", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="628A788F", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="63A33EA7", desc="ANIM", info="scene"});
+            AllTypes.Add(new typeList{typeID="6ABFAD26", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="6B20C4F3", desc="CLIP", info="animation"});
+            AllTypes.Add(new typeList{typeID="6B6D837D", desc="SNAP", info="png"});
+            AllTypes.Add(new typeList{typeID="6B6D837E", desc="SNAP", info="png"});
+            AllTypes.Add(new typeList{typeID="6B6D837F", desc="SNAP", info="png"});
+            AllTypes.Add(new typeList{typeID="72683C15", desc="STPR", info="sktonepreset"});
+            AllTypes.Add(new typeList{typeID="736884F1", desc="VPXY", info="vpxy"});
+            AllTypes.Add(new typeList{typeID="73E93EEB", desc="_XML", info="xml"});
+            AllTypes.Add(new typeList{typeID="7672F0C5", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="8070223D", desc="AUDT", info="audtun"});
+            AllTypes.Add(new typeList{typeID="82B43584", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="8EAF13DE", desc="_RIG", info="grannyrig"});
+            AllTypes.Add(new typeList{typeID="8FFB80F6", desc="_ADS", info="dds"});
+            AllTypes.Add(new typeList{typeID="90620000", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="90624C1B", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="9063660D", desc="WTXT", info=""});
+            AllTypes.Add(new typeList{typeID="9063660E", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="913381F2", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="9151E6BC", desc="CWST", info="wallstyle"});
+            AllTypes.Add(new typeList{typeID="91EDBD3E", desc="CRST", info="roofstyle"});
+            AllTypes.Add(new typeList{typeID="94C5D14A", desc="SIGR", info="signature"});
+            AllTypes.Add(new typeList{typeID="94EC4B54", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="A2377025", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="A5F9FE18", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="A8D58BE5", desc="SKIL", info="xml"});
+            AllTypes.Add(new typeList{typeID="AE39399F", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="B074ACE6", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="B125533A", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="B1422971", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="B1CC1AF6", desc="_VID", info="mm"});
+            AllTypes.Add(new typeList{typeID="B4DD716B", desc="_INV", info="inventory"});
+            AllTypes.Add(new typeList{typeID="B52F5055", desc="FBLN", info="blendunit"});
+            AllTypes.Add(new typeList{typeID="CF84EC98", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="CF9A4ACE", desc="MDLR", info="modular"});
+            AllTypes.Add(new typeList{typeID="D063545B", desc="LDES", info="lotdesc"});
+            AllTypes.Add(new typeList{typeID="D3044521", desc="RSLT", info="scene"});
+            AllTypes.Add(new typeList{typeID="D382BF57", desc="FTPT", info="scene"});
+            AllTypes.Add(new typeList{typeID="D4D9FBE5", desc="PTRN", info="patternlist"});
+            AllTypes.Add(new typeList{typeID="D84E7FC5", desc="ICON", info="png"});
+            AllTypes.Add(new typeList{typeID="D84E7FC6", desc="ICON", info="png"});
+            AllTypes.Add(new typeList{typeID="D84E7FC7", desc="ICON", info="png"});
+            AllTypes.Add(new typeList{typeID="D9BD0909", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="DC37E964", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="DD3223A7", desc="BUFF", info="xml"});
+            AllTypes.Add(new typeList{typeID="DEA2951C", desc="PETB", info="breed"});
+            AllTypes.Add(new typeList{typeID="EA5118B0", desc="_SWB", info="effects"});
+            AllTypes.Add(new typeList{typeID="F0633989", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="F0FF5598", desc="", info="cam"});
+            AllTypes.Add(new typeList{typeID="F12E5E12", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="F1EDBD86", desc="CRMT", info="roofmatrl"});
+            AllTypes.Add(new typeList{typeID="F3A38370", desc="NGMP", info="guidmap"});
+            AllTypes.Add(new typeList{typeID="F609FD60", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="FCEAB65B", desc="THUM", info="png"});
             return AllTypes;
         }
 
         public List<typeList> createS4TypeList(){
             List<typeList> AllTypes = new List<typeList>();
-            AllTypes.Add(new typeList{typeID="0x00B2D882", desc="_IMG ", info="dds "});
-            AllTypes.Add(new typeList{typeID="0x00DE5AC5", desc="", info="rmi "});
-            AllTypes.Add(new typeList{typeID="0x010FAF71", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x015A1849", desc="GEOM ", info="geom"});
-            AllTypes.Add(new typeList{typeID="0x0166038C", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x01661233", desc="MODL ", info="scene "});
-            AllTypes.Add(new typeList{typeID="0x01942E2C", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x01A527DB", desc="_AUD ", info="mm "});
-            AllTypes.Add(new typeList{typeID="0x01D0E75D", desc="MATD ", info=""});
-            AllTypes.Add(new typeList{typeID="0x01D10F34", desc="MLOD ", info="scene "});
-            AllTypes.Add(new typeList{typeID="0x01EEF63A", desc="_AUD ", info="mm "});
-            AllTypes.Add(new typeList{typeID="0x02019972", desc="MTST ", info=""});
-            AllTypes.Add(new typeList{typeID="0x025ED6F4", desc="SIMO ", info=""});
-            AllTypes.Add(new typeList{typeID="0x02D5DF13", desc="JAZZ ", info="jazz "});
-            AllTypes.Add(new typeList{typeID="0x033260E3", desc="TkMk ", info=""});
-            AllTypes.Add(new typeList{typeID="0x0333406C", desc="_XML ", info="xml "});
-            AllTypes.Add(new typeList{typeID="0x033B2B66", desc="UNKN ", info=""});
-            AllTypes.Add(new typeList{typeID="0x034AEECB", desc="CASP ", info="caspart "});
-            AllTypes.Add(new typeList{typeID="0x0354796A", desc="TONE ", info="skintone "});
-            AllTypes.Add(new typeList{typeID="0x0355E0A6", desc="BOND ", info="bonedelta "});
-            AllTypes.Add(new typeList{typeID="0x03B4C61D", desc="LITE ", info=""});
-            AllTypes.Add(new typeList{typeID="0x0418FE2A", desc="CFEN ", info=""});
-            AllTypes.Add(new typeList{typeID="0x067CAA11", desc="BGEO ", info="blendgeom "});
-            AllTypes.Add(new typeList{typeID="0x07936CE0", desc="SPLT ", info="CTProductBlock "});
-            AllTypes.Add(new typeList{typeID="0x0A227BCF", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x0C772E27", desc="_XML ", info=""});
-            AllTypes.Add(new typeList{typeID="0x0D338A3A", desc="THUM ", info=""});
-            AllTypes.Add(new typeList{typeID="0x105205BA", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x122FC66A", desc="_XML ", info="lottypeeventmap "});
-            AllTypes.Add(new typeList{typeID="0x12952634", desc="LDNB ", info=""});
-            AllTypes.Add(new typeList{typeID="0x153D2219", desc="UNKN ", info=""});
-            AllTypes.Add(new typeList{typeID="0x16CA6BC4", desc="_THM ", info=""});
-            AllTypes.Add(new typeList{typeID="0x17C0C281", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x18F3C673", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x19301120", desc="WCLR ", info=""});
-            AllTypes.Add(new typeList{typeID="0x1A8506C5", desc="_XML ", info="mmusx? "});
-            AllTypes.Add(new typeList{typeID="0x1B25A024", desc="_XML ", info="sysx "});
-            AllTypes.Add(new typeList{typeID="0x1C1CF1F7", desc="CRAL ", info=""});
-            AllTypes.Add(new typeList{typeID="0x1C99B344", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x1CC04273", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x1D6DF1CF", desc="CCOL ", info=""});
-            AllTypes.Add(new typeList{typeID="0x20D81496", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x220557DA", desc="STBL ", info="stbl"});
-            AllTypes.Add(new typeList{typeID="0x25796DCA", desc="_OTF ", info="otf "});
-            AllTypes.Add(new typeList{typeID="0x26978421", desc="_CUR ", info="cur "});
-            AllTypes.Add(new typeList{typeID="0x276CA4B9", desc="_TTF ", info="ttf "});
-            AllTypes.Add(new typeList{typeID="0x2A8A5E22", desc="", info="trayitem "});
-            AllTypes.Add(new typeList{typeID="0x2AD195F2", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x2F7D0004", desc="IMAG ", info="png "});
-            AllTypes.Add(new typeList{typeID="0x2FAE983E", desc="CFND ", info=""});
-            AllTypes.Add(new typeList{typeID="0x319E4F1D", desc="COBJ ", info=""});
-            AllTypes.Add(new typeList{typeID="0x3453CF95", desc="RLE2 ", info="DXT5RLE2 "});
-            AllTypes.Add(new typeList{typeID="0x370EFD6E", desc="ROOM ", info="room "});
-            AllTypes.Add(new typeList{typeID="0x376840D7", desc="AVI ", info="Video "});
-            AllTypes.Add(new typeList{typeID="0x3924DE26", desc="_BPT ", info="blueprint "});
-            AllTypes.Add(new typeList{typeID="0x3BD45407", desc="_HHI ", info="hhi "});
-            AllTypes.Add(new typeList{typeID="0x3BF8FD86", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x3C1AF1F2", desc="THUM ", info="png "});
-            AllTypes.Add(new typeList{typeID="0x3C2A8647", desc="THUM ", info="png "});
-            AllTypes.Add(new typeList{typeID="0x3D8632D0", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x3EAAA87C", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x3F0C529A", desc="CSPN ", info=""});
-            AllTypes.Add(new typeList{typeID="0x4115F9D5", desc="XML ", info="mixbus "});
-            AllTypes.Add(new typeList{typeID="0x48C28979", desc="CLCT ", info=""});
-            AllTypes.Add(new typeList{typeID="0x4F726BBE", desc="FTPT ", info="footprint "});
-            AllTypes.Add(new typeList{typeID="0x545AC67A", desc="DATA ", info="data "});
-            AllTypes.Add(new typeList{typeID="0x56278554", desc="_SGI ", info="sgi "});
-            AllTypes.Add(new typeList{typeID="0x5B282D45", desc="THUM ", info="png"});
-            AllTypes.Add(new typeList{typeID="0x5BE29703", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x6017E896", desc="_XML ", info="buff "});
-            AllTypes.Add(new typeList{typeID="0x62E94D38", desc="", info="xml "});
-            AllTypes.Add(new typeList{typeID="0x62ECC59A", desc="GFX ", info="gfx "});
-            AllTypes.Add(new typeList{typeID="0x6B20C4F3", desc="CLIP ", info=""});
-            AllTypes.Add(new typeList{typeID="0x6DFF1A66", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x6F40796A", desc="WRPR ", info=""});
-            AllTypes.Add(new typeList{typeID="0x71A449C9", desc="SKYB ", info=""});
-            AllTypes.Add(new typeList{typeID="0x71BDB8A2", desc="STLK ", info="sfpusp? "});
-            AllTypes.Add(new typeList{typeID="0x729F6C4F", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x73CB32C2", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x74050B1F", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x76BCF80C", desc="TRIM ", info=""});
-            AllTypes.Add(new typeList{typeID="0x78C8BCE4", desc="WRMF ", info=""});
-            AllTypes.Add(new typeList{typeID="0x810A102D", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x81CA1A10", desc="MTBL ", info=""});
-            AllTypes.Add(new typeList{typeID="0x84C23219", desc="CFLT ", info=""});
-            AllTypes.Add(new typeList{typeID="0x892C4B8A", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x8B18FF6E", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x8EAF13DE", desc="_RIG ", info="skeleton "});
-            AllTypes.Add(new typeList{typeID="0x90624C1B", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x9063660D", desc="WTXT ", info="World texture map "});
-            AllTypes.Add(new typeList{typeID="0x9063660E", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x91568FD8", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x91EDBD3E", desc="CRST ", info=""});
-            AllTypes.Add(new typeList{typeID="0x9917EACD", desc="RNDP ", info=""});
-            AllTypes.Add(new typeList{typeID="0x99D98089", desc="XML ", info="imusx? "});
-            AllTypes.Add(new typeList{typeID="0x9A20CD1C", desc="CSTR ", info=""});
-            AllTypes.Add(new typeList{typeID="0x9AFE47F5", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x9C925813", desc="THUM ", info="png "});
-            AllTypes.Add(new typeList{typeID="0x9D1AB874", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0x9F5CFF10", desc="CSTL ", info=""});
-            AllTypes.Add(new typeList{typeID="0xA0451CBD", desc="CPMP ", info=""});
-            AllTypes.Add(new typeList{typeID="0xA057811C", desc="CFRZ ", info=""});
-            AllTypes.Add(new typeList{typeID="0xA1FF2FC4", desc="THUM ", info="png "});
-            AllTypes.Add(new typeList{typeID="0xA576C2E7", desc="XML ", info="mapx "});
-            AllTypes.Add(new typeList{typeID="0xA5DFFCF3", desc="CPLT ", info=""});
-            AllTypes.Add(new typeList{typeID="0xA680EA4B", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xA8F7B517", desc="CWNS ", info="bnry "});
-            AllTypes.Add(new typeList{typeID="0xAC03A936", desc="CMTX ", info="bnry "});
-            AllTypes.Add(new typeList{typeID="0xAC16FBEC", desc="RMAP ", info="regionmap "});
-            AllTypes.Add(new typeList{typeID="0xAE39399F", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xB0118C15", desc="TMLT ", info=""});
-            AllTypes.Add(new typeList{typeID="0xB0311D0F", desc="CRTR ", info=""});
-            AllTypes.Add(new typeList{typeID="0xB3C438F0", desc="", info="householdbinary "});
-            AllTypes.Add(new typeList{typeID="0xB4F762C9", desc="CFLR ", info=""});
-            AllTypes.Add(new typeList{typeID="0xB61DE6B4", desc="_XML ", info=""});
-            AllTypes.Add(new typeList{typeID="0xB6C8B6A0", desc="_IMG ", info="dds "});
-            AllTypes.Add(new typeList{typeID="0xB734E44F", desc="FTPT ", info=""});
-            AllTypes.Add(new typeList{typeID="0xB8444447", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xB91E18DB", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xB93A9915", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xBA856C78", desc="RLES ", info="DXT5RLES "});
-            AllTypes.Add(new typeList{typeID="0xBC4A5044", desc="CLHD ", info=""});
-            AllTypes.Add(new typeList{typeID="0xBC80ED59", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xBDD82221", desc="AUEV ", info=""});
-            AllTypes.Add(new typeList{typeID="0xC0084996", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xC0DB5AE7", desc="OBJD ", info=""});
-            AllTypes.Add(new typeList{typeID="0xC202C770", desc="XML ", info="trax "});
-            AllTypes.Add(new typeList{typeID="0xC582D2FB", desc="XML ", info="voicex "});
-            AllTypes.Add(new typeList{typeID="0xC5F6763E", desc="UNKN ", info=""});
-            AllTypes.Add(new typeList{typeID="0xC71CA490", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xCB5FDDC7", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xCD9DE247", desc="PNG ", info="png "});
-            AllTypes.Add(new typeList{typeID="0xD2DC5BAD", desc="_XML ", info=""});
-            AllTypes.Add(new typeList{typeID="0xD3044521", desc="RSLT ", info=""});
-            AllTypes.Add(new typeList{typeID="0xD33C281E", desc="", info="bpi "});
-            AllTypes.Add(new typeList{typeID="0xD382BF57", desc="FTPT ", info="scene "});
-            AllTypes.Add(new typeList{typeID="0xD5F0F921", desc="CWAL ", info=""});
-            AllTypes.Add(new typeList{typeID="0xD65DAFF9", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xD99F5E5C", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xDB43E069", desc="DMAP ", info=""});
-            AllTypes.Add(new typeList{typeID="0xE0ED7129", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xE2249422", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xE231B3D8", desc="XML ", info="objmod "});
-            AllTypes.Add(new typeList{typeID="0xE7ADA79D", desc="CFTR ", info="CTProductFountainTrim "});
-            AllTypes.Add(new typeList{typeID="0xE882D22F", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xEA5118B0", desc="_SWB ", info=""});
-            AllTypes.Add(new typeList{typeID="0xEAA32ADD", desc="UNKN ", info=""});
-            AllTypes.Add(new typeList{typeID="0xEBCBB16C", desc="CTPT ", info=""});
-            AllTypes.Add(new typeList{typeID="0xF0633989", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xF1EDBD86", desc="CRPT ", info=""});
-            AllTypes.Add(new typeList{typeID="0xFA25B7DE", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xFCB1A1E4", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="0xFD04E3BE", desc="PRPX ", info="propx "});
-            AllTypes.Add(new typeList{typeID="0x7FB6AD8A", desc="S4SM ", info="Sims 4 Studio Merged Package Manifest"});
+            AllTypes.Add(new typeList{typeID="00B2D882", desc="_IMG", info="dds "});
+            AllTypes.Add(new typeList{typeID="00DE5AC5", desc="", info="rmi "});
+            AllTypes.Add(new typeList{typeID="010FAF71", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="015A1849", desc="GEOM", info="geom"});
+            AllTypes.Add(new typeList{typeID="0166038C", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="01661233", desc="MODL", info="scene "});
+            AllTypes.Add(new typeList{typeID="01942E2C", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="01A527DB", desc="_AUD", info="mm "});
+            AllTypes.Add(new typeList{typeID="01D0E75D", desc="MATD", info=""});
+            AllTypes.Add(new typeList{typeID="01D10F34", desc="MLOD", info="scene "});
+            AllTypes.Add(new typeList{typeID="01EEF63A", desc="_AUD", info="mm "});
+            AllTypes.Add(new typeList{typeID="02019972", desc="MTST", info=""});
+            AllTypes.Add(new typeList{typeID="025ED6F4", desc="SIMO", info=""});
+            AllTypes.Add(new typeList{typeID="02D5DF13", desc="JAZZ", info="jazz "});
+            AllTypes.Add(new typeList{typeID="033260E3", desc="TkMk", info=""});
+            AllTypes.Add(new typeList{typeID="0333406C", desc="_XML", info="xml "});
+            AllTypes.Add(new typeList{typeID="033B2B66", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="034AEECB", desc="CASP", info="caspart "});
+            AllTypes.Add(new typeList{typeID="0354796A", desc="TONE", info="skintone "});
+            AllTypes.Add(new typeList{typeID="0355E0A6", desc="BOND", info="bonedelta "});
+            AllTypes.Add(new typeList{typeID="03B4C61D", desc="LITE", info=""});
+            AllTypes.Add(new typeList{typeID="0418FE2A", desc="CFEN", info=""});
+            AllTypes.Add(new typeList{typeID="067CAA11", desc="BGEO", info="blendgeom "});
+            AllTypes.Add(new typeList{typeID="07936CE0", desc="SPLT", info="CTProductBlock "});
+            AllTypes.Add(new typeList{typeID="0A227BCF", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0C772E27", desc="_XML", info=""});
+            AllTypes.Add(new typeList{typeID="0D338A3A", desc="THUM", info=""});
+            AllTypes.Add(new typeList{typeID="105205BA", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="122FC66A", desc="_XML", info="lottypeeventmap "});
+            AllTypes.Add(new typeList{typeID="12952634", desc="LDNB", info=""});
+            AllTypes.Add(new typeList{typeID="153D2219", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="16CA6BC4", desc="_THM", info=""});
+            AllTypes.Add(new typeList{typeID="17C0C281", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="18F3C673", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="19301120", desc="WCLR", info=""});
+            AllTypes.Add(new typeList{typeID="1A8506C5", desc="_XML", info="mmusx? "});
+            AllTypes.Add(new typeList{typeID="1B25A024", desc="_XML", info="sysx "});
+            AllTypes.Add(new typeList{typeID="1C1CF1F7", desc="CRAL", info=""});
+            AllTypes.Add(new typeList{typeID="1C99B344", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="1CC04273", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="1D6DF1CF", desc="CCOL", info=""});
+            AllTypes.Add(new typeList{typeID="20D81496", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="220557DA", desc="STBL", info="stbl"});
+            AllTypes.Add(new typeList{typeID="25796DCA", desc="_OTF", info="otf "});
+            AllTypes.Add(new typeList{typeID="26978421", desc="_CUR", info="cur "});
+            AllTypes.Add(new typeList{typeID="276CA4B9", desc="_TTF", info="ttf "});
+            AllTypes.Add(new typeList{typeID="2A8A5E22", desc="", info="trayitem "});
+            AllTypes.Add(new typeList{typeID="2AD195F2", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="2F7D0004", desc="IMAG", info="png "});
+            AllTypes.Add(new typeList{typeID="2FAE983E", desc="CFND", info=""});
+            AllTypes.Add(new typeList{typeID="319E4F1D", desc="COBJ", info=""});
+            AllTypes.Add(new typeList{typeID="3453CF95", desc="RLE2", info="DXT5RLE2 "});
+            AllTypes.Add(new typeList{typeID="370EFD6E", desc="ROOM", info="room "});
+            AllTypes.Add(new typeList{typeID="376840D7", desc="AVI", info="Video "});
+            AllTypes.Add(new typeList{typeID="3924DE26", desc="_BPT", info="blueprint "});
+            AllTypes.Add(new typeList{typeID="3BD45407", desc="_HHI", info="hhi "});
+            AllTypes.Add(new typeList{typeID="3BF8FD86", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="3C1AF1F2", desc="THUM", info="png "});
+            AllTypes.Add(new typeList{typeID="3C2A8647", desc="THUM", info="png "});
+            AllTypes.Add(new typeList{typeID="3D8632D0", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="3EAAA87C", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="3F0C529A", desc="CSPN", info=""});
+            AllTypes.Add(new typeList{typeID="4115F9D5", desc="XML", info="mixbus "});
+            AllTypes.Add(new typeList{typeID="48C28979", desc="CLCT", info=""});
+            AllTypes.Add(new typeList{typeID="4F726BBE", desc="FTPT", info="footprint "});
+            AllTypes.Add(new typeList{typeID="545AC67A", desc="DATA", info="data "});
+            AllTypes.Add(new typeList{typeID="56278554", desc="_SGI", info="sgi "});
+            AllTypes.Add(new typeList{typeID="5B282D45", desc="THUM", info="png"});
+            AllTypes.Add(new typeList{typeID="5BE29703", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="6017E896", desc="_XML", info="buff "});
+            AllTypes.Add(new typeList{typeID="62E94D38", desc="", info="xml "});
+            AllTypes.Add(new typeList{typeID="62ECC59A", desc="GFX", info="gfx "});
+            AllTypes.Add(new typeList{typeID="6DFF1A66", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="6F40796A", desc="WRPR", info=""});
+            AllTypes.Add(new typeList{typeID="71A449C9", desc="SKYB", info=""});
+            AllTypes.Add(new typeList{typeID="71BDB8A2", desc="STLK", info="sfpusp? "});
+            AllTypes.Add(new typeList{typeID="729F6C4F", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="73CB32C2", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="74050B1F", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="76BCF80C", desc="TRIM", info=""});
+            AllTypes.Add(new typeList{typeID="78C8BCE4", desc="WRMF", info=""});
+            AllTypes.Add(new typeList{typeID="810A102D", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="81CA1A10", desc="MTBL", info=""});
+            AllTypes.Add(new typeList{typeID="84C23219", desc="CFLT", info=""});
+            AllTypes.Add(new typeList{typeID="892C4B8A", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="8B18FF6E", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="8EAF13DE", desc="_RIG", info="skeleton "});
+            AllTypes.Add(new typeList{typeID="90624C1B", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="9063660D", desc="WTXT", info="World texture map "});
+            AllTypes.Add(new typeList{typeID="9063660E", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="91568FD8", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="91EDBD3E", desc="CRST", info=""});
+            AllTypes.Add(new typeList{typeID="9917EACD", desc="RNDP", info=""});
+            AllTypes.Add(new typeList{typeID="99D98089", desc="XML", info="imusx? "});
+            AllTypes.Add(new typeList{typeID="9A20CD1C", desc="CSTR", info=""});
+            AllTypes.Add(new typeList{typeID="9AFE47F5", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="9C925813", desc="THUM", info="png "});
+            AllTypes.Add(new typeList{typeID="9D1AB874", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="9F5CFF10", desc="CSTL", info=""});
+            AllTypes.Add(new typeList{typeID="A0451CBD", desc="CPMP", info=""});
+            AllTypes.Add(new typeList{typeID="A057811C", desc="CFRZ", info=""});
+            AllTypes.Add(new typeList{typeID="A1FF2FC4", desc="THUM", info="png "});
+            AllTypes.Add(new typeList{typeID="A576C2E7", desc="XML", info="mapx "});
+            AllTypes.Add(new typeList{typeID="A5DFFCF3", desc="CPLT", info=""});
+            AllTypes.Add(new typeList{typeID="A680EA4B", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="A8F7B517", desc="CWNS", info="bnry "});
+            AllTypes.Add(new typeList{typeID="AC03A936", desc="CMTX", info="bnry "});
+            AllTypes.Add(new typeList{typeID="AC16FBEC", desc="RMAP", info="regionmap "});
+            AllTypes.Add(new typeList{typeID="AE39399F", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="B0118C15", desc="TMLT", info=""});
+            AllTypes.Add(new typeList{typeID="B0311D0F", desc="CRTR", info=""});
+            AllTypes.Add(new typeList{typeID="B3C438F0", desc="", info="householdbinary "});
+            AllTypes.Add(new typeList{typeID="B4F762C9", desc="CFLR", info=""});
+            AllTypes.Add(new typeList{typeID="B61DE6B4", desc="_XML", info=""});
+            AllTypes.Add(new typeList{typeID="B6C8B6A0", desc="_IMG", info="dds "});
+            AllTypes.Add(new typeList{typeID="B734E44F", desc="FTPT", info=""});
+            AllTypes.Add(new typeList{typeID="B8444447", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="B91E18DB", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="B93A9915", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="BA856C78", desc="RLES", info="DXT5RLES "});
+            AllTypes.Add(new typeList{typeID="BC4A5044", desc="CLHD", info=""});
+            AllTypes.Add(new typeList{typeID="BC80ED59", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="BDD82221", desc="AUEV", info=""});
+            AllTypes.Add(new typeList{typeID="C0084996", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="C0DB5AE7", desc="OBJD", info=""});
+            AllTypes.Add(new typeList{typeID="C202C770", desc="XML", info="trax "});
+            AllTypes.Add(new typeList{typeID="C582D2FB", desc="XML", info="voicex "});
+            AllTypes.Add(new typeList{typeID="C5F6763E", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="C71CA490", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="CB5FDDC7", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="CD9DE247", desc="PNG", info="png "});
+            AllTypes.Add(new typeList{typeID="D2DC5BAD", desc="_XML", info=""});
+            AllTypes.Add(new typeList{typeID="D3044521", desc="RSLT", info=""});
+            AllTypes.Add(new typeList{typeID="D33C281E", desc="", info="bpi "});
+            AllTypes.Add(new typeList{typeID="D382BF57", desc="FTPT", info="scene "});
+            AllTypes.Add(new typeList{typeID="D5F0F921", desc="CWAL", info=""});
+            AllTypes.Add(new typeList{typeID="D65DAFF9", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="D99F5E5C", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="DB43E069", desc="DMAP", info=""});
+            AllTypes.Add(new typeList{typeID="E0ED7129", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="E2249422", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="E231B3D8", desc="XML", info="objmod "});
+            AllTypes.Add(new typeList{typeID="E7ADA79D", desc="CFTR", info="CTProductFountainTrim "});
+            AllTypes.Add(new typeList{typeID="E882D22F", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="EA5118B0", desc="_SWB", info=""});
+            AllTypes.Add(new typeList{typeID="EAA32ADD", desc="UNKN", info=""});
+            AllTypes.Add(new typeList{typeID="EBCBB16C", desc="CTPT", info=""});
+            AllTypes.Add(new typeList{typeID="F0633989", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="F1EDBD86", desc="CRPT", info=""});
+            AllTypes.Add(new typeList{typeID="FA25B7DE", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="FCB1A1E4", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="FD04E3BE", desc="PRPX", info="propx "});            
+            AllTypes.Add(new typeList{typeID="07576A17", desc="MCOR", info="Model Cutout Resource"});
+            AllTypes.Add(new typeList{typeID="7FB6AD8A", desc="S4SM", info="Sims 4 Studio Merged Package Manifest"});
 
             return AllTypes;
         }
     
-    /*
-        public List<typeList> creates4functagsList(){
-            List<typeList> s4fl = new List<typeList>();
+        
+        public void creates4functagsList(){
+            /*List<typeList> s4fl = new List<typeList>();
             s4fl.Add(new typeList { typeID="0x0041", info="Color_Red" });
             s4fl.Add(new typeList { typeID="0x0044", info="Color_Blue" });
             s4fl.Add(new typeList { typeID="0x005A", info="Color_DarkBrown" });
@@ -647,9 +660,15 @@ namespace SSAGlobals {
             s4fl.Add(new typeList { typeID="0x3060", info="Func_Retail_NPC_ItemForSale" });
             s4fl.Add(new typeList { typeID="0xC00F", info="Func_Spells_Steal" });
             s4fl.Add(new typeList { typeID="0xE018", info="Func_Scratched_Low" });
-            return s4fl;
+            return s4fl;*/
+
+            using (StreamReader file = File.OpenText("data\\s4bbtags.json"))
+            {                
+                TypeListings.S4BBFunctionTags = (ConcurrentBag<typeList>)serializer.Deserialize(file, typeof(ConcurrentBag<typeList>));
+            }
         }
-        */
+        
+        
         public List<FunctionSortList> createS2buyfunctionsortlist(){
             List<FunctionSortList> s2fs = new List<FunctionSortList>();
             //seating
@@ -835,18 +854,31 @@ namespace SSAGlobals {
             //List<FunctionSortList> s3fs = new List<FunctionSortList>()            
             //return s2fs;
         }*/
-    
+
+        public static Dictionary<string,string> OverrideList = new Dictionary<string, string>();
+   
     }
     
 
     public class GlobalVariables {
+        /// <summary>
+        /// Global variables, anything used all over the program that requires easy access, like locations for databases, and global settings like debug mode.
+        /// </summary>
+        JsonSerializer serializer = new JsonSerializer();
+        public static bool consolevr = false;
         public static bool debugMode = true;
         public static bool loadedSaveData = false;
         public static string ModFolder;
         public static string logfile;
-        public static int gameVer;  
         public static int PackageCount = 0;       
         public static int packagesRead = 1;
+        public static string S4_Overrides_All = @"data\S4_Instances.sqlite";
+        public static string S4_Overrides_List = @"data\S4_SpecificOverrides.sqlite";
+
+        private static string PackagesCacheLoc = @"Sims CC Manager\data\PackagesCache.sqlite";
+        public static string PackagesRead = Path.Combine(LoggingGlobals.mydocs, PackagesCacheLoc); 
+        public static string PackagesReadDS = string.Format("Data Source={0}", PackagesRead);
+        
         
         //vars that hold package files 
         public static List<FileInfo> justPackageFiles = new List<FileInfo>();
@@ -866,21 +898,24 @@ namespace SSAGlobals {
         public static List<PackageFile> gamesPackages = new List<PackageFile>();
                     //this one holds all the working packages that have been assigned a game
         public static List<SimsPackage> loadedData = new List<SimsPackage>();
+        public static List<string> S4OverrideInstances = new List<string>();
         LoggingGlobals log = new LoggingGlobals();
 
 
-        public void Initialize(int gameNum, string modLocation){
-            gameVer = gameNum;
-            ModFolder = modLocation;
-            logfile = modLocation + "\\SimsCCSorter.log";
-            StreamWriter putContentsIntoTxt = new StreamWriter(logfile);
-            putContentsIntoTxt.Close();
-            InitializeVariables(); 
+        public void Initialize(string modLocation){
+            if (consolevr != true){
+                ModFolder = modLocation;
+                logfile = modLocation + "\\SimsCCSorter.log";
+                StreamWriter putContentsIntoTxt = new StreamWriter(logfile);
+                putContentsIntoTxt.Close();
+            }            
+            log.InitializeLog();
         }
 
         TypeListings typeListings = new TypeListings();
+        
         public void InitializeVariables(){
-            log.InitializeLog();
+            
             log.MakeLog("Initializing application.", true);
             TypeListings.AllTypesS2 = typeListings.createS2TypeList();
             log.MakeLog("Created sims 2 type list.", true);
@@ -892,27 +927,42 @@ namespace SSAGlobals {
             log.MakeLog("Created sims 2 buy function sort list.", true);
             TypeListings.S2BuildFunctionSort = typeListings.createS2buildfunctionsortlist();
             log.MakeLog("Created sims 2 build function sort.", true);  
-            
-            using (StreamReader file = File.OpenText("data\\s4bbtags.json"))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                TypeListings.S4BBFunctionTags = (List<typeList>)serializer.Deserialize(file, typeof(List<typeList>));
-            }
-            log.MakeLog("Created sims 4 function tags list.", true);            
+            typeListings.creates4functagsList();
+            log.MakeLog("Created sims 4 function tags list.", true);  
+            InitializedLists.InitializeLists();          
             log.MakeLog("Finished initializing.", true);
-        }       
+            MakeDatabases();
+        }   
+
+        public void UpdateBBTags(){
+           using (StreamWriter file = File.CreateText("data\\s4bbtags.json"))
+            {
+                serializer.Serialize(file, TypeListings.S4BBFunctionTags);
+            } 
+        }
+
+        public void MakeDatabases(){
+            
+            
+        }
     }
 
     public class SaveData {
-        public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        /// <summary>
+        /// Cache locations. May be merged in with Globals now databases are being used.
+        /// </summary>
+        public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);        
         public static string SimsCCManagerFolder = mydocs + "\\Sims CC Manager";
-        public static string saveDataFolder = mydocs + "\\Sims CC Manager\\data";
-        public static string mainSaveData = saveDataFolder + "\\PackageCache.data";
+        public static string docsDataFolder = mydocs + "\\Sims CC Manager\\data";
+        public static string mainSaveData = docsDataFolder + "\\PackageCache.db";
         public static string cacheFolder = SimsCCManagerFolder + "\\Cache";
-
+        public static string database = docsDataFolder + "\\packagedata.sqlite";
     }
 
     public class CacheLocations {
+        /// <summary>
+        /// Holds the location of Sims cache files for future implementation.
+        /// </summary>
         public string CacheName {get; set;}
         public string CacheLocation {get; set;}
         public string CacheRename {get; set;}
@@ -920,6 +970,9 @@ namespace SSAGlobals {
 
     public class LoggingGlobals
     {
+        /// <summary>
+        /// Synchronous log file implementation. 
+        /// </summary>
         public static bool firstrunmain = true;
         public static bool firstrundebug = true;
         public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -928,6 +981,13 @@ namespace SSAGlobals {
         static ReaderWriterLock locker = new ReaderWriterLock();
         //Function for logging to the logfile set at the start of the program
         public void InitializeLog() {
+            if (GlobalVariables.consolevr == true){
+                internalLogFolder = "\\log\\";
+                debuglog = internalLogFolder + "\\debug.log";
+            } else {
+                internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
+                debuglog = internalLogFolder + "\\debug.log";
+            }
             Methods.MakeFolder(internalLogFolder);
             Methods.MakeFolder(SaveData.cacheFolder);
             Methods.MakeFolder(mydocs + "\\Sims CC Manager\\data");
@@ -943,7 +1003,7 @@ namespace SSAGlobals {
             string time = "";
             string statement = "";
             FileInfo filepath = new FileInfo(filePath);
-            if (debug && (GlobalVariables.debugMode == true)) {
+            if (debug) {
                 try
                 {
                     time = DateTime.Now.ToString("h:mm:ss tt");
@@ -972,6 +1032,9 @@ namespace SSAGlobals {
     }
 
     public class Methods {
+        /// <summary>
+        /// Repeatedly called methods like making a folder.
+        /// </summary>
         public static void MakeFolder (string directory)
         {
             try
@@ -990,7 +1053,6 @@ namespace SSAGlobals {
                 
             }
             finally {}
-            }
-    }
-    
+        }
+    }    
 }

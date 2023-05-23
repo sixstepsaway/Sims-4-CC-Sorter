@@ -32,11 +32,17 @@ using SimsCCManager.Packages.Initial;
 using SimsCCManager.Search_All;
 using SimsCCManager.App.Controls;
 using SimsCCManager.Packages.Sims2Search;
+using SimsCCManager.Packages.Sims3Search;
+using SimsCCManager.Packages.Sims4Search;
 using SimsCCManager.Packages.Containers;
 using SimsCCManager.SortingUIResults;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Microsoft.VisualBasic;
+using SQLite;
+using SQLiteNetExtensions;
+using SQLiteNetExtensions.Attributes;
+using System.Data.SQLite;
+
 
 namespace Sims_CC_Sorter
 {
@@ -54,19 +60,42 @@ namespace Sims_CC_Sorter
 
     {
         S2PackageSearch s2packs = new S2PackageSearch();
+        S4PackageSearch s4packs = new S4PackageSearch();
         LoggingGlobals log = new LoggingGlobals();
         GlobalVariables globalVars = new GlobalVariables();
         InitialProcessing initialprocess = new InitialProcessing();
-        ParallelOptions parallelSettings = new ParallelOptions() { MaxDegreeOfParallelism = 200};
+        ParallelOptions parallelSettings = new ParallelOptions();
         List<Task> TaskList = new List<Task>();
         public Stopwatch sw = new Stopwatch();
         string SelectedFolder = "";
         string statement = "";
         int gameNum = 0;
+        bool keepgoing = true;
+        bool continuing = true;
+        bool stop = false;
+        bool eatenturecpu = true;
+
+        private bool FindNewAdditions;
+        private bool ContinuePrevious;
+        private bool ManageFolder;
+        private bool SortFolder;
+        public bool DetectedHalfRun;
+        private int workerThreads;
+        private int portThreads;
+        public int countprogress = 0;
 
         public MainWindow()
-        {    
+        {               
             InitializeComponent();
+            int threads = Environment.ProcessorCount;
+            Console.WriteLine("Threads: " + threads);
+            int threadstouse = 0;
+            if (eatenturecpu == true){
+                threadstouse = threads * 100;
+            } else {
+                threadstouse = threads / 2;
+            }
+            parallelSettings.MaxDegreeOfParallelism = threadstouse;
             if (GlobalVariables.debugMode) {
                 testButton.Visibility = Visibility.Visible;
             } else {
@@ -79,20 +108,21 @@ namespace Sims_CC_Sorter
                 LoadButton.Visibility = Visibility.Collapsed;
             }
             CollectCaches();
-
+            globalVars.InitializeVariables();
         }
+
 
         #region Load 
 
         private void loadData_Click(object sender, RoutedEventArgs e){
             
-            using (StreamReader file = File.OpenText(SaveData.mainSaveData))
+            /*using (StreamReader file = File.OpenText(SaveData.mainSaveData))
             {
                 JsonSerializer serializer = new JsonSerializer();
                 GlobalVariables.loadedData = (List<SimsPackage>)serializer.Deserialize(file, typeof(List<SimsPackage>));
             }
             GlobalVariables.loadedSaveData = true;
-            GetResults();
+            GetResults();*/
         }
 
         #endregion   
@@ -122,7 +152,13 @@ namespace Sims_CC_Sorter
                 }
             }            
         }
-        
+
+        private void noeatcpu_Check(object sender, RoutedEventArgs e){
+            eatenturecpu = false;
+        }
+        private void eatcpu_Uncheck(object sender, RoutedEventArgs e){
+            eatenturecpu = true;
+        }        
         
         private void App_Loaded(object sender, RoutedEventArgs e){
              
@@ -142,6 +178,14 @@ namespace Sims_CC_Sorter
                 {
                 //React as needed.
                 }
+        }
+
+        private void CancelScan_Click(object sender, EventArgs e) {
+            stop = true;
+            CancelButton.Background = Brushes.LightGray;
+            Thread.Sleep(600);
+            ProgressGrid.Visibility = Visibility.Hidden;
+            MainMenuGrid.Visibility = Visibility.Visible;
         }
 
         private void exitButton_Click(object sender, EventArgs e)
@@ -169,90 +213,777 @@ namespace Sims_CC_Sorter
                 System.Windows.Forms.MessageBox.Show("Please select the folder containing your package files.");
             } else {
                 log.MakeLog("Managing old folder.", true);
-                ManageOldFolder();
+                ManageFolder = true;
+                //System.Windows.Forms.MessageBox.Show("Not yet implemented.");
+                //ManageOldFolder();
             }            
         }
 
         private void SortNewFolder_Click(object sender, EventArgs e) {
+
+            
             if (SelectedFolder == "") {
                 System.Windows.Forms.MessageBox.Show("Please select the folder containing your package files.");
             } else {
                 log.MakeLog("Sorting new folder.", true);
-                //ManageOldFolder();
+                SortFolder = true;
+                DetectedHalfRun = DetectHalfRun();
+                if (DetectedHalfRun == true){
+                    stop = false;
+                    FoundPastItems.Visibility = Visibility.Visible;
+                    ContinueQuestion.Visibility = Visibility.Visible;
+                } else {
+                    stop = false;
+                    SortNewPrep();
+                }                
             }   
         }
+
+        private bool DetectHalfRun(){
+            bool value = false;
+            if (!File.Exists(GlobalVariables.PackagesRead)){
+                value = false;
+            } else {
+                var dbc = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead);
+                var packagesQuery = dbc.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending'");
+                if (packagesQuery.Count > 0){
+                    value = true;
+                }
+                dbc.Close();
+            }
+            return value;
+        }
+
+
+        private void ContinueSearch_Click(object sender, EventArgs e) {
+            ContinueQuestion.Visibility = Visibility.Hidden;
+            FindNewItemsQuestion.Visibility = Visibility.Visible;
+            ContinuePrevious = true;
+            
+        }
+        private void RestartSearch_Click(object sender, EventArgs e) {
+            ContinuePrevious = false;
+            SortNewPrep();
+        }
+        private void CancelSearch_Click(object sender, EventArgs e) {
+            FoundPastItems.Visibility = Visibility.Hidden;
+        }
+        private void YesFindNewItems_Click(object sender, EventArgs e) {
+            FindNewAdditions = true;
+            FindNewPackages();
+        }
+        private void NoDontFindNew_Click(object sender, EventArgs e) {
+            FindNewAdditions = false;
+            SortNewFolder();
+        }
+
+        public async Task FindNewPackages(){
+            MainWindow window = new MainWindow();
+            sw.Start();           
+            
+            
+            ProgressGrid.Visibility = Visibility.Visible;
+            MainMenuGrid.Visibility = Visibility.Hidden;
+            completionAlert.Visibility = Visibility.Visible;
+            
+            mainProgressBar.Visibility = Visibility.Visible;
+            
+            string[] filesS = Directory.GetFiles(GlobalVariables.ModFolder, "*", SearchOption.AllDirectories);
+            log.MakeLog("Checking for broken packages.", true);
+            int maxi = filesS.Length;             
+            mainProgressBar.Value = 0;
+            mainProgressBar.Maximum = maxi;
+            textCurrentPk.Visibility = Visibility.Visible;
+            completionAlertValue("Sorting package files from non-package files.");
+            int countprogress = 0;
+
+            if (stop == false) {
+                
+                List<FileInfo> files = new List<FileInfo>();
+                    
+                foreach (string file in filesS){
+                    files.Add(new FileInfo(file));
+                }
+                
+                List<Task> IdentifyPackagesList = new List<Task>();
+
+                var sims3pack = files.Where(x => x.Extension == ".Sims3Pack" || x.Extension == ".sims3pack");
+                var sims2pack = files.Where(x => x.Extension == ".Sims2Pack" || x.Extension == ".sims2pack");
+                var sims4script = files.Where(x => x.Extension == ".ts4script" || x.Extension == ".TS4Script" || x.Extension == ".ts4Script");
+                var compressed = files.Where(x => x.Extension == ".zip" || x.Extension == ".rar" || x.Extension == ".7z" || x.Extension == ".pkg");
+                var other = files.Where(x => x.Extension != ".zip" || x.Extension != ".rar" || x.Extension != ".7z" || x.Extension != ".pkg" || x.Extension != ".ts4script" || x.Extension != ".TS4Script" || x.Extension != ".ts4Script" || x.Extension != ".Sims2Pack" || x.Extension != ".sims2pack" || x.Extension != ".Sims3Pack" || x.Extension != ".sims3pack" || x.Extension != ".package");
+                var packages = files.Where(x => x.Extension == ".package");
+                var dbc = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead);
+                var packagesPending = dbc.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending'");
+                var packagesProcessing = dbc.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Processing'");
+                var packagesDone = dbc.Query<SimsPackage>("SELECT * FROM Packages");
+                var notpack = dbc.Query<AllFiles>("SELECT * FROM AllFiles");
+
+                foreach (FileInfo s3 in sims3pack){
+                    bool foundfile;
+                    var isinpending = from pending in packagesPending
+                        where pending.Location == s3.FullName
+                        select pending.Location;
+                        foundfile = isinpending.Any();
+                    var isinprocessing = from processing in packagesProcessing
+                        where processing.Location == s3.FullName
+                        select processing.Location;
+                        foundfile = isinprocessing.Any();
+                    var isindone = from done in packagesDone
+                        where done.Location == s3.FullName
+                        select done.Location;
+                        foundfile = isindone.Any();
+                    var isinnp = from np in notpack
+                        where np.Location == s3.FullName
+                        select np.Location;
+                        foundfile = isinnp.Any();
+
+                    if (foundfile == true){
+                        log.MakeLog("File " + s3.Name + " already exists in database.", true);
+                    } else {    
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            log.MakeLog(countprogress + "/" + maxi + " - Checking " + s3.Name, true);
+                            progresstracker++;                            
+                            using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){
+                                db.Open();
+                                string cmdtext = string.Format("INSERT INTO AllFiles(type, location, name) VALUES('{0}', '{1}', {2})", "sims3pack", s3.FullName, s3.Name);
+                                System.Data.SQLite.SQLiteCommand sqm = new System.Data.SQLite.SQLiteCommand(cmdtext, db);
+                                sqm.ExecuteNonQuery();                
+                                db.Close();
+                            }
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Checking " + s3.Name));
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));                                              
+                    }
+                }
+                log.MakeLog("sims3packs found: " + CountItems("sims3pack"), true);
+                foreach (FileInfo s2 in sims2pack){
+                    bool foundfile;
+                    var isinpending = from pending in packagesPending
+                        where pending.Location == s2.FullName
+                        select pending.Location;
+                        foundfile = isinpending.Any();
+                    var isinprocessing = from processing in packagesProcessing
+                        where processing.Location == s2.FullName
+                        select processing.Location;
+                        foundfile = isinprocessing.Any();
+                    var isindone = from done in packagesDone
+                        where done.Location == s2.FullName
+                        select done.Location;
+                        foundfile = isindone.Any();
+                    var isinnp = from np in notpack
+                        where np.Location == s2.FullName
+                        select np.Location;
+                        foundfile = isinnp.Any();
+
+                    if (foundfile == true){
+                        log.MakeLog("File " + s2.Name + " already exists in database.", true);
+                    } else {
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){
+                                db.Open();
+                                string cmdtext = string.Format("INSERT INTO AllFiles(type, location, name) VALUES('{0}', '{1}', {2})", "sims2pack", s2.FullName, s2.Name);
+                                System.Data.SQLite.SQLiteCommand sqm = new System.Data.SQLite.SQLiteCommand(cmdtext, db);
+                                sqm.ExecuteNonQuery();                
+                                db.Close();
+                            }                        
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Checking " + s2.Name));
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }  
+                }
+                log.MakeLog("sims2packs found: " + CountItems("sims2pack"), true);
+                foreach (FileInfo t4 in sims4script){
+                    bool foundfile;
+                    var isinpending = from pending in packagesPending
+                        where pending.Location == t4.FullName
+                        select pending.Location;
+                        foundfile = isinpending.Any();
+                    var isinprocessing = from processing in packagesProcessing
+                        where processing.Location == t4.FullName
+                        select processing.Location;
+                        foundfile = isinprocessing.Any();
+                    var isindone = from done in packagesDone
+                        where done.Location == t4.FullName
+                        select done.Location;
+                        foundfile = isindone.Any();
+                    var isinnp = from np in notpack
+                        where np.Location == t4.FullName
+                        select np.Location;
+                        foundfile = isinnp.Any();
+
+                    if (foundfile == true){
+                        log.MakeLog("File " + t4.Name + " already exists in database.", true);
+                    } else {
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){
+                                db.Open();
+                                string cmdtext = string.Format("INSERT INTO AllFiles(type, location, name) VALUES('{0}', '{1}', {2})", "ts4script", t4.FullName, t4.Name);
+                                System.Data.SQLite.SQLiteCommand sqm = new System.Data.SQLite.SQLiteCommand(cmdtext, db);
+                                sqm.ExecuteNonQuery();                
+                                db.Close();
+                            }                        
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Checking " + t4.Name));
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }
+                }
+                log.MakeLog("ts4scripts found: " + CountItems("ts4script"), true);
+                foreach (FileInfo c in compressed){
+                    bool foundfile;
+                    var isinpending = from pending in packagesPending
+                        where pending.Location == c.FullName
+                        select pending.Location;
+                        foundfile = isinpending.Any();
+                    var isinprocessing = from processing in packagesProcessing
+                        where processing.Location == c.FullName
+                        select processing.Location;
+                        foundfile = isinprocessing.Any();
+                    var isindone = from done in packagesDone
+                        where done.Location == c.FullName
+                        select done.Location;
+                        foundfile = isindone.Any();
+                    var isinnp = from np in notpack
+                        where np.Location == c.FullName
+                        select np.Location;
+                        foundfile = isinnp.Any();
+
+                    if (foundfile == true){
+                        log.MakeLog("File " + c.Name + " already exists in database.", true);
+                    } else {
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){
+                                db.Open();
+                                string cmdtext = string.Format("INSERT INTO AllFiles(type, location, name) VALUES('{0}', '{1}', {2})", "compressed file", c.FullName, c.Name);
+                                System.Data.SQLite.SQLiteCommand sqm = new System.Data.SQLite.SQLiteCommand(cmdtext, db);
+                                sqm.ExecuteNonQuery();                
+                                db.Close();
+                            }                        
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Checking " + c.Name));
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }
+                }
+                log.MakeLog("Compressed files found: " + CountItems("compressed file"), true);
+                foreach (FileInfo o in other){
+                    bool foundfile;
+                    var isinpending = from pending in packagesPending
+                        where pending.Location == o.FullName
+                        select pending.Location;
+                        foundfile = isinpending.Any();
+                    var isinprocessing = from processing in packagesProcessing
+                        where processing.Location == o.FullName
+                        select processing.Location;
+                        foundfile = isinprocessing.Any();
+                    var isindone = from done in packagesDone
+                        where done.Location == o.FullName
+                        select done.Location;
+                        foundfile = isindone.Any();
+                    var isinnp = from np in notpack
+                        where np.Location == o.FullName
+                        select np.Location;
+                        foundfile = isinnp.Any();
+
+                    if (foundfile == true){
+                        log.MakeLog("File " + o.Name + " already exists in database.", true);
+                    } else {
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){
+                                db.Open();
+                                string cmdtext = string.Format("INSERT INTO AllFiles(type, location, name) VALUES('{0}', '{1}', {2})", "other", o.FullName, o.Name);
+                                System.Data.SQLite.SQLiteCommand sqm = new System.Data.SQLite.SQLiteCommand(cmdtext, db);
+                                sqm.ExecuteNonQuery();                
+                                db.Close();
+                            }                        
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Checking " + o.Name));
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }
+                }
+                log.MakeLog("Other files found: " + CountItems("other"), true);
+                foreach (FileInfo p in packages){
+                    bool foundfile;
+                    var isinpending = from pending in packagesPending
+                        where pending.Location == p.FullName
+                        select pending.Location;
+                        foundfile = isinpending.Any();
+                    var isinprocessing = from processing in packagesProcessing
+                        where processing.Location == p.FullName
+                        select processing.Location;
+                        foundfile = isinprocessing.Any();
+                    var isindone = from done in packagesDone
+                        where done.Location == p.FullName
+                        select done.Location;
+                        foundfile = isindone.Any();
+                    var isinnp = from np in notpack
+                        where np.Location == p.FullName
+                        select np.Location;
+                        foundfile = isinnp.Any();
+
+                    if (foundfile == true){
+                        log.MakeLog("File " + p.Name + " already exists in database.", true);
+                    } else {
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){
+                                db.Open();
+                                string cmdtext = string.Format("INSERT INTO AllFiles(type, location, name) VALUES('{0}', '{1}', {2})", "package", p.FullName, p.Name);
+                                System.Data.SQLite.SQLiteCommand sqm = new System.Data.SQLite.SQLiteCommand(cmdtext, db);
+                                sqm.ExecuteNonQuery();                
+                                db.Close();
+                            }                        
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Checking " + p.Name));
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }
+                }
+                log.MakeLog("Package files found: " + CountItems("package"), true);
+                
+                await Task.WhenAll(IdentifyPackagesList);
+                dbc.Close();          
+            }
+            
+            
+
+            if (stop == false) {
+                maxi = GlobalVariables.justPackageFiles.Count; 
+                mainProgressBar.Maximum = maxi;
+                mainProgressBar.Value = 0;
+                completionAlertValue("Checking for broken packages.");
+                countprogress = 0;
+
+                List<Task> FindBrokenList = new List<Task>();
+
+                foreach (FileInfo file in GlobalVariables.justPackageFiles){
+                    FindBrokenList.Add(Task.Run(() => {
+                        log.MakeLog(countprogress + "/" + maxi + " - Checking " + file.Name, true);
+                        progresstracker++;
+                        initialprocess.FindBrokenPackages(file.FullName);
+                        window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Reading " + file.Name));
+                        window.Dispatcher.Invoke(new Action(() => countprogress++));
+                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));   
+                    }));
+                }
+                log.MakeLog("Awaiting finding broken packages to finish.", true);
+                await Task.WhenAll(FindBrokenList);
+                
+                log.MakeLog("Broken check complete.", true);
+            }
+
+            
+            if (stop == false) {                
+                mainProgressBar.Value = 0;
+                completionAlertValue("Identifying package versions.");
+                log.MakeLog("Identifying game.", true);
+                maxi = GlobalVariables.workingPackageFiles.Count;
+                mainProgressBar.Maximum = maxi;
+                countprogress = 0;
+
+                List<Task> IdentifyGamesList = new List<Task>();
+
+                foreach (PackageFile file in GlobalVariables.workingPackageFiles){
+                    IdentifyGamesList.Add(Task.Run(() => {
+                        log.MakeLog(countprogress + "/" + maxi + " - Checking " + file.Name, true);
+                        initialprocess.IdentifyGames(file.Location);
+                        window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Reading " + file.Name));
+                        window.Dispatcher.Invoke(new Action(() => countprogress++));
+                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                    }));
+                }                
+                log.MakeLog("Awaiting game ID to finish.", true);
+                await Task.WhenAll(IdentifyGamesList);
+                log.MakeLog("Game identification complete.", true);                
+            }
+        }
+
 
         public static int progresstracker = 0;
 
         public static int maxi = 0;
 
-        private async Task ManageOldFolder(){
-            MainWindow window = new MainWindow();
-            log.MakeLog("Checking for broken packages.", true);
-            completionAlert.Visibility = Visibility.Visible;
-            
-            completionAlertValue("Checking for broken packages.");
-            int i = 0;
-            mainProgressBar.Visibility = Visibility.Visible;
-            int maxi = GlobalVariables.justPackageFiles.Count; 
-            mainProgressBar.Maximum = maxi;     
-            textCurrentPk.Visibility = Visibility.Visible;
-            Task task1 = Task.Run(() => Parallel.For(0, GlobalVariables.justPackageFiles.Count, i => {                
-                var file = (GlobalVariables.justPackageFiles[i]).FullName;
-                log.MakeLog("Checking " + file, true);
-                progresstracker++;
-                initialprocess.FindBrokenPackages(file);  
-                window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
-                window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = "Reading " + GlobalVariables.justPackageFiles[i].Name));
-            }));
-            log.MakeLog("Awaiting finding broken packages to finish.", true);
-            await(task1);
-            log.MakeLog("Broken check complete.", true);
-            mainProgressBar.Value = 0;
-            completionAlertValue("Identifying package versions.");
-            log.MakeLog("Identifying game.", true);
-            maxi = GlobalVariables.workingPackageFiles.Count;
-            mainProgressBar.Maximum = maxi;
-            Task task2 = Task.Run(() => Parallel.For(0, GlobalVariables.workingPackageFiles.Count, i => {                
-                var file = (GlobalVariables.workingPackageFiles[i]).Location;
-                log.MakeLog("Checking " + file, true);
-                initialprocess.IdentifyGames(file);
-                window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
-                window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = "Reading " + GlobalVariables.workingPackageFiles[i].Name));
-            }));
-            log.MakeLog("Awaiting game ID to finish.", true);
-            await(task2);
-            log.MakeLog("Game identification complete.", true); 
-            mainProgressBar.Value = 0;
-            completionAlertValue("Searching packages for details.");
-            log.MakeLog("Parsing Sims 2 packages.", true);
-            maxi = GlobalVariables.gamesPackages.Count;
-            mainProgressBar.Maximum = maxi;
-            Task task3 = Task.Run(() => Parallel.For(0, GlobalVariables.gamesPackages.Count, i => {
-                var file = (GlobalVariables.gamesPackages[i]).Location;
-                log.MakeLog("Checking " + file, true);
-                if (GlobalVariables.gamesPackages[i].Game == 2) {
-                    s2packs.SearchS2Packages(file);
+        private void SortNewPrep(){
+            log.MakeLog("Sorting new folder.", true);
+
+            string cs = GlobalVariables.PackagesRead;
+            log.MakeLog("Getting database location: " + cs, true);
+
+            log.MakeLog("Creating database.", true);
+
+            if (File.Exists(cs)){
+                log.MakeLog("Database exists! Deleting.", true);
+                try {
+                    File.Delete(cs);
+                } catch (Exception e) {
+                    Console.WriteLine(e.Message);
                 }
-                window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
-                window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = "Reading " + GlobalVariables.gamesPackages[i].Name));
-            }));
+                
+                log.MakeLog("Now creating database.", true);
+                try {
+                    System.Data.SQLite.SQLiteConnection.CreateFile(cs);
+                } catch (System.Data.SQLite.SQLiteException e) {
+                    Console.WriteLine(e.Message);
+                }
+                
+            } else {
+                log.MakeLog("No database. Creating.", true);
+                try {
+                    System.Data.SQLite.SQLiteConnection.CreateFile(cs);
+                } catch (System.Data.SQLite.SQLiteException e) {
+                    Console.WriteLine(e.Message);
+                }
+            }
+
+            using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){
+                db.Open();
+                string cmdtxt = "CREATE TABLE AllFiles (Type TEXT, Location TEXT, Name TEXT)";
+                System.Data.SQLite.SQLiteCommand sqcm = new System.Data.SQLite.SQLiteCommand(cmdtxt, db);
+                log.MakeLog("Creating: " + cmdtxt, true);
+                sqcm.ExecuteNonQuery();
+                db.Close();
+                log.MakeLog("Created!", true);
+            }
+
+            log.MakeLog("Making database connection", true);
+
+            using (SQLite.SQLiteConnection db = new SQLite.SQLiteConnection(cs))
+            {
+                log.MakeLog("Connected", true);
+                log.MakeLog("Making tables", true);
+                try {
+                    log.MakeLog("Making PackageFile table", true);
+                    db.CreateTable <PackageFile>();
+                } catch (SQLite.SQLiteException e) {
+                    log.MakeLog(e.Message, true);
+                }                
+                try {
+                    log.MakeLog("Making SimsPackages table", true);
+                    db.CreateTable <SimsPackage>();
+                    log.MakeLog("Making AgeGenderFlags table", true);
+                    db.CreateTable <AgeGenderFlags>();
+                    log.MakeLog("Making TypeCounter table", true);
+                    db.CreateTable <TypeCounter>();
+                    log.MakeLog("Making Tagslist table", true);
+                    db.CreateTable <TagsList>();
+                } catch (SQLite.SQLiteException ex) {
+                    log.MakeLog(ex.Message, true);
+                }
+                log.MakeLog("Tables created", true);
+            };
             
-            log.MakeLog("Awaiting Sims 2 package reading to finish.", true);
-            await(task3);
-            completionAlertValue("Done!");
-            textCurrentPk.Text = "";
-            mainProgressBar.Value = maxi;
-            GetResults();
+            SortNewFolder();
+        }
+
+        private int CountItems(string type) {
+            log.MakeLog("Checking count of database.", true);
+            int value;
+            using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){               
+                db.Open();
+                string cmdtext = string.Format("SELECT count(*) FROM AllFiles where type = '{0}'", type);
+                System.Data.SQLite.SQLiteCommand sqm = new System.Data.SQLite.SQLiteCommand(cmdtext, db);
+                value = Convert.ToInt32(sqm.ExecuteScalar());                
+                db.Close();
+            }
+            log.MakeLog("Counted! Returning.", true);
+            return value;
+        }
+
+        private async Task SortNewFolder(){   
+            MainWindow window = new MainWindow();  
+            if (FindNewAdditions == false){
+                sw.Start();           
+            
+                ProgressGrid.Visibility = Visibility.Visible;
+                MainMenuGrid.Visibility = Visibility.Hidden;
+                completionAlert.Visibility = Visibility.Visible;
+                
+                mainProgressBar.Visibility = Visibility.Visible;
+                
+            }           
+
+
+            if (ContinuePrevious == false){
+                string[] filesS = Directory.GetFiles(GlobalVariables.ModFolder, "*", SearchOption.AllDirectories);
+                log.MakeLog("Checking for broken packages.", true);
+                int maxi = filesS.Length;             
+                mainProgressBar.Value = 0;
+                mainProgressBar.Maximum = maxi;
+                textCurrentPk.Visibility = Visibility.Visible;
+                completionAlertValue("Sorting package files from non-package files.");
+                int countprogress = 0;
+
+                if (stop == false) {
+                    List<FileInfo> files = new List<FileInfo>();
+
+                    List<FileInfo> sims3pack = new List<FileInfo>();
+                    List<FileInfo> sims2pack = new List<FileInfo>();
+                    List<FileInfo> sims4script = new List<FileInfo>();
+                    List<FileInfo> other = new List<FileInfo>();
+                    List<FileInfo> packages = new List<FileInfo>();
+                    List<FileInfo> compressed = new List<FileInfo>();
+
+                    Task task1 = Task.Run(() => {    
+                        foreach (string file in filesS){                        
+                            files.Add(new FileInfo(file));
+                            log.MakeLog("Adding " + file + " to list.", true);
+                        }
+                    });
+                    await(task1);
+                    Task task2 = Task.Run(() => {
+                        log.MakeLog("Finding sims3packs.", true);
+                        var sims3packs = files.Where(x => x.Extension == ".Sims3Pack" || x.Extension == ".sims3pack");
+                        sims3pack.AddRange(sims3packs);
+                    });
+                    await(task2);
+
+                    Task task3 = Task.Run(() => {
+                        log.MakeLog("Finding sims2packs.", true);
+                        var sims2packs = files.Where(x => x.Extension == ".Sims2Pack" || x.Extension == ".sims2pack");
+                        sims2pack.AddRange(sims2packs);
+                    });
+                    await(task3);
+
+                    Task task5 = Task.Run(() => {
+                        log.MakeLog("Finding ts4scripts.", true);
+                        var sims4scripts = files.Where(x => x.Extension == ".ts4script" || x.Extension == ".TS4Script" || x.Extension == ".ts4Script");
+                        sims4script.AddRange(sims4scripts);
+                    });
+                    await(task5);
+
+                    Task task6 = Task.Run(() => {
+                        log.MakeLog("Finding compressed files.", true);
+                        var compresseds = files.Where(x => x.Extension == ".zip" || x.Extension == ".rar" || x.Extension == ".7z" || x.Extension == ".pkg");
+                        compressed.AddRange(compresseds);
+                    });
+                    await(task6);
+
+                    Task task7 = Task.Run(() => {
+                        log.MakeLog("Finding everything else.", true);
+                        var others = files.Where(x => x.Extension != ".zip" || x.Extension != ".rar" || x.Extension != ".7z" || x.Extension != ".pkg" || x.Extension != ".ts4script" || x.Extension != ".TS4Script" || x.Extension != ".ts4Script" || x.Extension != ".Sims2Pack" || x.Extension != ".sims2pack" || x.Extension != ".Sims3Pack" || x.Extension != ".sims3pack" || x.Extension != ".package");
+                        other.AddRange(others);
+                    });
+                    await(task7);
+                        
+                    Task task8 = Task.Run(() => {
+                        log.MakeLog("Finding packages.", true);
+                        var package = files.Where(x => x.Extension == ".package");
+                        packages.AddRange(package);
+                    });
+                    await(task8);
+                    
+                    List<Task> IdentifyPackagesList = new List<Task>();
+                    List<AllFiles> allfiles = new List<AllFiles>();
+                    countprogress = 0;
+                    
+                    foreach (FileInfo s3 in sims3pack){
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            allfiles.Add(new AllFiles { Name = s3.Name, Location = s3.FullName, Type = "sims3pack"});
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Sorting " + s3.Name));
+                            log.MakeLog(countprogress + "/" + maxi + " - Sorting " + s3.Name, true);
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }
+                    
+                    foreach (FileInfo s2 in sims2pack){
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            allfiles.Add(new AllFiles { Name = s2.Name, Location = s2.FullName, Type = "sims2pack"});                        
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Sorting " + s2.Name));
+                            log.MakeLog(countprogress + "/" + maxi + " - Sorting " + s2.Name, true);
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));  
+                    }
+                    
+                    
+                    foreach (FileInfo t4 in sims4script){
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            allfiles.Add(new AllFiles { Name = t4.Name, Location = t4.FullName, Type = "ts4script"});  
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Sorting " + t4.Name));
+                            log.MakeLog(countprogress + "/" + maxi + " - Sorting " + t4.Name, true);
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }
+                    
+                    foreach (FileInfo c in compressed){
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            allfiles.Add(new AllFiles { Name = c.Name, Location = c.FullName, Type = "compressed file"});
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Sorting " + c.Name));
+                            log.MakeLog(countprogress + "/" + maxi + " - Sorting " + c.Name, true);
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }                    
+                    foreach (FileInfo o in other){
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            allfiles.Add(new AllFiles { Name = o.Name, Location = o.FullName, Type = "other"});           
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Sorting " + o.Name));
+                            log.MakeLog(countprogress + "/" + maxi + " - Sorting " + o.Name, true);
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }
+                    foreach (FileInfo p in packages){
+                        IdentifyPackagesList.Add(Task.Run(() => {
+                            allfiles.Add(new AllFiles { Name = p.Name, Location = p.FullName, Type = "package"});
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Sorting " + p.Name));
+                            log.MakeLog(countprogress + "/" + maxi + " - Sorting " + p.Name, true);
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }
+                    
+                    
+                    
+                    await Task.WhenAll(IdentifyPackagesList);
+                    log.MakeLog("There are " + allfiles.Count + "items in allfiles. Preparing to add to database.", true);
+
+                    Task task9 = Task.Run(() => {
+                        using (SQLite.SQLiteConnection db = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead)){
+                            log.MakeLog("Inserting, please wait.", true);
+                            try {
+                                db.InsertAll(allfiles);
+                            } catch (SQLite.SQLiteException e) {
+                                Console.WriteLine(e.Message);
+                            }
+                            
+                        }
+                    });
+                    await(task9);
+
+                    log.MakeLog("sims3packs found: " + CountItems("sims3pack"), true);
+                    log.MakeLog("sims2packs found: " + CountItems("sims2pack"), true);
+                    log.MakeLog("ts4scripts found: " + CountItems("ts4script"), true);
+                    log.MakeLog("Compressed files found: " + CountItems("compressed file"), true);
+                    log.MakeLog("Other files found: " + CountItems("other"), true);
+                    log.MakeLog("Package files found: " + CountItems("package"), true);
+                }
+                
+                
+
+                if (stop == false) {
+
+                    var dbq = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead);
+
+                    var dbqc = dbq.Query<AllFiles>("SELECT * FROM AllFiles where Type = 'package'");
+                    dbq.Close();
+
+                    maxi = dbqc.Count;
+                    mainProgressBar.Maximum = maxi;
+                    mainProgressBar.Value = 0;
+                    completionAlertValue("Checking for broken packages.");
+                    countprogress = 0;
+
+                    List<Task> FindBrokenList = new List<Task>();
+
+                    
+
+                    foreach (AllFiles file in dbqc){
+                        FindBrokenList.Add(Task.Run(() => {
+                            log.MakeLog(countprogress + "/" + maxi + " - Checking " + file.Name, true);
+                            progresstracker++;
+                            initialprocess.FindBrokenPackages(file.Location);
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Reading " + file.Name));
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));   
+                        }));
+                    }
+                    log.MakeLog("Awaiting finding broken packages to finish.", true);
+                    await Task.WhenAll(FindBrokenList);
+
+                    log.MakeLog("Broken check complete.", true);
+                }
+
+                
+                if (stop == false) {                
+                    mainProgressBar.Value = 0;
+                    completionAlertValue("Identifying package versions.");
+                    log.MakeLog("Identifying game.", true);
+                    maxi = GlobalVariables.workingPackageFiles.Count;
+                    mainProgressBar.Maximum = maxi;
+                    countprogress = 0;
+
+                    List<Task> IdentifyGamesList = new List<Task>();
+
+                    foreach (PackageFile file in GlobalVariables.workingPackageFiles){
+                        IdentifyGamesList.Add(Task.Run(() => {
+                            log.MakeLog(countprogress + "/" + maxi + " - Checking " + file.Name, true);
+                            initialprocess.IdentifyGames(file.Location);
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Reading " + file.Name));
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        }));
+                    }                
+                    log.MakeLog("Awaiting game ID to finish.", true);
+                    await Task.WhenAll(IdentifyGamesList);
+                    log.MakeLog("Game identification complete.", true);                    
+                }
+            }
+            
+            var dbc = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead);
+
+            var packagesQuery = dbc.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending'");
+            dbc.Close();
+
+            if (stop == false) {
+                mainProgressBar.Value = 0;
+                completionAlertValue("Searching packages for details.");
+                log.MakeLog("Parsing Sims packages.", true);
+                maxi = packagesQuery.Count;
+                log.MakeLog("There are " + maxi + " packages to go through. These are: ", true);
+                foreach (PackageFile pack in packagesQuery){
+                    log.MakeLog(pack.Name, true);
+                }
+                mainProgressBar.Maximum = maxi;
+                countprogress = 0;
+
+                List<Task> ProcessPackages = new List<Task>();
+
+                foreach (PackageFile file in packagesQuery){
+                    ProcessPackages.Add(Task.Run(() => {
+                        log.MakeLog("Checking " + file.Name, true);
+                        if (file.Game == 2) {                            
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Reading " + file.Name));
+                            s2packs.SearchS2Packages(file.Location);
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                                                
+                        } else if (file.Game == 4) {                            
+                            window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = countprogress + "/" + maxi + " - Reading " + file.Name));
+                            s4packs.SearchS4Packages(file.Location, false);                        
+                            window.Dispatcher.Invoke(new Action(() => countprogress++));
+                            window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));                  
+                        }  
+                    }));
+                }                
+                log.MakeLog("Awaiting package reading to finish.", true);
+                await Task.WhenAll(ProcessPackages);
+
+                completionAlertValue("Done!");
+                textCurrentPk.Text = "";
+                mainProgressBar.Value = maxi;
+                sw.Stop();
+                TimeSpan ts = sw.Elapsed;
+                string elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                                    ts.Hours, ts.Minutes, ts.Seconds,
+                                    ts.Milliseconds / 10);
+                log.MakeLog("Processing took " + elapsedtime, true);
+                GetResults();
+            } 
         }
 
         private void GetResults(){
             ResultsWindow resultsWindow = new ResultsWindow();
             resultsWindow.Show();
-            //this.Hide();
+            this.Hide();
         }
         
-        private void SortNewFolder(){
+        private void ManageOldFolder(){
             
         }
 
@@ -281,7 +1012,7 @@ namespace Sims_CC_Sorter
                 DialogResult result = GetFolder.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK) {
                     SelectedFolder = GetFolder.SelectedPath;
-                    globalVars.Initialize(gameNum, SelectedFolder);
+                    globalVars.Initialize(SelectedFolder);
                     LocationBoxValue(GlobalVariables.ModFolder);
                     statement = "Application initiated. ModFolder found at " + GlobalVariables.ModFolder;
                     log.MakeLog(statement, false); 
@@ -292,7 +1023,6 @@ namespace Sims_CC_Sorter
                         statement = "Application is not running in debug mode.";
                         log.MakeLog(statement, true);
                     }
-                    initialprocess.IdentifyPackages();                    
                 } else {
                     LocationBoxValue(SelectedFolder);
                 }
@@ -306,7 +1036,9 @@ namespace Sims_CC_Sorter
         
         private void testbutton_Click(object sender, EventArgs e) {
             statement = "Dev test button clicked.";
-            log.MakeLog(statement, true);            
+            log.MakeLog(statement, true);
+                      
+
         }        
     }
 }

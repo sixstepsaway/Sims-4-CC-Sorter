@@ -7,12 +7,22 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Collections;
 using System.Xml;
+using ICSharpCode.SharpZipLib;
+using ICSharpCode.SharpZipLib.Zip;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using System.Security.Cryptography;
 using SimsCCManager.Packages.Containers;
 using SSAGlobals;
 
 namespace SimsCCManager.Packages.Decryption
 {
+	/// <summary>
+	/// Decryption functions for Sims 2 packs. Credits to:
+	/// - https://modthesims.info/d/227925/delphy-s-download-organiser-v1-2-6365-updated-6th-june-2017.html
+	/// - https://github.com/LazyDuchess/CC-Merger/tree/master/CCMerger
+	/// - https://github.com/whoward69/Sims2Tools
+	/// for a lot of the code I cannibalized for my own uses. 
+	/// </summary>
     public class DecryptByteStream
     {
         public int currOffset = 0;
@@ -1196,4 +1206,18 @@ namespace SimsCCManager.Packages.Decryption
             return infovar;
 		}
     }
+
+	public class S4Decryption {
+		public static Stream Decompress(byte[] data)
+		{
+			var outputStream = new MemoryStream();
+			using (var compressedStream = new MemoryStream(data))
+			using (var inputStream = new InflaterInputStream(compressedStream))
+			{
+				inputStream.CopyTo(outputStream);
+				outputStream.Position = 0;
+				return outputStream;
+			}
+		}
+	}
 }
