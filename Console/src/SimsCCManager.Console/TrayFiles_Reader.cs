@@ -13,7 +13,6 @@ using System.Runtime.CompilerServices;
 using SSAGlobals;
 using SimsCCManager.Packages.Containers;
 using SimsCCManager.Packages.Decryption;
-using SimsCCManager.Decryption.EndianDecoding;
 
 namespace SimsCCManager.Misc.TrayReader
 {

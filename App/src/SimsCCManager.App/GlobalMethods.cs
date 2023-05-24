@@ -945,6 +945,7 @@ namespace SSAGlobals {
         public void ConnectDatabase(bool restart){
             string cs = GlobalVariables.PackagesRead;
             if (restart == true){
+                log.MakeLog("Connecting database and restarting.", true);
                 if (File.Exists(cs)){
                     log.MakeLog("Database exists! Deleting.", true);
                         try {
@@ -968,7 +969,9 @@ namespace SSAGlobals {
                             Console.WriteLine(e.Message);
                         }
                     }
-                }
+                } else {
+                    log.MakeLog("Connecting database without restarting.", true);
+                }            
             DatabaseConnection = new SQLite.SQLiteConnection(PackagesRead);
         }
     }
@@ -1002,7 +1005,7 @@ namespace SSAGlobals {
         public static bool firstrunmain = true;
         public static bool firstrundebug = true;
         public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        private static string internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
+        public static string internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
         private static string debuglog = internalLogFolder + "\\debug.log";
         static ReaderWriterLock locker = new ReaderWriterLock();
         //Function for logging to the logfile set at the start of the program
@@ -1014,7 +1017,6 @@ namespace SSAGlobals {
                 internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
                 debuglog = internalLogFolder + "\\debug.log";
             }
-            Methods.MakeFolder(internalLogFolder);
             Methods.MakeFolder(SaveData.cacheFolder);
             Methods.MakeFolder(mydocs + "\\Sims CC Manager\\data");
             StreamWriter addToInternalLog = new StreamWriter (debuglog, append: false);

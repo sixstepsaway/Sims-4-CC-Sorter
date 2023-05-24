@@ -36,13 +36,17 @@ namespace SimsCCManager.SortingUIResults {
     public partial class ResultsWindow : Window {
         LoggingGlobals log = new LoggingGlobals();
         public int gameNum = 0;
+        private bool showallfiles = false;
+        private DataTable packagesDataTable = new DataTable();
+        private DataTable allFilesDataTable = new DataTable();
         //public static ObservableCollection<SimsPackage> resultspackageslist = new ObservableCollection<SimsPackage>();
         
         public ResultsWindow() 
         {
             log.MakeLog("Initializing results window.", true);
             InitializeComponent(); 
-            log.MakeLog("Running results grid method.", true);  
+            log.MakeLog("Running results grid method.", true); 
+            
 
             var con = new SQLiteConnection(GlobalVariables.PackagesReadDS);
             try
@@ -52,11 +56,17 @@ namespace SimsCCManager.SortingUIResults {
                 cmd.CommandText = "SELECT * FROM Packages ";
                 using (SQLiteDataAdapter dataAdapter = new SQLiteDataAdapter(cmd.CommandText, con))
                 {
-                    DataTable dataTable = new DataTable();
-                    dataAdapter.Fill(dataTable);
+                    
+                    dataAdapter.Fill(packagesDataTable);
+                    ResultsDataGridPackages.ItemsSource = packagesDataTable.AsDataView();
 
-                    ResultsDataGrid.ItemsSource =  dataTable.AsDataView();
-
+                }
+                cmd.CommandText = "SELECT * FROM AllFiles ";
+                using (SQLiteDataAdapter dataAdapter = new SQLiteDataAdapter(cmd.CommandText, con))
+                {
+                   
+                    dataAdapter.Fill(allFilesDataTable);   
+                    ResultsDataGridAllFiles.ItemsSource = allFilesDataTable.AsDataView();
                 }
             }
             catch (Exception exp)
@@ -74,6 +84,23 @@ namespace SimsCCManager.SortingUIResults {
             //}  
         }
 
+        private void showallfiles_Click(object sender, EventArgs e){
+            if (showallfiles == false){
+                ShowAllBt.Content = "Show Only Packages";
+                ShowAllBt.Background = Brushes.CadetBlue;
+                ResultsDataGridPackages.Visibility = Visibility.Hidden;
+                ResultsDataGridAllFiles.Visibility = Visibility.Visible;
+                showallfiles = true;
+            } else {
+                ShowAllBt.Content = "Show All Files";
+                ShowAllBt.Background = Brushes.Beige;
+                ResultsDataGridPackages.Visibility = Visibility.Visible;
+                ResultsDataGridAllFiles.Visibility = Visibility.Hidden;
+                showallfiles = false;
+            }
+            
+        }
+
         private void CacheData(){
             log.MakeLog("Turning data into json file.", true);
             using (StreamWriter file = File.CreateText(SaveData.mainSaveData))
@@ -83,14 +110,25 @@ namespace SimsCCManager.SortingUIResults {
             }
         }
 
-        private void ResultsDataGrid_SelectionChanged(object sender, EventArgs e){
+        private void ResultsDataGridPackages_SelectionChanged(object sender, EventArgs e){
             ResultsPreviewImage rpi = new ResultsPreviewImage();
-            if( ResultsDataGrid.SelectedCells.Count == 1 )
+            if( ResultsDataGridPackages.SelectedCells.Count == 1 )
             {                
                 DataGrid dg = sender as DataGrid;
-                var row = ResultsDataGrid.SelectedValue;
+                var row = ResultsDataGridPackages.SelectedValue;
                 rpi.Show();
-            } else if ((ResultsDataGrid.SelectedCells.Count == 0) || (ResultsDataGrid.SelectedCells.Count > 1)) {
+            } else if ((ResultsDataGridPackages.SelectedCells.Count == 0) || (ResultsDataGridPackages.SelectedCells.Count > 1)) {
+                rpi.Hide();
+            }
+        }
+        private void ResultsDataGridAllFiles_SelectionChanged(object sender, EventArgs e){
+            ResultsPreviewImage rpi = new ResultsPreviewImage();
+            if( ResultsDataGridAllFiles.SelectedCells.Count == 1 )
+            {                
+                DataGrid dg = sender as DataGrid;
+                var row = ResultsDataGridAllFiles.SelectedValue;
+                rpi.Show();
+            } else if ((ResultsDataGridAllFiles.SelectedCells.Count == 0) || (ResultsDataGridAllFiles.SelectedCells.Count > 1)) {
                 rpi.Hide();
             }
         }
@@ -119,6 +157,7 @@ namespace SimsCCManager.SortingUIResults {
         private void menu_Click(object sender, EventArgs e)
         {
             log.MakeLog("Closing application.", false);
+            GlobalVariables.DatabaseConnection.Close();
             System.Windows.Application.Current.Shutdown();
         }
 

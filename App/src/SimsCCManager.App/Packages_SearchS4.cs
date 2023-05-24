@@ -697,13 +697,17 @@ namespace SimsCCManager.Packages.Sims4Search
 
         public void SearchS4Packages(string file, bool dump) {
             FileInfo packageinfo = new FileInfo(file);
-            var txt = string.Format("SELECT * FROM Processing_Reader where Name = {0}", packageinfo.Name);
-            var query = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            log.MakeLog(string.Format("File {0} arrived for processing as Sims 4 file.", packageinfo.Name), true);
+            var txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", packageinfo.Name);
+            var queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            var query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
-            var pk = new PackageFile { Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
+            var pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
             GlobalVariables.DatabaseConnection.Update(pk);
             var packageparsecount = GlobalVariables.packagesRead;   
+            log.MakeLog("Got package parse count.", true);
             GlobalVariables.packagesRead++;       
+            log.MakeLog("Incrementing packages read.", true);
                      
         
             //Misc Vars
@@ -711,8 +715,8 @@ namespace SimsCCManager.Packages.Sims4Search
             
             //locations
 
-            long entrycountloc = 32;
-            long indexRecordPositionloc = 60;
+            long entrycountloc = 36;
+            long indexRecordPositionloc = 64;
 
             SimsPackage thisPackage = new SimsPackage();          
 
@@ -733,19 +737,18 @@ namespace SimsCCManager.Packages.Sims4Search
             ArrayList linkData = new ArrayList();
             List<indexEntry> indexData = new List<indexEntry>();
             SimsPackage DataDelivery = new SimsPackage();
-            //FileInfo packageinfo = new FileInfo(file); 
 
             itemtags = new List<TagsList>();
             distinctItemTags = new List<TagsList>();
 
             //create readers  
-            
             byte[] filebyte = File.ReadAllBytes(packageinfo.FullName);
             MemoryStream dbpfFile = new MemoryStream(filebyte);
             BinaryReader readFile = new BinaryReader(dbpfFile);
             
             //log opening file
-            Console.WriteLine(string.Format("Reading package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name));
+            //string cwl = string.Format("Reading package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
+            //Console.WriteLine(cwl);
             thisPackage.PackageName = packageinfo.Name;
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 4;
@@ -757,40 +760,49 @@ namespace SimsCCManager.Packages.Sims4Search
             //dbpf
             test = Encoding.ASCII.GetString(readFile.ReadBytes(4)); 
             log.MakeLog("DBPF: " + test, true);
+            log.MakeLog("DBPF Location: " + readFile.BaseStream.Position, true);
             
             //major
             uint testint = readFile.ReadUInt32(); 
             test = testint.ToString();
             log.MakeLog("Major :" + test, true);
+            log.MakeLog("Major Location: " + readFile.BaseStream.Position, true);
             
             //minor
             testint = readFile.ReadUInt32(); 
             test = testint.ToString();
             log.MakeLog("Minor : " + test, true);
+            log.MakeLog("Minor Location: " + readFile.BaseStream.Position, true);
             
             testint = readFile.ReadUInt32(); 
             test = testint.ToString();
-            log.MakeLog("Unknown : " + test, true);
+            log.MakeLog("Unknown: " + test, true);
+            log.MakeLog("Unknown1 Location: " + readFile.BaseStream.Position, true);
             
             testint = readFile.ReadUInt32(); 
             test = testint.ToString();
-            log.MakeLog("Unknown : " + test, true);
+            log.MakeLog("Unknown: " + test, true);
+            log.MakeLog("Unknown2 Location: " + readFile.BaseStream.Position, true);
             
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unknown : " + test, true);
+            log.MakeLog("Unknown3 Location: " + readFile.BaseStream.Position, true);
             
             testint = readFile.ReadUInt32(); 
             test = testint.ToString();
             log.MakeLog("Created : " + test, true);
+            log.MakeLog("Created Location: " + readFile.BaseStream.Position, true);
 
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Modified : " + test, true);
+            log.MakeLog("Modified Location: " + readFile.BaseStream.Position, true);
             
             testint = readFile.ReadUInt32(); 
             test = testint.ToString();
             log.MakeLog("Index Major : " + test, true);
+            log.MakeLog("Index Major Location: " + readFile.BaseStream.Position, true);
             */
             //entrycount
             
@@ -799,60 +811,67 @@ namespace SimsCCManager.Packages.Sims4Search
 
             uint entrycount = readFile.ReadUInt32();
             log.MakeLog(string.Format("Entry Count: {0}", entrycount.ToString()), true);
+            log.MakeLog("Entry Count Location: " + readFile.BaseStream.Position, true);
             
             //record position low
             uint indexRecordPositionLow = readFile.ReadUInt32();
             log.MakeLog(string.Format("IndexRecordPositionLow: {0}", indexRecordPositionLow.ToString()), true);
+            log.MakeLog("IndexRecordPositionLow Location: " + readFile.BaseStream.Position, true);
             
             //index record size
             uint indexRecordSize = readFile.ReadUInt32();
             log.MakeLog(string.Format("IndexRecordSize: {0}", indexRecordSize.ToString()), true);
-
-            /*//unused
+            log.MakeLog("IndexRecordSize Location: " + readFile.BaseStream.Position, true);
+            /*
+            //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Trash Index offset: " + test, true);
+            log.MakeLog("Unused Trash Index offset Location: " + readFile.BaseStream.Position, true);
             
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Trash Index size: " + test, true);
+            log.MakeLog("Unused Trash Index size Location: " + readFile.BaseStream.Position, true);
             
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Index Minor Version: " + test, true);
+            log.MakeLog("Unused Index Minor Version Location: " + readFile.BaseStream.Position, true);
             
             //unused but 3 for historical reasons
             testint = readFile.ReadUInt32();
             test = testint.ToString();
-            log.MakeLog("Unused, 3 for historical reasons: " + test, true);*/
-            
+            log.MakeLog("Unused, 3 for historical reasons: " + test, true);
+            log.MakeLog("Unused, 3 for historical reasons Location: " + readFile.BaseStream.Position, true);
+            */
             readFile.BaseStream.Position = indexRecordPositionloc;
 
             ulong indexRecordPosition = readFile.ReadUInt64();
             test = indexRecordPosition.ToString();
-            log.MakeLog("Inded Record Position: " + test, true);
-            uint testint;
+            log.MakeLog("Index Record Position: " + test, true);
+            log.MakeLog("Index Record Position Location: " + readFile.BaseStream.Position, true);
+            /*
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Unknown:" + test, true);
+            log.MakeLog("Unused Unknown Location: " + readFile.BaseStream.Position, true);
             
             //unused six bytes
             test = Encoding.ASCII.GetString(readFile.ReadBytes(24));
             log.MakeLog("Unused: " + test, true);
-
+            log.MakeLog("Unused4 Location: " + readFile.BaseStream.Position, true);
+            */
             byte[] headersize = new byte[96];
 
             if (indexRecordPosition != 0){
-                long indexseek = (long)indexRecordPosition - headersize.Length;
-                //dbpfFile.Seek(indexseek, SeekOrigin.Current);
+                long indexseek = (long)indexRecordPosition - headersize.Length;                
                 var here = readFile.BaseStream.Position;
                 readFile.BaseStream.Position = here + indexseek;
             } else {
-                //long indexseek = indexRecordPositionLow - headersize.Length;    
-                //dbpfFile.Seek(indexRecordPositionLow, SeekOrigin.Current);
                 var here = readFile.BaseStream.Position;
                 readFile.BaseStream.Position = here + indexRecordPositionLow;
             }
@@ -891,20 +910,18 @@ namespace SimsCCManager.Packages.Sims4Search
                     holderEntry.position = (long)testin;
                     log.MakeLog("P" + packageparsecount + "/E" + i + " - Position " + testin.ToString(), true);
 
-                    testint = readFile.ReadUInt32();
-                    holderEntry.fileSize = testint;
-                    log.MakeLog("P" + packageparsecount + "/E" + i + " - File Size " + testint.ToString("X8"), true);
+                    holderEntry.fileSize = readFile.ReadUInt32();
 
-                    testint = readFile.ReadUInt32();
-                    holderEntry.memSize = testint;
-                    log.MakeLog("P" + packageparsecount + "/E" + i + " - Mem Size " + testint.ToString("X8"), true);
+                    log.MakeLog("P" + packageparsecount + "/E" + i + " - File Size " + holderEntry.fileSize.ToString("X8"), true);
 
-                    testint = readFile.ReadUInt16();
-                    holderEntry.compressionType = testint.ToString("X4");
-                    log.MakeLog("P" + packageparsecount + "/E" + i + " - Compression Type " + testint.ToString("X4"), true);
+                    holderEntry.memSize = readFile.ReadUInt32();
+                    log.MakeLog("P" + packageparsecount + "/E" + i + " - Mem Size " + holderEntry.memSize.ToString("X8"), true);
 
-                    testint = readFile.ReadUInt16();
-                    log.MakeLog("P" + packageparsecount + "/E" + i + " - Confirmed: " + testint.ToString("X4"), true);
+                    holderEntry.compressionType = readFile.ReadUInt16().ToString("X4");
+                    log.MakeLog("P" + packageparsecount + "/E" + i + " - Compression Type " + holderEntry.compressionType, true);
+
+                    //testint = readFile.ReadUInt16();
+                    //log.MakeLog("P" + packageparsecount + "/E" + i + " - Confirmed: " + testint.ToString("X4"), true);
 
                     indexData.Add(holderEntry);
 
@@ -1792,16 +1809,18 @@ namespace SimsCCManager.Packages.Sims4Search
 
             log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
             log.MakeLog(thisPackage.ToString(), false);
-            //Containers.Containers.allSims4Packages.Add(thisPackage);
+            Containers.Containers.allSims4Packages.Add(thisPackage);
             GlobalVariables.DatabaseConnection.Insert(thisPackage, typeof(SimsPackage));
-            txt = string.Format("SELECT * FROM Processing_Reader where Name = {0}", packageinfo.Name);
-            query = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", packageinfo.Name);
+            queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
 
             readFile.Dispose();
             dbpfFile.Dispose();
-            Console.WriteLine(string.Format("Closing package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name));
-            packageparsecount++;
+            //cwl = string.Format("Closing package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
+            //Console.WriteLine(cwl);
+            
 
         }
 

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Sims_CC_Sorter"
         mc:Ignorable="d"
-        Title="Sims CC Sorter"
+        Title="Sims CC Manager"
         WindowState="Normal"
         WindowStartupLocation="CenterScreen"
         Loaded="App_Loaded"

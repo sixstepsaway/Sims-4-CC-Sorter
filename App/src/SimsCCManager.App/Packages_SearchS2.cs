@@ -49,12 +49,14 @@ namespace SimsCCManager.Packages.Sims2Search
         uint chunkOffset = 0;        
        
 
-        public void SearchS2Packages(string file) {            
+        public void SearchS2Packages(string file) {
             FileInfo packageinfo = new FileInfo(file); 
-            var txt = string.Format("SELECT * FROM Processing_Reader where Name = {0}", packageinfo.Name);
-            var query = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            log.MakeLog(string.Format("File {0} arrived for processing as Sims 2 file.", packageinfo.Name), true);
+            var txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", packageinfo.Name);
+            var queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            var query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
-            var pk = new PackageFile { Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
+            var pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
             GlobalVariables.DatabaseConnection.Update(pk);
             var packageparsecount = GlobalVariables.packagesRead;   
             GlobalVariables.packagesRead++;         
@@ -88,7 +90,8 @@ namespace SimsCCManager.Packages.Sims2Search
             
             //locations
             
-            
+            long indexmajorloc = 32;
+            long indexminorloc = 60;
         
 
             //Lists 
@@ -114,74 +117,91 @@ namespace SimsCCManager.Packages.Sims2Search
             
 
             //start actually reading the package 
-            Console.WriteLine(string.Format("Reading package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name));
+            //string cwl = string.Format("Reading package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
+            //Console.WriteLine(cwl);
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 2;
             log.MakeLog(string.Format("Package #{0} registered as {1} and meant for Sims 2", packageparsecount, packageinfo.FullName), true);          
-            readFile.BaseStream.Position = 32;
-            /*test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
+            //readFile.BaseStream.Position = 32;
+            test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
             log.MakeLog("P" + packageparsecount + " - DBPF Bytes: " + test, true);
-            
-            string DBPF = test;
+            log.MakeLog("DBPF Location: " + readFile.BaseStream.Position, true);
+            /*string DBPF = test;
             
             uint major = readFile.ReadUInt32();
             test = major.ToString();  
             log.MakeLog("P" + packageparsecount + " - Major: " + test, true);
+            log.MakeLog("major loc: " + readFile.BaseStream.Position, true);
 
             uint minor = readFile.ReadUInt32();
             test = minor.ToString();
             log.MakeLog("P" + packageparsecount + " - Minor: " + test, true);
+            log.MakeLog("minor loc: " + readFile.BaseStream.Position, true);
             
             string reserved = Encoding.UTF8.GetString(readFile.ReadBytes(12));
             test = reserved;
             log.MakeLog("P" + packageparsecount + " - Reserved: " + test, true);
+            log.MakeLog("reserved loc: " + readFile.BaseStream.Position, true);
             
             uint dateCreated = readFile.ReadUInt32();
             test = dateCreated.ToString();
             log.MakeLog("P" + packageparsecount + " - Date created: " + test, true);
+            log.MakeLog("dc Location: " + readFile.BaseStream.Position, true);
             
             uint dateModified = readFile.ReadUInt32();
             test = dateModified.ToString();
-            log.MakeLog("P" + packageparsecount + " - Date modified: " + test, true);*/
-            
+            log.MakeLog("P" + packageparsecount + " - Date modified: " + test, true);
+            log.MakeLog("dm loc: " + readFile.BaseStream.Position, true);*/
+            readFile.BaseStream.Position = indexmajorloc;
+
             uint indexMajorVersion = readFile.ReadUInt32();
             test = indexMajorVersion.ToString();
             log.MakeLog("P" + packageparsecount + " - Index Major: " + test, true);
+            log.MakeLog("Index Major Location: " + readFile.BaseStream.Position, true);
             
             uint indexCount = readFile.ReadUInt32();
             test = indexCount.ToString();
             log.MakeLog("P" + packageparsecount + " - Index Count: " + test, true);
+            log.MakeLog("Index count loc: " + readFile.BaseStream.Position, true);
             
             uint indexOffset = readFile.ReadUInt32();
             test = indexOffset.ToString();
             log.MakeLog("P" + packageparsecount + " - Index Offset: " + test, true);
+            log.MakeLog("Index offset loc: " + readFile.BaseStream.Position, true);
             
             uint indexSize = readFile.ReadUInt32();
             test = indexSize.ToString();
             log.MakeLog("P" + packageparsecount + " - Index Size: " + test, true);
+            log.MakeLog("Index size loc: " + readFile.BaseStream.Position, true);
             
-            uint holesCount = readFile.ReadUInt32();
+            /*uint holesCount = readFile.ReadUInt32();
             test = holesCount.ToString();
             log.MakeLog("P" + packageparsecount + " - Holes Count: " + test, true);
+            log.MakeLog("holesc loc: " + readFile.BaseStream.Position, true);
 
             uint holesOffset = readFile.ReadUInt32();
             test = holesOffset.ToString();
             log.MakeLog("P" + packageparsecount + " - Holes Offset: " + test, true);
+            log.MakeLog("holes o loc: " + readFile.BaseStream.Position, true);
             
             uint holesSize = readFile.ReadUInt32();
             test = holesSize.ToString();
             log.MakeLog("P" + packageparsecount + " - Holes Size: " + test, true);
-            
+            log.MakeLog("holess loc: " + readFile.BaseStream.Position, true);*/
+
+            readFile.BaseStream.Position = indexminorloc;
+
             uint indexMinorVersion = readFile.ReadUInt32() -1;
             test = indexMinorVersion.ToString();
             log.MakeLog("P" + packageparsecount + " - Index Minor Version: " + test, true);
+            log.MakeLog("Index minor Location: " + readFile.BaseStream.Position, true);
             
             string reserved2 = Encoding.UTF8.GetString(readFile.ReadBytes(32));
             log.MakeLog("P" + packageparsecount + " - Reserved 2: " + reserved2, true);
+            log.MakeLog("reserved 2 Location: " + readFile.BaseStream.Position, true);
 
             log.MakeLog("P" + packageparsecount + " - ChunkOffset: " + chunkOffset, true);
 
-            //dbpfFile.Seek(chunkOffset + indexOffset, SeekOrigin.Begin);
             readFile.BaseStream.Position = chunkOffset + indexOffset;
             for (int i = 0; i < indexCount; i++) {
                 indexEntry holderEntry = new indexEntry();
@@ -889,8 +909,9 @@ namespace SimsCCManager.Packages.Sims2Search
             log.MakeLog(thisPackage.ToString(), false);
             //Containers.Containers.allSims2Packages.Add(thisPackage);
             GlobalVariables.DatabaseConnection.Insert(thisPackage, typeof(SimsPackage));
-            txt = string.Format("SELECT * FROM Processing_Reader where Name = {0}", packageinfo.Name);
-            query = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", packageinfo.Name);
+            queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
 
             objdnum = new List<int>();   
@@ -914,7 +935,8 @@ namespace SimsCCManager.Packages.Sims2Search
             
             readFile.Dispose();
             dbpfFile.Dispose();
-            Console.WriteLine(string.Format("Closing package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name));
+            //cwl = string.Format("Closing package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
+            //Console.WriteLine(cwl);
             packageparsecount++;
         }
 

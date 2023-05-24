@@ -48,12 +48,6 @@ namespace Sims_CC_Sorter
     /// Interaction logic for MainWindow.xaml
     /// </summary>
 
-    public partial class SplashScreen : Window    
-    {
-        
-
-    }
-
     public partial class MainWindow : Window    
 
     {
@@ -74,6 +68,7 @@ namespace Sims_CC_Sorter
         bool eatenturecpu = true;
 
         private bool FindNewAdditions;
+        public static bool dataExists;
         private bool ContinuePrevious;
         private bool ManageFolder;
         private bool SortFolder;
@@ -84,7 +79,7 @@ namespace Sims_CC_Sorter
 
         public MainWindow()
         {               
-            InitializeComponent();
+            //InitializeComponent();
             int threads = Environment.ProcessorCount;
             int threadstouse = 0;
             if (eatenturecpu == true){
@@ -97,14 +92,13 @@ namespace Sims_CC_Sorter
                 testButton.Visibility = Visibility.Visible;
             } else {
                 testButton.Visibility = Visibility.Hidden;
-            }
-            if (File.Exists(SaveData.mainSaveData)) 
+            }            
+            if (dataExists == true) 
             {
                 LoadButton.Visibility = Visibility.Visible;
             } else {
                 LoadButton.Visibility = Visibility.Collapsed;
             }
-            CollectCaches();
             globalVars.InitializeVariables();
         }
 
@@ -112,43 +106,10 @@ namespace Sims_CC_Sorter
         #region Load 
 
         private void loadData_Click(object sender, RoutedEventArgs e){
-            
-            /*using (StreamReader file = File.OpenText(SaveData.mainSaveData))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                GlobalVariables.loadedData = (List<SimsPackage>)serializer.Deserialize(file, typeof(List<SimsPackage>));
-            }
-            GlobalVariables.loadedSaveData = true;
-            GetResults();*/
+            GetResults();
         }
 
         #endregion   
-
-        private void CollectCaches() {
-            //if file exists, get it. if we already have it, delete it then and replace it
-            List<CacheLocations> caches = new List<CacheLocations>();
-            caches.Add(new CacheLocations{ CacheName = "localthumbcache.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\Electronic Arts\\The Sims 4\\localthumbcache.package"), CacheRename = "S4_localthumbcache.package" });
-            caches.Add(new CacheLocations{ CacheName = "CASThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\Electronic Arts\\The Sims 3\\Thumbnails\\CASThumbnails.package"), CacheRename = "S3_CASThumbnails.package" });
-            caches.Add(new CacheLocations{ CacheName = "ObjectThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\Electronic Arts\\The Sims 3\\Thumbnails\\ObjectThumbnails.package"), CacheRename = "S3_ObjectThumbnails.package" });
-            caches.Add(new CacheLocations{ CacheName = "CASThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\EA Games\\The Sims 2 Ultimate Collection\\Thumbnails\\BuildModeThumbnails.package"), CacheRename = "S2_CASThumbnails.package" });
-            caches.Add(new CacheLocations{ CacheName = "ObjectThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\EA Games\\The Sims 2 Ultimate Collection\\Thumbnails\\CASThumbnails.package"), CacheRename = "S2_ObjectThumbnails.package" });
-            caches.Add(new CacheLocations{ CacheName = "BuildModeThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\EA Games\\The Sims 2 Ultimate Collection\\Thumbnails\\ObjectThumbnails.package"), CacheRename = "S2_BuildModeThumbnails.package" });
-
-            foreach (CacheLocations cache in caches){
-                string cachefolder = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\Sims CC Manager\\cache");
-                string location = System.IO.Path.Combine(LoggingGlobals.mydocs, System.IO.Path.Combine("\\Sims CC Manager\\cache\\", cache.CacheRename));
-                string unnamedversion = System.IO.Path.Combine(LoggingGlobals.mydocs, System.IO.Path.Combine("\\Sims CC Manager\\cache\\", cache.CacheName));
-                if (File.Exists(cache.CacheLocation)) {
-                    if (File.Exists(location)){
-                        File.Delete(location);
-                        File.Copy(cache.CacheLocation, cachefolder);
-                        Microsoft.VisualBasic.FileIO.FileSystem.RenameFile(unnamedversion, cache.CacheRename);
-                    }
-                } else {
-                    //do nothing, there's no cache to get
-                }
-            }            
-        }
 
         private void noeatcpu_Check(object sender, RoutedEventArgs e){
             eatenturecpu = false;
@@ -307,7 +268,7 @@ namespace Sims_CC_Sorter
             log.MakeLog("Making BrokenChecked table", true);
             GlobalVariables.DatabaseConnection.CreateTable <BrokenChecked>();
             var pragmas = new List<string>(){
-                //"PRAGMA journal_mode=WAL;",
+                "PRAGMA journal_mode=WAL;",
                 "PRAGMA synchronous=NORMAL;",
                 "PRAGMA auto_vacuum=FULL"
             };
@@ -344,7 +305,7 @@ namespace Sims_CC_Sorter
 
             if (ContinuePrevious == false || FindNewAdditions == true){
                 string[] filesS = Directory.GetFiles(GlobalVariables.ModFolder, "*", SearchOption.AllDirectories);
-                log.MakeLog("Checking for broken packages.", true);
+                log.MakeLog("Sorting packages files from non-package files.", true);
                 int maxi = filesS.Length;             
                 mainProgressBar.Value = 0;
                 mainProgressBar.Maximum = maxi;
@@ -363,10 +324,13 @@ namespace Sims_CC_Sorter
                     List<FileInfo> compressed = new List<FileInfo>();
                     List<FileInfo> trayitems = new List<FileInfo>();
 
-                    
+                    log.MakeLog("Getting packagesPending.", true);
                     var packagesPending = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending'");
+                    log.MakeLog("Getting packagesProcessing.", true);
                     var packagesProcessing = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Processing'");
+                    log.MakeLog("Getting packagesDone.", true);
                     var packagesDone = GlobalVariables.DatabaseConnection.Query<SimsPackage>("SELECT * FROM Packages");
+                    log.MakeLog("Getting notpack.", true);
                     var notpack = GlobalVariables.DatabaseConnection.Query<AllFiles>("SELECT * FROM AllFiles");
 
                     Task task1 = Task.Run(() => {    
@@ -819,27 +783,30 @@ namespace Sims_CC_Sorter
                 ConcurrentQueue<Task> ProcessPackages = new ConcurrentQueue<Task>();
 
                 foreach (PackageFile file in pending2) {
+                    log.MakeLog(string.Format("Processing Sims 2 file: {0}", file.Name), true);
                     ProcessPackages.Enqueue(Task.Run(() => {
-                        s2packs.SearchS2Packages(file.Location);
                         window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
                         window.Dispatcher.Invoke(new Action(() => countprogress++));
-                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));                        
+                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        s2packs.SearchS2Packages(file.Location);                        
                     }));
                 }
                 foreach (PackageFile file in pending3) {
+                    log.MakeLog(string.Format("Processing Sims 3 file: {0}", file.Name), true);
                     /*ProcessPackages.Enqueue(Task.Run(() => {
-                        s3packs.SearchS3Packages(file.Location);
                         window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
                         window.Dispatcher.Invoke(new Action(() => countprogress++));
-                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));                        
+                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        s3packs.SearchS3Packages(file.Location);                        
                     }));*/                    
                 }
                 foreach (PackageFile file in pending4) {
+                    log.MakeLog(string.Format("Processing Sims 4 file: {0}", file.Name), true);
                     ProcessPackages.Enqueue(Task.Run(() => {
-                        s4packs.SearchS4Packages(file.Location, false);
                         window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
                         window.Dispatcher.Invoke(new Action(() => countprogress++));
-                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));                        
+                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                        s4packs.SearchS4Packages(file.Location, false);                        
                     }));
                 }
                 while (ProcessPackages.Any())
