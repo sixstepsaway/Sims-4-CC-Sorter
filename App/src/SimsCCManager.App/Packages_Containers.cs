@@ -16,6 +16,14 @@ namespace SimsCCManager.Packages.Containers
     /// Containing classes for holding the information the program gets.
     /// </summary>
 
+    [Table("BrokenChecked")]
+    public class BrokenChecked {
+        public string Name {get; set;}
+        public string Location {get; set;}
+        public string Status {get; set;} //working vs broken
+    }
+     
+
     [Table ("AllFiles")]
     public class AllFiles {
         /// <summary>
@@ -30,7 +38,9 @@ namespace SimsCCManager.Packages.Containers
         /// <summary>
         /// Basic package file with no full information yet; game version, whether it's broken, and whether it's being processed or waiting to be processed.
         /// </summary>
-        [Indexed, PrimaryKey]
+        [PrimaryKey, AutoIncrement]
+        public int ID {get; set;}
+        [Indexed]
         [Column("Name")]
         public string Name {get; set;}
         [Column("Location")]
@@ -68,7 +78,8 @@ namespace SimsCCManager.Packages.Containers
         /// <summary>
         /// The full package summary used for sorting and editing the items.
         /// </summary>
-        
+        [PrimaryKey, AutoIncrement]
+        public int ID {get; set;}        
         [Column ("Title")]
         public string Title {get; set;}  
         [Column ("Description")]
@@ -76,7 +87,7 @@ namespace SimsCCManager.Packages.Containers
         [Column ("Location")]
         public string Location {get; set;}
         [Column ("PackageName")]
-        [Indexed, PrimaryKey]
+        [Indexed]
         public string PackageName {get; set;}
         [Column ("Type")]
         public string Type {get; set;}

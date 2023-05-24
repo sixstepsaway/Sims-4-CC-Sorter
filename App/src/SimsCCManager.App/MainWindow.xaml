@@ -141,7 +141,7 @@
                 </Grid.RowDefinitions>
                 <TextBlock FontFamily="Arial" Text="The app has detected a search that didn't conclude before." Foreground="#D2BDD1" FontSize="15" TextWrapping="Wrap" TextAlignment="Center" Grid.Row="0"/>
                 <TextBlock FontFamily="Arial" Text="Should we continue from there?" Foreground="#D2BDD1" FontSize="15" TextWrapping="Wrap" TextAlignment="Center" Grid.Row="1" Margin="0, 0, 0, 15"/>
-                <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Visible">
                     <Button Click="ContinueSearch_Click" Content="Continue" Margin="5, 0, 5, 0" Style="{StaticResource PriorDataButtons}"/>
                     <Button Click="RestartSearch_Click" Content="Restart" Margin="5, 0, 5, 0" Style="{StaticResource PriorDataButtons}"/>
                     <Button Click="CancelSearch_Click" Content="Cancel" Margin="5, 0, 5, 0" Style="{StaticResource PriorDataButtons}"/>
@@ -154,7 +154,7 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <TextBlock FontFamily="Arial" Text="Search for new additions first?" Foreground="#D2BDD1" FontSize="15" TextWrapping="Wrap" TextAlignment="Center" Grid.Row="0" Margin="0, 0, 0, 15"/>                
-                <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Visible">
                     <Button Click="YesFindNewItems_Click" Content="Yes" Margin="5, 0, 5, 0" Style="{StaticResource PriorDataButtons}"/>
                     <Button Click="NoDontFindNew_Click" Content="No" Margin="5, 0, 5, 0" Style="{StaticResource PriorDataButtons}"/>
                 </StackPanel>

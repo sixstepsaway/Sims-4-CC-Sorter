@@ -186,15 +186,24 @@ namespace SimsCCManager.Packages.Initial {
             if (test != "DBPF") {
                 packagereader.Close();
                 var statement = pack.FullName + " is either not a package or is broken.";
-                GlobalVariables.brokenFiles.Add(new SimsPackage{ Title = pack.Name, Location = pack.FullName, Broken = true});
+                //GlobalVariables.brokenFiles.Add(new SimsPackage{ Title = pack.Name, Location = pack.FullName, Broken = true});
+                log.MakeLog("Adding broken file to list.", true);
+                GlobalVariables.DatabaseConnection.Insert(new BrokenChecked{Name = pack.Name, Location = pack.FullName, Status = "Broken"});
                 log.MakeLog(statement, false);
+                packagereader.Dispose();
+                msPackage.Dispose();
                 return;
             } else {
                 packagereader.Close();
-                log.MakeLog(pack.FullName + " is a package.", true);                
-                GlobalVariables.workingPackageFiles.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Broken = false});
+                log.MakeLog(pack.FullName + " is a package.", true); 
+                log.MakeLog("Adding working file to list.", true);
+                GlobalVariables.DatabaseConnection.Insert(new BrokenChecked{Name = pack.Name, Location = pack.FullName, Status = "Working"});
+                //GlobalVariables.workingPackageFiles.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Broken = false});
+                packagereader.Dispose();
+                msPackage.Dispose();
                 return;
             }
+            
         }
 
         public void IdentifyGames(string input){ 
@@ -209,57 +218,53 @@ namespace SimsCCManager.Packages.Initial {
             log.MakeLog("Created memorystream for " + pack.Name, true);
             BinaryReader packagereader = new BinaryReader(msPackage);
             log.MakeLog("Created binaryreader for " + pack.Name, true);
-            string test = "";
+            packagereader.BaseStream.Position = 4;
+            //string test = "";
 
-            test = Encoding.ASCII.GetString(packagereader.ReadBytes(4));
+            //test = Encoding.ASCII.GetString(packagereader.ReadBytes(4));
 
             uint major = packagereader.ReadUInt32();
-            test = major.ToString();
             log.MakeLog(pack.Name + " has " + major + " as a major.", true);
             
             uint minor = packagereader.ReadUInt32();
-            test = minor.ToString();
+            //test = minor.ToString();
             log.MakeLog(pack.Name + " has " + minor + " as a minor.", true);
             if (major is 1 && minor is 1) {
                 log.MakeLog(pack.FullName + " is a sims 2 file.", false);
-                PtoDb(pack, 2);  
-                log.MakeLog(string.Format("There are {0} Sims 2 files to process.", CountPackages(2)), true);
+                PtoDb(pack, 2);
             } else if (major is 2 && minor is 0) {
                 log.MakeLog(pack.FullName + " is a sims 3 file.", false);
-                PtoDb(pack, 3); 
-                log.MakeLog(string.Format("There are {0} Sims 3 files to process.", CountPackages(3)), true);
+                PtoDb(pack, 3);
             } else if (major is 2 && minor is 1) {
                 log.MakeLog(pack.FullName + " is a sims 4 file.", false);
-                PtoDb(pack, 4); 
-                log.MakeLog(string.Format("There are {0} Sims 4 files to process.", CountPackages(4)), true);
+                PtoDb(pack, 4);
             } else if (major is 3 && minor is 0) {
                 log.MakeLog(pack.FullName + " is a Sim City 5 file.", false);
                 PtoDb(pack, 12);
-                log.MakeLog(string.Format("There are {0} Sim City 5 files to process.", CountPackages(12)), true);
             } else {
                 log.MakeLog(pack.FullName + " was unidentifiable.", false);
                 NotPtoDb("unidentifiable", pack.FullName);
             }
+            packagereader.Dispose();
+            msPackage.Dispose();
         }
 
         private void PtoDb(FileInfo f, int game){
-            log.MakeLog("Adding item to database as for Sims " + game, true);
-            using (SQLite.SQLiteConnection db = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead)){
-                db.Insert(new PackageFile { Name = f.Name, Location = f.FullName, Game = game, Broken = false, Status = "Pending"});
+            log.MakeLog("Adding " + f.Name + " to database as for Sims " + game, true);
+            try {
+              GlobalVariables.DatabaseConnection.Insert(new PackageFile { Name = f.Name, Location = f.FullName, Game = game, Broken = false, Status = "Pending"});
+            } catch (Exception e) {
+                Console.WriteLine(e.Message);
             }
-            log.MakeLog("Added! Returning.", true);
+            log.MakeLog("Added " + f.Name + "! Returning.", true);
         }
 
         private int CountPackages(int game) {
             log.MakeLog("Checking count of packages database.", true);
             int value;
-            using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){               
-                db.Open();
-                string cmdtext = string.Format("SELECT count(*) FROM Processing_Reader where game = '{0}'", game);
-                System.Data.SQLite.SQLiteCommand sqm = new System.Data.SQLite.SQLiteCommand(cmdtext, db);
-                value = Convert.ToInt32(sqm.ExecuteScalar());                
-                db.Close();
-            }
+            string cmdtext = string.Format("SELECT count(*) FROM Processing_Reader where game = '{0}'", game);
+            var command = GlobalVariables.DatabaseConnection.CreateCommand(cmdtext);
+            value = command.ExecuteScalar<Int32>();
             log.MakeLog("Counted! Returning.", true);
             return value;
         }

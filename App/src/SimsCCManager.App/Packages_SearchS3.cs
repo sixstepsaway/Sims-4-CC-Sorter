@@ -16,6 +16,10 @@ using SimsCCManager.Packages.Decryption;
 
 namespace SimsCCManager.Packages.Sims3Search
 {
+    /// <summary>
+    /// Sims 3 package reading. Gets all the information from inside S3 Package files and returns it for use.
+    /// NOT YET IMPLEMENTED.
+    /// </summary>
     public static class extensions {
         public static void Increment<T>(this Dictionary<T, int> dictionary, T key)
         {

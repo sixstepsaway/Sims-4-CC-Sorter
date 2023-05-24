@@ -21,7 +21,6 @@ using System.Text.Json.Serialization;
 using SSAGlobals;
 using SimsCCManager.Packages.Containers;
 using SimsCCManager.Packages.Decryption;
-using SimsCCManager.Decryption.EndianDecoding;
 using System.Data.SQLite;
 using System.Windows.Forms;
 
@@ -698,22 +697,22 @@ namespace SimsCCManager.Packages.Sims4Search
 
         public void SearchS4Packages(string file, bool dump) {
             FileInfo packageinfo = new FileInfo(file);
-            using (SQLite.SQLiteConnection db = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead)){
-                db.Update(new PackageFile { Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"});
-            }
+            var txt = string.Format("SELECT * FROM Processing_Reader where Name = {0}", packageinfo.Name);
+            var query = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            GlobalVariables.DatabaseConnection.Delete(query);
+            var pk = new PackageFile { Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
+            GlobalVariables.DatabaseConnection.Update(pk);
             var packageparsecount = GlobalVariables.packagesRead;   
             GlobalVariables.packagesRead++;       
-
-            //Vars for Package Info
-            string typefound = "";  
-                      
+                     
         
             //Misc Vars
             string test = "";
             
-            const EndianType endiant = EndianType.Little;
-            byte[] uncompresseddata;
-            
+            //locations
+
+            long entrycountloc = 32;
+            long indexRecordPositionloc = 60;
 
             SimsPackage thisPackage = new SimsPackage();          
 
@@ -744,35 +743,36 @@ namespace SimsCCManager.Packages.Sims4Search
             byte[] filebyte = File.ReadAllBytes(packageinfo.FullName);
             MemoryStream dbpfFile = new MemoryStream(filebyte);
             BinaryReader readFile = new BinaryReader(dbpfFile);
-            //FileStream dbpfFile = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-            //BinaryReader readFile = new BinaryReader(dbpfFile); 
             
             //log opening file
-            Console.WriteLine("Reading Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
-            log.MakeLog("Logged Package #" + packageparsecount + " as " + packageinfo.FullName, true);
+            Console.WriteLine(string.Format("Reading package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name));
             thisPackage.PackageName = packageinfo.Name;
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 4;
-            log.MakeLog("Logged Package #" + packageparsecount + " as meant for The Sims " + thisPackage.Game, true);           
-            
-            //start actually reading the package 
-            int counter = 0;
+            log.MakeLog(string.Format("Package #{0} registered as {1} and meant for Sims 4", packageparsecount, packageinfo.FullName), true);
 
+            //start actually reading the package 
+            
+            /*
             //dbpf
-            test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
+            test = Encoding.ASCII.GetString(readFile.ReadBytes(4)); 
             log.MakeLog("DBPF: " + test, true);
             
             //major
-            uint testint = readFile.ReadUInt32();
+            uint testint = readFile.ReadUInt32(); 
             test = testint.ToString();
             log.MakeLog("Major :" + test, true);
             
             //minor
-            testint = readFile.ReadUInt32();
+            testint = readFile.ReadUInt32(); 
             test = testint.ToString();
             log.MakeLog("Minor : " + test, true);
             
-            testint = readFile.ReadUInt32();
+            testint = readFile.ReadUInt32(); 
+            test = testint.ToString();
+            log.MakeLog("Unknown : " + test, true);
+            
+            testint = readFile.ReadUInt32(); 
             test = testint.ToString();
             log.MakeLog("Unknown : " + test, true);
             
@@ -780,11 +780,7 @@ namespace SimsCCManager.Packages.Sims4Search
             test = testint.ToString();
             log.MakeLog("Unknown : " + test, true);
             
-            testint = readFile.ReadUInt32();
-            test = testint.ToString();
-            log.MakeLog("Unknown : " + test, true);
-            
-            testint = readFile.ReadUInt32();
+            testint = readFile.ReadUInt32(); 
             test = testint.ToString();
             log.MakeLog("Created : " + test, true);
 
@@ -792,26 +788,27 @@ namespace SimsCCManager.Packages.Sims4Search
             test = testint.ToString();
             log.MakeLog("Modified : " + test, true);
             
-            testint = readFile.ReadUInt32();
+            testint = readFile.ReadUInt32(); 
             test = testint.ToString();
             log.MakeLog("Index Major : " + test, true);
-            
+            */
             //entrycount
+            
+
+            readFile.BaseStream.Position = entrycountloc;
+
             uint entrycount = readFile.ReadUInt32();
-            test = entrycount.ToString();
-            log.MakeLog("Entry Count: " + test, true);
+            log.MakeLog(string.Format("Entry Count: {0}", entrycount.ToString()), true);
             
             //record position low
             uint indexRecordPositionLow = readFile.ReadUInt32();
-            test = indexRecordPositionLow.ToString();
-            log.MakeLog("indexRecordPositionLow: " + test, true);
+            log.MakeLog(string.Format("IndexRecordPositionLow: {0}", indexRecordPositionLow.ToString()), true);
             
             //index record size
             uint indexRecordSize = readFile.ReadUInt32();
-            test = indexRecordSize.ToString();
-            log.MakeLog("indexRecordSize: " + test, true);
+            log.MakeLog(string.Format("IndexRecordSize: {0}", indexRecordSize.ToString()), true);
 
-            //unused
+            /*//unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Trash Index offset: " + test, true);
@@ -829,12 +826,14 @@ namespace SimsCCManager.Packages.Sims4Search
             //unused but 3 for historical reasons
             testint = readFile.ReadUInt32();
             test = testint.ToString();
-            log.MakeLog("Unused, 3 for historical reasons: " + test, true);
+            log.MakeLog("Unused, 3 for historical reasons: " + test, true);*/
             
+            readFile.BaseStream.Position = indexRecordPositionloc;
+
             ulong indexRecordPosition = readFile.ReadUInt64();
             test = indexRecordPosition.ToString();
             log.MakeLog("Inded Record Position: " + test, true);
-
+            uint testint;
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
@@ -1436,13 +1435,13 @@ namespace SimsCCManager.Packages.Sims4Search
                                 }
                             }
 
-
-
+                            decompbr.Dispose();
+                            decomps.Dispose();
 
                         }
 
                         caspc++;
-                    
+                        
                     }                     
 
                 }
@@ -1485,6 +1484,8 @@ namespace SimsCCManager.Packages.Sims4Search
                                       itemtags.Add(tag);
                                     }                                    
                                 }
+                            decompbr.Dispose();
+                            decomps.Dispose();
                                 
                         } else if (indexData[e].compressionType == "00"){
                             //dbpfFile.Seek(, SeekOrigin.Begin); 
@@ -1582,9 +1583,10 @@ namespace SimsCCManager.Packages.Sims4Search
                                     }
                                 }
                                                              
-                                
+                             decompbr.Dispose();   
+                             decomps.Dispose();
                         }
-
+                        
                         objdc++;
                     }
                     
@@ -1791,15 +1793,14 @@ namespace SimsCCManager.Packages.Sims4Search
             log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
             log.MakeLog(thisPackage.ToString(), false);
             //Containers.Containers.allSims4Packages.Add(thisPackage);
+            GlobalVariables.DatabaseConnection.Insert(thisPackage, typeof(SimsPackage));
+            txt = string.Format("SELECT * FROM Processing_Reader where Name = {0}", packageinfo.Name);
+            query = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            GlobalVariables.DatabaseConnection.Delete(query);
 
-            using (SQLite.SQLiteConnection db = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead)){
-                db.Insert(thisPackage);
-                var package = db.Get<PackageFile>(packageinfo.Name);
-                db.Delete(package);
-            }
-
-
-            Console.WriteLine("Closing Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
+            readFile.Dispose();
+            dbpfFile.Dispose();
+            Console.WriteLine(string.Format("Closing package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name));
             packageparsecount++;
 
         }

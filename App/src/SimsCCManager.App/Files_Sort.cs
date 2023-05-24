@@ -1055,6 +1055,7 @@ namespace SimsCCManager.Packages.Sorting
             SortingRulesSS.Add("vintage", "\\_Possibly Historical");
             SortingRulesSS.Add("ingeli", "\\_Possibly Historical");
             SortingRulesSS.Add("moriel", "\\_Possibly Historical");
+            SortingRulesSS.Add("reminisims", "\\_Possibly Historical");
             
 
 

@@ -51,9 +51,11 @@ namespace SimsCCManager.Packages.Sims2Search
 
         public void SearchS2Packages(string file) {            
             FileInfo packageinfo = new FileInfo(file); 
-            using (SQLite.SQLiteConnection db = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead)){
-                db.Update(new PackageFile { Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"});
-            }
+            var txt = string.Format("SELECT * FROM Processing_Reader where Name = {0}", packageinfo.Name);
+            var query = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            GlobalVariables.DatabaseConnection.Delete(query);
+            var pk = new PackageFile { Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
+            GlobalVariables.DatabaseConnection.Update(pk);
             var packageparsecount = GlobalVariables.packagesRead;   
             GlobalVariables.packagesRead++;         
             //Vars for Package Info
@@ -84,6 +86,10 @@ namespace SimsCCManager.Packages.Sims2Search
             SimsPackage objdvar = new SimsPackage();
             SimsPackage mmatvar = new SimsPackage();
             
+            //locations
+            
+            
+        
 
             //Lists 
             
@@ -108,13 +114,14 @@ namespace SimsCCManager.Packages.Sims2Search
             
 
             //start actually reading the package 
-            Console.WriteLine("Reading Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
-            log.MakeLog("Logged Package #" + packageparsecount + " as " + packageinfo.FullName, true);
+            Console.WriteLine(string.Format("Reading package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name));
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 2;
-            log.MakeLog("Logged Package #" + packageparsecount + " as meant for The Sims " + thisPackage.Game, true);           
-            test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
+            log.MakeLog(string.Format("Package #{0} registered as {1} and meant for Sims 2", packageparsecount, packageinfo.FullName), true);          
+            readFile.BaseStream.Position = 32;
+            /*test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
             log.MakeLog("P" + packageparsecount + " - DBPF Bytes: " + test, true);
+            
             string DBPF = test;
             
             uint major = readFile.ReadUInt32();
@@ -135,7 +142,7 @@ namespace SimsCCManager.Packages.Sims2Search
             
             uint dateModified = readFile.ReadUInt32();
             test = dateModified.ToString();
-            log.MakeLog("P" + packageparsecount + " - Date modified: " + test, true);
+            log.MakeLog("P" + packageparsecount + " - Date modified: " + test, true);*/
             
             uint indexMajorVersion = readFile.ReadUInt32();
             test = indexMajorVersion.ToString();
@@ -774,7 +781,7 @@ namespace SimsCCManager.Packages.Sims2Search
                 log.MakeLog("Getting title " + strvar.Title + " from strvar.", true);
                 thisPackage.Title = strvar.Title;
             } else if (!String.IsNullOrWhiteSpace(mmatvar.Title)) {
-                Console.WriteLine("Mmatvar has content.");
+                //Console.WriteLine("Mmatvar has content.");
                 log.MakeLog("Getting title " + mmatvar.Title + " from mmatvar.", true);
             }
 
@@ -881,11 +888,10 @@ namespace SimsCCManager.Packages.Sims2Search
             log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
             log.MakeLog(thisPackage.ToString(), false);
             //Containers.Containers.allSims2Packages.Add(thisPackage);
-            using (SQLite.SQLiteConnection db = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead)){
-                db.Insert(thisPackage);
-                var package = db.Get<PackageFile>(packageinfo.Name);
-                db.Delete(package);
-            }
+            GlobalVariables.DatabaseConnection.Insert(thisPackage, typeof(SimsPackage));
+            txt = string.Format("SELECT * FROM Processing_Reader where Name = {0}", packageinfo.Name);
+            query = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            GlobalVariables.DatabaseConnection.Delete(query);
 
             objdnum = new List<int>();   
             strnm = new List<int>();
@@ -905,9 +911,11 @@ namespace SimsCCManager.Packages.Sims2Search
             allInstanceIDs = new List<string>();      
             distinctInstanceIDs = new List<string>();  
 
-            readFile.Close();
-            Console.WriteLine("Closing Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
             
+            readFile.Dispose();
+            dbpfFile.Dispose();
+            Console.WriteLine(string.Format("Closing package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name));
+            packageparsecount++;
         }
 
         public void S2FindOrphans(SimsPackage package) {  

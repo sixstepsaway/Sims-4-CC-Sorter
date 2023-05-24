@@ -12,7 +12,6 @@ using SimsCCManager.Packages.Containers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SQLite;
-using System.Data.SQLite;
 
 
 
@@ -875,9 +874,12 @@ namespace SSAGlobals {
         public static string S4_Overrides_All = @"data\S4_Instances.sqlite";
         public static string S4_Overrides_List = @"data\S4_SpecificOverrides.sqlite";
 
+
         private static string PackagesCacheLoc = @"Sims CC Manager\data\PackagesCache.sqlite";
         public static string PackagesRead = Path.Combine(LoggingGlobals.mydocs, PackagesCacheLoc); 
         public static string PackagesReadDS = string.Format("Data Source={0}", PackagesRead);
+
+        public static SQLite.SQLiteConnection DatabaseConnection;
         
         
         //vars that hold package files 
@@ -908,7 +910,7 @@ namespace SSAGlobals {
                 logfile = modLocation + "\\SimsCCSorter.log";
                 StreamWriter putContentsIntoTxt = new StreamWriter(logfile);
                 putContentsIntoTxt.Close();
-            }            
+            }
             log.InitializeLog();
         }
 
@@ -931,7 +933,6 @@ namespace SSAGlobals {
             log.MakeLog("Created sims 4 function tags list.", true);  
             InitializedLists.InitializeLists();          
             log.MakeLog("Finished initializing.", true);
-            MakeDatabases();
         }   
 
         public void UpdateBBTags(){
@@ -941,9 +942,34 @@ namespace SSAGlobals {
             } 
         }
 
-        public void MakeDatabases(){
-            
-            
+        public void ConnectDatabase(bool restart){
+            string cs = GlobalVariables.PackagesRead;
+            if (restart == true){
+                if (File.Exists(cs)){
+                    log.MakeLog("Database exists! Deleting.", true);
+                        try {
+                            File.Delete(cs);
+                        } catch (Exception e) {
+                            Console.WriteLine(e.Message);
+                        }
+                        
+                        log.MakeLog("Now creating database.", true);
+                        try {
+                            System.Data.SQLite.SQLiteConnection.CreateFile(cs);
+                        } catch (System.Data.SQLite.SQLiteException e) {
+                            Console.WriteLine(e.Message);
+                        }
+                        
+                    } else {
+                        log.MakeLog("No database. Creating.", true);
+                        try {
+                            System.Data.SQLite.SQLiteConnection.CreateFile(cs);
+                        } catch (System.Data.SQLite.SQLiteException e) {
+                            Console.WriteLine(e.Message);
+                        }
+                    }
+                }
+            DatabaseConnection = new SQLite.SQLiteConnection(PackagesRead);
         }
     }
 
