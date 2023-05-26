@@ -73,3 +73,7 @@ I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\ref
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\SimsCCManager.App.pdb
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\SimsCCManager.App.genruntimeconfig.cache
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\obj\Debug\net6.0-windows\ref\SimsCCManager.App.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\All_Instances.sqlite
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\s4bbtags.json
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\S4_Instances.sqlite
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\S4_SpecificOverrides.sqlite

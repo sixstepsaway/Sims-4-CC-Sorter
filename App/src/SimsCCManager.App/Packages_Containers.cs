@@ -32,6 +32,7 @@ namespace SimsCCManager.Packages.Containers
         public string Type {get; set;}
         public string Location {get; set;}
         public string Name {get; set;}
+        public string Status {get; set;}
     }
     [Table("Processing_Reader")]
     public class PackageFile { //A basic summary of a package file.
@@ -294,10 +295,8 @@ namespace SimsCCManager.Packages.Containers
         /// No longer used. Any implementations will be swapped to database.
         /// </summary>
         public static SynchronizedCollection<PackageFile> packageFiles = new SynchronizedCollection<PackageFile>();
-        public static SynchronizedCollection<SimsPackage> allSims2Packages = new SynchronizedCollection<SimsPackage>();
-        public static SynchronizedCollection<SimsPackage> allSims3Packages = new SynchronizedCollection<SimsPackage>();
-        public static SynchronizedCollection<SimsPackage> allSims4Packages = new SynchronizedCollection<SimsPackage>();
-
+        public static SynchronizedCollection<SimsPackage> allSimsPackages = new SynchronizedCollection<SimsPackage>();
+        public static SynchronizedCollection<PackageFile> identifiedPackages = new SynchronizedCollection<PackageFile>();
     }
 
     public class FunctionListing {
@@ -341,5 +340,14 @@ namespace SimsCCManager.Packages.Containers
 
         }
     }
+
+    public class BatchTasks {
+        public List<Task> Batch {get; set;}
+
+        public BatchTasks(){
+            List<Task> Batch = new List<Task>();
+        }
+    }
+
 
 }

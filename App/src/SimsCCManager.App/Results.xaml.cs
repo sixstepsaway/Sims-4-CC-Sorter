@@ -157,9 +157,52 @@ namespace SimsCCManager.SortingUIResults {
         private void menu_Click(object sender, EventArgs e)
         {
             log.MakeLog("Closing application.", false);
+            GlobalVariables.DatabaseConnection.Commit();
             GlobalVariables.DatabaseConnection.Close();
             System.Windows.Application.Current.Shutdown();
         }
+
+        /*private void ResultsDataGridPackages_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                ContextMenu m = new ContextMenu();
+                m.MenuItems.Add(new MenuItem("Cut"));
+                m.MenuItems.Add(new MenuItem("Copy"));
+                m.MenuItems.Add(new MenuItem("Paste"));
+
+                int currentMouseOverRow = ResultsDataGridPackages.HitTest(e.X,e.Y).RowIndex;
+
+                if (currentMouseOverRow >= 0)
+                {
+                    m.MenuItems.Add(new MenuItem(string.Format("Do something to row {0}", currentMouseOverRow.ToString())));
+                }
+
+                m.Show(ResultsDataGridPackages, new Point(e.X, e.Y));
+
+            }
+        }
+
+        private void ResultsDataGridAllFiles_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                ContextMenu m = new ContextMenu();
+                m.MenuItems.Add(new MenuItem("Cut"));
+                m.MenuItems.Add(new MenuItem("Copy"));
+                m.MenuItems.Add(new MenuItem("Paste"));
+
+                int currentMouseOverRow = ResultsDataGridAllFiles.HitTest(e.X,e.Y).RowIndex;
+
+                if (currentMouseOverRow >= 0)
+                {
+                    m.MenuItems.Add(new MenuItem(string.Format("Do something to row {0}", currentMouseOverRow.ToString())));
+                }
+
+                m.Show(ResultsDataGridAllFiles, new Point(e.X, e.Y));
+
+            }
+        }*/
 
         private void Kofi_Click(object sender, EventArgs e){
             if (System.Windows.Forms.MessageBox.Show

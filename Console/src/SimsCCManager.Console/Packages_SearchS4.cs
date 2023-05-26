@@ -21,9 +21,7 @@ using System.Text.Json.Serialization;
 using SSAGlobals;
 using SimsCCManager.Packages.Containers;
 using SimsCCManager.Packages.Decryption;
-using SimsCCManager.Decryption.EndianDecoding;
 using System.Data.SQLite;
-using System.Windows.Forms;
 
 namespace SimsCCManager.Packages.Sims4Search
 {
@@ -711,7 +709,6 @@ namespace SimsCCManager.Packages.Sims4Search
             //Misc Vars
             string test = "";
             
-            const EndianType endiant = EndianType.Little;
             byte[] uncompresseddata;
             
 
@@ -759,87 +756,106 @@ namespace SimsCCManager.Packages.Sims4Search
             int counter = 0;
 
             //dbpf
+            log.MakeLog("DBPF Pos: " + readFile.BaseStream.Position, true);
             test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
             log.MakeLog("DBPF: " + test, true);
             
             //major
+            log.MakeLog("Maj Pos: " + readFile.BaseStream.Position, true);
             uint testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Major :" + test, true);
             
             //minor
+            log.MakeLog("Min Pos: " + readFile.BaseStream.Position, true);
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Minor : " + test, true);
             
+            log.MakeLog("unk1 Pos: " + readFile.BaseStream.Position, true);
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unknown : " + test, true);
             
+            log.MakeLog("unk2 Pos: " + readFile.BaseStream.Position, true);
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unknown : " + test, true);
             
+            log.MakeLog("unk3: " + readFile.BaseStream.Position, true);
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unknown : " + test, true);
             
+            log.MakeLog("cr Pos: " + readFile.BaseStream.Position, true);
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Created : " + test, true);
 
+            log.MakeLog("mod Pos: " + readFile.BaseStream.Position, true);
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Modified : " + test, true);
             
+            log.MakeLog("imaj Pos: " + readFile.BaseStream.Position, true);
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Index Major : " + test, true);
             
             //entrycount
+            log.MakeLog("ecnt Pos: " + readFile.BaseStream.Position, true);
             uint entrycount = readFile.ReadUInt32();
             test = entrycount.ToString();
             log.MakeLog("Entry Count: " + test, true);
             
+            log.MakeLog("elow Pos: " + readFile.BaseStream.Position, true);
             //record position low
             uint indexRecordPositionLow = readFile.ReadUInt32();
             test = indexRecordPositionLow.ToString();
             log.MakeLog("indexRecordPositionLow: " + test, true);
             
+            log.MakeLog("ersize Pos: " + readFile.BaseStream.Position, true);
             //index record size
             uint indexRecordSize = readFile.ReadUInt32();
             test = indexRecordSize.ToString();
             log.MakeLog("indexRecordSize: " + test, true);
 
             //unused
+            log.MakeLog("unused1 Pos: " + readFile.BaseStream.Position, true);
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Trash Index offset: " + test, true);
             
+            log.MakeLog("unused2 Pos: " + readFile.BaseStream.Position, true);
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Trash Index size: " + test, true);
             
+            log.MakeLog("unused3 Pos: " + readFile.BaseStream.Position, true);
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Index Minor Version: " + test, true);
             
+            log.MakeLog("unused4 Pos: " + readFile.BaseStream.Position, true);
             //unused but 3 for historical reasons
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused, 3 for historical reasons: " + test, true);
             
+            log.MakeLog("indexrecpos Pos: " + readFile.BaseStream.Position, true);
             ulong indexRecordPosition = readFile.ReadUInt64();
             test = indexRecordPosition.ToString();
             log.MakeLog("Inded Record Position: " + test, true);
 
             //unused
+            log.MakeLog("unused5: " + readFile.BaseStream.Position, true);
             testint = readFile.ReadUInt32();
             test = testint.ToString();
             log.MakeLog("Unused Unknown:" + test, true);
             
+            log.MakeLog("unused24 byte Pos: " + readFile.BaseStream.Position, true);
             //unused six bytes
             test = Encoding.ASCII.GetString(readFile.ReadBytes(24));
             log.MakeLog("Unused: " + test, true);
@@ -849,14 +865,18 @@ namespace SimsCCManager.Packages.Sims4Search
             if (indexRecordPosition != 0){
                 long indexseek = (long)indexRecordPosition - headersize.Length;
                 //dbpfFile.Seek(indexseek, SeekOrigin.Current);
+                log.MakeLog("Here: " + readFile.BaseStream.Position, true);
                 var here = readFile.BaseStream.Position;
                 readFile.BaseStream.Position = here + indexseek;
             } else {
                 //long indexseek = indexRecordPositionLow - headersize.Length;    
                 //dbpfFile.Seek(indexRecordPositionLow, SeekOrigin.Current);
+                log.MakeLog("Here: " + readFile.BaseStream.Position, true);
                 var here = readFile.BaseStream.Position;
                 readFile.BaseStream.Position = here + indexRecordPositionLow;
             }
+
+            log.MakeLog("Here Having Moved: " + readFile.BaseStream.Position, true);
             
             
 
@@ -1655,9 +1675,7 @@ namespace SimsCCManager.Packages.Sims4Search
             List<string> FoundIDs = new List<string>();
             Parallel.ForEach(thisPackage.InstanceIDs, parallelSettings, iid => { 
                 string cs = string.Format("Data Source={0}", GlobalVariables.S4_Overrides_All);                   
-                using (var dataConnection = new SQLiteConnection(cs)){                    
-                    try
-                    {
+                using (var dataConnection = new SQLiteConnection(cs)){
                         dataConnection.Open();
                         string cmdtxt = string.Format("SELECT * FROM Instances WHERE InstanceID = '{0}'", iid);
                         using (SQLiteCommand sqcmd = new SQLiteCommand(cmdtxt, dataConnection)){
@@ -1679,24 +1697,12 @@ namespace SimsCCManager.Packages.Sims4Search
                                 }
                             }
                         }        
-                    }
-                    catch (System.Exception e)
-                    { 
-                        System.Windows.Forms.MessageBox.Show("Database Error: " + e.Message.ToString(),
-                        "Error Message: Searching for Sims 4 Overrides failed, please report the issue.",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    finally
-                    {
-                        dataConnection.Close();
-                    }                    
+                        dataConnection.Close();             
                 }
                 cs = string.Format("Data Source={0}", GlobalVariables.S4_Overrides_List);
                 foreach (string inst in thisPackage.OverriddenInstances){
                     using (var dataConnection = new SQLiteConnection(cs)){                    
-                        try
-                        {
-                            dataConnection.Open();
+                        dataConnection.Open();
                             string cmdtxt = string.Format("SELECT * FROM Overrides WHERE Instance = '{0}'", inst);
                             using (SQLiteCommand sqcmd = new SQLiteCommand(cmdtxt, dataConnection)){
                                 using (SQLiteDataReader sqlreader = sqcmd.ExecuteReader()){
@@ -1709,17 +1715,7 @@ namespace SimsCCManager.Packages.Sims4Search
                                     }
                                 }
                             }        
-                        }
-                        catch (System.Exception e)
-                        { 
-                            System.Windows.Forms.MessageBox.Show("Database Error: " + e.Message.ToString(),
-                            "Error Message: Searching for Sims 4 Overrides failed, please report the issue.",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                        finally
-                        {
-                            dataConnection.Close();
-                        }                    
+                        dataConnection.Close();               
                     }
                 }
             });

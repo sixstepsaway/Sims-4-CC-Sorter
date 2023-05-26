@@ -47,7 +47,7 @@ namespace SimsCCManager.CMD
             //string folder = "C:\\Program Files (x86)\\Origin Games\\The Sims 4\\";
                        
             globals.Initialize(folder);
-            initial.IdentifyPackages();
+            /*initial.IdentifyPackages();
 
             Parallel.ForEach(GlobalVariables.justPackageFiles, parallelSettings, file => 
             {
@@ -76,6 +76,8 @@ namespace SimsCCManager.CMD
                     sims4s.SearchS4Packages(package.Location, false);
                 }
             }*/
+
+            sims4s.SearchS4Packages(@"M:\The Sims 4 (Documents)\!UnmergedCC\To Sort\CURRENT TEST\[brown].CASroom.ellcrze.package", false);
 
             
             foreach (SimsPackage pack in Containers.allSims4Packages){

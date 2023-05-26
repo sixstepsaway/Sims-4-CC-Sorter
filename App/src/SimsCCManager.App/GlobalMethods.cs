@@ -971,7 +971,8 @@ namespace SSAGlobals {
                     }
                 } else {
                     log.MakeLog("Connecting database without restarting.", true);
-                }            
+                }   
+            log.MakeLog("Opening database.", true);         
             DatabaseConnection = new SQLite.SQLiteConnection(PackagesRead);
         }
     }

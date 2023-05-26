@@ -76,7 +76,7 @@ namespace SimsCCManager.Packages.Sorting
         Methods methods = new Methods();
         
         public void Prep(){            
-            InitializeSortingRules();            
+            /*InitializeSortingRules();            
             Methods.MakeFolder(SortedFolder);
 
             foreach (SimsPackage package in Containers.Containers.allSims2Packages){
@@ -140,7 +140,7 @@ namespace SimsCCManager.Packages.Sorting
                         File.Move(package.Location, newlocation);
                     }
                 }
-            }
+            }*/
 
 
 

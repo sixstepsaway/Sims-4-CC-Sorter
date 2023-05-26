@@ -250,7 +250,7 @@ namespace SimsCCManager.Packages.Decryption
 			} //try
 			catch(Exception ex)
 			{
-				//log.MakeLog("Exception thrown trying to uncompress bytes.", true);
+				//logging.WriteLine("Exception thrown trying to uncompress bytes.", true);
 				throw ex;
 			} 
 			
@@ -267,9 +267,27 @@ namespace SimsCCManager.Packages.Decryption
 			return uncdata;
 		}
 
-        public SimsPackage readCPFchunk(BinaryReader readFile)
+        public SimsPackage readCPFchunk(BinaryReader readFile, StreamWriter logging)
 		{
-			
+			packageTypes = new string[0];
+			xmlCatalogSortTypes = new string[0];
+			xmlSubtypes = new string[0];
+			xmlCategoryTypes = new string[0];
+			xmlType = "";
+			xmlCategory = "";
+			xmlSubtype = "";
+			xmlModelName = "";
+			xmlAge = "";
+			xmlGender = "";
+			xmlCatalog = "";
+			objectGUID = new List<string>();
+			xmlCreator = "";
+			xmlFunction = "";
+			xmlFunctionSubsort = "";
+			title = "";
+			description = "";
+			pkgType = "";
+			pkgTypeInt = 0;
 			SimsPackage infovar = new SimsPackage();
 			// Read an uncompressed CPF chunk and extract the name, description and type
 			// Version
@@ -353,53 +371,72 @@ namespace SimsCCManager.Packages.Decryption
             {
                 infovar.Title = this.title;
             }
-            log.MakeLog("Setting title to " + this.title, true);						
+            logging.WriteLine("Setting title to " + this.title, true);						
             if ((this.description != " ") && (this.description != ""))
             {
                 infovar.Description = this.description;
             }
-            log.MakeLog("Setting description to " + this.description, true);						
+            logging.WriteLine("Setting description to " + this.description, true);						
             if ((this.xmlType != " ") && (this.xmlType != ""))
             {
                 infovar.XMLType = this.xmlType;
             }
-            log.MakeLog("Setting XML Type to " + this.xmlType, true);
+            logging.WriteLine("Setting XML Type to " + this.xmlType, true);
             if ((this.xmlSubtype != " ") && (this.xmlSubtype != ""))
             {
                 infovar.XMLSubtype = this.xmlSubtype;
             }
-            log.MakeLog("Setting XML Subtype to " + this.xmlSubtype, true);
+            logging.WriteLine("Setting XML Subtype to " + this.xmlSubtype, true);
             if ((this.xmlCategory != " ") && (this.xmlCategory != ""))
             {
                 infovar.XMLCategory = this.xmlCategory;
             }
-            log.MakeLog("Setting XML Category to " + this.xmlCategory, true);						
+            logging.WriteLine("Setting XML Category to " + this.xmlCategory, true);						
             if ((this.xmlModelName != " ") && (this.xmlModelName != ""))
             {
                 infovar.XMLModelName = this.xmlModelName;
             }
-            log.MakeLog("Setting XML Model Name to " + this.xmlModelName, true);
+            logging.WriteLine("Setting XML Model Name to " + this.xmlModelName, true);
             infovar.ObjectGUID.AddRange(this.objectGUID);
-            log.MakeLog("GUID: " + infovar.ObjectGUID.ToString(), true);
+            logging.WriteLine("GUID: " + infovar.ObjectGUID.ToString(), true);
             if ((this.xmlCreator != " ") && (this.xmlCreator != ""))
             {
                 infovar.XMLCreator = this.xmlCreator;
             }
-            log.MakeLog("Setting XML Creator to " + this.xmlCreator, true);
+            logging.WriteLine("Setting XML Creator to " + this.xmlCreator, true);
             if ((this.xmlAge != " ") && (this.xmlAge != ""))
             {
                 infovar.XMLAge = this.xmlAge;
             }
-            log.MakeLog("Setting XML Age to " + this.xmlAge, true);
+            logging.WriteLine("Setting XML Age to " + this.xmlAge, true);
             if ((this.xmlGender != " ") && (this.xmlGender != ""))
             {
                 infovar.XMLGender = this.xmlGender;
             }
-            log.MakeLog("Setting XML Gender to " + this.xmlGender, true);
+            logging.WriteLine("Setting XML Gender to " + this.xmlGender, true);
 			return infovar;
 		}
-		public SimsPackage readCPFchunk(DecryptByteStream readFile)
+		public SimsPackage readCPFchunk(DecryptByteStream readFile, StreamWriter logging)
 		{
+			packageTypes = new string[0];
+			xmlCatalogSortTypes = new string[0];
+			xmlSubtypes = new string[0];
+			xmlCategoryTypes = new string[0];
+			xmlType = "";
+			xmlCategory = "";
+			xmlSubtype = "";
+			xmlModelName = "";
+			xmlAge = "";
+			xmlGender = "";
+			xmlCatalog = "";
+			objectGUID = new List<string>();
+			xmlCreator = "";
+			xmlFunction = "";
+			xmlFunctionSubsort = "";
+			title = "";
+			description = "";
+			pkgType = "";
+			pkgTypeInt = 0;
 			SimsPackage infovar = new SimsPackage();
 			
 			// Read a compressed CPF chunk from a byte stream and extrac the name, 
@@ -485,66 +522,85 @@ namespace SimsCCManager.Packages.Decryption
             {
                 infovar.Title = this.title;
             }
-            log.MakeLog("Setting title to " + this.title, true);						
+            logging.WriteLine("Setting title to " + this.title, true);						
             if ((this.description != " ") && (this.description != ""))
             {
                 infovar.Description = this.description;
             }
-            log.MakeLog("Setting description to " + this.description, true);						
+            logging.WriteLine("Setting description to " + this.description, true);						
             if ((this.xmlType != " ") && (this.xmlType != ""))
             {
                 infovar.XMLType = this.xmlType;
             }
-            log.MakeLog("Setting XML Type to " + this.xmlType, true);
+            logging.WriteLine("Setting XML Type to " + this.xmlType, true);
             if ((this.xmlSubtype != " ") && (this.xmlSubtype != ""))
             {
                 infovar.XMLSubtype = this.xmlSubtype;
             }
-            log.MakeLog("Setting XML Subtype to " + this.xmlSubtype, true);
+            logging.WriteLine("Setting XML Subtype to " + this.xmlSubtype, true);
             if ((this.xmlCategory != " ") && (this.xmlCategory != ""))
             {
                 infovar.XMLCategory = this.xmlCategory;
             }
-            log.MakeLog("Setting XML Category to " + this.xmlCategory, true);						
+            logging.WriteLine("Setting XML Category to " + this.xmlCategory, true);						
             if ((this.xmlModelName != " ") && (this.xmlModelName != ""))
             {
                 infovar.XMLModelName = this.xmlModelName;
             }
-            log.MakeLog("Setting XML Model Name to " + this.xmlModelName, true);
+            logging.WriteLine("Setting XML Model Name to " + this.xmlModelName, true);
             infovar.ObjectGUID.AddRange(this.objectGUID);
-            log.MakeLog("GUID: " + infovar.ObjectGUID.ToString(), true);
+            logging.WriteLine("GUID: " + infovar.ObjectGUID.ToString(), true);
             if ((this.xmlCreator != " ") && (this.xmlCreator != ""))
             {
                 infovar.XMLCreator = this.xmlCreator;
             }
-            log.MakeLog("Setting XML Creator to " + this.xmlCreator, true);
+            logging.WriteLine("Setting XML Creator to " + this.xmlCreator, true);
             if ((this.xmlAge != " ") && (this.xmlAge != ""))
             {
                 infovar.XMLAge = this.xmlAge;
             }
-            log.MakeLog("Setting XML Age to " + this.xmlAge, true);
+            logging.WriteLine("Setting XML Age to " + this.xmlAge, true);
             if ((this.xmlGender != " ") && (this.xmlGender != ""))
             {
                 infovar.XMLGender = this.xmlGender;
             }
-            log.MakeLog("Setting XML Gender to " + this.xmlGender, true);
+            logging.WriteLine("Setting XML Gender to " + this.xmlGender, true);
 			return infovar;
 
 		}
         
 
-        public SimsPackage readSTRchunk(BinaryReader readFile)
+        public SimsPackage readSTRchunk(BinaryReader readFile, StreamWriter logging)
 		{		
-            SimsPackage infovar = new SimsPackage();
+            packageTypes = new string[0];
+			xmlCatalogSortTypes = new string[0];
+			xmlSubtypes = new string[0];
+			xmlCategoryTypes = new string[0];
+			xmlType = "";
+			xmlCategory = "";
+			xmlSubtype = "";
+			xmlModelName = "";
+			xmlAge = "";
+			xmlGender = "";
+			xmlCatalog = "";
+			objectGUID = new List<string>();
+			xmlCreator = "";
+			xmlFunction = "";
+			xmlFunctionSubsort = "";
+			title = "";
+			description = "";
+			pkgType = "";
+			pkgTypeInt = 0;
+			SimsPackage infovar = new SimsPackage();
             readFile.ReadBytes(64);
 			readFile.ReadBytes(2);
 			uint numStrings = readFile.ReadUInt16();
-            log.MakeLog("Number of strings: " + numStrings, true);
+            logging.WriteLine("Number of strings: " + numStrings, true);
 			int lineNum = 0;
 			string tempString = "";
 			for (int j = 0; j < numStrings; j++)
 			{
-                log.MakeLog("Reading string: " + j, true);
+                logging.WriteLine("Reading string: " + j, true);
 				byte langCode = readFile.ReadByte();
 				if (langCode == 1)
 				{
@@ -572,15 +628,15 @@ namespace SimsCCManager.Packages.Decryption
 				if ((this.title != null) && (this.description != null)) { break; }
 			}
             if ((this.description != "") && (this.description != " ")){
-                log.MakeLog("Setting description to " + this.description, true);
+                logging.WriteLine("Setting description to " + this.description, true);
                 infovar.Description = this.description;
             }
 
             if ((this.title != "") && (this.title != " ")){
-                log.MakeLog("Setting title to " + this.title, true);
+                logging.WriteLine("Setting title to " + this.title, true);
                 infovar.Title = this.title;
             }
-			log.MakeLog("Returning infovar", true);
+			logging.WriteLine("Returning infovar", true);
             return infovar;
 		}
 
@@ -601,20 +657,39 @@ namespace SimsCCManager.Packages.Decryption
 			return result;
 		}
 
-		public SimsPackage readSTRchunk(DecryptByteStream readFile)
+		public SimsPackage readSTRchunk(DecryptByteStream readFile, StreamWriter logging)
 		{	
-            SimsPackage infovar = new SimsPackage();
+            packageTypes = new string[0];
+			xmlCatalogSortTypes = new string[0];
+			xmlSubtypes = new string[0];
+			xmlCategoryTypes = new string[0];
+			xmlType = "";
+			xmlCategory = "";
+			xmlSubtype = "";
+			xmlModelName = "";
+			xmlAge = "";
+			xmlGender = "";
+			xmlCatalog = "";
+			objectGUID = new List<string>();
+			xmlCreator = "";
+			xmlFunction = "";
+			xmlFunctionSubsort = "";
+			title = "";
+			description = "";
+			pkgType = "";
+			pkgTypeInt = 0;
+			SimsPackage infovar = new SimsPackage();
 
 			readFile.ReadBytes(64);
 			readFile.ReadBytes(2);
 
 			uint numStrings = readFile.ReadUInt16();
-            log.MakeLog("Number of strings: " + numStrings, true);
+            logging.WriteLine("Number of strings: " + numStrings, true);
 			int lineNum = 0;
 			string tempString = "";
 			for (int j = 0; j < numStrings; j++)
 			{
-                log.MakeLog("Reading string: " + j, true);
+                logging.WriteLine("Reading string: " + j, true);
 				byte langCode = readFile.ReadByte();
 				if (langCode == 1)
 				{
@@ -646,22 +721,41 @@ namespace SimsCCManager.Packages.Decryption
 				if ((this.title != null) && (this.description != null)) { break; }
 			}
             if ((this.description != "") && (this.description != " ")){
-                log.MakeLog("Setting description to " + this.description, true);
+                logging.WriteLine("Setting description to " + this.description, true);
                 infovar.Description = this.description;
             }
 
             if ((this.title != "") && (this.title != " ")){
-                log.MakeLog("Setting title to " + this.title, true);
+                logging.WriteLine("Setting title to " + this.title, true);
                 infovar.Title = this.title;
             }
-			log.MakeLog("Returning infovar", true);
+			logging.WriteLine("Returning infovar", true);
             return infovar;
 		}
 
-        public SimsPackage readXMLchunk(DecryptByteStream readFile)
+        public SimsPackage readXMLchunk(DecryptByteStream readFile, StreamWriter logging)
 		{
+			packageTypes = new string[0];
+			xmlCatalogSortTypes = new string[0];
+			xmlSubtypes = new string[0];
+			xmlCategoryTypes = new string[0];
+			xmlType = "";
+			xmlCategory = "";
+			xmlSubtype = "";
+			xmlModelName = "";
+			xmlAge = "";
+			xmlGender = "";
+			xmlCatalog = "";
+			objectGUID = new List<string>();
+			xmlCreator = "";
+			xmlFunction = "";
+			xmlFunctionSubsort = "";
+			title = "";
+			description = "";
+			pkgType = "";
+			pkgTypeInt = 0;
 			SimsPackage infovar = new SimsPackage();
-			log.MakeLog("Reading XML", true);
+			logging.WriteLine("Reading XML", true);
 			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(readFile.GetEntireStream())));
 			bool inDesc = false;
 			string inAttrDesc = "";
@@ -729,33 +823,52 @@ namespace SimsCCManager.Packages.Decryption
 			}
 
             if ((this.description != "") && (this.description != " ")){
-                log.MakeLog("Setting description to " + this.description, true);
+                logging.WriteLine("Setting description to " + this.description, true);
                 infovar.Description = this.description;
             }
 
             if ((this.title != "") && (this.title != " ")){
-                log.MakeLog("Setting title to " + this.title, true);
+                logging.WriteLine("Setting title to " + this.title, true);
                 infovar.Title = this.title;
             }
             if ((this.xmlType != "") && (this.xmlType != " ")){
-                log.MakeLog("Setting XML Type to " + this.xmlType, true);
+                logging.WriteLine("Setting XML Type to " + this.xmlType, true);
                 infovar.XMLType = this.xmlType;
             }
             
             if ((this.xmlCategory != "") && (this.xmlCategory != " ")){
-                log.MakeLog("Setting XML Category to " + this.xmlCategory, true);
+                logging.WriteLine("Setting XML Category to " + this.xmlCategory, true);
                 infovar.XMLCategory = this.xmlCategory;  
             }
             if ((this.xmlSubtype != "") && (this.xmlSubtype != " ")){
-                log.MakeLog("Setting XML Subtype to " + this.xmlSubtype, true);  
+                logging.WriteLine("Setting XML Subtype to " + this.xmlSubtype, true);  
                 infovar.XMLSubtype = this.xmlSubtype;
             }                          
-			log.MakeLog("Returning infovar", true);
+			logging.WriteLine("Returning infovar", true);
             return infovar;
 		}
 
-		public SimsPackage readXMLchunk(string xmlData)
+		public SimsPackage readXMLchunk(string xmlData, StreamWriter logging)
 		{
+			packageTypes = new string[0];
+			xmlCatalogSortTypes = new string[0];
+			xmlSubtypes = new string[0];
+			xmlCategoryTypes = new string[0];
+			xmlType = "";
+			xmlCategory = "";
+			xmlSubtype = "";
+			xmlModelName = "";
+			xmlAge = "";
+			xmlGender = "";
+			xmlCatalog = "";
+			objectGUID = new List<string>();
+			xmlCreator = "";
+			xmlFunction = "";
+			xmlFunctionSubsort = "";
+			title = "";
+			description = "";
+			pkgType = "";
+			pkgTypeInt = 0;
 			SimsPackage infovar = new SimsPackage();
 			uint fieldValueInt = 0;
 			string fieldValueString = "";
@@ -828,33 +941,52 @@ namespace SimsCCManager.Packages.Decryption
             }
 			
             if ((this.description != "") && (this.description != " ")){
-                log.MakeLog("Setting description to " + this.description, true);
+                logging.WriteLine("Setting description to " + this.description, true);
                 infovar.Description = this.description;
             }
 
             if ((this.title != "") && (this.title != " ")){
-                log.MakeLog("Setting title to " + this.title, true);
+                logging.WriteLine("Setting title to " + this.title, true);
                 infovar.Title = this.title;
             }
             if ((this.xmlType != "") && (this.xmlType != " ")){
-                log.MakeLog("Setting XML Type to " + this.xmlType, true);
+                logging.WriteLine("Setting XML Type to " + this.xmlType, true);
                 infovar.XMLType = this.xmlType;
             }
             
             if ((this.xmlCategory != "") && (this.xmlCategory != " ")){
-                log.MakeLog("Setting XML Category to " + this.xmlCategory, true);
+                logging.WriteLine("Setting XML Category to " + this.xmlCategory, true);
                 infovar.XMLCategory = this.xmlCategory;  
             }
             if ((this.xmlSubtype != "") && (this.xmlSubtype != " ")){
-                log.MakeLog("Setting XML Subtype to " + this.xmlSubtype, true);  
+                logging.WriteLine("Setting XML Subtype to " + this.xmlSubtype, true);  
                 infovar.XMLSubtype = this.xmlSubtype;
             }                          
-			log.MakeLog("Returning infovar", true);
+			logging.WriteLine("Returning infovar", true);
             return infovar;
 		}
 
         public SimsPackage readCTSSchunk(BinaryReader readFile)
 		{		
+			packageTypes = new string[0];
+			xmlCatalogSortTypes = new string[0];
+			xmlSubtypes = new string[0];
+			xmlCategoryTypes = new string[0];
+			xmlType = "";
+			xmlCategory = "";
+			xmlSubtype = "";
+			xmlModelName = "";
+			xmlAge = "";
+			xmlGender = "";
+			xmlCatalog = "";
+			objectGUID = new List<string>();
+			xmlCreator = "";
+			xmlFunction = "";
+			xmlFunctionSubsort = "";
+			title = "";
+			description = "";
+			pkgType = "";
+			pkgTypeInt = 0;
 			SimsPackage infovar = new SimsPackage();
 			readFile.ReadBytes(64);
 			readFile.ReadUInt16();
@@ -887,7 +1019,26 @@ namespace SimsCCManager.Packages.Decryption
 
 		public SimsPackage readCTSSchunk(DecryptByteStream readFile)
 		{
-            SimsPackage infovar = new SimsPackage();
+            packageTypes = new string[0];
+			xmlCatalogSortTypes = new string[0];
+			xmlSubtypes = new string[0];
+			xmlCategoryTypes = new string[0];
+			xmlType = "";
+			xmlCategory = "";
+			xmlSubtype = "";
+			xmlModelName = "";
+			xmlAge = "";
+			xmlGender = "";
+			xmlCatalog = "";
+			objectGUID = new List<string>();
+			xmlCreator = "";
+			xmlFunction = "";
+			xmlFunctionSubsort = "";
+			title = "";
+			description = "";
+			pkgType = "";
+			pkgTypeInt = 0;
+			SimsPackage infovar = new SimsPackage();
 			readFile.SkipAhead(66);
 			//readFile.ReadBytes(64);
 			//readFile.ReadUInt16();
@@ -920,9 +1071,28 @@ namespace SimsCCManager.Packages.Decryption
             return infovar;
 		}
 
-        public SimsPackage readOBJDchunk(BinaryReader readFile)
+        public SimsPackage readOBJDchunk(BinaryReader readFile, StreamWriter logging)
 		{
-            SimsPackage infovar = new SimsPackage();
+            packageTypes = new string[0];
+			xmlCatalogSortTypes = new string[0];
+			xmlSubtypes = new string[0];
+			xmlCategoryTypes = new string[0];
+			xmlType = "";
+			xmlCategory = "";
+			xmlSubtype = "";
+			xmlModelName = "";
+			xmlAge = "";
+			xmlGender = "";
+			xmlCatalog = "";
+			objectGUID = new List<string>();
+			xmlCreator = "";
+			xmlFunction = "";
+			xmlFunctionSubsort = "";
+			title = "";
+			description = "";
+			pkgType = "";
+			pkgTypeInt = 0;
+			SimsPackage infovar = new SimsPackage();
 
 			readFile.ReadBytes(64); // Filename - 64 bytes
 			uint version = readFile.ReadUInt32();
@@ -940,11 +1110,11 @@ namespace SimsCCManager.Packages.Decryption
 			// Only check further if this is a Master ID or single id
 			if ((masterTileSubIndex == 65535) || (masterTileMasterId == 0))
 			{
-                log.MakeLog("This is a MasterID.", true);
+                logging.WriteLine("This is a MasterID.", true);
 				readFile.ReadUInt16(); // Use Default Placement Flags
 				readFile.ReadUInt16(); // Look at Score
 				uint objectGUID = readFile.ReadUInt32();
-                log.MakeLog("GUID: " + objectGUID, true);
+                logging.WriteLine("GUID: " + objectGUID, true);
 				this.objectGUID.Add(objectGUID.ToString("X8"));
 				//this.objectGUID = objectGUID.ToString("X8");
 				this.guidData.Add(this.objectGUID);
@@ -957,7 +1127,7 @@ namespace SimsCCManager.Packages.Decryption
 
                 int fsfn = 0;
                 foreach (var fsf in functionSortFlags){
-                    log.MakeLog("Function Sort Flag [" + fsfn + "] is: " + functionSortFlags[fsfn].ToString(), true);                    
+                    logging.WriteLine("Function Sort Flag [" + fsfn + "] is: " + functionSortFlags[fsfn].ToString(), true);                    
                     fsfn++;
                 }
 
@@ -965,32 +1135,32 @@ namespace SimsCCManager.Packages.Decryption
 				// No function sort, check Build Mode Sort
 				if (functionSortFlag[0] == 0)                 
 				{
-                    log.MakeLog("This is a build mode item.", true);                    
+                    logging.WriteLine("This is a build mode item.", true);                    
                     this.xmlCategory = "Build Item";
-                    log.MakeLog("This is a build mode item.", true);
+                    logging.WriteLine("This is a build mode item.", true);
 					// Skip until we hit the Build Mode sort and EP
 					readFile.ReadBytes(46);
 					uint expansionFlag = readFile.ReadUInt16();
-                    log.MakeLog("Expansion Flag: " + expansionFlag, true);
+                    logging.WriteLine("Expansion Flag: " + expansionFlag, true);
 
 					readFile.ReadBytes(8);
 					uint buildModeType = readFile.ReadUInt16();
-                    log.MakeLog("Build Mode Type: " + buildModeType, true);
+                    logging.WriteLine("Build Mode Type: " + buildModeType, true);
 					string originalGUID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("Original GUID: " + originalGUID, true);
+                    logging.WriteLine("Original GUID: " + originalGUID, true);
 					string objectModelGUID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("Object Model GUID: " + objectModelGUID, true);
+                    logging.WriteLine("Object Model GUID: " + objectModelGUID, true);
 					uint buildModeSubsort = readFile.ReadUInt16();
-                    log.MakeLog("Build Mode Subsort: " + buildModeSubsort, true);
+                    logging.WriteLine("Build Mode Subsort: " + buildModeSubsort, true);
 
-                    log.MakeLog("Build Mode Types: " + this.xmlSubtype, true);
+                    logging.WriteLine("Build Mode Types: " + this.xmlSubtype, true);
 
                     int funcflags = functionSortFlags.Length;
                     foreach (FunctionSortList category in TypeListings.S2BuildFunctionSort){                            
                         if ((buildModeType == category.flagnum) && (buildModeSubsort == category.functionsubsortnum)) {
                             infovar.Function = category.Category;
                             infovar.FunctionSubcategory = category.Subcategory;
-                            log.MakeLog("Identified function: " + infovar.Function, true);
+                            logging.WriteLine("Identified function: " + infovar.Function, true);
                         }                        
                     } 
 				} 
@@ -1012,13 +1182,13 @@ namespace SimsCCManager.Packages.Decryption
 
                     int funcflags = functionSortFlags.Length;
                     foreach (FunctionSortList category in TypeListings.S2BuyFunctionSort){
-                        //log.MakeLog("Catnum: " + category.flagnum, true);
+                        //logging.WriteLine("Catnum: " + category.flagnum, true);
                         for (int f = 0; f < funcflags; f++){
-                            //log.MakeLog("Flag: " + f, true);                            
+                            //logging.WriteLine("Flag: " + f, true);                            
                             if ((f == category.flagnum) && (functionSortFlags[f] == true) && (category.functionsubsortnum == functionSubsort)) {
                                 this.xmlFunction = category.Category;
                                 this.xmlFunctionSubsort = category.Subcategory;
-                                log.MakeLog("Identified function: " + this.xmlFunction + "/" + this.xmlFunctionSubsort, true);
+                                logging.WriteLine("Identified function: " + this.xmlFunction + "/" + this.xmlFunctionSubsort, true);
                             }
                         }
                     } 
@@ -1044,70 +1214,89 @@ namespace SimsCCManager.Packages.Decryption
             }     
             infovar.ObjectGUID.AddRange(this.objectGUID);
 
-            log.MakeLog("guids in infovar:", true);
+            logging.WriteLine("guids in infovar:", true);
             for (int i = 0; i < infovar.ObjectGUID.Count(); i++)
             {
-                log.MakeLog(infovar.ObjectGUID[i], true);
+                logging.WriteLine(infovar.ObjectGUID[i], true);
             }
             return infovar;
 		}
 
-		public SimsPackage readOBJDchunk(DecryptByteStream readFile)
+		public SimsPackage readOBJDchunk(DecryptByteStream readFile, StreamWriter logging)
 		{
-            SimsPackage infovar = new SimsPackage();
-            log.MakeLog("Reading compressed OBJD.", true);
+            packageTypes = new string[0];
+			xmlCatalogSortTypes = new string[0];
+			xmlSubtypes = new string[0];
+			xmlCategoryTypes = new string[0];
+			xmlType = "";
+			xmlCategory = "";
+			xmlSubtype = "";
+			xmlModelName = "";
+			xmlAge = "";
+			xmlGender = "";
+			xmlCatalog = "";
+			objectGUID = new List<string>();
+			xmlCreator = "";
+			xmlFunction = "";
+			xmlFunctionSubsort = "";
+			title = "";
+			description = "";
+			pkgType = "";
+			pkgTypeInt = 0;
+			SimsPackage infovar = new SimsPackage();
+            logging.WriteLine("Reading compressed OBJD.", true);
 			//readFile.ReadBytes(64); // Filename - 64 bytes
 			readFile.SkipAhead(64);
 			uint version = readFile.ReadUInt32();
-            log.MakeLog("Version: " + version, true);
+            logging.WriteLine("Version: " + version, true);
 			var test = readFile.ReadUInt16(); // Initial Stack Size
-            log.MakeLog("Initial Stack Size: " + test, true);
+            logging.WriteLine("Initial Stack Size: " + test, true);
 			test = readFile.ReadUInt16(); // Default Wall Adjacent Flags
-            log.MakeLog("Default Wall Adjacent Flags: " + test, true);
+            logging.WriteLine("Default Wall Adjacent Flags: " + test, true);
 			test = readFile.ReadUInt16(); // Default Placement Flags
-            log.MakeLog("Default Placement Flags: " + test, true);
+            logging.WriteLine("Default Placement Flags: " + test, true);
 			test = readFile.ReadUInt16(); // Default Wall Placement Flags
-            log.MakeLog("Default Wall Placement Flags: " + test, true);
+            logging.WriteLine("Default Wall Placement Flags: " + test, true);
 			test = readFile.ReadUInt16(); // Default Allowed Height Flags
-            log.MakeLog("Default Allowed Height Flags: " + test, true);
+            logging.WriteLine("Default Allowed Height Flags: " + test, true);
 			test = readFile.ReadUInt16(); // Interaction Table ID
-            log.MakeLog("Interaction Table ID: " + test, true);
+            logging.WriteLine("Interaction Table ID: " + test, true);
 			test = readFile.ReadUInt16(); // Interaction Group
-            log.MakeLog("Interaction Group: " + test, true);
+            logging.WriteLine("Interaction Group: " + test, true);
 			uint objectType = readFile.ReadUInt16(); // Type of Object
-            log.MakeLog("Type of Object: " + objectType, true);
+            logging.WriteLine("Type of Object: " + objectType, true);
 			uint masterTileMasterId = readFile.ReadUInt16();
-            log.MakeLog("Master Tile Master ID: " + masterTileMasterId, true);
+            logging.WriteLine("Master Tile Master ID: " + masterTileMasterId, true);
 			uint masterTileSubIndex = readFile.ReadUInt16();
-            log.MakeLog("Master Tile Sub Index: " + masterTileSubIndex, true);
+            logging.WriteLine("Master Tile Sub Index: " + masterTileSubIndex, true);
 
 			// Only check further if this is a Master ID or single id
 			if ((masterTileSubIndex == 65535) || (masterTileMasterId == 0))
 			{
-                log.MakeLog("This is a Master ID", true);
+                logging.WriteLine("This is a Master ID", true);
 				test = readFile.ReadUInt16(); // Use Default Placement Flags
-                log.MakeLog("Use Default Placement Flags: " + test, true);
+                logging.WriteLine("Use Default Placement Flags: " + test, true);
 				test = readFile.ReadUInt16(); // Look at Score
-                log.MakeLog("Score: " + test, true);
+                logging.WriteLine("Score: " + test, true);
 				uint objectGUID = readFile.ReadUInt32();
-                log.MakeLog("GUID: " + objectGUID, true);
+                logging.WriteLine("GUID: " + objectGUID, true);
                 this.objectGUID.Add(objectGUID.ToString("X8"));
-                log.MakeLog("ObjectGUID: " + objectGUID, true);
+                logging.WriteLine("ObjectGUID: " + objectGUID, true);
 				//this.objectGUID = objectGUID.ToString("X8");
 				this.guidData.Add(this.objectGUID);
 				// Skip stuff we don't need
 				readFile.SkipAhead(46);
-                log.MakeLog("Skipping 46 bytes.", true);
+                logging.WriteLine("Skipping 46 bytes.", true);
 				uint roomSortFlag = readFile.ReadUInt16();
-                log.MakeLog("Room Sort Flag: " + roomSortFlag, true);
+                logging.WriteLine("Room Sort Flag: " + roomSortFlag, true);
 				int[] functionSortFlag = new int[1];
 				functionSortFlag[0] = (int)readFile.ReadUInt16();
 				BitArray functionSortFlags = new BitArray(functionSortFlag);
-                log.MakeLog("Function Sort Flag: " + functionSortFlag[0], true);
-                log.MakeLog("Function Sort Flags: ", true);
+                logging.WriteLine("Function Sort Flag: " + functionSortFlag[0], true);
+                logging.WriteLine("Function Sort Flags: ", true);
                 /*int fsfn = 0;
                 foreach (var fsf in functionSortFlags){
-                    log.MakeLog("Function Sort Flag [" + fsfn + "] is: " + functionSortFlags[fsfn].ToString(), true);                    
+                    logging.WriteLine("Function Sort Flag [" + fsfn + "] is: " + functionSortFlags[fsfn].ToString(), true);                    
                     fsfn++;
                 }*/
                 
@@ -1118,30 +1307,30 @@ namespace SimsCCManager.Packages.Decryption
 				if (functionSortFlag[0] == 0) 
 				{
                     this.xmlCategory = "Build Item";
-                    log.MakeLog("This is a build mode item.", true);
+                    logging.WriteLine("This is a build mode item.", true);
 					// Skip until we hit the Build Mode sort and EP
 					readFile.SkipAhead(46);
 					uint expansionFlag = readFile.ReadUInt16();
-                    log.MakeLog("Expansion Flag: " + expansionFlag, true);
+                    logging.WriteLine("Expansion Flag: " + expansionFlag, true);
 
 					readFile.SkipAhead(8);
 					uint buildModeType = readFile.ReadUInt16();
-                    log.MakeLog("Build Mode Type: " + buildModeType, true);
+                    logging.WriteLine("Build Mode Type: " + buildModeType, true);
 					string originalGUID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("Original GUID: " + originalGUID, true);
+                    logging.WriteLine("Original GUID: " + originalGUID, true);
 					string objectModelGUID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("Object Model GUID: " + objectModelGUID, true);
+                    logging.WriteLine("Object Model GUID: " + objectModelGUID, true);
 					uint buildModeSubsort = readFile.ReadUInt16();
-                    log.MakeLog("Build Mode Subsort: " + buildModeSubsort, true);
+                    logging.WriteLine("Build Mode Subsort: " + buildModeSubsort, true);
 
-                    log.MakeLog("Build Mode Types: " + this.xmlSubtype, true);
+                    logging.WriteLine("Build Mode Types: " + this.xmlSubtype, true);
 
                     int funcflags = functionSortFlags.Length;
                     foreach (FunctionSortList category in TypeListings.S2BuildFunctionSort){                            
                         if ((buildModeType == category.flagnum) && (buildModeSubsort == category.functionsubsortnum)) {
                             infovar.Function = category.Category;
                             infovar.FunctionSubcategory = category.Subcategory;
-                            log.MakeLog("Identified function: " + infovar.Function, true);
+                            logging.WriteLine("Identified function: " + infovar.Function, true);
                         }                        
                     } 
 				} 
@@ -1157,30 +1346,30 @@ namespace SimsCCManager.Packages.Decryption
                     if (expansionFlag == 0){
                         //infovar.RequiredEPs.Add("None");
                     }
-                    log.MakeLog("Expansion Flag: " + expansionFlag, true);
+                    logging.WriteLine("Expansion Flag: " + expansionFlag, true);
 
 					readFile.SkipAhead(8);
 					uint buildModeType = readFile.ReadUInt16();
-                    log.MakeLog("Build Mode Type: " + buildModeType, true);
+                    logging.WriteLine("Build Mode Type: " + buildModeType, true);
 					string originalGUID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("Original GUID: " + originalGUID, true);
+                    logging.WriteLine("Original GUID: " + originalGUID, true);
 					string objectModelGUID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("Object Model GUID: " + objectModelGUID, true);
+                    logging.WriteLine("Object Model GUID: " + objectModelGUID, true);
 					uint buildModeSubsort = readFile.ReadUInt16();
-                    log.MakeLog("Build Mode Subsort: " + buildModeSubsort, true);
+                    logging.WriteLine("Build Mode Subsort: " + buildModeSubsort, true);
 					readFile.SkipAhead(38);
 					uint functionSubsort = readFile.ReadUInt16();
-                    log.MakeLog("Function Subsort: " + functionSubsort, true);
+                    logging.WriteLine("Function Subsort: " + functionSubsort, true);
 
                     int funcflags = functionSortFlags.Length;
                     foreach (FunctionSortList category in TypeListings.S2BuyFunctionSort){
-                        //log.MakeLog("Catnum: " + category.flagnum, true);
+                        //logging.WriteLine("Catnum: " + category.flagnum, true);
                         for (int f = 0; f < funcflags; f++){
-                            //log.MakeLog("Flag: " + f, true);                            
+                            //logging.WriteLine("Flag: " + f, true);                            
                             if ((f == category.flagnum) && (functionSortFlags[f] == true) && (category.functionsubsortnum == functionSubsort)) {
                                 this.xmlFunction = category.Category;
                                 this.xmlFunctionSubsort = category.Subcategory;
-                                log.MakeLog("Identified function: " + this.xmlFunction + "/" + this.xmlFunctionSubsort, true);
+                                logging.WriteLine("Identified function: " + this.xmlFunction + "/" + this.xmlFunctionSubsort, true);
                             }
                         }
                     }                    
@@ -1198,10 +1387,10 @@ namespace SimsCCManager.Packages.Decryption
             }     
             infovar.ObjectGUID.AddRange(this.objectGUID);
 
-            log.MakeLog("guids in infovar:", true);
+            logging.WriteLine("guids in infovar:", true);
             for (int i = 0; i < infovar.ObjectGUID.Count(); i++)
             {
-                log.MakeLog(infovar.ObjectGUID[i], true);
+                logging.WriteLine(infovar.ObjectGUID[i], true);
             }
             return infovar;
 		}

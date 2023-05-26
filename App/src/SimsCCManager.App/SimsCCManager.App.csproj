@@ -17,9 +17,13 @@
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.117" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.2" />
     <EmbeddedResource Include="data\s4bbtags.json" />
-    <Content Include="data\*.*"/>
+    <Content Include="Data\**">    
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Resource Include="img\*.*"/>
     <Resource Include="img\flaticon\*.*"/>
+    <Resource Include="img\icons\*.*"/>
+    <Resource Include="fonts\*.*" />
     <!--<Resource Include="fonts\*.*" />
     <Resource Include="fonts\logo\*.*" />
     <Resource Include="fonts\simlish\*.*" />-->

@@ -35,104 +35,7 @@ namespace SimsCCManager.Packages.Initial {
         LoggingGlobals log = new LoggingGlobals();
         
         
-        public void IdentifyPackages(string file, bool findnew){
-            
-            /*statement = "Running Identify Packages.";
-            log.MakeLog(statement, true);
-            string[] ts3pack = {".sims3pack", ".Sims3Pack"};
-            string[] ts2pack = {".sims2pack", ".Sims2Pack"};
-            string[] ts4script = {".ts4script", ".TS4Script"};
-            string[] compressedfiles = {".zip", ".rar", ".7z", ".pkg"};
-            string[] files = Directory.GetFiles(GlobalVariables.ModFolder, "*", SearchOption.AllDirectories);
-            FileInfo packageFile = new FileInfo(file);
-            statement = "Found " + packageFile.FullName;
-            log.MakeLog(statement, true);
-            if (findnew == true){
-                var dbc = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead);
-                var packagesPending = dbc.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending'");
-                var packagesProcessing = dbc.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Processing'");
-                var packagesDone = dbc.Query<SimsPackage>("SELECT * FROM Packages");
-                var notpack = dbc.Query<NotPackages>("SELECT * FROM NotPackages");
-
-                bool foundfile;
-
-                var isinpending = from pending in packagesPending
-                    where pending.Location == packageFile.FullName
-                    select pending.Location;
-                    foundfile = isinpending.Any();
-                var isinprocessing = from processing in packagesProcessing
-                    where processing.Location == packageFile.FullName
-                    select processing.Location;
-                    foundfile = isinprocessing.Any();
-                var isindone = from done in packagesDone
-                    where done.Location == packageFile.FullName
-                    select done.Location;
-                    foundfile = isindone.Any();
-                var isinnp = from np in notpack
-                    where np.Location == packageFile.FullName
-                    select np.Location;
-                    foundfile = isinnp.Any();
                 
-                if (foundfile == true){
-                    log.MakeLog("File " + packageFile.Name + " already exists in database.", true);
-                } else {
-                    if (Path.GetExtension(packageFile.FullName) == packageExtension) {
-                    log.MakeLog(packageFile.FullName + " is a package file.", true);
-                    GlobalVariables.justPackageFiles.Add(packageFile);
-                    log.MakeLog("Items in justPackageFiles array: " + GlobalVariables.justPackageFiles.Count, true);
-                } else if (ts3pack.Contains(Path.GetExtension(packageFile.FullName))) {
-                    log.MakeLog(packageFile.FullName + " is a sims3pack file.", true);
-                    NotPtoDb("sims3pack", packageFile.FullName);
-                    log.MakeLog("sims3packages found: " + CountItems("sims3pack"), true);
-                } else if (ts2pack.Contains(Path.GetExtension(packageFile.FullName))) {
-                    log.MakeLog(packageFile.FullName + " is a sims2pack file.", true);
-                    NotPtoDb("sims2pack", packageFile.FullName);
-                    log.MakeLog("sims2packages found: " + CountItems("sims2pack"), true);
-                } else if (ts4script.Contains(Path.GetExtension(packageFile.FullName))) {
-                    log.MakeLog(packageFile.FullName + " is a ts4script file.", true);
-                    NotPtoDb("ts4script", packageFile.FullName);
-                    log.MakeLog("ts4scripts found: " + CountItems("ts4script"), true);
-                } else if (compressedfiles.Contains(Path.GetExtension(packageFile.FullName))) {
-                    log.MakeLog(packageFile.FullName + " is a compressed file.", true);
-                    NotPtoDb("compressed file", packageFile.FullName);
-                    log.MakeLog("compressedfiles found: " + CountItems("compressed file"), true);
-                } else {
-                    log.MakeLog(packageFile.FullName + " is not a package file.", true);
-                    NotPtoDb("other", packageFile.FullName);
-                    log.MakeLog("Other files found: " + CountItems("other"), true);
-                } 
-                }
-
-            } else {
-                if (Path.GetExtension(packageFile.FullName) == packageExtension) {
-                    log.MakeLog(packageFile.FullName + " is a package file.", true);
-                    GlobalVariables.justPackageFiles.Add(packageFile);
-                    log.MakeLog("Items in justPackageFiles array: " + GlobalVariables.justPackageFiles.Count, true);
-                } else if (ts3pack.Contains(Path.GetExtension(packageFile.FullName))) {
-                    log.MakeLog(packageFile.FullName + " is a sims3pack file.", true);
-                    NotPtoDb("sims3pack", packageFile.FullName);
-                    log.MakeLog("sims3packages found: " + CountItems("sims3pack"), true);
-                } else if (ts2pack.Contains(Path.GetExtension(packageFile.FullName))) {
-                    log.MakeLog(packageFile.FullName + " is a sims2pack file.", true);
-                    NotPtoDb("sims2pack", packageFile.FullName);
-                    log.MakeLog("sims2packages found: " + CountItems("sims2pack"), true);
-                } else if (ts4script.Contains(Path.GetExtension(packageFile.FullName))) {
-                    log.MakeLog(packageFile.FullName + " is a ts4script file.", true);
-                    NotPtoDb("ts4script", packageFile.FullName);
-                    log.MakeLog("ts4scripts found: " + CountItems("ts4script"), true);
-                } else if (compressedfiles.Contains(Path.GetExtension(packageFile.FullName))) {
-                    log.MakeLog(packageFile.FullName + " is a compressed file.", true);
-                    NotPtoDb("compressed file", packageFile.FullName);
-                    log.MakeLog("compressedfiles found: " + CountItems("compressed file"), true);
-                } else {
-                    log.MakeLog(packageFile.FullName + " is not a package file.", true);
-                    NotPtoDb("other", packageFile.FullName);
-                    log.MakeLog("Other files found: " + CountItems("other"), true);
-                }
-            }*/
-                        
-        }
-        
         private void NotPtoDb(string type, string location){
             log.MakeLog("Adding item to database as " + type, true);
             using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){
@@ -186,7 +89,6 @@ namespace SimsCCManager.Packages.Initial {
             if (test != "DBPF") {
                 packagereader.Close();
                 var statement = pack.FullName + " is either not a package or is broken.";
-                //GlobalVariables.brokenFiles.Add(new SimsPackage{ Title = pack.Name, Location = pack.FullName, Broken = true});
                 log.MakeLog("Adding broken file to list.", true);
                 GlobalVariables.DatabaseConnection.Insert(new BrokenChecked{Name = pack.Name, Location = pack.FullName, Status = "Broken"});
                 log.MakeLog(statement, false);
@@ -198,12 +100,63 @@ namespace SimsCCManager.Packages.Initial {
                 log.MakeLog(pack.FullName + " is a package.", true); 
                 log.MakeLog("Adding working file to list.", true);
                 GlobalVariables.DatabaseConnection.Insert(new BrokenChecked{Name = pack.Name, Location = pack.FullName, Status = "Working"});
-                //GlobalVariables.workingPackageFiles.Add(new PackageFile{ Name = pack.Name, Location = pack.FullName, Broken = false});
                 packagereader.Dispose();
                 msPackage.Dispose();
                 return;
             }
             
+        }
+
+        public void CheckThrough (string input){
+            FileInfo pack = new FileInfo(input);
+            byte[] file = File.ReadAllBytes(pack.FullName);
+            MemoryStream msPackage = new MemoryStream(file);
+            BinaryReader packagereader = new BinaryReader(msPackage);
+            string test = "";
+            test = Encoding.ASCII.GetString(packagereader.ReadBytes(4));
+            if (test != "DBPF") {
+                var statement = pack.FullName + " is either not a package or is broken.";
+                log.MakeLog("Adding broken file to list.", true);
+                string qcmd = string.Format("SELECT * FROM AllFiles where Name='{0}'", pack.FullName);
+                var fileq = GlobalVariables.DatabaseConnection.Query<AllFiles>(qcmd);
+                AllFiles query = fileq[0];
+                string qtype = query.Type;
+                GlobalVariables.DatabaseConnection.Delete(query);
+                GlobalVariables.DatabaseConnection.Insert(new AllFiles{Name = pack.Name, Location = pack.FullName, Type = qtype, Status = "Broken"});
+                log.MakeLog(statement, false);
+                packagereader.Dispose();
+                msPackage.Dispose();
+                return;
+            } else {
+                counter++;
+                uint major = packagereader.ReadUInt32();
+                log.MakeLog(pack.Name + " has " + major + " as a major.", true);                
+                uint minor = packagereader.ReadUInt32();
+                log.MakeLog(pack.Name + " has " + minor + " as a minor.", true);
+                if (major is 1 && minor is 1) {
+                    log.MakeLog(pack.FullName + " is a sims 2 file.", false);
+                    PtoDb(pack, 2);
+                } else if (major is 2 && minor is 0) {
+                    log.MakeLog(pack.FullName + " is a sims 3 file.", false);
+                    PtoDb(pack, 3);
+                } else if (major is 2 && minor is 1) {
+                    log.MakeLog(pack.FullName + " is a sims 4 file.", false);
+                    PtoDb(pack, 4);
+                } else if (major is 3 && minor is 0) {
+                    log.MakeLog(pack.FullName + " is a Sim City 5 file.", false);
+                    PtoDb(pack, 12);
+                } else {
+                    log.MakeLog(pack.FullName + " was unidentifiable.", false);
+                    string qcmd = string.Format("SELECT * FROM AllFiles where Name='{0}'", pack.FullName);
+                    var fileq = GlobalVariables.DatabaseConnection.Query<AllFiles>(qcmd);
+                    AllFiles query = fileq[0];
+                    string qtype = query.Type;
+                    GlobalVariables.DatabaseConnection.Delete(query);
+                    GlobalVariables.DatabaseConnection.Insert(new AllFiles{Name = pack.Name, Location = pack.FullName, Type = qtype, Status = "Unidentifiable Version"});
+                }
+                packagereader.Dispose();
+                msPackage.Dispose();
+            }
         }
 
         public void IdentifyGames(string input){ 
@@ -250,13 +203,11 @@ namespace SimsCCManager.Packages.Initial {
         }
 
         private void PtoDb(FileInfo f, int game){
-            log.MakeLog("Adding " + f.Name + " to database as for Sims " + game, true);
-            try {
-              GlobalVariables.DatabaseConnection.Insert(new PackageFile { Name = f.Name, Location = f.FullName, Game = game, Broken = false, Status = "Pending"});
-            } catch (Exception e) {
-                Console.WriteLine(e.Message);
-            }
-            log.MakeLog("Added " + f.Name + "! Returning.", true);
+            log.MakeLog(string.Format("Adding {0} to database as for Sims {1}", f.Name, game), true);
+            
+            Containers.Containers.identifiedPackages.Add(new PackageFile{Name = f.Name, Location = f.FullName, Game = game, Broken = false, Status = "Pending"});
+            
+            log.MakeLog(string.Format("Added {0}! Returning.", f.Name), true);
         }
 
         private int CountPackages(int game) {
