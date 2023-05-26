@@ -1,5 +1,3 @@
-I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\x86\e_sqlite3.dll
-I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\x64\e_sqlite3.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SimsCCManager.App.exe
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SimsCCManager.App.deps.json
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SimsCCManager.App.runtimeconfig.json
@@ -12,10 +10,8 @@ I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\New
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\ICSharpCode.SharpZipLib.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLite-net.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLiteNetExtensions.dll
-I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLitePCLRaw.batteries_green.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLitePCLRaw.batteries_v2.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLitePCLRaw.core.dll
-I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLitePCLRaw.provider.e_sqlite3.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\System.Data.SQLite.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\System.Private.ServiceModel.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\System.Security.Cryptography.Pkcs.dll
@@ -38,8 +34,6 @@ I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\zh-
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-x64\native\libe_sqlite3.so
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-x86\native\libe_sqlite3.so
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\osx-x64\native\libe_sqlite3.dylib
-I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win7-x64\native\e_sqlite3.dll
-I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win7-x86\native\e_sqlite3.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-x64\native\SQLite.Interop.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\osx-x64\native\SQLite.Interop.dll
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win-x64\native\SQLite.Interop.dll
@@ -77,3 +71,15 @@ I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Dat
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\s4bbtags.json
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\S4_Instances.sqlite
 I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\S4_SpecificOverrides.sqlite
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLitePCLRaw.nativelibrary.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\SQLitePCLRaw.provider.dynamic_cdecl.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\alpine-x64\native\libe_sqlite3.so
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-arm\native\libe_sqlite3.so
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-arm64\native\libe_sqlite3.so
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-armel\native\libe_sqlite3.so
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-mips64\native\libe_sqlite3.so
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\linux-musl-x64\native\libe_sqlite3.so
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win-arm\native\e_sqlite3.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win-arm64\native\e_sqlite3.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win-x64\native\e_sqlite3.dll
+I:\Code\C#\Sims-CC-Sorter\App\src\SimsCCManager.App\bin\Debug\net6.0-windows\runtimes\win-x86\native\e_sqlite3.dll

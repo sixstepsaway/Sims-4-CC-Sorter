@@ -39,6 +39,8 @@ using Newtonsoft.Json.Serialization;
 using SQLite;
 using SQLiteNetExtensions;
 using SQLiteNetExtensions.Attributes;
+using SQLitePCL;
+using SQLiteNetExtensions.Extensions.TextBlob;
 using System.Data.SQLite;
 
 
@@ -76,7 +78,7 @@ namespace Sims_CC_Sorter
         private int workerThreads;
         private int portThreads;
         public int countprogress = 0;
-        private int batchsize = 100;
+        private int batchsize = 250;
         private int totalbatches = 0;
         int threads = Environment.ProcessorCount;
         int threadstouse = 0;
@@ -117,13 +119,15 @@ namespace Sims_CC_Sorter
 
         private void noeatcpu_Check(object sender, RoutedEventArgs e){
             eatenturecpu = false;
-            threadstouse = threads / 2;
+            threadstouse = threads / 3;
             parallelSettings.MaxDegreeOfParallelism = threadstouse;
+            log.MakeLog(string.Format("Threads set to {0}", threadstouse), true);
         }
         private void eatcpu_Uncheck(object sender, RoutedEventArgs e){
             eatenturecpu = true;
             threadstouse = threads;
             parallelSettings.MaxDegreeOfParallelism = threadstouse;
+            log.MakeLog(string.Format("Threads set to {0}", threadstouse), true);
         }        
         
         private void App_Loaded(object sender, RoutedEventArgs e){
@@ -890,17 +894,17 @@ namespace Sims_CC_Sorter
             List<PackageFile> s3pending = new List<PackageFile>();
             List<PackageFile> s4pending = new List<PackageFile>();
 
-            var packagesQuery = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending' ORDER BY Name ASC");
+            var packagesQuery = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader ORDER BY Name ASC");
 
-            var pending2 = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending' AND Game = 2 ORDER BY Name ASC");
+            var pending2 = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Game = 2 ORDER BY Name ASC");
             s2pending.AddRange(pending2);
             log.MakeLog(string.Format("Found {0} pending Sims 2 files.", pending2.Count), true);
 
-            var pending3 = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending' AND Game = 3 ORDER BY Name ASC");
+            var pending3 = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Game = 3 ORDER BY Name ASC");
             s3pending.AddRange(pending3);
             log.MakeLog(string.Format("Found {0} pending Sims 3 files.", pending3.Count), true);
 
-            var pending4 = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending' AND Game = 4 ORDER BY Name ASC");
+            var pending4 = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Game = 4 ORDER BY Name ASC");
             s4pending.AddRange(pending4);
             log.MakeLog(string.Format("Found {0} pending Sims 4 files.", pending4.Count), true);
 
@@ -918,58 +922,77 @@ namespace Sims_CC_Sorter
             maxi = packagesQuery.Count;
             mainProgressBar.Maximum = maxi;
             countprogress = 0;                
-            ConcurrentQueue<Task> ProcessPackages = new ConcurrentQueue<Task>();
+            List<BatchTasks> ProcessPackages = new List<BatchTasks>();
 
-            foreach (PackageFile file in pending2) {
-                if (token.IsCancellationRequested)
-                {
-                    log.MakeLog("Process cancelled.", true);
-                    stop = true;
-                    return;
+            int numbatches = (int)Math.Ceiling((double)packagesQuery.Count / (double)batchsize);
+            int completedbatches = 0;
+
+            log.MakeLog(string.Format("There will be {0} batches of {1}, and the total items to process is {2}.", numbatches, batchsize, packagesQuery.Count), true);
+            BatchTasks newtasks = new BatchTasks(); 
+            foreach (PackageFile file in packagesQuery){
+                if (newtasks.Batches.Count >= batchsize){
+                    ProcessPackages.Add(newtasks);
+                    newtasks = new BatchTasks(); 
                 }
-                log.MakeLog(string.Format("Processing Sims 2 file: {0}", file.Name), true);
-                Task task = RunLimitedNumberAtATime(threadstouse, Enumerable.Range(1, 100), x => Task.Factory.StartNew(() => {
+                newtasks.Batches.Add(new Task (() => {
+                    log.MakeLog(string.Format("Processing {0}", file.Name), true);
                     window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
                     window.Dispatcher.Invoke(new Action(() => countprogress++));
                     window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
-                    s2packs.SearchS2Packages(file.Location);                        
-                }, TaskCreationOptions.LongRunning));
+                    if (file.Game == 2) s2packs.SearchS2Packages(file.Location);   
+                    if (file.Game == 4) s4packs.SearchS4Packages(file.Location, false);       
+                }));
             }
-            foreach (PackageFile file in pending3) {
-                if (token.IsCancellationRequested)
-                {
-                    log.MakeLog("Process cancelled.", true);
-                    stop = true;
-                    return;
-                }
-                log.MakeLog(string.Format("Processing Sims 3 file: {0}", file.Name), true);
-                /*ProcessPackages.Enqueue(Task.Run(() => {
-                    window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
-                    window.Dispatcher.Invoke(new Action(() => countprogress++));
-                    window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
-                    s3packs.SearchS3Packages(file.Location);                        
-                }));*/                    
-            }
-            foreach (PackageFile file in pending4) {
-                if (token.IsCancellationRequested)
-                {
-                    log.MakeLog("Process cancelled.", true);
-                    stop = true;
-                    return;
-                }
-                log.MakeLog(string.Format("Processing Sims 4 file: {0}", file.Name), true);
-                Task task = RunLimitedNumberAtATime(threadstouse, Enumerable.Range(1, 100), x => Task.Factory.StartNew(() => {
-                    window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
-                    window.Dispatcher.Invoke(new Action(() => countprogress++));
-                    window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
-                    s4packs.SearchS4Packages(file.Location, false);                        
-                }, TaskCreationOptions.LongRunning));
-            }
-            
-            
+            ProcessPackages.Add(newtasks);
+            newtasks = new BatchTasks(); 
+
+            log.MakeLog(string.Format("There are {0} batches in the batch list.", ProcessPackages.Count), true);
+            int h = 0; 
+
+            Task doprocessing = Task.Run(async () => {                
+                foreach (BatchTasks batch in ProcessPackages){
+                    if (token.IsCancellationRequested)
+                    {
+                        log.MakeLog("Process cancelled.", true);
+                        stop = true;
+                        break;
+                    }
+                    Task dobatch = Task.Run(async() => {
+                       h++;                
+                        log.MakeLog(string.Format("Batch {0} has {1} items.", h, batch.Batches.Count), true);
+                        foreach (Task t in batch.Batches){
+                            if (token.IsCancellationRequested)
+                            {
+                                log.MakeLog("Process cancelled.", true);
+                                stop = true;
+                                break;
+                            }
+                            await maxThread.WaitAsync();
+                            t.Start();
+                            maxThread.Release();
+                        }
+                        while (batch.Batches.Any())
+                        {
+                            Task finishedbatchtask = await Task.WhenAny(batch.Batches);                    
+                            batch.Batches.Remove(finishedbatchtask);
+                            finishedbatchtask.Dispose();
+                        } 
+                    });                    
+                    await (dobatch);
+                    completedbatches++;
+                    /*Task insert = Task.Run(() => {
+                        GlobalVariables.DatabaseConnection.InsertAll(Containers.allSimsPackages);
+                        Containers.allSimsPackages = new SynchronizedCollection<SimsPackage>();
+                    });
+                    await (insert); */                   
+                }                
+            });
+            await(doprocessing);
+
+            log.MakeLog(string.Format("Batches completed: {0}", completedbatches), true);
+
             if (!token.IsCancellationRequested) {
                 log.MakeLog("Awaiting package reading to finish.", true);
-                //await(processpackages);
                 completionAlertValue("Done!");
                 textCurrentPk.Text = "";
                 mainProgressBar.Value = maxi;
@@ -990,8 +1013,8 @@ namespace Sims_CC_Sorter
             ResultsWindow resultsWindow = new ResultsWindow();
             resultsWindow.Show();
             this.Close();
-        }
-        
+        }        
+      
         private void ManageOldFolder(){
             
         }

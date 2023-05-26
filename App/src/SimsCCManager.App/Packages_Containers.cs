@@ -342,10 +342,10 @@ namespace SimsCCManager.Packages.Containers
     }
 
     public class BatchTasks {
-        public List<Task> Batch {get; set;}
+        public List<Task> Batches {get; set;}
 
         public BatchTasks(){
-            List<Task> Batch = new List<Task>();
+            Batches = new List<Task>();
         }
     }
 

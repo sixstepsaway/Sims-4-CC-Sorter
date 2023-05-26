@@ -58,13 +58,13 @@ namespace SimsCCManager.Packages.Sims4Search
         public uint type;
         public uint group;
         
-        public ResourceKeyITG(BinaryReader reader, StreamWriter logging){
+        public ResourceKeyITG(BinaryReader reader){
             this.instance = reader.ReadUInt64(); 
-            logging.WriteLine("GUID Instance: " + this.instance, true);
+            log.MakeLog("GUID Instance: " + this.instance, true);
             this.type = reader.ReadUInt32(); 
-            logging.WriteLine("GUID Type: " + this.type, true);
+            log.MakeLog("GUID Type: " + this.type, true);
             this.group = reader.ReadUInt32();     
-            logging.WriteLine("GUID Group: " + this.group, true);  
+            log.MakeLog("GUID Group: " + this.group, true);  
         }
 
         public override string ToString() => $"{type.ToString("X8")}-{group.ToString("X8")}-{instance.ToString("X16")}";
@@ -79,17 +79,17 @@ namespace SimsCCManager.Packages.Sims4Search
         public uint type;
         public uint group;
         
-        public ResourceKeyITGFlip(BinaryReader reader, StreamWriter logging){
+        public ResourceKeyITGFlip(BinaryReader reader){
             uint left = reader.ReadUInt32();
             uint right = reader.ReadUInt32();
             ulong longleft = left;
             longleft = (longleft << 32);
             this.instance = longleft | right;
-            logging.WriteLine("GUID Instance: " + this.instance, true);
+            log.MakeLog("GUID Instance: " + this.instance, true);
             this.type = reader.ReadUInt32(); 
-            logging.WriteLine("GUID Type: " + this.type, true);
+            log.MakeLog("GUID Type: " + this.type, true);
             this.group = reader.ReadUInt32();  
-            logging.WriteLine("GUID Group: " + this.group, true);       
+            log.MakeLog("GUID Group: " + this.group, true);       
         }
 
         public override string ToString() => $"{type.ToString("X8")}-{group.ToString("X8")}-{instance.ToString("X16")}";
@@ -189,48 +189,48 @@ namespace SimsCCManager.Packages.Sims4Search
         LoggingGlobals log = new LoggingGlobals();
         GlobalVariables globals = new GlobalVariables();
 
-        public ReadCOBJ(BinaryReader readFile, int packageparsecount, int e, List<TagsList> itemtags, StreamWriter logging){
+        public ReadCOBJ(BinaryReader readFile, int packageparsecount, int e, List<TagsList> itemtags){
             uint version = readFile.ReadUInt32();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Version: " + version, true);
-            logging.WriteLine("-- As hex: " + version.ToString("X8"), true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - Version: " + version, true);
+            log.MakeLog("-- As hex: " + version.ToString("X8"), true);
             uint commonblockversion = readFile.ReadUInt32();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Common Block Version: " + commonblockversion, true);
-            logging.WriteLine("-- As hex: " + commonblockversion.ToString("X8"), true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - Common Block Version: " + commonblockversion, true);
+            log.MakeLog("-- As hex: " + commonblockversion.ToString("X8"), true);
             uint namehash = readFile.ReadUInt32();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - NameHash: " + namehash, true);
-            logging.WriteLine("-- As hex: " + namehash.ToString("X8"), true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - NameHash: " + namehash, true);
+            log.MakeLog("-- As hex: " + namehash.ToString("X8"), true);
             uint descriptionhash = readFile.ReadUInt32();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - DescriptionHash: " + descriptionhash, true);
-            logging.WriteLine("-- As hex: " + descriptionhash.ToString("X8"), true);                            
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - DescriptionHash: " + descriptionhash, true);
+            log.MakeLog("-- As hex: " + descriptionhash.ToString("X8"), true);                            
             uint price = readFile.ReadUInt32();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Price: " + price, true);
-            logging.WriteLine("-- As hex: " + price.ToString("X8"), true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - Price: " + price, true);
+            log.MakeLog("-- As hex: " + price.ToString("X8"), true);
 
             ulong thumbhash = readFile.ReadUInt64();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Thumbnail Hash: " + thumbhash, true);
-            logging.WriteLine("-- As hex: " + thumbhash.ToString("X8"), true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - Thumbnail Hash: " + thumbhash, true);
+            log.MakeLog("-- As hex: " + thumbhash.ToString("X8"), true);
 
             uint devcatflags = readFile.ReadUInt32();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Dev Category Flags: " + devcatflags, true);
-            logging.WriteLine("-- As hex: " + devcatflags.ToString("X8"), true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - Dev Category Flags: " + devcatflags, true);
+            log.MakeLog("-- As hex: " + devcatflags.ToString("X8"), true);
             
             int tgicount = readFile.ReadByte();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - TGI Count: " + tgicount, true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - TGI Count: " + tgicount, true);
 
             if (tgicount != 0){
-                logging.WriteLine("P" + packageparsecount + "/E" + e + " - TGI Count is not zero. Reading resources.", true);
-                ResourceKeyITG resourcekey = new ResourceKeyITG(readFile, logging);
-                logging.WriteLine(resourcekey.ToString(), true);
-                logging.WriteLine("GUID: " + resourcekey.ToString(), true);
+                log.MakeLog("P" + packageparsecount + "/E" + e + " - TGI Count is not zero. Reading resources.", true);
+                ResourceKeyITG resourcekey = new ResourceKeyITG(readFile);
+                log.MakeLog(resourcekey.ToString(), true);
+                log.MakeLog("GUID: " + resourcekey.ToString(), true);
                 GUID = resourcekey.ToString();
             }                           
             
             if (commonblockversion >= 10)
             {
                 int packId = readFile.ReadInt16();
-                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Pack ID: " + packId, true);
+                log.MakeLog("P" + packageparsecount + "/E" + e + " - Pack ID: " + packId, true);
                 int packFlags = readFile.ReadByte();
-                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Pack Flags: " + packFlags, true);
+                log.MakeLog("P" + packageparsecount + "/E" + e + " - Pack Flags: " + packFlags, true);
                 byte[] reservedBytes = readFile.ReadBytes(9);
             } else {
                 int unused2 = readFile.ReadByte();
@@ -242,10 +242,10 @@ namespace SimsCCManager.Packages.Sims4Search
 
             if (commonblockversion >= 11){
                 uint count = readFile.ReadUInt32();
-                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Tags Count: " + count, true);
+                log.MakeLog("P" + packageparsecount + "/E" + e + " - Tags Count: " + count, true);
                 Tag tags = new Tag(readFile, count);
                 for (int i = 0; i < count; i++){
-                    logging.WriteLine("P" + packageparsecount + "/E" + e + " - Tag " + i + " value is: " + tags.tagKey[i], true);
+                    log.MakeLog("P" + packageparsecount + "/E" + e + " - Tag " + i + " value is: " + tags.tagKey[i], true);
                     
                     if (tags.tagKey[i] != 0){
                         var tagKeyexists = from ID in TypeListings.S4BBFunctionTags
@@ -253,26 +253,26 @@ namespace SimsCCManager.Packages.Sims4Search
                         select ID.typeID;
                         bool tagfound = tagKeyexists.Any();
                         if (tagfound == true){
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - TagKey " + tags.tagKey[i] + " exists in database.", true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - TagKey " + tags.tagKey[i] + " exists in database.", true);
                             foreach (typeList item in TypeListings.S4BBFunctionTags){
                                 if(item.typeID == tags.tagKey[i].ToString()){
                                     if ((itemtags.Exists(x => x.shortval == (short)tags.tagKey[i])) || (itemtags.Exists(x => x.stringval == tags.tagKey[i].ToString()))){
                                         
                                     } else {
                                         itemtags.Add(new TagsList{ shortval = (short)tags.tagKey[i], stringval = item.info});
-                                        logging.WriteLine("Tag " + i + " matched to " + item.info, true);
+                                        log.MakeLog("Tag " + i + " matched to " + item.info, true);
                                     }
                                 }
                             }
                         } else {
                             itemtags.Add(new TagsList{ shortval = (short)tags.tagKey[i], stringval = "Needs Identification"});
-                            logging.WriteLine("Tag " + i + " has no match.", true);
+                            log.MakeLog("Tag " + i + " has no match.", true);
                         }
                     }
                 }
             } else {
                 uint count = readFile.ReadUInt32();
-                logging.WriteLine("Num tags: " + count, true);
+                log.MakeLog("Num tags: " + count, true);
                 for (int t = 0; t < count; t++){
                     uint tagvalue = readFile.ReadUInt16();
                     if (tagvalue != 0){
@@ -281,34 +281,34 @@ namespace SimsCCManager.Packages.Sims4Search
                         select ID.typeID;
                         bool tagfound = tagKeyexists.Any();
                         if (tagfound == true){
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - TagKey " + tagvalue + " exists in database.", true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - TagKey " + tagvalue + " exists in database.", true);
                             foreach (typeList item in TypeListings.S4BBFunctionTags){
                                 if(item.typeID == tagvalue.ToString()){
                                     if ((itemtags.Exists(x => x.shortval == (short)tagvalue)) || (itemtags.Exists(x => x.stringval == tagvalue.ToString()))){
                                         
                                     } else {
                                         itemtags.Add(new TagsList{ shortval = (short)tagvalue, stringval = item.info});
-                                        logging.WriteLine("Tag " + t + " matched to " + item.info, true);
+                                        log.MakeLog("Tag " + t + " matched to " + item.info, true);
                                     }
                                 }
                             }
                         } else {
                             itemtags.Add(new TagsList{ shortval = (short)tagvalue, stringval = "Needs Identification"});
-                            logging.WriteLine("Tag " + t + " has no match.", true);
+                            log.MakeLog("Tag " + t + " has no match.", true);
                         }
                     }
                 }
             }
             long location = readFile.BaseStream.Position;
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Reader location: " + location, true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - Reader location: " + location, true);
             uint count2 = readFile.ReadUInt32();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Selling Point Count: " + count2, true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - Selling Point Count: " + count2, true);
             if (count2 > 5){
-                logging.WriteLine("Selling point count is too high, something went wrong.", true);
+                log.MakeLog("Selling point count is too high, something went wrong.", true);
             } else {
                     Tag sellingtags = new Tag(readFile, count2);
                 for (int i = 0; i < count2; i++){
-                    logging.WriteLine("P" + packageparsecount + "/E" + e + " - Tag " + i + " value is: " + sellingtags.tagKey[i], true);
+                    log.MakeLog("P" + packageparsecount + "/E" + e + " - Tag " + i + " value is: " + sellingtags.tagKey[i], true);
                     
                     if (sellingtags.tagKey[i] != 0){
                         var tagKeyexists = from ID in TypeListings.S4BBFunctionTags
@@ -316,20 +316,20 @@ namespace SimsCCManager.Packages.Sims4Search
                         select ID.typeID;
                         bool tagfound = tagKeyexists.Any();
                         if (tagfound == true){
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - TagKey " + sellingtags.tagKey[i] + " exists in database.", true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - TagKey " + sellingtags.tagKey[i] + " exists in database.", true);
                             foreach (typeList item in TypeListings.S4BBFunctionTags){
                                 if(item.typeID == sellingtags.tagKey[i].ToString()){
                                     if ((itemtags.Exists(x => x.shortval == (short)sellingtags.tagKey[i])) || (itemtags.Exists(x => x.stringval == sellingtags.tagKey[i].ToString()))){
                                         
                                     } else {
                                         itemtags.Add(new TagsList{ shortval = (short)sellingtags.tagKey[i], stringval = item.info});
-                                        logging.WriteLine("Tag " + i + " matched to " + item.info, true);
+                                        log.MakeLog("Tag " + i + " matched to " + item.info, true);
                                     }
                                 }
                             }
                         } else {
                             itemtags.Add(new TagsList{ shortval = (short)sellingtags.tagKey[i], stringval = "Needs Identification"});
-                            logging.WriteLine("Tag " + i + " has no match.", true);
+                            log.MakeLog("Tag " + i + " has no match.", true);
                         }
                     }
 
@@ -337,16 +337,16 @@ namespace SimsCCManager.Packages.Sims4Search
             }            
 
             uint unlockByHash = readFile.ReadUInt32();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - UnlockBy Hash: " + unlockByHash, true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - UnlockBy Hash: " + unlockByHash, true);
             
             uint unlockedByHash = readFile.ReadUInt32();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - UnlockedBy Hash: " + unlockedByHash, true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - UnlockedBy Hash: " + unlockedByHash, true);
 
             int swatchColorSortPriority = readFile.ReadUInt16();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Swatch Sort Priority: " + swatchColorSortPriority, true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - Swatch Sort Priority: " + swatchColorSortPriority, true);
 
             ulong varientThumbImageHash = readFile.ReadUInt64();
-            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Varient Thumb Image Hash: " + varientThumbImageHash, true);
+            log.MakeLog("P" + packageparsecount + "/E" + e + " - Varient Thumb Image Hash: " + varientThumbImageHash, true);
         }            
     }
     
@@ -361,11 +361,11 @@ namespace SimsCCManager.Packages.Sims4Search
         public uint[] entrytype;
         public uint[] position;
 
-        public ReadOBJDIndex(BinaryReader reader, StreamWriter logging){
+        public ReadOBJDIndex(BinaryReader reader){
             this.version = reader.ReadUInt16();
-            logging.WriteLine("Version: " + this.version, true);
+            log.MakeLog("Version: " + this.version, true);
             if (this.version > 150){
-                logging.WriteLine("Version is not legitimate.", true);
+                log.MakeLog("Version is not legitimate.", true);
                 this.refposition = 0; 
                 this.count = (int)0;
                 this.entrytype = new uint[0];
@@ -409,7 +409,7 @@ namespace SimsCCManager.Packages.Sims4Search
         public string[] model;
         public string[] footprint;
         private bool tuningidmissing = false;
-        public ReadOBJDEntry(BinaryReader reader, string[] entries, int[] positions, StreamWriter logging){
+        public ReadOBJDEntry(BinaryReader reader, string[] entries, int[] positions){
             uint preceeding;
             uint preceedingDiv;
 
@@ -441,26 +441,26 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "E7F07786": // name
                         reader.BaseStream.Position = entrypos;
                         this.namelength = reader.ReadByte();
-                        logging.WriteLine("Name Length: " + namelength, true);
-                        logging.WriteLine("Reading three empty bytes.", true);
-                        logging.WriteLine("Byte 1: " + reader.ReadByte().ToString(), true);
-                        logging.WriteLine("Byte 2: " + reader.ReadByte().ToString(), true);
-                        logging.WriteLine("Byte 3: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog("Name Length: " + namelength, true);
+                        log.MakeLog("Reading three empty bytes.", true);
+                        log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
                         this.namebit = reader.ReadBytes(namelength);
                         this.name = Encoding.UTF8.GetString(namebit);
-                        logging.WriteLine("Name: " + name, true);
+                        log.MakeLog("Name: " + name, true);
                         break;
                     case "790FA4BC": //tuning
                         reader.BaseStream.Position = entrypos;
                         this.tuningnamelength = reader.ReadByte();
-                        logging.WriteLine("Tuning Name Length: " + tuningnamelength, true);
-                        logging.WriteLine("Reading three empty bytes.", true);
-                        logging.WriteLine("Byte 1: " + reader.ReadByte().ToString(), true);
-                        logging.WriteLine("Byte 2: " + reader.ReadByte().ToString(), true);
-                        logging.WriteLine("Byte 3: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog("Tuning Name Length: " + tuningnamelength, true);
+                        log.MakeLog("Reading three empty bytes.", true);
+                        log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
                         this.tuningbit = reader.ReadBytes(tuningnamelength);
                         this.tuningname = Encoding.UTF8.GetString(tuningbit);
-                        logging.WriteLine("Tuning Name: " + tuningname, true);
+                        log.MakeLog("Tuning Name: " + tuningname, true);
                         break;
                     case "B994039B": //TuningID
                         reader.BaseStream.Position = entrypos;
@@ -469,80 +469,80 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "CADED888": //Icon
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        logging.WriteLine("Reading preceeding UInt32: " + preceeding, true);
+                        log.MakeLog("Reading preceeding UInt32: " + preceeding, true);
                         preceedingDiv = preceeding / 4;            
-                        logging.WriteLine("Number of Icon GUIDs: " + preceedingDiv, true);
+                        log.MakeLog("Number of Icon GUIDs: " + preceedingDiv, true);
                         this.icon = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip ricon = new ResourceKeyITGFlip(reader, logging);
-                            logging.WriteLine(ricon.ToString(), true);
-                            logging.WriteLine("Icon GUID: " + ricon.ToString(), true);
+                            ResourceKeyITGFlip ricon = new ResourceKeyITGFlip(reader);
+                            log.MakeLog(ricon.ToString(), true);
+                            log.MakeLog("Icon GUID: " + ricon.ToString(), true);
                             this.icon[p] = ricon.ToString();
                         }
                         break;
                     case "E206AE4F": //Rig
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        logging.WriteLine("Reading preceeding UInt32: " + preceeding, true);
+                        log.MakeLog("Reading preceeding UInt32: " + preceeding, true);
                         preceedingDiv = preceeding / 4;
-                        logging.WriteLine("Number of Rig GUIDs: " + preceedingDiv, true);
+                        log.MakeLog("Number of Rig GUIDs: " + preceedingDiv, true);
                         this.rig = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip rkrig = new ResourceKeyITGFlip(reader, logging);
-                            logging.WriteLine(rkrig.ToString(), true);
-                            logging.WriteLine("Rig GUID: " + rkrig.ToString(), true);
+                            ResourceKeyITGFlip rkrig = new ResourceKeyITGFlip(reader);
+                            log.MakeLog(rkrig.ToString(), true);
+                            log.MakeLog("Rig GUID: " + rkrig.ToString(), true);
                             this.rig[p] = rkrig.ToString();
                         }   
                         break;
                     case "8A85AFF3": //Slot
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        logging.WriteLine("Reading preceeding UInt32: " + preceeding, true);
+                        log.MakeLog("Reading preceeding UInt32: " + preceeding, true);
                         preceedingDiv = preceeding / 4;
-                        logging.WriteLine("Number of Slot GUIDs: " + preceedingDiv, true);
+                        log.MakeLog("Number of Slot GUIDs: " + preceedingDiv, true);
                         this.slot = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip rkslot = new ResourceKeyITGFlip(reader, logging);
-                            logging.WriteLine(rkslot.ToString(), true);
-                            logging.WriteLine("Slot GUID: " + rkslot.ToString(), true);
+                            ResourceKeyITGFlip rkslot = new ResourceKeyITGFlip(reader);
+                            log.MakeLog(rkslot.ToString(), true);
+                            log.MakeLog("Slot GUID: " + rkslot.ToString(), true);
                             this.slot[p] = rkslot.ToString();
                         }            
                         break;
                     case "8D20ACC6": //Model
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        logging.WriteLine("Reading preceeding UInt32: " + preceeding, true);
+                        log.MakeLog("Reading preceeding UInt32: " + preceeding, true);
                         preceedingDiv = preceeding / 4;
-                        logging.WriteLine("Number of Model GUIDs: " + preceedingDiv, true);
+                        log.MakeLog("Number of Model GUIDs: " + preceedingDiv, true);
                         this.model = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip rkmodel = new ResourceKeyITGFlip(reader, logging);
-                            logging.WriteLine(rkmodel.ToString(), true);
-                            logging.WriteLine("Reader is at " + reader.BaseStream.Position, true);
-                            logging.WriteLine("Model GUID: " + rkmodel.ToString(), true);
+                            ResourceKeyITGFlip rkmodel = new ResourceKeyITGFlip(reader);
+                            log.MakeLog(rkmodel.ToString(), true);
+                            log.MakeLog("Reader is at " + reader.BaseStream.Position, true);
+                            log.MakeLog("Model GUID: " + rkmodel.ToString(), true);
                             this.model[p] = rkmodel.ToString();
                         }
                         break;
                     case "6C737AD8": //Footprint
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        logging.WriteLine("Reading preceeding UInt32: " + preceeding, true);
+                        log.MakeLog("Reading preceeding UInt32: " + preceeding, true);
                         preceedingDiv = preceeding / 4;
-                        logging.WriteLine("Number of Footprint GUIDs: " + preceedingDiv, true);
+                        log.MakeLog("Number of Footprint GUIDs: " + preceedingDiv, true);
                         this.footprint = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip rkft = new ResourceKeyITGFlip(reader, logging);
-                            logging.WriteLine(rkft.ToString(), true);
-                            logging.WriteLine("Reader is at " + reader.BaseStream.Position, true);
-                            logging.WriteLine("Footprint GUID: " + rkft.ToString(), true);
+                            ResourceKeyITGFlip rkft = new ResourceKeyITGFlip(reader);
+                            log.MakeLog(rkft.ToString(), true);
+                            log.MakeLog("Reader is at " + reader.BaseStream.Position, true);
+                            log.MakeLog("Footprint GUID: " + rkft.ToString(), true);
                             this.footprint[p] = rkft.ToString();                
                         }
                         break;
                     case "E6E421FB": //Components
                         reader.BaseStream.Position = entrypos;
                         this.componentcount = reader.ReadUInt32();
-                        logging.WriteLine("Reader is at " + reader.BaseStream.Position, true);
-                        logging.WriteLine("Component count: " + componentcount, true);
+                        log.MakeLog("Reader is at " + reader.BaseStream.Position, true);
+                        log.MakeLog("Component count: " + componentcount, true);
                         this.components = new uint[this.componentcount];
                         for (int i = 0; i < this.componentcount; i++){
                             components[i] = reader.ReadUInt32();
@@ -551,14 +551,14 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "ECD5A95F": //MaterialVariant
                         reader.BaseStream.Position = entrypos;
                         this.materialvariantlength = reader.ReadByte();
-                        logging.WriteLine("Material Variant Length: " + materialvariantlength, true);
-                        logging.WriteLine("Reading three empty bytes.", true);
-                        logging.WriteLine("Byte 1: " + reader.ReadByte().ToString(), true);
-                        logging.WriteLine("Byte 2: " + reader.ReadByte().ToString(), true);
-                        logging.WriteLine("Byte 3: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog("Material Variant Length: " + materialvariantlength, true);
+                        log.MakeLog("Reading three empty bytes.", true);
+                        log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
                         this.materialvariantbyte = reader.ReadBytes(materialvariantlength);
                         this.materialvariant = Encoding.UTF8.GetString(materialvariantbyte);
-                        logging.WriteLine("Material Variant: " + materialvariant, true);
+                        log.MakeLog("Material Variant: " + materialvariant, true);
                         break;
                     case "AC8E1BC0": //Unknown1
                         reader.BaseStream.Position = entrypos;
@@ -567,7 +567,7 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "E4F4FAA4": //SimoleonPrice
                         reader.BaseStream.Position = entrypos;
                         this.price = reader.ReadUInt32();
-                        logging.WriteLine("Price: " + price, true);
+                        log.MakeLog("Price: " + price, true);
                         break;
                     case "7236BEEA": //PositiveEnvironmentScore
                         reader.BaseStream.Position = entrypos;
@@ -697,23 +697,20 @@ namespace SimsCCManager.Packages.Sims4Search
         
 
         public void SearchS4Packages(string file, bool dump) {
+            Stopwatch sw = new Stopwatch();
             string packagelogfolder = "packagelogs";
             FileInfo packageinfo = new FileInfo(file);
-            string logname = string.Format("{0}.packagelog", Path.GetFileNameWithoutExtension(packageinfo.Name));
-            string logspot = Path.Combine(LoggingGlobals.internalLogFolder, packagelogfolder);
-            string logfile = Path.Combine(logspot, logname);
-            StreamWriter logging = new StreamWriter(logfile);
-            logging.WriteLine(string.Format("File {0} arrived for processing as Sims 4 file.", packageinfo.Name), true);
+            log.MakeLog(string.Format("File {0} arrived for processing as Sims 4 file.", packageinfo.Name), true);
             var txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", packageinfo.Name);
             var queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
             var query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
             var pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
-            GlobalVariables.DatabaseConnection.Update(pk);
+            GlobalVariables.DatabaseConnection.Insert(pk);
             var packageparsecount = GlobalVariables.packagesRead;   
-            logging.WriteLine("Got package parse count.", true);
+            log.MakeLog("Got package parse count.", true);
             GlobalVariables.packagesRead++;       
-            logging.WriteLine("Incrementing packages read.", true);
+            log.MakeLog("Incrementing packages read.", true);
                      
         
             //Misc Vars
@@ -758,57 +755,57 @@ namespace SimsCCManager.Packages.Sims4Search
             thisPackage.PackageName = packageinfo.Name;
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 4;
-            logging.WriteLine(string.Format("Package #{0} registered as {1} and meant for Sims 4", packageparsecount, packageinfo.FullName), true);
+            log.MakeLog(string.Format("Package #{0} registered as {1} and meant for Sims 4", packageparsecount, packageinfo.FullName), true);
 
             //start actually reading the package 
             
             /*
             //dbpf
             test = Encoding.ASCII.GetString(readFile.ReadBytes(4)); 
-            logging.WriteLine("DBPF: " + test, true);
-            logging.WriteLine("DBPF Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("DBPF: " + test, true);
+            log.MakeLog("DBPF Location: " + readFile.BaseStream.Position, true);
             
             //major
             uint testint = readFile.ReadUInt32(); 
             test = testint.ToString();
-            logging.WriteLine("Major :" + test, true);
-            logging.WriteLine("Major Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Major :" + test, true);
+            log.MakeLog("Major Location: " + readFile.BaseStream.Position, true);
             
             //minor
             testint = readFile.ReadUInt32(); 
             test = testint.ToString();
-            logging.WriteLine("Minor : " + test, true);
-            logging.WriteLine("Minor Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Minor : " + test, true);
+            log.MakeLog("Minor Location: " + readFile.BaseStream.Position, true);
             
             testint = readFile.ReadUInt32(); 
             test = testint.ToString();
-            logging.WriteLine("Unknown: " + test, true);
-            logging.WriteLine("Unknown1 Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Unknown: " + test, true);
+            log.MakeLog("Unknown1 Location: " + readFile.BaseStream.Position, true);
             
             testint = readFile.ReadUInt32(); 
             test = testint.ToString();
-            logging.WriteLine("Unknown: " + test, true);
-            logging.WriteLine("Unknown2 Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Unknown: " + test, true);
+            log.MakeLog("Unknown2 Location: " + readFile.BaseStream.Position, true);
             
             testint = readFile.ReadUInt32();
             test = testint.ToString();
-            logging.WriteLine("Unknown : " + test, true);
-            logging.WriteLine("Unknown3 Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Unknown : " + test, true);
+            log.MakeLog("Unknown3 Location: " + readFile.BaseStream.Position, true);
             
             testint = readFile.ReadUInt32(); 
             test = testint.ToString();
-            logging.WriteLine("Created : " + test, true);
-            logging.WriteLine("Created Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Created : " + test, true);
+            log.MakeLog("Created Location: " + readFile.BaseStream.Position, true);
 
             testint = readFile.ReadUInt32();
             test = testint.ToString();
-            logging.WriteLine("Modified : " + test, true);
-            logging.WriteLine("Modified Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Modified : " + test, true);
+            log.MakeLog("Modified Location: " + readFile.BaseStream.Position, true);
             
             testint = readFile.ReadUInt32(); 
             test = testint.ToString();
-            logging.WriteLine("Index Major : " + test, true);
-            logging.WriteLine("Index Major Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Index Major : " + test, true);
+            log.MakeLog("Index Major Location: " + readFile.BaseStream.Position, true);
             */
             //entrycount
             
@@ -816,60 +813,60 @@ namespace SimsCCManager.Packages.Sims4Search
             readFile.BaseStream.Position = entrycountloc.Length;
 
             uint entrycount = readFile.ReadUInt32();
-            logging.WriteLine(string.Format("Entry Count: {0}", entrycount.ToString()), true);
-            logging.WriteLine("Entry Count Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog(string.Format("Entry Count: {0}", entrycount.ToString()), true);
+            log.MakeLog("Entry Count Location: " + readFile.BaseStream.Position, true);
             
             //record position low
             uint indexRecordPositionLow = readFile.ReadUInt32();
-            logging.WriteLine(string.Format("IndexRecordPositionLow: {0}", indexRecordPositionLow.ToString()), true);
-            logging.WriteLine("IndexRecordPositionLow Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog(string.Format("IndexRecordPositionLow: {0}", indexRecordPositionLow.ToString()), true);
+            log.MakeLog("IndexRecordPositionLow Location: " + readFile.BaseStream.Position, true);
             
             //index record size
             uint indexRecordSize = readFile.ReadUInt32();
-            logging.WriteLine(string.Format("IndexRecordSize: {0}", indexRecordSize.ToString()), true);
-            logging.WriteLine("IndexRecordSize Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog(string.Format("IndexRecordSize: {0}", indexRecordSize.ToString()), true);
+            log.MakeLog("IndexRecordSize Location: " + readFile.BaseStream.Position, true);
             /*
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
-            logging.WriteLine("Unused Trash Index offset: " + test, true);
-            logging.WriteLine("Unused Trash Index offset Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Unused Trash Index offset: " + test, true);
+            log.MakeLog("Unused Trash Index offset Location: " + readFile.BaseStream.Position, true);
             
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
-            logging.WriteLine("Unused Trash Index size: " + test, true);
-            logging.WriteLine("Unused Trash Index size Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Unused Trash Index size: " + test, true);
+            log.MakeLog("Unused Trash Index size Location: " + readFile.BaseStream.Position, true);
             
             //unused
             testint = readFile.ReadUInt32();
             test = testint.ToString();
-            logging.WriteLine("Unused Index Minor Version: " + test, true);
-            logging.WriteLine("Unused Index Minor Version Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Unused Index Minor Version: " + test, true);
+            log.MakeLog("Unused Index Minor Version Location: " + readFile.BaseStream.Position, true);
             
             //unused but 3 for historical reasons
             testint = readFile.ReadUInt32();
             test = testint.ToString();
-            logging.WriteLine("Unused, 3 for historical reasons: " + test, true);
-            logging.WriteLine("Unused, 3 for historical reasons Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Unused, 3 for historical reasons: " + test, true);
+            log.MakeLog("Unused, 3 for historical reasons Location: " + readFile.BaseStream.Position, true);
             */
             readFile.BaseStream.Position = indexRecordPositionloc.Length;
 
             ulong indexRecordPosition = readFile.ReadUInt64();
             test = indexRecordPosition.ToString();
-            logging.WriteLine("Index Record Position: " + test, true);
-            logging.WriteLine("Index Record Position Location: " + readFile.BaseStream.Position, true);
+            log.MakeLog("Index Record Position: " + test, true);
+            log.MakeLog("Index Record Position Location: " + readFile.BaseStream.Position, true);
             
             //unused
             //testint = readFile.ReadUInt32();
             //test = testint.ToString();
-            //logging.WriteLine("Unused Unknown:" + test, true);
-            //logging.WriteLine("Unused Unknown Location: " + readFile.BaseStream.Position, true);
+            //log.MakeLog("Unused Unknown:" + test, true);
+            //log.MakeLog("Unused Unknown Location: " + readFile.BaseStream.Position, true);
             
             //unused six bytes
             //test = Encoding.ASCII.GetString(readFile.ReadBytes(24));
-            //logging.WriteLine("Unused: " + test, true);
-            //logging.WriteLine("Unused4 Location: " + readFile.BaseStream.Position, true);
+            //log.MakeLog("Unused: " + test, true);
+            //log.MakeLog("Unused4 Location: " + readFile.BaseStream.Position, true);
             
             byte[] headersize = new byte[96];
             byte[] here = new byte[100];
@@ -886,7 +883,7 @@ namespace SimsCCManager.Packages.Sims4Search
             for (int i = 0; i < entrycount; i++){
                 indexEntry holderEntry = new indexEntry();                
                 holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
-                logging.WriteLine("P" + packageparsecount + "/E" + i + " - Index Entry TypeID: " + holderEntry.typeID, true);
+                log.MakeLog("P" + packageparsecount + "/E" + i + " - Index Entry TypeID: " + holderEntry.typeID, true);
 
                 if(TypeListings.AllTypesS4.Exists(x => x.typeID == holderEntry.typeID)){
                     foreach (typeList type in TypeListings.AllTypesS4){
@@ -901,30 +898,30 @@ namespace SimsCCManager.Packages.Sims4Search
                 
 
                 holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
-                logging.WriteLine("P" + packageparsecount + "/E" + i + " - Index Entry GroupID: " + holderEntry.groupID, true);
+                log.MakeLog("P" + packageparsecount + "/E" + i + " - Index Entry GroupID: " + holderEntry.groupID, true);
                 
                 string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
                 string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
                 holderEntry.instanceID = instanceid1 + instanceid2;
                 allInstanceIDs.Add(holderEntry.instanceID);
-                logging.WriteLine("P" + packageparsecount + "/E" + i + " - InstanceID: " + holderEntry.instanceID, true);
+                log.MakeLog("P" + packageparsecount + "/E" + i + " - InstanceID: " + holderEntry.instanceID, true);
 
                 uint testin = readFile.ReadUInt32();
                 holderEntry.position = (long)testin;
-                logging.WriteLine("P" + packageparsecount + "/E" + i + " - Position " + testin.ToString(), true);
+                log.MakeLog("P" + packageparsecount + "/E" + i + " - Position " + testin.ToString(), true);
 
                 holderEntry.fileSize = readFile.ReadUInt32();
 
-                logging.WriteLine("P" + packageparsecount + "/E" + i + " - File Size " + holderEntry.fileSize.ToString("X8"), true);
+                log.MakeLog("P" + packageparsecount + "/E" + i + " - File Size " + holderEntry.fileSize.ToString("X8"), true);
 
                 holderEntry.memSize = readFile.ReadUInt32();
-                logging.WriteLine("P" + packageparsecount + "/E" + i + " - Mem Size " + holderEntry.memSize.ToString("X8"), true);
+                log.MakeLog("P" + packageparsecount + "/E" + i + " - Mem Size " + holderEntry.memSize.ToString("X8"), true);
 
                 holderEntry.compressionType = readFile.ReadUInt16().ToString("X4");
-                logging.WriteLine("P" + packageparsecount + "/E" + i + " - Compression Type " + holderEntry.compressionType, true);
+                log.MakeLog("P" + packageparsecount + "/E" + i + " - Compression Type " + holderEntry.compressionType, true);
 
                 //readFile.ReadUInt16();
-                //logging.WriteLine("P" + packageparsecount + "/E" + i + " - Confirmed: " + testint.ToString("X4"), true);
+                //log.MakeLog("P" + packageparsecount + "/E" + i + " - Confirmed: " + testint.ToString("X4"), true);
 
                 readFile.BaseStream.Position = readFile.BaseStream.Position + 2;
 
@@ -933,13 +930,13 @@ namespace SimsCCManager.Packages.Sims4Search
                 holderEntry = null;
             }
 
-            logging.WriteLine("This package contains: ", true);
+            log.MakeLog("This package contains: ", true);
             foreach (fileHasList type in fileHas){
-                logging.WriteLine(type.term + " at location " + type.location, true);
+                log.MakeLog(type.term + " at location " + type.location, true);
             }
 
             if(fileHas.Exists(x => x.term == "S4SM")) {
-                logging.WriteLine("P" + packageparsecount + ": " + thisPackage.PackageName + " is a Merged Package and cannot be processed until it has been unmerged.", true);
+                log.MakeLog("P" + packageparsecount + ": " + thisPackage.PackageName + " is a Merged Package and cannot be processed until it has been unmerged.", true);
                 thisPackage.Type = "Merged Package";
             } else {
                 if ((fileHas.Exists(x => x.term == "CASP"))){
@@ -953,33 +950,33 @@ namespace SimsCCManager.Packages.Sims4Search
                     }    
                     int caspc = 0;
                     foreach (int e in entryspots){
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Opening CASP #" + caspc, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Opening CASP #" + caspc, true);
                         if (indexData[e].compressionType == "5A42"){
                         readFile.BaseStream.Position = indexData[e].position;
                         long entryEnd = indexData[e].position + indexData[e].memSize;
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
                         byte[] entry = readFile.ReadBytes((int)indexData[e].memSize);
                         Stream decomps = S4Decryption.Decompress(entry);
                         
                         BinaryReader decompbr = new BinaryReader(decomps);
 
                         uint version = decompbr.ReadUInt32();
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Version: " + version, true);
-                        logging.WriteLine("-- As hex: " + version.ToString("X8"), true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Version: " + version, true);
+                        log.MakeLog("-- As hex: " + version.ToString("X8"), true);
                         uint tgioffset = decompbr.ReadUInt32() +8;
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - TGI Offset: " + tgioffset, true);
-                        logging.WriteLine("-- As hex: " + tgioffset.ToString("X8"), true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - TGI Offset: " + tgioffset, true);
+                        log.MakeLog("-- As hex: " + tgioffset.ToString("X8"), true);
                         uint numpresets = decompbr.ReadUInt32();
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Number of Presets: " + numpresets, true);
-                        logging.WriteLine("-- As hex: " + numpresets.ToString("X8"), true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Number of Presets: " + numpresets, true);
+                        log.MakeLog("-- As hex: " + numpresets.ToString("X8"), true);
                         using (var reader = new BinaryReader(decomps, Encoding.BigEndianUnicode, true))
                         {
                             thisPackage.Title = reader.ReadString();
                         }                            
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Name: " + thisPackage.Title, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Name: " + thisPackage.Title, true);
 
                         if (dump == true){
                             distinctInstanceIDs = allInstanceIDs.Distinct().ToList();
@@ -990,33 +987,33 @@ namespace SimsCCManager.Packages.Sims4Search
                         } else {
                         
                         float sortpriority = decompbr.ReadSingle();
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Sort Priority: " + sortpriority, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Sort Priority: " + sortpriority, true);
 
                         int secondarySortIndex = decompbr.ReadUInt16();
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Secondary Sort Index: " + secondarySortIndex, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Secondary Sort Index: " + secondarySortIndex, true);
 
                         uint propertyid = decompbr.ReadUInt32();
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Property ID: " + propertyid, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Property ID: " + propertyid, true);
                         
                         uint auralMaterialHash = decompbr.ReadUInt32();
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Aural Material Hash: " + auralMaterialHash.ToString("X8"), true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Aural Material Hash: " + auralMaterialHash.ToString("X8"), true);
 
                         if (version <= 42){
-                            logging.WriteLine("Version is <= 42: " + version, true);
+                            log.MakeLog("Version is <= 42: " + version, true);
                             int[] parameterFlag = new int[1];
                             parameterFlag[0] = (int)decompbr.ReadUInt16();
                             BitArray parameterFlags = new BitArray(parameterFlag);
-                            logging.WriteLine(parameterFlags.Length.ToString(), true);
+                            log.MakeLog(parameterFlags.Length.ToString(), true);
                             for(int p = 0; p < 16; p++)
                             {
                                 if (parameterFlags[p] == true) {
                                     allFlags.Add(parameters[p]);
                                 }
-                                logging.WriteLine("Function Sort Flag [" + p + "] is " + parameters[p] + " and is " + parameterFlags[p].ToString(), true);
+                                log.MakeLog("Function Sort Flag [" + p + "] is " + parameters[p] + " and is " + parameterFlags[p].ToString(), true);
                             } 
                             
                         } else if (version >= 43){
-                            logging.WriteLine("Version is >= 43: " + version, true);
+                            log.MakeLog("Version is >= 43: " + version, true);
                             int[] parameterFlag = new int[1];
                             parameterFlag[0] = (int)decompbr.ReadUInt16();
                             BitArray parameterFlags = new BitArray(parameterFlag);
@@ -1025,26 +1022,26 @@ namespace SimsCCManager.Packages.Sims4Search
                                 if (parameterFlags[pfc] == true) {
                                     allFlags.Add(parameters[pfc]);
                                 }
-                                logging.WriteLine("Function Sort Flag [" + pfc + "] is: " + parameters[pfc] + " and is " + parameterFlags[pfc].ToString(), true);
+                                log.MakeLog("Function Sort Flag [" + pfc + "] is: " + parameters[pfc] + " and is " + parameterFlags[pfc].ToString(), true);
                             } 
                             
                         }
                             ulong excludePartFlags = decompbr.ReadUInt64();
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Exclude Part Flags: " + excludePartFlags.ToString("X16"), true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Exclude Part Flags: " + excludePartFlags.ToString("X16"), true);
                             ulong excludePartFlags2 = decompbr.ReadUInt64();
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Exclude Part Flags2: " + excludePartFlags2.ToString("X16"), true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Exclude Part Flags2: " + excludePartFlags2.ToString("X16"), true);
                             ulong excludeModifierRegionFlags = decompbr.ReadUInt64();
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Exclude Part Flags: " + excludeModifierRegionFlags.ToString("X16"), true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Exclude Part Flags: " + excludeModifierRegionFlags.ToString("X16"), true);
 
 
                         if (version >= 37){
-                            logging.WriteLine(">= 37", true);
+                            log.MakeLog(">= 37", true);
                             uint count = decompbr.ReadByte();
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Tag Count: " + count.ToString(), true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Tag Count: " + count.ToString(), true);
                             decompbr.ReadByte();
                             CASTag16Bit tags = new CASTag16Bit(decompbr, count);
                             for (int i = 0; i < count; i++){
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Function Sort Flag " + i + " value is: " + tags.tagKey[i], true);                                
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Function Sort Flag " + i + " value is: " + tags.tagKey[i], true);                                
                                 if (tags.tagKey[i] != 0){
                                     var tagKeyexists = from ID in TypeListings.S4BBFunctionTags
                                     where ID.typeID == tags.tagKey[i].ToString()
@@ -1055,44 +1052,44 @@ namespace SimsCCManager.Packages.Sims4Search
                                     select ID.typeID;
                                     bool catfound = catKeyexists.Any();
                                     if (tagfound == true){
-                                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - TagKey " + tags.tagKey[i] + " exists in database.", true);
+                                        log.MakeLog("P" + packageparsecount + "/E" + e + " - TagKey " + tags.tagKey[i] + " exists in database.", true);
                                         foreach (typeList item in TypeListings.S4BBFunctionTags){
                                             if(item.typeID == tags.tagKey[i].ToString()){
                                                 if ((itemtags.Exists(x => x.shortval == (short)tags.tagKey[i])) || (itemtags.Exists(x => x.stringval == tags.tagKey[i].ToString()))){
                                                     
                                                 } else {
                                                     itemtags.Add(new TagsList{ shortval = (short)tags.tagKey[i], stringval = item.info});
-                                                    logging.WriteLine("Tag " + i + " matched to " + item.info, true);
+                                                    log.MakeLog("Tag " + i + " matched to " + item.info, true);
                                                 }
                                             }
                                         }
 
                                     } else if (catfound == true) {
-                                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - CatKey " + tags.catKey[i] + " exists in database.", true);
+                                        log.MakeLog("P" + packageparsecount + "/E" + e + " - CatKey " + tags.catKey[i] + " exists in database.", true);
                                         foreach (typeList item in TypeListings.S4BBFunctionTags){
                                             if(item.typeID == tags.catKey[i].ToString()){
                                                 if ((itemtags.Exists(x => x.shortval == (short)tags.catKey[i])) || (itemtags.Exists(x => x.stringval == tags.catKey[i].ToString()))){
                                                     
                                                 } else {
                                                     itemtags.Add(new TagsList{ shortval = (short)tags.catKey[i], stringval = item.info});
-                                                    logging.WriteLine("Tag " + i + " matched to " + item.info, true);
+                                                    log.MakeLog("Tag " + i + " matched to " + item.info, true);
                                                 }
                                             }
                                         }
 
                                     } else {
                                         itemtags.Add(new TagsList{ shortval = (short)tags.tagKey[i], stringval = "Needs Identification"});
-                                        logging.WriteLine("Tag " + i + " has no match, adding it to json.", true);
+                                        log.MakeLog("Tag " + i + " has no match, adding it to json.", true);
                                     }
                                 }
                             }
                         } else {
                             uint count = decompbr.ReadByte();
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Tag Count: " + count.ToString(), true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Tag Count: " + count.ToString(), true);
                             decompbr.ReadByte();
                             CASTag16Bit tags = new CASTag16Bit(decompbr, count);
                             for (int i = 0; i < count; i++){
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Function Sort Flag " + i + " value is: " + tags.tagKey[i], true);                                
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Function Sort Flag " + i + " value is: " + tags.tagKey[i], true);                                
                                 if (tags.tagKey[i] != 0){
                                     var tagKeyexists = from ID in TypeListings.S4BBFunctionTags
                                     where ID.typeID == tags.tagKey[i].ToString()
@@ -1103,34 +1100,34 @@ namespace SimsCCManager.Packages.Sims4Search
                                     select ID.typeID;
                                     bool catfound = catKeyexists.Any();
                                     if (tagfound == true){
-                                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - TagKey " + tags.tagKey[i] + " exists in database.", true);
+                                        log.MakeLog("P" + packageparsecount + "/E" + e + " - TagKey " + tags.tagKey[i] + " exists in database.", true);
                                         foreach (typeList item in TypeListings.S4BBFunctionTags){
                                             if(item.typeID == tags.tagKey[i].ToString()){
                                                 if ((itemtags.Exists(x => x.shortval == (short)tags.tagKey[i])) || (itemtags.Exists(x => x.stringval == tags.tagKey[i].ToString()))){
                                                     
                                                 } else {
                                                     itemtags.Add(new TagsList{ shortval = (short)tags.tagKey[i], stringval = item.info});
-                                                    logging.WriteLine("Tag " + i + " matched to " + item.info, true);
+                                                    log.MakeLog("Tag " + i + " matched to " + item.info, true);
                                                 }
                                             }
                                         }
 
                                     } else if (catfound == true) {
-                                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - CatKey " + tags.catKey[i] + " exists in database.", true);
+                                        log.MakeLog("P" + packageparsecount + "/E" + e + " - CatKey " + tags.catKey[i] + " exists in database.", true);
                                         foreach (typeList item in TypeListings.S4BBFunctionTags){
                                             if(item.typeID == tags.catKey[i].ToString()){
                                                 if ((itemtags.Exists(x => x.shortval == (short)tags.catKey[i])) || (itemtags.Exists(x => x.stringval == tags.catKey[i].ToString()))){
                                                     
                                                 } else {
                                                     itemtags.Add(new TagsList{ shortval = (short)tags.catKey[i], stringval = item.info});
-                                                    logging.WriteLine("Tag " + i + " matched to " + item.info, true);
+                                                    log.MakeLog("Tag " + i + " matched to " + item.info, true);
                                                 }
                                             }
                                         }
 
                                     } else {
                                         itemtags.Add(new TagsList{ shortval = (short)tags.tagKey[i], stringval = "Needs Identification"});
-                                        logging.WriteLine("Tag " + i + " has no match.", true);
+                                        log.MakeLog("Tag " + i + " has no match.", true);
                                     }
                                 }
                             }
@@ -1139,16 +1136,16 @@ namespace SimsCCManager.Packages.Sims4Search
                             
 
                             uint simoleonprice = decompbr.ReadUInt32();
-                            logging.WriteLine("Simoleon Price: " + simoleonprice.ToString("X8"), true);
+                            log.MakeLog("Simoleon Price: " + simoleonprice.ToString("X8"), true);
                             uint partTitleKey = decompbr.ReadUInt32();
-                            logging.WriteLine("Part Title Key: " + partTitleKey.ToString("X8"), true);
+                            log.MakeLog("Part Title Key: " + partTitleKey.ToString("X8"), true);
                             uint partDescriptionKey = decompbr.ReadUInt32();
-                            logging.WriteLine("Part Description Key: " + partDescriptionKey.ToString("X8"), true);
+                            log.MakeLog("Part Description Key: " + partDescriptionKey.ToString("X8"), true);
                             if (version >= 43) {
                                 uint createDescriptionKey = decompbr.ReadUInt32();
                             }
                             int uniqueTextureSpace = decompbr.ReadByte();
-                            logging.WriteLine("Unique Texture Space: " + uniqueTextureSpace.ToString("X8"), true);
+                            log.MakeLog("Unique Texture Space: " + uniqueTextureSpace.ToString("X8"), true);
                             uint bodytype = decompbr.ReadUInt32();
                             bool foundmatch = false;
                             foreach (FunctionListing item in InitializedLists.S4BodyTypes){
@@ -1163,12 +1160,12 @@ namespace SimsCCManager.Packages.Sims4Search
                             if (foundmatch == false){
                                 thisPackage.Function = "Unidentified function (contact SinfulSimming). Code: " + bodytype.ToString();
                             }
-                            logging.WriteLine("Bodytype: " + bodytype.ToString(), true);
+                            log.MakeLog("Bodytype: " + bodytype.ToString(), true);
                             uint bodytypesubtype = decompbr.ReadUInt16();
-                            logging.WriteLine("Bodytype Subtype: " + bodytypesubtype.ToString(), true);
+                            log.MakeLog("Bodytype Subtype: " + bodytypesubtype.ToString(), true);
                             decompbr.ReadUInt32();                        
                             uint agflags = decompbr.ReadUInt32();
-                            logging.WriteLine("Age Gender Flags Value: " + agflags.ToString("X8"), true);
+                            log.MakeLog("Age Gender Flags Value: " + agflags.ToString("X8"), true);
 
                             string AGFlag = agflags.ToString("X8");
                             
@@ -1186,7 +1183,7 @@ namespace SimsCCManager.Packages.Sims4Search
                                 YoungAdult = false, 
                                 Female = false, 
                                 Male = false};
-                                logging.WriteLine("No age/gender flags present.", true);
+                                log.MakeLog("No age/gender flags present.", true);
                             } else if (AGFlag == "00000020") {
                                 agegenderset = new AgeGenderFlags{
                                 Adult = true, 
@@ -1199,7 +1196,7 @@ namespace SimsCCManager.Packages.Sims4Search
                                 YoungAdult = false, 
                                 Female = false, 
                                 Male = false};
-                                logging.WriteLine("Adult (nothing else)", true);
+                                log.MakeLog("Adult (nothing else)", true);
                             } else if (AGFlag == "00002020") {
                                 agegenderset = new AgeGenderFlags{
                                     Adult = true, 
@@ -1212,7 +1209,7 @@ namespace SimsCCManager.Packages.Sims4Search
                                 YoungAdult = false, 
                                 Female = true, 
                                 Male = false};
-                                logging.WriteLine("Adult Female", true);
+                                log.MakeLog("Adult Female", true);
                             } else if (AGFlag == "00020000") {
                                 agegenderset = new AgeGenderFlags{
                                     Adult = true, 
@@ -1225,7 +1222,7 @@ namespace SimsCCManager.Packages.Sims4Search
                                     YoungAdult = false, 
                                     Female = false, 
                                     Male = true};
-                                logging.WriteLine("Adult Male", true);
+                                log.MakeLog("Adult Male", true);
                             } else if (AGFlag == "00002078") {
                                 agegenderset = new AgeGenderFlags{
                                     Adult = true, 
@@ -1238,7 +1235,7 @@ namespace SimsCCManager.Packages.Sims4Search
                                     YoungAdult = true, 
                                     Female = true, 
                                     Male = false};
-                                logging.WriteLine("Adult/Elder/Teen, Female", true);
+                                log.MakeLog("Adult/Elder/Teen, Female", true);
                             } else if (AGFlag == "000030FF") {
                                 agegenderset = new AgeGenderFlags{
                                 Adult = true, 
@@ -1251,7 +1248,7 @@ namespace SimsCCManager.Packages.Sims4Search
                                 YoungAdult = true, 
                                 Female = true, 
                                 Male = true};
-                                logging.WriteLine("Everything", true);
+                                log.MakeLog("Everything", true);
                             } else if (AGFlag == "00003004") {
                                 agegenderset = new AgeGenderFlags{
                                 Adult = false, 
@@ -1264,7 +1261,7 @@ namespace SimsCCManager.Packages.Sims4Search
                                 YoungAdult = false, 
                                 Female = true, 
                                 Male = true};
-                                logging.WriteLine("Child of either gender", true);
+                                log.MakeLog("Child of either gender", true);
                             } else if (AGFlag == "00001078") {
                                 agegenderset = new AgeGenderFlags{
                                 Adult = true, 
@@ -1439,7 +1436,7 @@ namespace SimsCCManager.Packages.Sims4Search
                                 for(int p = 0; p < packFlags; p++)
                                 {
                                     bool check = decompbr.ReadBoolean();
-                                    logging.WriteLine("Pack Flag [" + p + "] is " + check.ToString(), true);
+                                    log.MakeLog("Pack Flag [" + p + "] is " + check.ToString(), true);
                                 } 
                                 byte[] reserved2 = decompbr.ReadBytes(9);
                             }
@@ -1475,22 +1472,22 @@ namespace SimsCCManager.Packages.Sims4Search
                     }    
                     int cobjc = 0;
                     foreach (int e in entryspots){
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Opening COBJ #" + cobjc, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Opening COBJ #" + cobjc, true);
                         if (indexData[e].compressionType == "5A42"){                                
                                 //var here = readFile.BaseStream.Position;
                                 readFile.BaseStream.Position = indexData[e].position;
                                 //dbpfFile.Seek(, SeekOrigin.Begin);                            
                                 int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
                                 byte[] entry = readFile.ReadBytes((int)indexData[e].memSize);
                                 Stream decomps = S4Decryption.Decompress(entry);
                                 
                                 BinaryReader decompbr = new BinaryReader(decomps);                           
                                 
-                                ReadCOBJ rc = new ReadCOBJ(decompbr, packageparsecount, e, itemtags, logging);
+                                ReadCOBJ rc = new ReadCOBJ(decompbr, packageparsecount, e, itemtags);
 
                                 if((!allGUIDS.Contains(rc.GUID)) && rc.GUID != "null"){
                                     allGUIDS.Add(rc.GUID);
@@ -1508,11 +1505,11 @@ namespace SimsCCManager.Packages.Sims4Search
                             //dbpfFile.Seek(, SeekOrigin.Begin); 
                             readFile.BaseStream.Position = indexData[e].position;                           
                             int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
-                            logging.WriteLine("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
-                            ReadCOBJ rc = new ReadCOBJ(readFile, packageparsecount, e, itemtags, logging);                            
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
+                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
+                            ReadCOBJ rc = new ReadCOBJ(readFile, packageparsecount, e, itemtags);                            
                             if((!allGUIDS.Contains(rc.GUID)) && rc.GUID != "null"){
                                 allGUIDS.Add(rc.GUID);
                             }
@@ -1543,40 +1540,40 @@ namespace SimsCCManager.Packages.Sims4Search
                     }    
                     int objdc = 0;
                     foreach (int e in entryspots){
-                        logging.WriteLine("P" + packageparsecount + "/E" + e + " - Opening OBJD #" + objdc, true);
+                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Opening OBJD #" + objdc, true);
                         if (indexData[e].compressionType == "5A42"){
                                 //dbpfFile.Seek(, SeekOrigin.Begin);
                                 //var here = readFile.BaseStream.Position;
                                 readFile.BaseStream.Position = indexData[e].position;                       
                                 int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
                                 byte[] entry = readFile.ReadBytes((int)indexData[e].memSize);
                                 Stream decomps = S4Decryption.Decompress(entry);
                                 
                                 BinaryReader decompbr = new BinaryReader(decomps);
 
-                                ReadOBJDIndex readOBJD = new ReadOBJDIndex(decompbr, logging);
-                                logging.WriteLine("There are " + readOBJD.count + " entries to read.", true);
+                                ReadOBJDIndex readOBJD = new ReadOBJDIndex(decompbr);
+                                log.MakeLog("There are " + readOBJD.count + " entries to read.", true);
                                 objdentries = new string[readOBJD.count];
                                 objdpositions = new int[readOBJD.count];
                                 for (int f = 0; f < readOBJD.count; f++){
-                                    logging.WriteLine("Entry " + f + ": ", true);
-                                    logging.WriteLine("--- Type: " + readOBJD.entrytype[f].ToString("X8"), true);
+                                    log.MakeLog("Entry " + f + ": ", true);
+                                    log.MakeLog("--- Type: " + readOBJD.entrytype[f].ToString("X8"), true);
                                     objdentries[f] = readOBJD.entrytype[f].ToString();
                                     objdpositions[f] = (int)readOBJD.position[f];
-                                    logging.WriteLine("--- Position " + readOBJD.position[f], true);
+                                    log.MakeLog("--- Position " + readOBJD.position[f], true);
                                 }
-                                logging.WriteLine("P" + packageparsecount + "/E" + e + " - Reader is at " + decompbr.BaseStream.Position, true);
+                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Reader is at " + decompbr.BaseStream.Position, true);
                                 decompbr.BaseStream.Position = readOBJD.position[0];
-                                ReadOBJDEntry readobjdentry = new ReadOBJDEntry(decompbr, objdentries, objdpositions, logging);
+                                ReadOBJDEntry readobjdentry = new ReadOBJDEntry(decompbr, objdentries, objdpositions);
                                 thisPackage.Title = readobjdentry.name;
-                                logging.WriteLine("Adding components to package: ", true);
+                                log.MakeLog("Adding components to package: ", true);
                                 for (int c = 0; c < readobjdentry.componentcount; c++){
-                                    logging.WriteLine(readobjdentry.components[c].ToString(), true);
-                                    logging.WriteLine(readobjdentry.components[c].ToString("X8"), true);
+                                    log.MakeLog(readobjdentry.components[c].ToString(), true);
+                                    log.MakeLog(readobjdentry.components[c].ToString("X8"), true);
                                     thisPackage.Components.Add(readobjdentry.components[c].ToString("X8"));
                                 }
                                 foreach (string m in readobjdentry.model) {
@@ -1613,17 +1610,17 @@ namespace SimsCCManager.Packages.Sims4Search
 
 
 
-            logging.WriteLine("All methods complete, moving on to getting info.", true);
+            log.MakeLog("All methods complete, moving on to getting info.", true);
 
             List<TypeCounter> typecount = new List<TypeCounter>();
             var typeDict = new Dictionary<string, int>();
 
-            logging.WriteLine("Making dictionary.", true);
+            log.MakeLog("Making dictionary.", true);
 
             foreach (fileHasList item in fileHas){
                 foreach (typeList type in TypeListings.AllTypesS4){
                     if (type.desc == item.term){
-                        logging.WriteLine("Added " + type.desc + " to dictionary.", true);
+                        log.MakeLog("Added " + type.desc + " to dictionary.", true);
                         typeDict.Increment(type.desc);
                     }
                 }
@@ -1633,7 +1630,7 @@ namespace SimsCCManager.Packages.Sims4Search
                 TypeCounter tc = new TypeCounter();
                 tc.Type = type.Key;
                 tc.Count = type.Value;
-                logging.WriteLine("There are " + tc.Count + " of " + tc.Type + " in this package.", true);
+                log.MakeLog("There are " + tc.Count + " of " + tc.Type + " in this package.", true);
                 typecount.Add(tc);
             }
 
@@ -1660,7 +1657,7 @@ namespace SimsCCManager.Packages.Sims4Search
 
             
                      
-            logging.WriteLine("P" + packageparsecount + ": Checking " + thisPackage.PackageName + " against override IDs.", true);
+            log.MakeLog("P" + packageparsecount + ": Checking " + thisPackage.PackageName + " against override IDs.", true);
             
             
 
@@ -1744,60 +1741,62 @@ namespace SimsCCManager.Packages.Sims4Search
             });
             
             if (thisPackage.Override != true){
-                logging.WriteLine("No overrides were found. Checking other options.", true);
+                log.MakeLog("No overrides were found. Checking other options.", true);
                 if ((typeDict.TryGetValue("S4SM", out ssm) && ssm >= 1)){
                 thisPackage.Type = "Merged Package";
-                logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
-                } else if ((typeDict.TryGetValue("BGEO", out bgeo) && bgeo >= 1) && (typeDict.TryGetValue("HOTC", out hotc) && hotc >= 1) && (typeDict.TryGetValue("SMOD", out smod) && smod >= 1)){
+                log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                } else if (!String.IsNullOrWhiteSpace(thisPackage.Function)) {
+                    thisPackage.Type = thisPackage.Function;
+                }else if ((typeDict.TryGetValue("BGEO", out bgeo) && bgeo >= 1) && (typeDict.TryGetValue("HOTC", out hotc) && hotc >= 1) && (typeDict.TryGetValue("SMOD", out smod) && smod >= 1)){
                     thisPackage.Type = "Slider";
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("BOND", out bond) && bond >= 1) && (typeDict.TryGetValue("CPRE", out cpre) && cpre >= 1) && (typeDict.TryGetValue("DMAP", out dmap) && dmap >= 1) && (typeDict.TryGetValue("SMOD", out smod) && smod >= 1)){
                     thisPackage.Type = "Preset";
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0)){
                     thisPackage.Type = "CAS Recolor";
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("LRLE", out lrle) && lrle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0)){
                     thisPackage.Type = "Makeup";
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("CASP", out casp) && casp <= 0) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1) && (typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("RMAP", out rmap) && rmap >= 1) && (typeDict.TryGetValue("_IMG", out img) && img <= 0)){
                     thisPackage.Type = "Hair Mesh";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = false;
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0) && (typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("RMAP", out rmap) && rmap >= 1) && (typeDict.TryGetValue("_IMG", out img) && img >= 1)){
                     thisPackage.Type = "Hair Recolor";
                     thisPackage.Mesh = false;
                     thisPackage.Recolor = true;
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1) && (typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("RMAP", out rmap) && rmap >= 1) && (typeDict.TryGetValue("_IMG", out img) && img >= 1)){
                     thisPackage.Type = "Hair";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = true;
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("_XML", out xml) && xml >= 1) && (typeDict.TryGetValue("CLHD", out clhd) && clhd >= 1) && (typeDict.TryGetValue("CLIP", out clip) && clip >= 1) && (typeDict.TryGetValue("STBL", out stbl) && stbl >= 1)){
                     thisPackage.Type = "Pose Pack";
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("COBJ", out cobj) && cobj >= 1) && (typeDict.TryGetValue("FTPT", out ftpt) && ftpt >= 1) && (typeDict.TryGetValue("MLOD", out mlod) && mlod >= 1) && (typeDict.TryGetValue("MODL", out modl) && modl >= 1) && (typeDict.TryGetValue("MTBL", out mtbl) && mtbl <= 0)  && (typeDict.TryGetValue("_IMG", out img) && img <= 0) && (typeDict.TryGetValue("OBJD", out objd) && objd >= 1)){
                     thisPackage.Type = "Object Mesh";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = false;
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("COBJ", out cobj) && cobj >= 1) && (typeDict.TryGetValue("FTPT", out ftpt) && ftpt >= 1) && (typeDict.TryGetValue("MLOD", out mlod) && mlod >= 1) && (typeDict.TryGetValue("MODL", out modl) && modl >= 1) && (typeDict.TryGetValue("MTBL", out mtbl) && mtbl >= 1) && (typeDict.TryGetValue("OBJD", out objd) && objd <= 0)){
                     thisPackage.Type = "Object Recolor";
                     thisPackage.Mesh = false;
                     thisPackage.Recolor = true;
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("COBJ", out cobj) && cobj >= 1) && (typeDict.TryGetValue("FTPT", out ftpt) && ftpt >= 1) && (typeDict.TryGetValue("MLOD", out mlod) && mlod >= 1) && (typeDict.TryGetValue("MODL", out modl) && modl >= 1) && (typeDict.TryGetValue("MTBL", out mtbl) && mtbl >= 1) && (typeDict.TryGetValue("OBJD", out objd) && objd >= 1)){
                     thisPackage.Type = "Object";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = true;
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else if ((typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1)){
                     thisPackage.Type = "CAS Part";
-                    logging.WriteLine("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
                 } else {
-                    logging.WriteLine("Unable to identify package.", true);
+                    log.MakeLog("Unable to identify package.", true);
                     thisPackage.Type = "UNKNOWN";
                 }
             }
@@ -1807,22 +1806,22 @@ namespace SimsCCManager.Packages.Sims4Search
 
             
 
-            logging.WriteLine("In thisPackage: " + thisPackage.ToString(), true);
-            logging.WriteLine(thisPackage.ToString(), false);
+            log.MakeLog("In thisPackage: " + thisPackage.ToString(), true);
+            log.MakeLog(thisPackage.ToString(), false);
             //Containers.Containers.allSimsPackages.Add(thisPackage);
             GlobalVariables.DatabaseConnection.Insert(thisPackage, typeof(SimsPackage));
             txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", packageinfo.Name);
-            queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
-            query = queries[0];
-            GlobalVariables.DatabaseConnection.Delete(query);
-            logging.Flush();
-            logging.Close();
-            var read = new StreamReader(logfile);
-            string logdata = read.ReadToEnd();
-            log.MakeLog(logdata, true);
-            File.Delete(logfile);
+            var closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            
+            GlobalVariables.DatabaseConnection.Delete(closingquery[0]);            
             readFile.Dispose();
             dbpfFile.Dispose();
+            sw.Stop();
+            TimeSpan ts = sw.Elapsed;
+            string elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                                ts.Hours, ts.Minutes, ts.Seconds,
+                                ts.Milliseconds / 10);
+            log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime), true);
             //cwl = string.Format("Closing package # {0}/{1}: {3}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
             //Console.WriteLine(cwl);
         }

@@ -11,7 +11,5 @@
 [assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("data/s4bbtags.json")]
 [assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("data/s4_instances.sqlite")]
 [assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("data/s4_specificoverrides.sqlite")]
-[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("e_sqlite3.dll")]
-[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("e_sqlite3.dll")]
 
 
