@@ -919,64 +919,57 @@ namespace Sims_CC_Sorter
             mainProgressBar.Maximum = maxi;
             countprogress = 0;                
             ConcurrentQueue<Task> ProcessPackages = new ConcurrentQueue<Task>();
-            Task processpackages = Task.Run(() => {
+
+            foreach (PackageFile file in pending2) {
                 if (token.IsCancellationRequested)
                 {
                     log.MakeLog("Process cancelled.", true);
                     stop = true;
                     return;
                 }
-                foreach (PackageFile file in pending2) {
-                    if (token.IsCancellationRequested)
-                    {
-                        log.MakeLog("Process cancelled.", true);
-                        stop = true;
-                        return;
-                    }
-                    log.MakeLog(string.Format("Processing Sims 2 file: {0}", file.Name), true);
-                    Task task = RunLimitedNumberAtATime(threadstouse, Enumerable.Range(1, 100), x => Task.Factory.StartNew(() => {
-                        window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
-                        window.Dispatcher.Invoke(new Action(() => countprogress++));
-                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
-                        s2packs.SearchS2Packages(file.Location);                        
-                    }, TaskCreationOptions.LongRunning));
+                log.MakeLog(string.Format("Processing Sims 2 file: {0}", file.Name), true);
+                Task task = RunLimitedNumberAtATime(threadstouse, Enumerable.Range(1, 100), x => Task.Factory.StartNew(() => {
+                    window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
+                    window.Dispatcher.Invoke(new Action(() => countprogress++));
+                    window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                    s2packs.SearchS2Packages(file.Location);                        
+                }, TaskCreationOptions.LongRunning));
+            }
+            foreach (PackageFile file in pending3) {
+                if (token.IsCancellationRequested)
+                {
+                    log.MakeLog("Process cancelled.", true);
+                    stop = true;
+                    return;
                 }
-                foreach (PackageFile file in pending3) {
-                    if (token.IsCancellationRequested)
-                    {
-                        log.MakeLog("Process cancelled.", true);
-                        stop = true;
-                        return;
-                    }
-                    log.MakeLog(string.Format("Processing Sims 3 file: {0}", file.Name), true);
-                    /*ProcessPackages.Enqueue(Task.Run(() => {
-                        window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
-                        window.Dispatcher.Invoke(new Action(() => countprogress++));
-                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
-                        s3packs.SearchS3Packages(file.Location);                        
-                    }));*/                    
+                log.MakeLog(string.Format("Processing Sims 3 file: {0}", file.Name), true);
+                /*ProcessPackages.Enqueue(Task.Run(() => {
+                    window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
+                    window.Dispatcher.Invoke(new Action(() => countprogress++));
+                    window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                    s3packs.SearchS3Packages(file.Location);                        
+                }));*/                    
+            }
+            foreach (PackageFile file in pending4) {
+                if (token.IsCancellationRequested)
+                {
+                    log.MakeLog("Process cancelled.", true);
+                    stop = true;
+                    return;
                 }
-                foreach (PackageFile file in pending4) {
-                    if (token.IsCancellationRequested)
-                    {
-                        log.MakeLog("Process cancelled.", true);
-                        stop = true;
-                        return;
-                    }
-                    log.MakeLog(string.Format("Processing Sims 4 file: {0}", file.Name), true);
-                    Task task = RunLimitedNumberAtATime(threadstouse, Enumerable.Range(1, 100), x => Task.Factory.StartNew(() => {
-                        window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
-                        window.Dispatcher.Invoke(new Action(() => countprogress++));
-                        window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
-                        s4packs.SearchS4Packages(file.Location, false);                        
-                    }, TaskCreationOptions.LongRunning));
-                }
-            });
+                log.MakeLog(string.Format("Processing Sims 4 file: {0}", file.Name), true);
+                Task task = RunLimitedNumberAtATime(threadstouse, Enumerable.Range(1, 100), x => Task.Factory.StartNew(() => {
+                    window.Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - Reading {2}", countprogress, maxi, file.Name)));
+                    window.Dispatcher.Invoke(new Action(() => countprogress++));
+                    window.Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
+                    s4packs.SearchS4Packages(file.Location, false);                        
+                }, TaskCreationOptions.LongRunning));
+            }
             
             
             if (!token.IsCancellationRequested) {
                 log.MakeLog("Awaiting package reading to finish.", true);
-                await(processpackages);
+                //await(processpackages);
                 completionAlertValue("Done!");
                 textCurrentPk.Text = "";
                 mainProgressBar.Value = maxi;
