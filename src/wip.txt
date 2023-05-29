@@ -1,15 +1,9 @@
 Next steps:
 
-- Integrate into App -- done 
 - make it auto rename
-- fill the rest of the types in
 - see how moving files is set up
 - compare guids for missing meshes
 
-today:
-- copy working cs files back to console
-- set up auto-moving in console (move each game type into own folder)
-- finish setting up which game is which
-- try finding out what sims 4 packages are which?
+consider: packages section of db as, well, indexed db? and non-indexed go elsewhere? dunno
 
-- get data grid working -.- - DONE
+save file size. if size changes, rescan? save location; if it goes away, remove
