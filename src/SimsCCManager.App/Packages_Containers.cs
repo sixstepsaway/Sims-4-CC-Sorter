@@ -87,6 +87,8 @@ namespace SimsCCManager.Packages.Containers
         public string Description {get; set;}
         [Column ("Location")]
         public string Location {get; set;}
+        [Column("File Size")]
+        public long FileSize {get; set;}
         [Column ("PackageName")]
         [Indexed]
         public string PackageName {get; set;}

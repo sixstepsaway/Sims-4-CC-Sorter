@@ -53,13 +53,13 @@ namespace SimsCCManager.Packages.Sims2Search
             Stopwatch sw = new Stopwatch();
             sw.Start();
             log.MakeLog(string.Format("File {0} arrived for processing as Sims 2 file.", packageinfo.Name), true);
-            var txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", packageinfo.Name);
+            string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
             var queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
             var query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
             var pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
             GlobalVariables.DatabaseConnection.Insert(pk);
-            var packageparsecount = GlobalVariables.packagesRead;         
+            var packageparsecount = GlobalVariables.packagesRead;  
             //Vars for Package Info
             string typefound = "";
             string instanceID2;
@@ -112,7 +112,8 @@ namespace SimsCCManager.Packages.Sims2Search
             //create readers              
             //MemoryStream dbpfFile = Methods.ReadBytesToFile(packageinfo.FullName);
             //BinaryReader readFile = new BinaryReader(dbpfFile);
-
+    
+            thisPackage.FileSize = packageinfo.Length;   
             thisPackage.PackageName = packageinfo.Name;
             thisPackage.Game = 2;
             
@@ -914,7 +915,7 @@ namespace SimsCCManager.Packages.Sims2Search
             log.MakeLog(string.Format("Adding {0} to packages database.", thisPackage.PackageName), true);
             GlobalVariables.DatabaseConnection.Insert(thisPackage);
             log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
-            txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", thisPackage.PackageName);
+            txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
             var closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
             GlobalVariables.DatabaseConnection.Delete(closingquery[0]);
 

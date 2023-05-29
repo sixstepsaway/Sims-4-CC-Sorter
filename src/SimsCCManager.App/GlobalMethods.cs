@@ -11,9 +11,8 @@ using System.Reflection;
 using SimsCCManager.Packages.Containers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using SQLite;
-
-
+using SQLitePCL;
+using System.Text.RegularExpressions;
 
 namespace SSAGlobals {
 
@@ -863,11 +862,11 @@ namespace SSAGlobals {
         /// Cache locations. May be merged in with Globals now databases are being used.
         /// </summary>
         public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);        
-        public static string SimsCCManagerFolder = mydocs + "\\Sims CC Manager";
-        public static string docsDataFolder = mydocs + "\\Sims CC Manager\\data";
-        public static string mainSaveData = docsDataFolder + "\\PackageCache.db";
-        public static string cacheFolder = SimsCCManagerFolder + "\\Cache";
-        public static string database = docsDataFolder + "\\packagedata.sqlite";
+        public static string SimsCCManagerFolder = Path.Combine(mydocs, "Sims CC Manager");
+        public static string docsDataFolder = Path.Combine(mydocs, "Sims CC Manager\\data");
+        public static string mainSaveData = Path.Combine(docsDataFolder, "packagedata.sqlite");
+        public static string cacheFolder = Path.Combine(SimsCCManagerFolder, "Cache");
+        public static string database = Path.Combine(docsDataFolder, "packagedata.sqlite");
     }
 
     public class CacheLocations {
@@ -887,22 +886,15 @@ namespace SSAGlobals {
         public static bool firstrunmain = true;
         public static bool firstrundebug = true;
         public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        public static string internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
-        private static string debuglog = internalLogFolder + "\\debug.log";
+        public static string internalLogFolder = Path.Combine(mydocs, "Sims CC Manager\\logs");
+        private static string debuglog = Path.Combine(internalLogFolder, "debug.log");
         static ReaderWriterLock locker = new ReaderWriterLock();
         //Function for logging to the logfile set at the start of the program
-        public void InitializeLog() {
-            if (GlobalVariables.consolevr == true){
-                internalLogFolder = "\\log\\";
-                debuglog = internalLogFolder + "\\debug.log";
-            } else {
-                internalLogFolder = mydocs + "\\Sims CC Manager\\logs";
-                debuglog = internalLogFolder + "\\debug.log";
-            }
+        public void InitializeLog() {            
             Methods.MakeFolder(SaveData.cacheFolder);
-            Methods.MakeFolder(mydocs + "\\Sims CC Manager\\data");
+            Methods.MakeFolder(Path.Combine(mydocs, "Sims CC Manager\\data"));
             StreamWriter addToInternalLog = new StreamWriter (debuglog, append: false);
-            addToInternalLog.WriteLine("Initializing internal log file.");
+            addToInternalLog.WriteLine("Initializing debug log file.");
             addToInternalLog.Close();
             StreamWriter addToLog = new StreamWriter (GlobalVariables.logfile, append: false);
             addToLog.WriteLine("Initializing log file.");
@@ -918,7 +910,7 @@ namespace SSAGlobals {
                    try
                     {
                         time = DateTime.Now.ToString("h:mm:ss tt");
-                        statement = "[L" + lineNumber + " | " + filepath.Name + "] " + time + ": " + Statement;
+                        statement = string.Format("[L{0} | {1}] {2}: {3}", lineNumber, filepath.Name, time, Statement);
                         locker.AcquireWriterLock(int.MaxValue); 
                         System.IO.File.AppendAllLines(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""), debuglog), new[] { statement });
                     }
@@ -931,7 +923,7 @@ namespace SSAGlobals {
                 try
                 {
                     time = DateTime.Now.ToString("h:mm:ss tt");
-                    statement = time + ": " + Statement;
+                    statement = string.Format("{0}: {1}", time, Statement);
                     locker.AcquireWriterLock(int.MaxValue); 
                     System.IO.File.AppendAllLines(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""), GlobalVariables.logfile), new[] { statement });
                 }
@@ -965,6 +957,16 @@ namespace SSAGlobals {
                 
             }
             finally {}
+        }
+
+        public static string FixApostrophesforSQL(string input){
+            string output = "";
+            string pattern = @"'";
+            string replace = @"''";
+
+            output = Regex.Replace(input, pattern, replace);            
+
+            return output;
         }
 
         public static MemoryStream ReadBytesToFile(string file){

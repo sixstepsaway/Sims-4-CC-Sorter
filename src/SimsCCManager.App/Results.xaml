@@ -43,7 +43,7 @@
                 </Button>
             </StackPanel>
                    
-            <DataGrid Visibility="Visible" x:Name="ResultsDataGridPackages" SelectionUnit="FullRow" CanUserAddRows="False" CanUserDeleteRows="False" Style="{StaticResource ResultsDataGridStyle}" ItemsSource="{Binding resultspackageslist}" AutoGenerateColumns="false" Grid.Column="1" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible" VirtualizingStackPanel.IsVirtualizing="true" VirtualizingStackPanel.VirtualizationMode="Recycling" VirtualizingPanel.IsVirtualizingWhenGrouping="True" MaxHeight="999999999" MaxWidth="999999999" Grid.Row="1">
+            <DataGrid Visibility="Visible" x:Name="ResultsDataGridPackages" SelectionUnit="FullRow"  CanUserAddRows="False" CanUserDeleteRows="False" Style="{StaticResource ResultsDataGridStyle}" ItemsSource="{Binding resultspackageslist}" AutoGenerateColumns="false" Grid.Column="1" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible" VirtualizingStackPanel.IsVirtualizing="true" VirtualizingStackPanel.VirtualizationMode="Recycling" VirtualizingPanel.IsVirtualizingWhenGrouping="True" MaxHeight="999999999" MaxWidth="999999999" Grid.Row="1">
                 <DataGrid.Columns>
                     <DataGridCheckBoxColumn Header="" Binding="{Binding selected}" Width="5"/>
                     <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>                     

@@ -23,6 +23,7 @@ using SimsCCManager.Packages.Containers;
 using SimsCCManager.Packages.Decryption;
 using System.Data.SQLite;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace SimsCCManager.Packages.Sims4Search
 {
@@ -769,8 +770,8 @@ namespace SimsCCManager.Packages.Sims4Search
         public void SearchS4Packages(BinaryReader readFile, FileInfo packageinfo) {
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            log.MakeLog(string.Format("File {0} arrived for processing as Sims 4 file.", packageinfo.Name), true);
-            var txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", packageinfo.Name);
+            log.MakeLog(string.Format("File {0} arrived for processing as Sims 4 file.", packageinfo.Name), true);            
+            string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
             var queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
             var query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
@@ -779,6 +780,7 @@ namespace SimsCCManager.Packages.Sims4Search
             var packageparsecount = GlobalVariables.packagesRead;   
             log.MakeLog("Got package parse count.", true);   
             log.MakeLog("Incrementing packages read.", true);
+            
                      
         
             //Misc Vars
@@ -786,8 +788,8 @@ namespace SimsCCManager.Packages.Sims4Search
             
             //locations
 
-            byte[] entrycountloc = new byte[36];
-            byte[] indexRecordPositionloc = new byte[64];
+            long entrycountloc = 36;
+            long indexRecordPositionloc = 64;
 
             SimsPackage thisPackage = new SimsPackage();          
 
@@ -821,12 +823,13 @@ namespace SimsCCManager.Packages.Sims4Search
             thisPackage.PackageName = packageinfo.Name;
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 4;
+            thisPackage.FileSize = packageinfo.Length;
             log.MakeLog(string.Format("Package #{0} registered as {1} and meant for Sims 4", packageparsecount, packageinfo.FullName), true);
 
             //start actually reading the package             
             //entrycount
 
-            readFile.BaseStream.Position = entrycountloc.Length;
+            readFile.BaseStream.Position = entrycountloc;
 
             uint entrycount = readFile.ReadUInt32();
             log.MakeLog(string.Format("Entry Count: {0}", entrycount.ToString()), true);
@@ -840,28 +843,34 @@ namespace SimsCCManager.Packages.Sims4Search
             uint indexRecordSize = readFile.ReadUInt32();
             log.MakeLog(string.Format("IndexRecordSize: {0}", indexRecordSize.ToString()), true);
             
-            readFile.BaseStream.Position = indexRecordPositionloc.Length;
+            readFile.BaseStream.Position = indexRecordPositionloc;
 
             ulong indexRecordPosition = readFile.ReadUInt64();
             log.MakeLog(string.Format("Index Record Position: {0}", indexRecordPosition.ToString()), true);
             
                         
             byte[] headersize = new byte[96];
-            byte[] here = new byte[100];
+            long here = 100;
             long movedto = 0;
             if (indexRecordPosition != 0){
                 long indexseek = (long)indexRecordPosition - headersize.Length;
-                movedto = here.Length + indexseek;
-                readFile.BaseStream.Position = here.Length + indexseek;                
+                movedto = here + indexseek;
+                readFile.BaseStream.Position = here + indexseek;                
             } else {
-                movedto = here.Length + indexRecordPositionLow;
-                readFile.BaseStream.Position = here.Length + indexRecordPositionLow;
+                movedto = here + indexRecordPositionLow;
+                readFile.BaseStream.Position = here + indexRecordPositionLow;
             }
             
-            byte[] movedhere = new byte[readFile.BaseStream.Position];
+            long movedhere = readFile.BaseStream.Position;
             uint testpos = readFile.ReadUInt32();
             if (testpos != 0){
+                log.MakeLog(string.Format("Read first entry TypeID and it read as {0}, returning to read entries.", testpos.ToString("X8")), true);
                 readFile.BaseStream.Position = movedto;
+            } else if (testpos == 80000000) {
+                long moveback = movedhere - 4;
+                readFile.BaseStream.Position = moveback;
+            } else {
+                log.MakeLog(string.Format("Read first entry TypeID and it read as {0}, moving forward.", testpos.ToString("X8")), true);
             }
             
 
@@ -869,6 +878,26 @@ namespace SimsCCManager.Packages.Sims4Search
                 indexEntry holderEntry = new indexEntry();                
                 holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
                 log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, i, holderEntry.typeID), true);
+
+                if (holderEntry.typeID == "7FB6AD8A"){
+                    thisPackage.Type = "Merged Package";
+                    GlobalVariables.DatabaseConnection.Insert(thisPackage);
+                    log.MakeLog(string.Format("Package {0} is a merged package, and cannot be processed in this manner right now. Package will either need unmerging or to be sorted manually.", thisPackage.Location), false);
+                    log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
+                    txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
+                    var mergedquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);                    
+                    GlobalVariables.DatabaseConnection.Delete(mergedquery[0]);            
+                    readFile.Dispose();
+                    sw.Stop();
+                    TimeSpan tss = sw.Elapsed;
+                    string elapsedtimee = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                                        tss.Hours, tss.Minutes, tss.Seconds,
+                                        tss.Milliseconds / 10);
+                    log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtimee), true);
+                    GlobalVariables.packagesRead++;
+                    log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
+                    return;
+                }
 
                 if(TypeListings.AllTypesS4.Exists(x => x.typeID == holderEntry.typeID)){
                     var tid = from types in TypeListings.AllTypesS4
@@ -1726,9 +1755,8 @@ namespace SimsCCManager.Packages.Sims4Search
             log.MakeLog(string.Format("Adding {0} to packages database.", thisPackage.PackageName), true);
             GlobalVariables.DatabaseConnection.Insert(thisPackage);
             log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
-            txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", packageinfo.Name);
-            var closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
-            
+            txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
+            var closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);            
             GlobalVariables.DatabaseConnection.Delete(closingquery[0]);            
             readFile.Dispose();
             //dbpfFile.Dispose();
