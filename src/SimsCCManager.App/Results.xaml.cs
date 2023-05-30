@@ -27,6 +27,8 @@ using SimsCCManager.Packages.Containers;
 using SimsCCManager.App.PreviewImage;
 using System.Data.SQLite;
 using System.Data;
+using System.Threading;
+using SQLiteNetExtensions.Extensions;
 
 namespace SimsCCManager.SortingUIResults {
     /// <summary>
@@ -40,52 +42,29 @@ namespace SimsCCManager.SortingUIResults {
         private DataTable packagesDataTable = new DataTable();
         private DataTable allFilesDataTable = new DataTable();
         //public static ObservableCollection<SimsPackage> resultspackageslist = new ObservableCollection<SimsPackage>();
+        CancellationTokenSource cts = new CancellationTokenSource();
+        GridViewColumnHeader _lastHeaderClicked = null;
+        ListSortDirection _lastDirection = ListSortDirection.Ascending;
         
-        public ResultsWindow() 
+        public ResultsWindow(CancellationTokenSource cts) 
         {
+            this.cts = cts;
             log.MakeLog("Initializing results window.", true);
             InitializeComponent(); 
             log.MakeLog("Running results grid method.", true); 
+            Loaded += ResultsWindow_Loaded;
+            DataContext = new PackagesViewModel(); 
+        }     
+
+        private void ResultsWindow_Loaded(object sender, RoutedEventArgs e)
+        {
             
-
-            var con = new SQLiteConnection(GlobalVariables.PackagesReadDS);
-            try
-            {
-                con.Open();
-                SQLiteCommand cmd = con.CreateCommand();
-                cmd.CommandText = "SELECT * FROM Packages ";
-                using (SQLiteDataAdapter dataAdapter = new SQLiteDataAdapter(cmd.CommandText, con))
-                {
-                    
-                    dataAdapter.Fill(packagesDataTable);
-                    ResultsDataGridPackages.ItemsSource = packagesDataTable.AsDataView();
-
-                }
-                cmd.CommandText = "SELECT * FROM AllFiles ";
-                using (SQLiteDataAdapter dataAdapter = new SQLiteDataAdapter(cmd.CommandText, con))
-                {
-                   
-                    dataAdapter.Fill(allFilesDataTable);   
-                    ResultsDataGridAllFiles.ItemsSource = allFilesDataTable.AsDataView();
-                }
-            }
-            catch (Exception exp)
-            {
-                System.Windows.Forms.MessageBox.Show(exp.Message);
-            }
-
-            //var dbc = new SQLite.SQLiteConnection(GlobalVariables.PackagesRead);
-            //var pquery = dbc.Query<SimsPackage>("SELECT * FROM Packages");
-
-             
-            //ResultsDataGrid.DataContext = pquery; 
-            //if (GlobalVariables.loadedSaveData == false) {
-            //    CacheData();
-            //}  
         }
 
+
+
         private void showallfiles_Click(object sender, EventArgs e){
-            if (showallfiles == false){
+            /*if (showallfiles == false){
                 ShowAllBt.Content = "Show Only Packages";
                 ShowAllBt.Background = Brushes.CadetBlue;
                 ResultsDataGridPackages.Visibility = Visibility.Hidden;
@@ -97,19 +76,14 @@ namespace SimsCCManager.SortingUIResults {
                 ResultsDataGridPackages.Visibility = Visibility.Visible;
                 ResultsDataGridAllFiles.Visibility = Visibility.Hidden;
                 showallfiles = false;
-            }
+            }*/
             
         }
 
         private void CacheData(){
-            log.MakeLog("Turning data into json file.", true);
-            using (StreamWriter file = File.CreateText(SaveData.mainSaveData))
-            {
-                Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer();
-                serializer.Serialize(file, resultspackages.resultspackageslist);
-            }
+            
         }
-
+        /*
         private void ResultsDataGridPackages_SelectionChanged(object sender, EventArgs e){
             ResultsPreviewImage rpi = new ResultsPreviewImage();
             if( ResultsDataGridPackages.SelectedCells.Count == 1 )
@@ -133,31 +107,16 @@ namespace SimsCCManager.SortingUIResults {
             }
         }
         
-
+        */
         //if selected --> right click "make otg > lights" --> add thing to package
 
-        public void SearchEntered(object sender, TextChangedEventArgs args)
-        {   /*string cs = string.Format("Data Source={0}", GlobalVariables.PackagesRead);
-            using (var dataConnection = new SQLiteConnection(cs))
-            try
-            {
-                string sql = "SELECT * FROM *";
-            }
-            catch (Exception e) {
-                System.Windows.Forms.MessageBox.Show("Search Error: " + e.Message.ToString(),
-                "Error Message: Results Window Search Failure",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-                dataConnection.Close();
-            }*/
-        }
+        
 
         private void menu_Click(object sender, EventArgs e)
         {
             log.MakeLog("Closing application.", false);
-            GlobalVariables.DatabaseConnection.Commit();
+            cts.Cancel();
+            Thread.Sleep(2000);
             GlobalVariables.DatabaseConnection.Close();
             System.Windows.Application.Current.Shutdown();
         }
@@ -264,62 +223,236 @@ namespace SimsCCManager.SortingUIResults {
             }
         }
 
+        private void ListViewHeader_Click (object sender, RoutedEventArgs e){
+            var headerClicked = e.OriginalSource as GridViewColumnHeader;
+            ListSortDirection direction;
 
+            if (headerClicked != null)
+            {
+                if (headerClicked.Role != GridViewColumnHeaderRole.Padding)
+                {
+                    if (headerClicked != _lastHeaderClicked)
+                    {
+                        direction = ListSortDirection.Ascending;
+                    }
+                    else
+                    {
+                        if (_lastDirection == ListSortDirection.Ascending)
+                        {
+                            direction = ListSortDirection.Descending;
+                        }
+                        else
+                        {
+                            direction = ListSortDirection.Ascending;
+                        }
+                    }
+
+                    var columnBinding = headerClicked.Column.DisplayMemberBinding as System.Windows.Data.Binding;
+                    var sortBy = columnBinding?.Path.Path ?? headerClicked.Column.Header as string;
+
+                    Sort(sortBy, direction);
+
+                    if (direction == ListSortDirection.Ascending)
+                    {
+                        headerClicked.Column.HeaderTemplate =
+                        Resources["HeaderTemplateArrowUp"] as DataTemplate;
+                    }
+                    else
+                    {
+                        headerClicked.Column.HeaderTemplate =
+                        Resources["HeaderTemplateArrowDown"] as DataTemplate;
+                    }
+
+                    // Remove arrow from previously sorted header
+                    if (_lastHeaderClicked != null && _lastHeaderClicked != headerClicked)
+                    {
+                        _lastHeaderClicked.Column.HeaderTemplate = null;
+                    }
+
+                    _lastHeaderClicked = headerClicked;
+                    _lastDirection = direction;
+                }
+            }            
+        }
+        private void Sort(string sortBy, ListSortDirection direction)
+        {
+            ICollectionView dataView =
+            CollectionViewSource.GetDefaultView(ResultsView.ItemsSource);
+
+            dataView.SortDescriptions.Clear();
+            SortDescription sd = new SortDescription(sortBy, direction);
+            dataView.SortDescriptions.Add(sd);
+            dataView.Refresh();
+        }
     }
 
-        
-    public class resultspackages : INotifyPropertyChanged {
-        LoggingGlobals log = new LoggingGlobals();
-        public static ObservableCollection<SimsPackage> resultspackageslist = new ObservableCollection<SimsPackage>();
-        private bool selected; 
-        
-        public bool Selected { 
-            get { return Selected; } 
-            set { 
-                Selected = value; 
-                RaiseProperChanged(); 
-            } 
-        }
-        
-       public static ObservableCollection<SimsPackage> populateResultsList() 
-        {   LoggingGlobals log = new LoggingGlobals();
-            
-                
+    
 
-            /*if (GlobalVariables.loadedSaveData == true) {
-                log.MakeLog("Retrieving save data and putting it into grid.", true);
-                foreach (SimsPackage pack in GlobalVariables.loadedData){
-                    resultspackageslist.Add(new SimsPackage{ Title = pack.Title, Description = pack.Description, Location = pack.Location, PackageName = pack.PackageName, Type = pack.Type, Game = pack.Game, DBPF = pack.DBPF, InstanceIDs = pack.InstanceIDs, Major = pack.Major, Minor = pack.Minor, DateCreated = pack.DateCreated, DateModified = pack.DateModified, IndexMajorVersion = pack.IndexMajorVersion, IndexCount = pack.IndexCount, IndexOffset = pack.IndexOffset, IndexSize = pack.IndexSize, HolesCount = pack.HolesCount, HolesOffset = pack.HolesOffset, HolesSize = pack.HolesSize, IndexMinorVersion = pack.IndexMinorVersion, XMLType = pack.XMLType, XMLSubtype = pack.XMLSubtype, XMLCategory = pack.XMLCategory, XMLModelName = pack.XMLModelName, ObjectGUID = pack.ObjectGUID, XMLCreator = pack.XMLCreator, XMLAge = pack.XMLAge, XMLGender = pack.XMLGender, RequiredEPs = pack.RequiredEPs, Function = pack.Function, FunctionSubcategory = pack.FunctionSubcategory, RoomSort = pack.RoomSort, Entries = pack.Entries, Mesh = pack.Mesh, Recolor = pack.Recolor, Orphan = pack.Orphan, GameVersion = pack.GameVersion });
-                }
-                log.MakeLog("Returning.", true);
-                return resultspackageslist; 
-            } else {
-                log.MakeLog("Putting Sims 2 packages into grid.", true);
-                foreach (SimsPackage pack in Containers.allSims2Packages){
-                    resultspackageslist.Add(new SimsPackage{ Title = pack.Title, Description = pack.Description, Location = pack.Location, PackageName = pack.PackageName, Type = pack.Type, Game = pack.Game, DBPF = pack.DBPF, InstanceIDs = pack.InstanceIDs, Major = pack.Major, Minor = pack.Minor, DateCreated = pack.DateCreated, DateModified = pack.DateModified, IndexMajorVersion = pack.IndexMajorVersion, IndexCount = pack.IndexCount, IndexOffset = pack.IndexOffset, IndexSize = pack.IndexSize, HolesCount = pack.HolesCount, HolesOffset = pack.HolesOffset, HolesSize = pack.HolesSize, IndexMinorVersion = pack.IndexMinorVersion, XMLType = pack.XMLType, XMLSubtype = pack.XMLSubtype, XMLCategory = pack.XMLCategory, XMLModelName = pack.XMLModelName, ObjectGUID = pack.ObjectGUID, XMLCreator = pack.XMLCreator, XMLAge = pack.XMLAge, XMLGender = pack.XMLGender, RequiredEPs = pack.RequiredEPs, Function = pack.Function, FunctionSubcategory = pack.FunctionSubcategory, RoomSort = pack.RoomSort, Entries = pack.Entries, Mesh = pack.Mesh, Recolor = pack.Recolor, Orphan = pack.Orphan, GameVersion = "Sims 2" });
-                }
-                log.MakeLog("Putting Sims 3 packages into grid.", true);
-                foreach (SimsPackage pack in Containers.allSims3Packages){
-                    resultspackageslist.Add(new SimsPackage{ Title = pack.Title, Description = pack.Description, Location = pack.Location, PackageName = pack.PackageName, Type = pack.Type, Game = pack.Game, DBPF = pack.DBPF, InstanceIDs = pack.InstanceIDs, Major = pack.Major, Minor = pack.Minor, DateCreated = pack.DateCreated, DateModified = pack.DateModified, IndexMajorVersion = pack.IndexMajorVersion, IndexCount = pack.IndexCount, IndexOffset = pack.IndexOffset, IndexSize = pack.IndexSize, HolesCount = pack.HolesCount, HolesOffset = pack.HolesOffset, HolesSize = pack.HolesSize, IndexMinorVersion = pack.IndexMinorVersion, XMLType = pack.XMLType, XMLSubtype = pack.XMLSubtype, XMLCategory = pack.XMLCategory, XMLModelName = pack.XMLModelName, ObjectGUID = pack.ObjectGUID, XMLCreator = pack.XMLCreator, XMLAge = pack.XMLAge, XMLGender = pack.XMLGender, RequiredEPs = pack.RequiredEPs, Function = pack.Function, FunctionSubcategory = pack.FunctionSubcategory, RoomSort = pack.RoomSort, Entries = pack.Entries, Mesh = pack.Mesh, Recolor = pack.Recolor, Orphan = pack.Orphan, GameVersion = "Sims 3" });
-                }
-                log.MakeLog("Putting Sims 4 packages into grid.", true);
-                foreach (SimsPackage pack in Containers.allSims4Packages){
-                    resultspackageslist.Add(new SimsPackage{ Title = pack.Title, Description = pack.Description, Location = pack.Location, PackageName = pack.PackageName, Type = pack.Type, Game = pack.Game, DBPF = pack.DBPF, InstanceIDs = pack.InstanceIDs, Major = pack.Major, Minor = pack.Minor, DateCreated = pack.DateCreated, DateModified = pack.DateModified, IndexMajorVersion = pack.IndexMajorVersion, IndexCount = pack.IndexCount, IndexOffset = pack.IndexOffset, IndexSize = pack.IndexSize, HolesCount = pack.HolesCount, HolesOffset = pack.HolesOffset, HolesSize = pack.HolesSize, IndexMinorVersion = pack.IndexMinorVersion, XMLType = pack.XMLType, XMLSubtype = pack.XMLSubtype, XMLCategory = pack.XMLCategory, XMLModelName = pack.XMLModelName, ObjectGUID = pack.ObjectGUID, XMLCreator = pack.XMLCreator, XMLAge = pack.XMLAge, XMLGender = pack.XMLGender, RequiredEPs = pack.RequiredEPs, Function = pack.Function, FunctionSubcategory = pack.FunctionSubcategory, RoomSort = pack.RoomSort, Entries = pack.Entries, Mesh = pack.Mesh, Recolor = pack.Recolor, Orphan = pack.Orphan, GameVersion = "Sims 4" });
-                }
-                log.MakeLog("Returning.", true);
-                return resultspackageslist; 
-            }*/
-            return resultspackageslist;
+    public class PackagesViewModel : INotifyPropertyChanged{
+        private ICollectionView _packagesView;
+        public event PropertyChangedEventHandler PropertyChanged;
+        private PackagesViewModel _selectedFile;  
+
+        public ICollectionView Packages
+        {
+            get {return _packagesView;}
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        public object Resources { get; private set; }
+        ObservableCollection<SimsPackage> packages = new ObservableCollection<SimsPackage>();
+
+        public PackagesViewModel(){
+            packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
+            _packagesView = CollectionViewSource.GetDefaultView(packages);
+            
+            /*this.Packages.SortDescriptions.Add(new SortDescription("PackageName", ListSortDirection.Ascending));
+            this.Packages.SortDescriptions.Add(new SortDescription("Title", ListSortDirection.Ascending));
+            this.Packages.SortDescriptions.Add(new SortDescription("Game", ListSortDirection.Ascending));
+            this.Packages.SortDescriptions.Add(new SortDescription("Location", ListSortDirection.Ascending));
+            this.Packages.SortDescriptions.Add(new SortDescription("Type", ListSortDirection.Ascending));
+            this.Packages.SortDescriptions.Add(new SortDescription("Size", ListSortDirection.Ascending));
+            this.Packages.SortDescriptions.Add(new SortDescription("Function", ListSortDirection.Ascending));
+            this.Packages.SortDescriptions.Add(new SortDescription("Tags", ListSortDirection.Ascending));
+            this.Packages.SortDescriptions.Add(new SortDescription("Override", ListSortDirection.Ascending));
+            _packagesView.CurrentChanged += PackagesSelectionChanged;*/
             
         }
-        public event PropertyChangedEventHandler PropertyChanged; 
-	
-        private void RaiseProperChanged([CallerMemberName] string caller = "") { 
-        
-            if (PropertyChanged != null) { 
-                PropertyChanged(this, new PropertyChangedEventArgs(caller)); 
-            } 
+
+        public PackagesViewModel SelectedFileInfo  
+        {  
+            get { return _selectedFile; }  
+            set 
+            {  
+                if (value != _selectedFile)  
+                {  
+                    _selectedFile = value;  
+                    this.OnPropertyChanged("SelectedFileInfo");  
+                }  
+            }  
         }  
+ 
+        public ICommand DeleteFile  
+        {  
+            get { return new DelegateCommand(this.OnDelete); }  
+        } 
+ 
+        public ICommand MoveFile  
+        {  
+            get { return new DelegateCommand(this.OnMove); }  
+        }  
+ 
+        private void OnDelete()  
+        {   
+            var selection = _selectedFile.Cast<SimsPackage>().Count();
+            var items = _packagesView.Cast<SimsPackage>().ToList();
+            if (selection == 1){
+                System.Windows.Forms.MessageBox.Show(string.Format("You will be deleting one item: {0}", ((SimsPackage)_packagesView.CurrentItem).PackageName));
+            } else if (selection != 1 && selection != 0){
+                string stuff = "";
+                foreach (SimsPackage item in items){
+                    if (String.IsNullOrEmpty(stuff)){
+                        stuff = string.Format("{0}", item.PackageName);
+                    } else {
+                        stuff += string.Format("\n {0}", item.PackageName);
+                    }
+                }
+                System.Windows.Forms.MessageBox.Show(string.Format("You will be deleting {1} items: {0}", stuff, selection));
+            }
+            System.Windows.Forms.MessageBox.Show(string.Format("Deleted {0}!", ((SimsPackage)_packagesView.CurrentItem).PackageName));
+        }  
+ 
+        private void OnMove()  
+        {  
+            string movefolder = "";
+            string sourcefile = ((SimsPackage)_packagesView.CurrentItem).Location;
+            string filename = ((SimsPackage)_packagesView.CurrentItem).PackageName;
+            string destination = "";
+            
+            using(var MoveFolder = new FolderBrowserDialog())
+            {
+                DialogResult result = MoveFolder.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK) {
+                    movefolder = MoveFolder.SelectedPath;
+                    destination = System.IO.Path.Combine(movefolder, filename);
+                    if (File.Exists(sourcefile)){
+                        SimsPackage item = (SimsPackage)_packagesView.CurrentItem;
+                        item.Location = destination;
+                        File.Move(sourcefile, destination);                        
+                        GlobalVariables.DatabaseConnection.UpdateWithChildren(item);                        
+                        packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
+                        _packagesView = CollectionViewSource.GetDefaultView(packages);
+                    } else {
+                        System.Windows.Forms.MessageBox.Show(string.Format("File {0} not found at source. Did it get deleted?", sourcefile));    
+                    }
+                    
+                } else {
+                    System.Windows.Forms.MessageBox.Show(string.Format("Please pick somewhere to move file."));
+                }
+            }
+            System.Windows.Forms.MessageBox.Show(string.Format("Moved {0}!", ((SimsPackage)_packagesView.CurrentItem).PackageName));
+
+        }  
+  
+        protected virtual void OnPropertyChanged(string propertyName)  
+        {  
+            PropertyChangedEventHandler handler = this.PropertyChanged;  
+            if (handler != null)  
+            {  
+                var e = new PropertyChangedEventArgs(propertyName);  
+                handler(this, e);  
+            }  
+        }      
         
-    }   
+    }
+
+     public class DelegateCommand : ICommand  
+    {  
+        public delegate void SimpleEventHandler();  
+        private SimpleEventHandler handler;  
+        private bool isEnabled = true;  
+ 
+        public event EventHandler CanExecuteChanged;  
+ 
+        public DelegateCommand(SimpleEventHandler handler)  
+        {  
+            this.handler = handler;  
+        }  
+ 
+        private void OnCanExecuteChanged()  
+        {  
+            if (this.CanExecuteChanged != null)  
+            {  
+                this.CanExecuteChanged(this, EventArgs.Empty);  
+            }  
+        }  
+ 
+        bool ICommand.CanExecute(object arg)  
+        {  
+            return this.IsEnabled;  
+        }  
+ 
+        void ICommand.Execute(object arg)  
+        {  
+            this.handler();  
+        }  
+ 
+        public bool IsEnabled  
+        {  
+            get { return this.isEnabled; }  
+ 
+            set 
+            {  
+                this.isEnabled = value;  
+                this.OnCanExecuteChanged();  
+            }  
+        }  
+    } 
 }

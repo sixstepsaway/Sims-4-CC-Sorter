@@ -9,6 +9,8 @@ using System.Data.SQLite;
 using SQLitePCL;
 using SQLite;
 using SQLiteNetExtensions.Attributes;
+using Newtonsoft.Json;
+using System.ComponentModel;
 
 namespace SimsCCManager.Packages.Containers
 {    
@@ -60,11 +62,17 @@ namespace SimsCCManager.Packages.Containers
         /// </summary>
         [PrimaryKey, AutoIncrement]
         public int Id {get; set;}
-        public string stringval {get; set;}
-        public string shortval {get; set;}
+        [Column("Description")]
+        public string Description {get; set;}
+        [Column("TypeID")]
+        public string TypeID {get; set;}
         
         [ForeignKey(typeof(SimsPackage))]
         public int PackageID {get; set;}
+        [Column("SimsPackage")]
+        
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
     }
 
     public class ThingHolder<T> : List<T> {
@@ -75,7 +83,7 @@ namespace SimsCCManager.Packages.Containers
     }
 
     [Table("Packages")]
-    public class SimsPackage { // A more in depth package file.
+    public class SimsPackage : INotifyPropertyChanged { // A more in depth package file.
         /// <summary>
         /// The full package summary used for sorting and editing the items.
         /// </summary>
@@ -87,8 +95,8 @@ namespace SimsCCManager.Packages.Containers
         public string Description {get; set;}
         [Column ("Location")]
         public string Location {get; set;}
-        [Column("File Size")]
-        public long FileSize {get; set;}
+        [Column("FileSize")]
+        public int FileSize {get; set;}
         [Column ("PackageName")]
         [Indexed]
         public string PackageName {get; set;}
@@ -96,28 +104,28 @@ namespace SimsCCManager.Packages.Containers
         public string Type {get; set;}
         [Column ("Game")]
         public int Game {get; set;}
+        [Column ("GameString")]
+        public string GameString {get; set;}
         [Column ("InstanceIDs")]
         [TextBlob("InstancesBlobbed")]
         public List<string> InstanceIDs {get; set;}
         public string InstancesBlobbed {get; set;}
-        [Column ("XMLType")]
-        public string XMLType {get; set;}
-        [Column ("XMLSubtype")]
-        public string XMLSubtype {get; set;}
-        [Column ("XMLCategory")]
-        public string XMLCategory {get; set;}
-        [Column ("XMLModelName")]
-        public string XMLModelName {get; set;}
-        [Column ("ObjectGUID")]
+        [Column ("Subtype")]
+        public string Subtype {get; set;}
+        [Column ("Category")]
+        public string Category {get; set;}
+        [Column ("ModelName")]
+        public string ModelName {get; set;}
+        [Column ("GUIDs")]
         [TextBlob("GuidsBlobbed")]
-        public List<string> ObjectGUID {get; set;}
+        public List<string> GUIDs {get; set;}
         public string GuidsBlobbed {get; set;}
-        [Column ("XMLCreator")]
-        public string XMLCreator {get; set;}
-        [Column ("XMLAge")]
-        public string XMLAge {get; set;}
-        [Column ("XMLGender")]
-        public string XMLGender {get; set;}
+        [Column ("Creator")]
+        public string Creator {get; set;}
+        [Column ("Age")]
+        public string Age {get; set;}
+        [Column ("Gender")]
+        public string Gender {get; set;}
         [Column ("RequiredEPs")]
         [TextBlob("RequiredEPsBlob")]
         public List<string> RequiredEPs {get; set;}
@@ -127,9 +135,12 @@ namespace SimsCCManager.Packages.Containers
         [Column ("FunctionSubcategory")]
         public string FunctionSubcategory {get; set;}
         [Column ("AgeGenderFlags")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        [OneToOne(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
         public AgeGenderFlags AgeGenderFlags {get; set;}
-        [Column ("RoomSort")]
+        [Column ("Entry Locations")]
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<fileHasList> FileHas {get; set;}
+        [Column ("RoomSort")]        
         [TextBlob("RoomsBlobbed")]
         public List<string> RoomSort {get; set;}
         public string RoomsBlobbed {get; set;}
@@ -139,8 +150,8 @@ namespace SimsCCManager.Packages.Containers
         public string ComponentsBlobbed {get; set;}
         [Column ("Entries")]
         [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<TypeCounter> Entries {get; set;}
-        [Column ("Flags")]
+        public List<TypeCounter> Entries {get; set;}        
+        [Column ("Flags")]        
         [TextBlob("FlagsBlobbed")]
         public List<string> Flags {get; set;}
         public string FlagsBlobbed {get; set;}
@@ -155,16 +166,16 @@ namespace SimsCCManager.Packages.Containers
         public bool Recolor {get; set;}
         [Column ("Orphan")]
         public bool Orphan {get; set;}
-        [Column ("Override")]
+        [Column ("Override")]        
         public bool Override {get; set;}
         [Column ("OverriddenInstances")]
         [TextBlob("OverriddenInstancesBlobbed")]
         public List<string> OverriddenInstances {get; set;}
         public string OverriddenInstancesBlobbed {get; set;}
-        [Column ("OverriddenItems")]
-        [TextBlob("OverriddenItemsBlobbed")]
+        [Column ("OverriddenItems")]        
+        [TextBlob("OverriddenItemsBlobbed")]   
         public List<string> OverriddenItems {get; set;}
-        public string OverriddenItemsBlobbed;
+        public string OverriddenItemsBlobbed {get; set;}
         public string MatchingMesh {get; set;}
         [Column ("MatchingRecolors")]
         [TextBlob("MatchingRecolorsBlobbed")]
@@ -177,18 +188,21 @@ namespace SimsCCManager.Packages.Containers
 
         public SimsPackage() {
             InstanceIDs = new List<string>();
-            ObjectGUID = new List<string>();
+            GUIDs = new List<string>();
             RequiredEPs = new List<string>();
             RoomSort = new List<string>();
             MatchingRecolors = new List<string>();
             Components = new List<string>();
             MatchingConflicts = new List<string>();
             Entries = new List<TypeCounter>();
+            FileHas = new List<fileHasList>();
             Flags = new List<string>();
             CatalogTags = new List<TagsList>();
             OverriddenInstances = new List<string>();
             OverriddenItems = new List<string>();
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public static string GetFormatListString(List<string> words){
             string retVal = string.Empty;
@@ -207,9 +221,9 @@ namespace SimsCCManager.Packages.Containers
             string retVal = string.Empty;
             foreach (TagsList tag in tags){
                 if (string.IsNullOrEmpty(retVal)){
-                    retVal +=  tag.shortval.ToString() + ", " + tag.stringval;
+                    retVal += tag.TypeID.ToString() + ", " + tag.Description;
                 } else {
-                    retVal += string.Format(", " + tag.shortval.ToString() + ": " + tag.stringval);
+                    retVal += string.Format(", " + tag.TypeID.ToString() + ": " + tag.Description);
                 }
             }
             return retVal;
@@ -234,7 +248,7 @@ namespace SimsCCManager.Packages.Containers
             //https://regex101.com/r/9MiSh9/1
 
             
-            return string.Format("Title: {0} \n Description: {1} \n Location: {2} \n PackageName: {3} \n Type: {4} \n Game: {5} \n InstanceIDs: {6} \n XMLType: {7} \n XMLSubtype: {8} \n XMLCategory: {9} \n XMLModelName: {10} \n ObjectGUID: {11} \n XMLCreator: {12} \n XMLAge: {13} \n XMLGender: {14} \n RequiredEPs: {15} \n Function: {16} \n FunctionSubcategory: {17} \n AgeGenderFlags: {18} \n RoomSort: {19} \n Components: {20} \n Entries: {21} \n Flags: {22} \n CatalogTags: {23} \n Broken: {24} \n Mesh: {25} \n Recolor: {26} \n Orphan: {27} \n Override: {28} \n OverriddenInstances: {29} \n OverriddenItems: {30} \n MatchingMesh: {31} \n MatchingRecolors: {32} \n MatchingConflicts: {33}", this.Title, this.Description, this.Location, this.PackageName, this.Type, this.Game, GetFormatListString(this.InstanceIDs), this.XMLType, this.XMLSubtype, this.XMLCategory, this.XMLModelName, GetFormatListString(this.ObjectGUID), this.XMLCreator, this.XMLAge, this.XMLGender, GetFormatListString(this.RequiredEPs), this.Function, this.FunctionSubcategory, this.AgeGenderFlags, GetFormatListString(this.RoomSort), GetFormatListString(this.Components), GetFormatTypeCounter(this.Entries), GetFormatListString(this.Flags), GetFormatTagsList(this.CatalogTags), this.Broken, this.Mesh, this.Recolor, this.Orphan, this.Override, GetFormatListString(this.OverriddenInstances), GetFormatListString(this.OverriddenItems), this.MatchingMesh, GetFormatListString(this.MatchingRecolors), GetFormatListString(this.MatchingConflicts));
+            return string.Format("Title: {0} \n Description: {1} \n Location: {2} \n PackageName: {3} \n Type: {4} \n Game: {5} \n InstanceIDs: {6} \n Subtype: {7} \n Category: {8} \n Model Name: {9} \n GUID: {10} \n Creator: {11} \n Age: {12} \n Gender: {13} \n Required EPs: {14} \n Function: {15} \n FunctionSubcategory: {16} \n AgeGenderFlags: {17} \n RoomSort: {18} \n Components: {19} \n Entries: {20} \n Flags: {21} \n CatalogTags: {22} \n Broken: {23} \n Mesh: {24} \n Recolor: {25} \n Orphan: {26} \n Override: {27} \n OverriddenInstances: {28} \n OverriddenItems: {29} \n MatchingMesh: {30} \n MatchingRecolors: {31} \n MatchingConflicts: {32}", this.Title, this.Description, this.Location, this.PackageName, this.Type, this.Game, GetFormatListString(this.InstanceIDs), this.Subtype, this.Category, this.ModelName, GetFormatListString(this.GUIDs), this.Creator, this.Age, this.Gender, GetFormatListString(this.RequiredEPs), this.Function, this.FunctionSubcategory, this.AgeGenderFlags, GetFormatListString(this.RoomSort), GetFormatListString(this.Components), GetFormatTypeCounter(this.Entries), GetFormatListString(this.Flags), GetFormatTagsList(this.CatalogTags), this.Broken, this.Mesh, this.Recolor, this.Orphan, this.Override, GetFormatListString(this.OverriddenInstances), GetFormatListString(this.OverriddenItems), this.MatchingMesh, GetFormatListString(this.MatchingRecolors), GetFormatListString(this.MatchingConflicts));
         }
 
     }
@@ -246,18 +260,33 @@ namespace SimsCCManager.Packages.Containers
         /// </summary>
         [PrimaryKey, AutoIncrement]
         public int Id {get; set;}
-        public string Type;
-        public int Count;        
+        [Column("Type")]
+        public string Type {get; set;}
+        [Column("Count")]
+        public int Count {get; set;}    
         [ForeignKey(typeof(SimsPackage))]
         public int PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
     }
 
+    [Table("SP_EntryList")]
     public class fileHasList {
         /// <summary>
         /// The more rudamentary version, with each entry's location attached. 
         /// </summary>
-        public string term {get; set;}
-        public int location {get; set;}
+        [PrimaryKey, AutoIncrement]
+        public int Id {get; set;}
+        [Column("TypeID")]
+        public string TypeID {get; set;}
+        [Column("Location")]
+        public int Location {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public int PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
     }
 
     public class FunctionSortList {
@@ -277,19 +306,31 @@ namespace SimsCCManager.Packages.Containers
         /// </summary>
         [PrimaryKey, AutoIncrement]
         public int Id {get; set;}
-
+        [Column("Adult")]
         public bool Adult {get; set;}
+        [Column("Baby")]
         public bool Baby {get; set;}
+        [Column("Child")]
         public bool Child {get; set;}
+        [Column("Elder")]
         public bool Elder {get; set;}
+        [Column("Infant")]
         public bool Infant {get; set;}
+        [Column("Teen")]
         public bool Teen {get; set;}
+        [Column("Toddler")]
         public bool Toddler {get; set;}
+        [Column("Young Adult")]
         public bool YoungAdult {get; set;}
+        [Column("Female")]
         public bool Female {get; set;}
+        [Column("Male")]
         public bool Male {get; set;}
         [ForeignKey(typeof(SimsPackage))]
         public int PackageID {get; set;}
+        [Column("SimsPackage")]
+        [OneToOne]
+        public SimsPackage SimsPackage {get; set;}
     } 
     
     public class Containers {
@@ -338,6 +379,7 @@ namespace SimsCCManager.Packages.Containers
             S4BodyTypes.Add(new FunctionListing{ bodytype = 1441792, Function = "Accessory", Subfunction = "Index Finger (L)" });
             S4BodyTypes.Add(new FunctionListing{ bodytype = 1572864, Function = "Accessory", Subfunction = "Ring Finger (L)" });
             S4BodyTypes.Add(new FunctionListing{ bodytype = 1245184, Function = "Accessory", Subfunction = "Nose Ring (R)" });
+            S4BodyTypes.Add(new FunctionListing{ bodytype = 3342336, Function = "Tattoo", Subfunction = "Lower Back" });
 
 
             //S4BB.Add(new FunctionListing{ bodytype = 65536, Function = "Accessory", Subfunction = "Hat" });

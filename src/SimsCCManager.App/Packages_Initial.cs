@@ -68,6 +68,8 @@ namespace SimsCCManager.Packages.Initial {
         }
 
         public void CheckThrough (string input){
+            int count = GlobalVariables.packagesRead;
+            GlobalVariables.packagesRead++;
             FileInfo pack = new FileInfo(input);
             MemoryStream msPackage = Methods.ReadBytesToFile(input);
             BinaryReader packagereader = new BinaryReader(msPackage);
@@ -96,7 +98,7 @@ namespace SimsCCManager.Packages.Initial {
                     log.MakeLog(pack.FullName + " is a sims 2 file.", false);
                     PtoDb(pack, 2);
                     try {
-                      s2s.SearchS2Packages(packagereader, pack, minor);
+                      s2s.SearchS2Packages(packagereader, pack, minor, count);
                     } catch (Exception e) {
                         log.MakeLog(string.Format("Caught exception reading Sims 2 package {0}, Exception: {1}", pack.Name, e), true);
                     }
@@ -109,7 +111,7 @@ namespace SimsCCManager.Packages.Initial {
                     log.MakeLog(pack.FullName + " is a sims 4 file.", false);
                     PtoDb(pack, 4);
                     try {
-                        s4s.SearchS4Packages(packagereader, pack);
+                        s4s.SearchS4Packages(packagereader, pack, count);
                     } catch (Exception e) {
                         log.MakeLog(string.Format("Caught exception reading Sims 4 package {0}, Exception: {1}", pack.Name, e), true);
                     }

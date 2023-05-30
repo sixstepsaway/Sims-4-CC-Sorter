@@ -376,32 +376,32 @@ namespace SimsCCManager.Packages.Decryption
             }
             if ((this.xmlType != " ") && (this.xmlType != ""))
             {
-                infovar.XMLType = this.xmlType;
+                infovar.Type = this.xmlType;
             }
             if ((this.xmlSubtype != " ") && (this.xmlSubtype != ""))
             {
-                infovar.XMLSubtype = this.xmlSubtype;
+                infovar.Subtype = this.xmlSubtype;
             }
             if ((this.xmlCategory != " ") && (this.xmlCategory != ""))
             {
-                infovar.XMLCategory = this.xmlCategory;
+                infovar.Category = this.xmlCategory;
             }
             if ((this.xmlModelName != " ") && (this.xmlModelName != ""))
             {
-                infovar.XMLModelName = this.xmlModelName;
+                infovar.ModelName = this.xmlModelName;
             }
-            infovar.ObjectGUID.AddRange(this.objectGUID);
+            infovar.GUIDs.AddRange(this.objectGUID);
             if ((this.xmlCreator != " ") && (this.xmlCreator != ""))
             {
-                infovar.XMLCreator = this.xmlCreator;
+                infovar.Creator = this.xmlCreator;
             }
             if ((this.xmlAge != " ") && (this.xmlAge != ""))
             {
-                infovar.XMLAge = this.xmlAge;
+                infovar.Age = this.xmlAge;
             }
             if ((this.xmlGender != " ") && (this.xmlGender != ""))
             {
-                infovar.XMLGender = this.xmlGender;
+                infovar.Gender = this.xmlGender;
             }
 			return infovar;
 		}
@@ -517,32 +517,32 @@ namespace SimsCCManager.Packages.Decryption
             }
             if ((this.xmlType != " ") && (this.xmlType != ""))
             {
-                infovar.XMLType = this.xmlType;
+                infovar.Type = this.xmlType;
             }
             if ((this.xmlSubtype != " ") && (this.xmlSubtype != ""))
             {
-                infovar.XMLSubtype = this.xmlSubtype;
+                infovar.Subtype = this.xmlSubtype;
             }
             if ((this.xmlCategory != " ") && (this.xmlCategory != ""))
             {
-                infovar.XMLCategory = this.xmlCategory;
+                infovar.Category = this.xmlCategory;
             }
             if ((this.xmlModelName != " ") && (this.xmlModelName != ""))
             {
-                infovar.XMLModelName = this.xmlModelName;
+                infovar.ModelName = this.xmlModelName;
             }
-            infovar.ObjectGUID.AddRange(this.objectGUID);
+            infovar.GUIDs.AddRange(this.objectGUID);
             if ((this.xmlCreator != " ") && (this.xmlCreator != ""))
             {
-                infovar.XMLCreator = this.xmlCreator;
+                infovar.Creator = this.xmlCreator;
             }
             if ((this.xmlAge != " ") && (this.xmlAge != ""))
             {
-                infovar.XMLAge = this.xmlAge;
+                infovar.Age = this.xmlAge;
             }
             if ((this.xmlGender != " ") && (this.xmlGender != ""))
             {
-                infovar.XMLGender = this.xmlGender;
+                infovar.Gender = this.xmlGender;
             }
 			return infovar;
 
@@ -798,14 +798,14 @@ namespace SimsCCManager.Packages.Decryption
                 infovar.Title = this.title;
             }
             if ((this.xmlType != "") && (this.xmlType != " ")){
-                infovar.XMLType = this.xmlType;
+                infovar.Type = this.xmlType;
             }
             
             if ((this.xmlCategory != "") && (this.xmlCategory != " ")){
-                infovar.XMLCategory = this.xmlCategory;  
+                infovar.Category = this.xmlCategory;  
             }
             if ((this.xmlSubtype != "") && (this.xmlSubtype != " ")){
-                infovar.XMLSubtype = this.xmlSubtype;
+                infovar.Subtype = this.xmlSubtype;
             }                          
             return infovar;
 		}
@@ -910,14 +910,14 @@ namespace SimsCCManager.Packages.Decryption
                 infovar.Title = this.title;
             }
             if ((this.xmlType != "") && (this.xmlType != " ")){
-                infovar.XMLType = this.xmlType;
+                infovar.Type = this.xmlType;
             }
             
             if ((this.xmlCategory != "") && (this.xmlCategory != " ")){
-                infovar.XMLCategory = this.xmlCategory;  
+                infovar.Category = this.xmlCategory;  
             }
             if ((this.xmlSubtype != "") && (this.xmlSubtype != " ")){
-                infovar.XMLSubtype = this.xmlSubtype;
+                infovar.Subtype = this.xmlSubtype;
             }                          
             return infovar;
 		}
@@ -1145,7 +1145,7 @@ namespace SimsCCManager.Packages.Decryption
 				if (this.debugMode) Console.WriteLine(functionSortFlag);*/
 			} 
             if ((this.xmlCategory != " ") && (this.xmlCategory != "")) {
-                infovar.XMLCategory = this.xmlCategory;
+                infovar.Category = this.xmlCategory;
             }
             if ((this.xmlFunction != " ") && (this.xmlFunction != "")) {
                 infovar.Function = this.xmlFunction;
@@ -1153,9 +1153,9 @@ namespace SimsCCManager.Packages.Decryption
             if ((this.xmlFunctionSubsort != " ") && (this.xmlFunctionSubsort != "")) {
                 infovar.FunctionSubcategory = this.xmlFunctionSubsort;
             }     
-            infovar.ObjectGUID.AddRange(this.objectGUID);
+            infovar.GUIDs.AddRange(this.objectGUID);
 
-            for (int i = 0; i < infovar.ObjectGUID.Count(); i++)
+            for (int i = 0; i < infovar.GUIDs.Count(); i++)
             {
             }
             return infovar;
@@ -1277,7 +1277,7 @@ namespace SimsCCManager.Packages.Decryption
 			}
 
             if ((this.xmlCategory != " ") && (this.xmlCategory != "")) {
-                infovar.XMLCategory = this.xmlCategory;
+                infovar.Category = this.xmlCategory;
             }
             if ((this.xmlFunction != " ") && (this.xmlFunction != "")) {
                 infovar.Function = this.xmlFunction;
@@ -1285,9 +1285,9 @@ namespace SimsCCManager.Packages.Decryption
             if ((this.xmlFunctionSubsort != " ") && (this.xmlFunctionSubsort != "")) {
                 infovar.FunctionSubcategory = this.xmlFunctionSubsort;
             }     
-            infovar.ObjectGUID.AddRange(this.objectGUID);
+            infovar.GUIDs.AddRange(this.objectGUID);
 
-            for (int i = 0; i < infovar.ObjectGUID.Count(); i++)
+            for (int i = 0; i < infovar.GUIDs.Count(); i++)
             {
             }
             return infovar;
@@ -1438,8 +1438,8 @@ namespace SimsCCManager.Packages.Decryption
 						if (addModelName == true)
 						{
 							TagsList modelName = new TagsList();
-							if (shpePartDesc.IndexOf("!") > -1) { modelName.stringval = shpePartDesc.Substring(shpePartDesc.IndexOf("!")+1); } 
-							else { modelName.stringval = shpePartDesc; }
+							if (shpePartDesc.IndexOf("!") > -1) { modelName.Description = shpePartDesc.Substring(shpePartDesc.IndexOf("!")+1); } 
+							else { modelName.Description = shpePartDesc; }
 							thisPackage.CatalogTags.Add(modelName);
 							modelName = null;
 						}
@@ -1594,8 +1594,8 @@ namespace SimsCCManager.Packages.Decryption
 						if (addModelName == true)
 						{
 							TagsList modelName = new TagsList();
-							if (shpePartDesc.IndexOf("!") > -1) { modelName.stringval = shpePartDesc.Substring(shpePartDesc.IndexOf("!")+1); } 
-							else { modelName.stringval = shpePartDesc; }
+							if (shpePartDesc.IndexOf("!") > -1) { modelName.Description = shpePartDesc.Substring(shpePartDesc.IndexOf("!")+1); } 
+							else { modelName.Description = shpePartDesc; }
 							thisPackage.CatalogTags.Add(modelName);
 							modelName = null;
 						}

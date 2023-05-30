@@ -8,11 +8,22 @@
         Title="Results" Height="Auto" Width="Auto" SizeToContent="Manual"
         WindowStartupLocation="CenterOwner">
         <Window.Resources>
-            <Style x:Key="ResultsDataGridStyle">                        
-                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Visible" />
-                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Visible" />
-                <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
+            <Style x:Key="ResultsDataGridStyle" TargetType="ListView">
+                <Setter Property="Background" Value="#C1C0DE"/>
             </Style>
+            <Style x:Key="ResultsRows" TargetType="ListViewItem">
+                <Style.Triggers>
+                    <Trigger Property="Content" Value="Override">
+                        <Setter Property="Background" Value="Red"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <ContextMenu x:Key="cmButton">
+                <MenuItem Header="Menu item 1" />
+                <MenuItem Header="Menu item 2" />
+                <Separator />
+                <MenuItem Header="Menu item 3" />
+            </ContextMenu>
         </Window.Resources>  
 
         <Grid Background="#FF231636">
@@ -41,26 +52,87 @@
                 <Button Click="Kofi_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
                     <Image Source="img\ko-fi_logo-2039355488.png"/>
                 </Button>
-            </StackPanel>
-                   
-            <DataGrid Visibility="Visible" x:Name="ResultsDataGridPackages" SelectionUnit="FullRow"  CanUserAddRows="False" CanUserDeleteRows="False" Style="{StaticResource ResultsDataGridStyle}" ItemsSource="{Binding resultspackageslist}" AutoGenerateColumns="false" Grid.Column="1" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible" VirtualizingStackPanel.IsVirtualizing="true" VirtualizingStackPanel.VirtualizationMode="Recycling" VirtualizingPanel.IsVirtualizingWhenGrouping="True" MaxHeight="999999999" MaxWidth="999999999" Grid.Row="1">
-                <DataGrid.Columns>
-                    <DataGridCheckBoxColumn Header="" Binding="{Binding selected}" Width="5"/>
-                    <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>                     
-                    <DataGridTextColumn Header="Package Name" Binding="{Binding PackageName}" Width="*"/> 
-                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*"/>
-                    <DataGridTextColumn Header="Game" Binding="{Binding Game}" Width="*"/>
-                    
-                </DataGrid.Columns>        
-            </DataGrid>
-            <DataGrid Visibility="Hidden" x:Name="ResultsDataGridAllFiles" SelectionUnit="FullRow" CanUserAddRows="False" CanUserDeleteRows="False" Style="{StaticResource ResultsDataGridStyle}" ItemsSource="{Binding resultsallfileslist}" AutoGenerateColumns="false" Grid.Column="1" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible" VirtualizingStackPanel.IsVirtualizing="true" VirtualizingStackPanel.VirtualizationMode="Recycling" VirtualizingPanel.IsVirtualizingWhenGrouping="True" MaxHeight="999999999" MaxWidth="999999999" Grid.Row="1">
-                <DataGrid.Columns>
-                    <DataGridCheckBoxColumn Header="" Binding="{Binding selected}" Width="5"/>
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>                     
-                    <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*"/> 
-                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*"/>                    
-                </DataGrid.Columns>        
-            </DataGrid>
+            </StackPanel>                   
+            <ListView x:Name="ResultsView" SelectionMode="Extended" Style="{StaticResource ResultsDataGridStyle}" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Packages}" SelectedItem="{Binding SelectedFileInfo}" IsSynchronizedWithCurrentItem="True" GridViewColumnHeader.Click="ListViewHeader_Click">
+            <ListView.ContextMenu> 
+                <ContextMenu> 
+                    <MenuItem Header="Move File" Command="{Binding MoveFile}"></MenuItem> 
+                    <MenuItem Header="Delete" Command="{Binding DeleteFile}"></MenuItem> 
+                    <MenuItem Header="Remove a Tag" Command="{Binding RemoveTag}"></MenuItem> 
+                    <MenuItem Header="Add a Tag" Command="{Binding AddTag}"></MenuItem> 
+                    <MenuItem Header="Merge These" Command="{Binding MergeFiles}"></MenuItem>
+                    <MenuItem Header="Unmerge" Command="{Binding UnmergeFiles}"></MenuItem> 
+                </ContextMenu> 
+            </ListView.ContextMenu> 
+                <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding PackageName}" />
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
+                <ListView.View>
+                    <GridView AllowsColumnReorder="True">
+                        <GridViewColumn DisplayMemberBinding="{Binding PackageName}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="PackageName" Click="ListViewHeader_Click">PackageName</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Title}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Title" Click="ListViewHeader_Click">Title</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Type}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Type" Click="ListViewHeader_Click">Type</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Description}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Description" Click="ListViewHeader_Click">Description</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding FileSize}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Size" Click="ListViewHeader_Click">Size</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding GameString}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Game" Click="ListViewHeader_Click">Game</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Function}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Function" Click="ListViewHeader_Click">Function</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding FunctionSubcategory}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="FunctionSubcategory" Click="ListViewHeader_Click">Function Subcategory</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Location}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Location" Click="ListViewHeader_Click">Location</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding InstancesBlobbed}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Instances" Click="ListViewHeader_Click">Instances</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding ComponentsBlobbed}">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Tag="Components" Click="ListViewHeader_Click">Components</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>                          
+                    </GridView>
+                </ListView.View>        
+            </ListView>
             <Grid Grid.Column="1" VerticalAlignment="Bottom" Margin="15, 15, 0, 10" Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="100"/>
@@ -110,7 +182,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Vertical" Grid.Column="3" VerticalAlignment="Center">
                     <TextBlock Text="Search" Margin="25, 0, 0, 5"/>
-                    <TextBox Name="SearchBox" TextChanged="SearchEntered" Foreground="#FF372C42" Background="#FFCCD3DA" Margin="20, 0, 0, 0"/>
+                    <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Foreground="#FF372C42" Background="#FFCCD3DA" Margin="20, 0, 0, 0"/>
                 </StackPanel>
                 
             </Grid>

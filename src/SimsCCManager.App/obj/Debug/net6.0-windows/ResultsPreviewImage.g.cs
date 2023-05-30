@@ -9,7 +9,6 @@
 //------------------------------------------------------------------------------
 
 using SimsCCManager.App.PreviewImage;
-using SimsCCManager.SortingUIResults;
 using System;
 using System.Diagnostics;
 using System.Windows;

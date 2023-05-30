@@ -12,6 +12,11 @@ using System.Runtime.CompilerServices;
 using SSAGlobals;
 using SimsCCManager.Packages.Containers;
 using SimsCCManager.Packages.Decryption;
+using SQLitePCL;
+using SQLiteNetExtensions;
+using SQLiteNetExtensions.Attributes;
+using SQLiteNetExtensions.Extensions;
+using SQLite;
 
 namespace SimsCCManager.Packages.Sims2Search
 {    
@@ -49,7 +54,7 @@ namespace SimsCCManager.Packages.Sims2Search
         uint chunkOffset = 0;        
        
 
-        public void SearchS2Packages(BinaryReader readFile, FileInfo packageinfo, uint minor) {
+        public void SearchS2Packages(BinaryReader readFile, FileInfo packageinfo, uint minor, int packageparsecount) {
             Stopwatch sw = new Stopwatch();
             sw.Start();
             log.MakeLog(string.Format("File {0} arrived for processing as Sims 2 file.", packageinfo.Name), true);
@@ -59,7 +64,6 @@ namespace SimsCCManager.Packages.Sims2Search
             GlobalVariables.DatabaseConnection.Delete(query);
             var pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
             GlobalVariables.DatabaseConnection.Insert(pk);
-            var packageparsecount = GlobalVariables.packagesRead;  
             //Vars for Package Info
             string typefound = "";
             string instanceID2;
@@ -113,9 +117,9 @@ namespace SimsCCManager.Packages.Sims2Search
             //MemoryStream dbpfFile = Methods.ReadBytesToFile(packageinfo.FullName);
             //BinaryReader readFile = new BinaryReader(dbpfFile);
     
-            thisPackage.FileSize = packageinfo.Length;   
+            thisPackage.FileSize = (int)packageinfo.Length;   
             thisPackage.PackageName = packageinfo.Name;
-            thisPackage.Game = 2;
+            thisPackage.GameString = "The Sims 2";
             
             log.MakeLog(string.Format("Reading package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
             
@@ -214,7 +218,7 @@ namespace SimsCCManager.Packages.Sims2Search
                 if(typef.Any()){
                     List<string> tps = new List<string>();
                     tps.AddRange(typef);
-                    fileHas.Add(new fileHasList() { term = tps[0], location = entrynum});
+                    fileHas.Add(new fileHasList() { TypeID = tps[0], Location = entrynum});
                     log.MakeLog(string.Format("P{0} - Found: {1}", packageparsecount, tps[0]), true);
                 }
                 entrynum++;
@@ -222,14 +226,14 @@ namespace SimsCCManager.Packages.Sims2Search
 
             log.MakeLog("P" + packageparsecount + " - This file has:", true);
             foreach (fileHasList item in fileHas) {
-                log.MakeLog("--- " + item.term + " at: " + item.location, true);
+                log.MakeLog("--- " + item.TypeID + " at: " + item.Location, true);
             }
 
-            if (fileHas.Exists(x => x.term == "DIR")) {       
+            if (fileHas.Exists(x => x.TypeID == "DIR")) {       
                 
                 var dirget = from has in fileHas
-                            where has.term == "DIR"
-                            select has.location;
+                            where has.TypeID == "DIR"
+                            select has.Location;
                 var dirs = dirget.ToList();
                 dirnum = dirs[0];                
 
@@ -306,7 +310,7 @@ namespace SimsCCManager.Packages.Sims2Search
                 }
             }
             
-            if (fileHas.Exists(x => x.term == "DIR")) {
+            if (fileHas.Exists(x => x.TypeID == "DIR")) {
                 //dbpfFile.Seek(chunkOffset + indexData[dirnum].offset, SeekOrigin.Begin);
                 readFile.BaseStream.Position = chunkOffset + indexData[dirnum].offset;
                 log.MakeLog("Entry offset: " + indexData[dirnum].offset, true);
@@ -431,11 +435,11 @@ namespace SimsCCManager.Packages.Sims2Search
             }
             
 
-            if (fileHas.Exists(x => x.term == "OBJD")) {
+            if (fileHas.Exists(x => x.TypeID == "OBJD")) {
                 
                 var obd = from has in fileHas
-                            where has.term == "OBJD"
-                            select has.location;
+                            where has.TypeID == "OBJD"
+                            select has.Location;
                 objdnum = obd.ToList();
 
 
@@ -467,11 +471,11 @@ namespace SimsCCManager.Packages.Sims2Search
                 
             }
 
-            if (fileHas.Exists(x => x.term == "STR#"))
+            if (fileHas.Exists(x => x.TypeID == "STR#"))
             {
                 var strr = from has in fileHas
-                            where has.term == "STR#"
-                            select has.location;
+                            where has.TypeID == "STR#"
+                            select has.Location;
                 strnm = strr.ToList();
                 
                 foreach (int strloc in strnm) {
@@ -501,12 +505,12 @@ namespace SimsCCManager.Packages.Sims2Search
                 }
                 
             }
-            if (fileHas.Exists(x => x.term == "MMAT"))
+            if (fileHas.Exists(x => x.TypeID == "MMAT"))
             {
                 List<int> entryspots = new List<int>();
                 var csp = from has in fileHas
-                        where has.term == "MMAT"
-                        select has.location;
+                        where has.TypeID == "MMAT"
+                        select has.Location;
                 entryspots = csp.ToList();
                 mmatloc = entryspots[0];
                 //dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
@@ -571,12 +575,12 @@ namespace SimsCCManager.Packages.Sims2Search
             }
 
             
-            if (fileHas.Exists(x => x.term == "SHPE"))
+            if (fileHas.Exists(x => x.TypeID == "SHPE"))
             {   
                 List<int> entryspots = new List<int>();
                 var csp = from has in fileHas
-                        where has.term == "SHPE"
-                        select has.location;
+                        where has.TypeID == "SHPE"
+                        select has.Location;
                 entryspots = csp.ToList();
                 int entryloc = entryspots[0];
                 //dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
@@ -722,11 +726,12 @@ namespace SimsCCManager.Packages.Sims2Search
 
             foreach (fileHasList item in fileHas){
                 foreach (typeList type in TypeListings.AllTypesS2){
-                    if (type.desc == item.term){
+                    if (type.desc == item.TypeID){
                         typeDict.Increment(type.desc);
                     }
                 }
             }
+            
 
             foreach (KeyValuePair<string, int> type in typeDict){
                 TypeCounter tc = new TypeCounter();
@@ -735,7 +740,7 @@ namespace SimsCCManager.Packages.Sims2Search
                 log.MakeLog("There are " + tc.Type + " of " + tc.Count + " in this package.", true);
                 typecount.Add(tc);
             }
-            
+            thisPackage.FileHas.AddRange(fileHas);
             thisPackage.Entries.AddRange(typecount);
 
             
@@ -835,37 +840,37 @@ namespace SimsCCManager.Packages.Sims2Search
 
             #region Get Info
 
-                if (!String.IsNullOrWhiteSpace(dirvar.XMLSubtype)){
-                    log.MakeLog("Getting XMLSubtype " + dirvar.XMLSubtype + " from dirvar.", true);
-                    thisPackage.XMLSubtype = dirvar.XMLSubtype;
+                if (!String.IsNullOrWhiteSpace(dirvar.Subtype)){
+                    log.MakeLog("Getting Subtype " + dirvar.Subtype + " from dirvar.", true);
+                    thisPackage.Subtype = dirvar.Subtype;
                 }
-                if (!String.IsNullOrWhiteSpace(dirvar.XMLType)){
-                    log.MakeLog("Getting Type " + dirvar.XMLType + " from dirvar.", true);
-                    thisPackage.XMLType = dirvar.XMLType;
+                if (!String.IsNullOrWhiteSpace(dirvar.Type)){
+                    log.MakeLog("Getting Type " + dirvar.Type + " from dirvar.", true);
+                    thisPackage.Type = dirvar.Type;
                 }
-                if (!String.IsNullOrWhiteSpace(dirvar.XMLCategory)){
-                    log.MakeLog("Getting xmlCategory " + dirvar.XMLCategory + " from dirvar.", true);
-                    thisPackage.XMLCategory = dirvar.XMLCategory;
+                if (!String.IsNullOrWhiteSpace(dirvar.Category)){
+                    log.MakeLog("Getting Category " + dirvar.Category + " from dirvar.", true);
+                    thisPackage.Category = dirvar.Category;
                 }
-                if (!String.IsNullOrWhiteSpace(dirvar.XMLModelName)){
-                    log.MakeLog("Getting XMLModelName " + dirvar.XMLModelName + " from dirvar.", true);
-                    thisPackage.XMLModelName = dirvar.XMLModelName;
+                if (!String.IsNullOrWhiteSpace(dirvar.ModelName)){
+                    log.MakeLog("Getting ModelName " + dirvar.ModelName + " from dirvar.", true);
+                    thisPackage.ModelName = dirvar.ModelName;
                 }
-                if (dirvar.ObjectGUID?.Any() != true){
-                    log.MakeLog("Getting ObjectGUID " + dirvar.ObjectGUID.ToString() + " from dirvar.", true);
-                    allGUIDS.AddRange(objdvar.ObjectGUID);
+                if (dirvar.GUIDs?.Any() != true){
+                    log.MakeLog("Getting GUID " + dirvar.GUIDs.ToString() + " from dirvar.", true);
+                    allGUIDS.AddRange(objdvar.GUIDs);
                 }
-                if (!String.IsNullOrWhiteSpace(dirvar.XMLCreator)){
-                    log.MakeLog("Getting XMLCreator " + dirvar.XMLCreator + " from dirvar.", true);
-                    thisPackage.XMLCreator = dirvar.XMLCreator;
+                if (!String.IsNullOrWhiteSpace(dirvar.Creator)){
+                    log.MakeLog("Getting Creator " + dirvar.Creator + " from dirvar.", true);
+                    thisPackage.Creator = dirvar.Creator;
                 }
-                if (!String.IsNullOrWhiteSpace(dirvar.XMLAge)){
-                    log.MakeLog("Getting XMLAge " + dirvar.XMLAge + " from dirvar.", true);
-                    thisPackage.XMLAge = dirvar.XMLAge;
+                if (!String.IsNullOrWhiteSpace(dirvar.Age)){
+                    log.MakeLog("Getting Age " + dirvar.Age + " from dirvar.", true);
+                    thisPackage.Age = dirvar.Age;
                 }
-                if (!String.IsNullOrWhiteSpace(dirvar.XMLGender)){
-                    log.MakeLog("Getting XMLGender " + dirvar.XMLGender + " from dirvar.", true);
-                    thisPackage.XMLGender = dirvar.XMLGender;
+                if (!String.IsNullOrWhiteSpace(dirvar.Gender)){
+                    log.MakeLog("Getting Gender " + dirvar.Gender + " from dirvar.", true);
+                    thisPackage.Gender = dirvar.Gender;
                 }
 
             #endregion
@@ -884,22 +889,22 @@ namespace SimsCCManager.Packages.Sims2Search
                 thisPackage.RequiredEPs = objdvar.RequiredEPs;
                 log.MakeLog("Getting RoomSort " + objdvar.RoomSort.ToString() + " from objdvar.", true);
                 thisPackage.RoomSort = objdvar.RoomSort;                
-                log.MakeLog("Getting ObjectGUID " + objdvar.ObjectGUID.ToString() + " from objdvar.", true);
-                allGUIDS.AddRange(objdvar.ObjectGUID);
+                log.MakeLog("Getting GUID " + objdvar.GUIDs.ToString() + " from objdvar.", true);
+                allGUIDS.AddRange(objdvar.GUIDs);
 
-            if (thisPackage.XMLType == "floor") {
+            if (thisPackage.Type == "floor") {
                 thisPackage.Type = "Floor";
-            } else if (thisPackage.XMLType == "wallpaper") {
+            } else if (thisPackage.Type == "wallpaper") {
                 thisPackage.Type = "Wallpaper";
-            } else if (thisPackage.XMLType == "terrainPaint") {
+            } else if (thisPackage.Type == "terrainPaint") {
                 thisPackage.Type = "Terrain Paint";
             }
-            if (!String.IsNullOrWhiteSpace(thisPackage.XMLType)){
-                thisPackage.Function = thisPackage.XMLType;
-                thisPackage.Type = thisPackage.XMLType;
+            if (!String.IsNullOrWhiteSpace(thisPackage.Type)){
+                thisPackage.Function = thisPackage.Type;
+                thisPackage.Type = thisPackage.Type;
             }
-            if (!String.IsNullOrWhiteSpace(thisPackage.XMLSubtype)){
-                thisPackage.FunctionSubcategory = thisPackage.XMLSubtype;
+            if (!String.IsNullOrWhiteSpace(thisPackage.Subtype)){
+                thisPackage.FunctionSubcategory = thisPackage.Subtype;
             }
 
             #endregion
@@ -908,12 +913,17 @@ namespace SimsCCManager.Packages.Sims2Search
             distinctInstanceIDs = allInstanceIDs.Distinct().ToList();
             thisPackage.InstanceIDs.AddRange(distinctInstanceIDs);
             distinctGUIDS = allGUIDS.Distinct().ToList();
-            thisPackage.ObjectGUID.AddRange(distinctGUIDS);
+            thisPackage.GUIDs.AddRange(distinctGUIDS);
             log.MakeLog("Package Summary: " + thisPackage.ToString(), true);
             log.MakeLog(thisPackage.ToString(), false);
             //Containers.Containers.allSimsPackages.Add(thisPackage);
             log.MakeLog(string.Format("Adding {0} to packages database.", thisPackage.PackageName), true);
-            GlobalVariables.DatabaseConnection.Insert(thisPackage);
+            try {
+                GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage, true);
+            } catch (Exception e) {
+                log.MakeLog(string.Format("Caught exception adding Sims 2 package to database. \n Exception: {0}", e), true);
+            }
+            
             log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
             txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
             var closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
@@ -945,7 +955,7 @@ namespace SimsCCManager.Packages.Sims2Search
                                 ts.Hours, ts.Minutes, ts.Seconds,
                                 ts.Milliseconds / 10);
             log.MakeLog(string.Format("Reading file {0} took {1}", packageinfo.Name, elapsedtime), true);
-            GlobalVariables.packagesRead++; 
+            
         }
 
         public void S2FindOrphans(SimsPackage package) {  
@@ -953,13 +963,13 @@ namespace SimsCCManager.Packages.Sims2Search
             log.MakeLog("Reading " + package.PackageName + " and checking for orphaned recolors.", true);        
             if ((package.Mesh == false) && (package.Recolor == true)){
                 log.MakeLog(package.PackageName + ": Package has no mesh.", true);                
-                foreach (string guid in package.ObjectGUID) {
+                foreach (string guid in package.GUIDs) {
 
                 }
             }
             if ((package.Mesh == true) && (package.Recolor == false)){
                 log.MakeLog(package.PackageName + ": Package has a mesh and no recolor.", true);  
-                foreach (string guid in package.ObjectGUID) {
+                foreach (string guid in package.GUIDs) {
                     
                 }
             }

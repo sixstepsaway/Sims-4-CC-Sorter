@@ -12,6 +12,7 @@ using SimsCCManager.Packages.Containers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SQLitePCL;
+using SQLiteNetExtensions;
 using System.Text.RegularExpressions;
 
 namespace SSAGlobals {

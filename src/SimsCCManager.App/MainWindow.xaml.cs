@@ -390,15 +390,44 @@ namespace Sims_CC_Sorter
             command.ExecuteNonQuery();
             GlobalVariables.DatabaseConnection.CreateTable <PackageFile>();
             log.MakeLog("Making SimsPackages table", true);
-            GlobalVariables.DatabaseConnection.CreateTable <SimsPackage>();
-            log.MakeLog("Making AgeGenderFlags table", true);
-            GlobalVariables.DatabaseConnection.CreateTable <AgeGenderFlags>();
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <SimsPackage>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making SimsPackages table: {0}", e), true);
+            }            
+            
+            log.MakeLog("Making AgeGenderFlags table", true);  
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <AgeGenderFlags>();              
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making AgeGenderFlags table: {0}", e), true);
+            }            
             log.MakeLog("Making TypeCounter table", true);
-            GlobalVariables.DatabaseConnection.CreateTable <TypeCounter>();
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <TypeCounter>();            
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making TypeCounter table: {0}", e), true);
+            }            
             log.MakeLog("Making Tagslist table", true);
-            GlobalVariables.DatabaseConnection.CreateTable <TagsList>();
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <TagsList>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making Tagslist table: {0}", e), true);
+            }             
             log.MakeLog("Making BrokenChecked table", true);
-            GlobalVariables.DatabaseConnection.CreateTable <BrokenChecked>();
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <BrokenChecked>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making BrokenChecked table: {0}", e), true);
+            }             
+            log.MakeLog("Making FileHasList table", true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <fileHasList>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making File Has table: {0}", e), true);
+            } 
+            
+            
             var pragmas = new List<string>(){
                 "PRAGMA journal_mode=MEMORY",
                 "PRAGMA synchronous=EXTRA",
@@ -451,8 +480,7 @@ namespace Sims_CC_Sorter
             
             sw.Stop();
             Task updatesw = Task.Run(() => {
-                complete= true;
-                ElapsedProcessing("Reading packages");                 
+                complete= true;               
             }, token);
 
             if (complete == true){
@@ -463,7 +491,6 @@ namespace Sims_CC_Sorter
 
             if (!token.IsCancellationRequested) {
                 sw.Stop();
-                ElapsedProcessing("reading packages");
                 completionAlertValue("Done!");
                 SetTextCurrentPkText("");
                 SetProgressBarMax();
@@ -937,7 +964,7 @@ namespace Sims_CC_Sorter
             new Thread(() => RunUpdateElapsed(sw)) {IsBackground = true}.Start();
             new Thread(() => RunUpdateProgressBar()) {IsBackground = true}.Start();
             Task ReadPackages = Task.Run(() => {                
-                if (GlobalVariables.debugMode == true){
+                if (GlobalVariables.debugMode == false){
                     foreach (PackageFile p in allp){
                         if (token.IsCancellationRequested)
                         {
@@ -968,8 +995,9 @@ namespace Sims_CC_Sorter
         }
 
         private void GetResults(){
+            runprogress = false;
             Dispatcher.Invoke(new Action(() => {
-                ResultsWindow resultsWindow = new ResultsWindow();
+                ResultsWindow resultsWindow = new ResultsWindow(cts);
                 resultsWindow.Show();
                 this.Close();
             }));
@@ -1021,32 +1049,36 @@ namespace Sims_CC_Sorter
         }  
 
         public void UpdateProgressBar(string name, string verb){
-            Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - {2} {3}", countprogress, maxi, verb, name)));
+            Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - {2} {3}", GlobalVariables.packagesRead, maxi, verb, name)));
             Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
         }
 
-        private async void RunUpdateProgressBar(){            
-            while (runprogress == true)
-            {   
-                if (GlobalVariables.packagesRead >= 0 && (!String.IsNullOrWhiteSpace(currentpackage))){
-                    new Thread(() => AutoUpdateProgressBar()) {IsBackground = true}.Start();
-                }
-                else 
-                {
-                    Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("Preparing to read {0} packages.", maxi)));
-                }         
-                
-            }
+        private async void RunUpdateProgressBar(){  
+            Task rp = Task.Run(() => {
+               while (runprogress == true)
+                {   
+                    if (GlobalVariables.packagesRead >= 0 && (!String.IsNullOrWhiteSpace(currentpackage))){
+                        new Thread(() => AutoUpdateProgressBar()) {IsBackground = true}.Start();
+                    }
+                    else 
+                    {
+                        Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("Preparing to read {0} packages.", maxi)));
+                    }                
+                } 
+            });
+            rp.Wait();
+            return;            
         }
 
         public void AutoUpdateProgressBar(){
             //for the reading of the packages
+            //log.MakeLog("Updating progress bar.", true);
             Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - {2}", GlobalVariables.packagesRead, maxi, currentpackage)));
             Dispatcher.Invoke(new Action(() => mainProgressBar.Value = GlobalVariables.packagesRead));
         }
 
         public void UpdateElasped(Stopwatch sw){
-            //log.MakeLog("Running update elapsed.", true);
+            //log.MakeLog("Updating elapsed.", true);
             List<string> times = new List<string>();
             TimeSpan Elapsed = sw.Elapsed;
             TimeSpan remaining = ((Elapsed / GlobalVariables.packagesRead) * maxi) - Elapsed;
@@ -1060,15 +1092,19 @@ namespace Sims_CC_Sorter
             Dispatcher.Invoke(new Action(() => timeRemaining.Text = string.Format("Elapsed: {0} | Remaining: {1}", times[0], times[1])));
         }
 
-        private async void RunUpdateElapsed(Stopwatch sw){            
-            log.MakeLog("Running run update elapsed.", true);
-            Dispatcher.Invoke(new Action(() => timeRemaining.Visibility = Visibility.Visible));
-            while (runprogress == true)
-            {
-                if (GlobalVariables.packagesRead != 0){
-                    new Thread(() => UpdateElasped(sw)) {IsBackground = true}.Start();
+        private async void RunUpdateElapsed(Stopwatch sw){
+            Task rue = Task.Run(() => {
+                //log.MakeLog("Running run update elapsed.", true);
+                Dispatcher.Invoke(new Action(() => timeRemaining.Visibility = Visibility.Visible));
+                while (runprogress == true)
+                {
+                    if (GlobalVariables.packagesRead != 0){
+                        new Thread(() => UpdateElasped(sw)) {IsBackground = true}.Start();
+                    }
                 }
-            }
+            });
+            rue.Wait();
+            return;            
         }
 
 
@@ -1082,8 +1118,7 @@ namespace Sims_CC_Sorter
         private void testbutton_Click(object sender, EventArgs e) {
             statement = "Dev test button clicked.";
             log.MakeLog(statement, true);
-                      
-
         }        
     }
+
 }
