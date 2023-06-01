@@ -66,17 +66,15 @@ namespace Sims_CC_Sorter
         int gameNum = 0;
         bool keepgoing = true;
         bool continuing = true;
+        bool hascancelled = false;
         bool stop = false;
         bool eatenturecpu = true;
 
         private bool FindNewAdditions;
         public static bool dataExists;
-        private bool ContinuePrevious;
-        private bool ManageFolder;
-        private bool SortFolder;
-        public bool DetectedHalfRun;
         public bool runprogress = false;
         private int workerThreads;
+        private bool fullystopped = false;
         private int portThreads;
         public int countprogress = 0;
         private int batchsize = 250;
@@ -84,7 +82,6 @@ namespace Sims_CC_Sorter
         int threads = Environment.ProcessorCount;
         int threadstouse = 0;
         bool complete = false;
-        public string currentpackage;
         
         private List<PackageFile> s2pending = new List<PackageFile>();
         private List<PackageFile> s3pending = new List<PackageFile>();
@@ -132,9 +129,13 @@ namespace Sims_CC_Sorter
             }            
             if (dataExists == true) 
             {
+                Dispatcher.Invoke(new Action(() => StartOverButton.Visibility = Visibility.Visible));
                 Dispatcher.Invoke(new Action(() => LoadButton.Visibility = Visibility.Visible));
+                Dispatcher.Invoke(new Action(() => NewFolder.Content = "Find New Items"));
             } else {
+                Dispatcher.Invoke(new Action(() => StartOverButton.Visibility = Visibility.Collapsed));
                 Dispatcher.Invoke(new Action(() => LoadButton.Visibility = Visibility.Collapsed));
+                Dispatcher.Invoke(new Action(() => NewFolder.Content = "Find Content"));
             }
         }      
         
@@ -146,7 +147,7 @@ namespace Sims_CC_Sorter
 
         private void loadData_Click(object sender, RoutedEventArgs e){
             Task.Run(() => {
-               GetResults(); 
+                GetResults(); 
             });
             
         }
@@ -206,13 +207,34 @@ namespace Sims_CC_Sorter
             cts.Cancel();
             CancelButton.Background = Brushes.LightGray;
             runprogress = false;
-            while (stop == false){
+            hascancelled = true;
+            Dispatcher.Invoke(new Action(() => Progressing.Visibility = Visibility.Hidden ));
+            Dispatcher.Invoke(new Action(() => Cancelling.Visibility = Visibility.Visible ));
+            while (fullystopped == false){
                 Thread.Sleep(1);
-            }            
+            }
             // Cancellation should have happened, so call Dispose.
-            
-            HideProgressGrid();
-            
+            HideProgressGrid();            
+        }
+
+        private async void CancellingTick(){
+            while (fullystopped == false){
+                Task one = Task.Run(() => {
+                    Dispatcher.Invoke(new Action(() => CancelLabel.Content = "Cancelling, please wait."));
+                    Thread.Sleep(15);
+                });
+                one.Wait();
+                Task two = Task.Run(() => {
+                    Dispatcher.Invoke(new Action(() => CancelLabel.Content = "Cancelling, please wait.."));
+                    Thread.Sleep(15);
+                });
+                two.Wait();
+                Task three = Task.Run(() => {
+                    Dispatcher.Invoke(new Action(() => CancelLabel.Content = "Cancelling, please wait..."));
+                    Thread.Sleep(15);
+                });
+                three.Wait();
+            }
         }
 
         private void exitButton_Click(object sender, EventArgs e)
@@ -232,68 +254,37 @@ namespace Sims_CC_Sorter
             Dispatcher.Invoke(new Action(() => completionAlert.Text = value));
         }
 
-        private void ManageOldFolder_Click(object sender, EventArgs e) {
+        private void StartOver_Click(object sender, EventArgs e) {
             if (SelectedFolder == "") {
                 System.Windows.Forms.MessageBox.Show("Please select the folder containing your package files.");
             } else {
-                log.MakeLog("Managing old folder.", true);
-                ManageFolder = true;
-                //System.Windows.Forms.MessageBox.Show("Not yet implemented.");
-                //ManageOldFolder();
+                log.MakeLog("Starting over.", true);
+                FindNewAdditions = false;
+                Task.Run(() => {
+                    SortNewPrep();
+                });                
             }            
         }
 
-        private void SortNewFolder_Click(object sender, EventArgs e) {
-            
+        private void FindNewItems_Click(object sender, EventArgs e) {            
             if (SelectedFolder == "") {
                 System.Windows.Forms.MessageBox.Show("Please select the folder containing your package files.");
             } else {
                 log.MakeLog("Sorting new folder.", true);
-                SortFolder = true;
-                DetectedHalfRun = DetectHalfRun();
-                if (DetectedHalfRun == true){
-                    Dispatcher.Invoke(new Action(() => FoundPastItems.Visibility = Visibility.Visible));
-                    Dispatcher.Invoke(new Action(() => ContinueQuestion.Visibility = Visibility.Visible));
+                if (dataExists == true){
+                    FindNewAdditions = true;
+                    Task.Run(() => {
+                        SortNewFolder(cts.Token);
+                    }); 
                 } else {
-                    SortNewPrep();
+                    FindNewAdditions = false;
+                    Task.Run(() => {
+                        SortNewPrep();
+                    });  
                 }                
+                               
             }   
         }
-        
-        private void ContinueSearch_Click(object sender, EventArgs e) {
-            Dispatcher.Invoke(new Action(() => ContinueQuestion.Visibility = Visibility.Hidden));
-            Dispatcher.Invoke(new Action(() => FindNewItemsQuestion.Visibility = Visibility.Visible));
-            ContinuePrevious = true;
-        }
-        private void RestartSearch_Click(object sender, EventArgs e) {
-            ContinuePrevious = false;
-            FindNewAdditions = true;
-            Dispatcher.Invoke(new Action(() => FoundPastItems.Visibility = Visibility.Hidden));
-            Task.Run(() => {
-                SortNewPrep();
-            });            
-        }
-        private void CancelSearch_Click(object sender, EventArgs e) {
-            Dispatcher.Invoke(new Action(() => FoundPastItems.Visibility = Visibility.Hidden));
-        }
-        private void YesFindNewItems_Click(object sender, EventArgs e) {
-            Dispatcher.Invoke(new Action(() => ContinueQuestion.Visibility = Visibility.Hidden));
-            Dispatcher.Invoke(new Action(() => FindNewItemsQuestion.Visibility = Visibility.Hidden));
-            Dispatcher.Invoke(new Action(() => FoundPastItems.Visibility = Visibility.Hidden));
-            FindNewAdditions = true;
-            Task.Run(() => {
-                SortNewFolder(cts.Token);
-            });            
-        }
-        private void NoDontFindNew_Click(object sender, EventArgs e) {
-            Dispatcher.Invoke(new Action(() => ContinueQuestion.Visibility = Visibility.Hidden));
-            Dispatcher.Invoke(new Action(() => FindNewItemsQuestion.Visibility = Visibility.Hidden));
-            Dispatcher.Invoke(new Action(() => FoundPastItems.Visibility = Visibility.Hidden));
-            FindNewAdditions = false;
-            Task.Run(() => {
-                SortNewFolder(cts.Token);
-            });
-        }          
 
         private void SetProgressBar(){
             log.MakeLog("Setting progress bar!", true);
@@ -310,11 +301,13 @@ namespace Sims_CC_Sorter
         }
 
         private void ShowProgressGrid(){
+            Dispatcher.Invoke(new Action(() => Progressing.Visibility = Visibility.Visible));
             try {
                 Dispatcher.Invoke(new Action(() => ProgressGrid.Visibility = Visibility.Visible));
             } catch (Exception e) {
                 Console.WriteLine("Show Progress Grid Failed: " + e.Message);
             }
+
             try {
                 Dispatcher.Invoke(new Action(() => MainMenuGrid.Visibility = Visibility.Hidden));
             } catch (Exception e) {
@@ -335,7 +328,9 @@ namespace Sims_CC_Sorter
 
         private void HideProgressGrid(){
             Dispatcher.Invoke(new Action(() => ProgressGrid.Visibility = Visibility.Hidden));
-            Dispatcher.Invoke(new Action(() => MainMenuGrid.Visibility = Visibility.Visible));
+            Dispatcher.Invoke(new Action(() => Progressing.Visibility = Visibility.Hidden));
+            Dispatcher.Invoke(new Action(() => MainMenuGrid.Visibility = Visibility.Visible));            
+            Dispatcher.Invoke(new Action(() => Cancelling.Visibility = Visibility.Hidden ));
         }
 
         private void SetTextCurrentPkText(string txt){
@@ -373,7 +368,7 @@ namespace Sims_CC_Sorter
 
 
         private void SortNewPrep(){
-            log.MakeLog("Prepping to sort folder.", true);
+            log.MakeLog("Prepping to sort folder.", true);            
 
             GlobalVariables.DatabaseConnection.Close();
             try{
@@ -448,9 +443,13 @@ namespace Sims_CC_Sorter
         private void SortNewFolder(object obj){
             CancellationToken token = (CancellationToken)obj;  
             parallelSettings.CancellationToken = token; 
+            
             sw.Start();
             ShowProgressGrid();
-            if (ContinuePrevious == true){
+            if (FindNewAdditions == true){
+                if (hascancelled == true){
+                    GlobalVariables.DatabaseConnection.Close();
+                }
                 globalVars.ConnectDatabase(false);
             }
 
@@ -499,6 +498,7 @@ namespace Sims_CC_Sorter
             } else {
                 cts.Dispose();
                 stop = false;
+                fullystopped = true;
                 runprogress = true;
                 log.MakeLog("Fully cancelled.", true);
             }
@@ -510,6 +510,8 @@ namespace Sims_CC_Sorter
 
         private void FindFiles(CancellationToken token){
             string[] filesS = Directory.GetFiles(GlobalVariables.ModFolder, "*", SearchOption.AllDirectories);
+            
+            
             Task task0 = Task.Run(() => {
                 log.MakeLog("Sorting packages files from non-package files.", true);
                 log.MakeLog(string.Format("Setting maxi to {0}", filesS.Length), true);
@@ -518,20 +520,27 @@ namespace Sims_CC_Sorter
                 log.MakeLog("Setting progress bar.", true);
                 SetProgressBar();
                 completionAlertValue("Sorting package files from non-package files.");
-                log.MakeLog("Getting packagesPending.", true);
-                var packagesPendingV = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending'");
-                packagesPending.AddRange(packagesPendingV);
-                log.MakeLog("Getting packagesProcessing.", true);
-                var packagesProcessingV = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Processing'");
-                packagesProcessing.AddRange(packagesPendingV);
-                log.MakeLog("Getting packagesDone.", true);
-                var packagesDoneV = GlobalVariables.DatabaseConnection.Query<SimsPackage>("SELECT * FROM Packages");
-                packagesDone.AddRange(packagesDoneV);
-                log.MakeLog("Getting notpack.", true);
-                var notpackV = GlobalVariables.DatabaseConnection.Query<AllFiles>("SELECT * FROM AllFiles");
-                notpack.AddRange(notpackV);
             }, token);
-            task0.Wait();
+            task0.Wait();  
+
+            if (FindNewAdditions == true){
+                Task taskfna = Task.Run(() => {
+                    log.MakeLog("Getting packagesPending.", true);
+                    var packagesPendingV = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending'");
+                    packagesPending.AddRange(packagesPendingV);
+                    log.MakeLog("Getting packagesProcessing.", true);
+                    var packagesProcessingV = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Processing'");
+                    packagesProcessing.AddRange(packagesPendingV);
+                    log.MakeLog("Getting packagesDone.", true);
+                    var packagesDoneV = GlobalVariables.DatabaseConnection.Query<SimsPackage>("SELECT * FROM Packages");
+                    packagesDone.AddRange(packagesDoneV);
+                    log.MakeLog("Getting notpack.", true);
+                    var notpackV = GlobalVariables.DatabaseConnection.Query<AllFiles>("SELECT * FROM AllFiles");
+                    notpack.AddRange(notpackV);
+                });
+                taskfna.Wait();
+            }                 
+            
 
             Task task1 = Task.Run(() => {
                 int c = 0;
@@ -891,6 +900,7 @@ namespace Sims_CC_Sorter
                     { 
                         log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", p.Name), true);
                         packagefiles.Add(new PackageFile { Name = p.Name, Location = p.FullName, Status = "Pending"});
+                        allfiles.Add(new AllFiles { Name = p.Name, Location = p.FullName, Type = "package", Status = "Fine"});
                     }
                 });
                 UpdateProgressBar("package files", "Sorting");
@@ -972,7 +982,6 @@ namespace Sims_CC_Sorter
                             stop = true;
                             return;
                         }
-                        currentpackage = p.Name;
                         Task read = Task.Run(() => {
                             initialprocess.CheckThrough(p.Location);
                         });
@@ -986,7 +995,6 @@ namespace Sims_CC_Sorter
                             stop = true;
                             return;
                         }
-                        currentpackage = p.Name;
                         initialprocess.CheckThrough(p.Location);
                     });
                 }
@@ -997,8 +1005,14 @@ namespace Sims_CC_Sorter
         private void GetResults(){
             runprogress = false;
             Dispatcher.Invoke(new Action(() => {
-                ResultsWindow resultsWindow = new ResultsWindow(cts);
-                resultsWindow.Show();
+                try {
+                    ResultsWindow resultsWindow = new ResultsWindow(cts);
+                    resultsWindow.Show();
+                } catch (Exception e) {
+                    Console.WriteLine("Failed to open results window. Error: " + e.Message);
+                    throw;
+                }
+                
                 this.Close();
             }));
         }
@@ -1057,7 +1071,7 @@ namespace Sims_CC_Sorter
             Task rp = Task.Run(() => {
                while (runprogress == true)
                 {   
-                    if (GlobalVariables.packagesRead >= 0 && (!String.IsNullOrWhiteSpace(currentpackage))){
+                    if (GlobalVariables.packagesRead >= 0 && (!String.IsNullOrWhiteSpace(GlobalVariables.currentpackage))){
                         new Thread(() => AutoUpdateProgressBar()) {IsBackground = true}.Start();
                     }
                     else 
@@ -1073,7 +1087,7 @@ namespace Sims_CC_Sorter
         public void AutoUpdateProgressBar(){
             //for the reading of the packages
             //log.MakeLog("Updating progress bar.", true);
-            Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - {2}", GlobalVariables.packagesRead, maxi, currentpackage)));
+            Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - {2}", GlobalVariables.packagesRead, maxi, GlobalVariables.currentpackage)));
             Dispatcher.Invoke(new Action(() => mainProgressBar.Value = GlobalVariables.packagesRead));
         }
 
@@ -1110,14 +1124,11 @@ namespace Sims_CC_Sorter
 
         #endregion
               
-      
-        private void ManageOldFolder(){
-            
-        }
 
         private void testbutton_Click(object sender, EventArgs e) {
-            statement = "Dev test button clicked.";
-            log.MakeLog(statement, true);
+            SimsPackage sp = new SimsPackage();
+            sp.FileSize = 143866046;
+            log.MakeLog(sp.ToString(), true);
         }        
     }
 

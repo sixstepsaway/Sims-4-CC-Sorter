@@ -45,6 +45,14 @@ namespace SimsCCManager.SortingUIResults {
         CancellationTokenSource cts = new CancellationTokenSource();
         GridViewColumnHeader _lastHeaderClicked = null;
         ListSortDirection _lastDirection = ListSortDirection.Ascending;
+        public static System.Windows.Controls.ListView resultsView = new System.Windows.Controls.ListView();
+        ContextMenu contextmenu = new ContextMenu();
+        public static System.Windows.Controls.TextBox searchbox = new System.Windows.Controls.TextBox();
+        public static System.Windows.Controls.ComboBox comboBox = new System.Windows.Controls.ComboBox();
+        public static System.Windows.Controls.ListView tagslist = new System.Windows.Controls.ListView();
+        public static Grid tagsgrid = new Grid();
+        public static Dictionary<string, string> comboboxoptions = new Dictionary<string, string>();
+        public static int game = 0;
         
         public ResultsWindow(CancellationTokenSource cts) 
         {
@@ -53,7 +61,35 @@ namespace SimsCCManager.SortingUIResults {
             InitializeComponent(); 
             log.MakeLog("Running results grid method.", true); 
             Loaded += ResultsWindow_Loaded;
+            resultsView = ResultsView;
+            tagslist = TagsListBox;
+            contextmenu = ResultsView.ContextMenu;
             DataContext = new PackagesViewModel(); 
+            searchbox = SearchBox;
+            comboBox = this.ComboBoxSearch;
+            List<string> comboboxsearch = new List<string>();
+            comboboxoptions.Add("Package Name", "PackageName");
+            comboboxoptions.Add("Title", "Title");
+            comboboxoptions.Add("Description", "Description");
+            comboboxoptions.Add("InstanceIDs", "InstanceIDsBlobbed");
+            comboboxoptions.Add("Catalog Tags", "CatalogTags");
+            comboboxoptions.Add("Type", "Type");
+            comboboxoptions.Add("Game", "Game");
+            comboboxoptions.Add("Category", "Category");
+            comboboxoptions.Add("Age", "Age");
+            comboboxoptions.Add("Gender", "Gender");
+            comboboxoptions.Add("Function", "Function");
+            comboboxoptions.Add("Function Subcategory", "FunctionSubcategory");
+            comboboxoptions.Add("Required EPs", "RequiredEpsBlob");
+            comboboxoptions.Add("Overridden Instances", "OverridenInstancesBlobbed");
+            comboboxoptions.Add("Overridden Items", "OverriddenItemsBlobbed");
+            comboboxoptions.Add("Conflicts", "MatchingConflictsBlobbed");
+            comboboxoptions.Add("Matching Recolors", "MatchingRecolorsBlobbed");
+            comboboxoptions.Add("Matching Meshes", "MatchingMesh");
+            foreach (KeyValuePair<string,string> kvp in comboboxoptions){
+                comboboxsearch.Add(kvp.Key);
+            }
+            this.ComboBoxSearch.ItemsSource = comboboxsearch;
         }     
 
         private void ResultsWindow_Loaded(object sender, RoutedEventArgs e)
@@ -61,56 +97,28 @@ namespace SimsCCManager.SortingUIResults {
             
         }
 
+        private void GameCheck(object sender, RoutedEventArgs e) {
+            System.Windows.Controls.RadioButton rb = sender as System.Windows.Controls.RadioButton; 
+            Console.WriteLine("You chose: " + rb.GroupName + ": " + rb.Name); 
+        }
+        private void SearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+		{
+			CollectionViewSource.GetDefaultView(ResultsWindow.resultsView.ItemsSource).Refresh();
+		}
 
+        private void ListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+             e.Handled = true;
+             contextmenu.IsOpen = true;
+        }
+        private void ListViewItem_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+             e.Handled = true;
+        }
 
         private void showallfiles_Click(object sender, EventArgs e){
-            /*if (showallfiles == false){
-                ShowAllBt.Content = "Show Only Packages";
-                ShowAllBt.Background = Brushes.CadetBlue;
-                ResultsDataGridPackages.Visibility = Visibility.Hidden;
-                ResultsDataGridAllFiles.Visibility = Visibility.Visible;
-                showallfiles = true;
-            } else {
-                ShowAllBt.Content = "Show All Files";
-                ShowAllBt.Background = Brushes.Beige;
-                ResultsDataGridPackages.Visibility = Visibility.Visible;
-                ResultsDataGridAllFiles.Visibility = Visibility.Hidden;
-                showallfiles = false;
-            }*/
-            
-        }
-
-        private void CacheData(){
-            
-        }
-        /*
-        private void ResultsDataGridPackages_SelectionChanged(object sender, EventArgs e){
-            ResultsPreviewImage rpi = new ResultsPreviewImage();
-            if( ResultsDataGridPackages.SelectedCells.Count == 1 )
-            {                
-                DataGrid dg = sender as DataGrid;
-                var row = ResultsDataGridPackages.SelectedValue;
-                rpi.Show();
-            } else if ((ResultsDataGridPackages.SelectedCells.Count == 0) || (ResultsDataGridPackages.SelectedCells.Count > 1)) {
-                rpi.Hide();
-            }
-        }
-        private void ResultsDataGridAllFiles_SelectionChanged(object sender, EventArgs e){
-            ResultsPreviewImage rpi = new ResultsPreviewImage();
-            if( ResultsDataGridAllFiles.SelectedCells.Count == 1 )
-            {                
-                DataGrid dg = sender as DataGrid;
-                var row = ResultsDataGridAllFiles.SelectedValue;
-                rpi.Show();
-            } else if ((ResultsDataGridAllFiles.SelectedCells.Count == 0) || (ResultsDataGridAllFiles.SelectedCells.Count > 1)) {
-                rpi.Hide();
-            }
-        }
-        
-        */
-        //if selected --> right click "make otg > lights" --> add thing to package
-
-        
+                        
+        }        
 
         private void menu_Click(object sender, EventArgs e)
         {
@@ -120,49 +128,7 @@ namespace SimsCCManager.SortingUIResults {
             GlobalVariables.DatabaseConnection.Close();
             System.Windows.Application.Current.Shutdown();
         }
-
-        /*private void ResultsDataGridPackages_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                ContextMenu m = new ContextMenu();
-                m.MenuItems.Add(new MenuItem("Cut"));
-                m.MenuItems.Add(new MenuItem("Copy"));
-                m.MenuItems.Add(new MenuItem("Paste"));
-
-                int currentMouseOverRow = ResultsDataGridPackages.HitTest(e.X,e.Y).RowIndex;
-
-                if (currentMouseOverRow >= 0)
-                {
-                    m.MenuItems.Add(new MenuItem(string.Format("Do something to row {0}", currentMouseOverRow.ToString())));
-                }
-
-                m.Show(ResultsDataGridPackages, new Point(e.X, e.Y));
-
-            }
-        }
-
-        private void ResultsDataGridAllFiles_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                ContextMenu m = new ContextMenu();
-                m.MenuItems.Add(new MenuItem("Cut"));
-                m.MenuItems.Add(new MenuItem("Copy"));
-                m.MenuItems.Add(new MenuItem("Paste"));
-
-                int currentMouseOverRow = ResultsDataGridAllFiles.HitTest(e.X,e.Y).RowIndex;
-
-                if (currentMouseOverRow >= 0)
-                {
-                    m.MenuItems.Add(new MenuItem(string.Format("Do something to row {0}", currentMouseOverRow.ToString())));
-                }
-
-                m.Show(ResultsDataGridAllFiles, new Point(e.X, e.Y));
-
-            }
-        }*/
-
+        
         private void Kofi_Click(object sender, EventArgs e){
             if (System.Windows.Forms.MessageBox.Show
             ("Are you sure you want to go to Kofi?", "Opening External URL",
@@ -284,18 +250,21 @@ namespace SimsCCManager.SortingUIResults {
             dataView.SortDescriptions.Add(sd);
             dataView.Refresh();
         }
-    }
-
-    
+    }    
 
     public class PackagesViewModel : INotifyPropertyChanged{
         private ICollectionView _packagesView;
+        private ICollectionView _tagsView;
         public event PropertyChangedEventHandler PropertyChanged;
         private PackagesViewModel _selectedFile;  
 
         public ICollectionView Packages
         {
             get {return _packagesView;}
+        }
+        public ICollectionView Tags
+        {
+            get {return _tagsView;}
         }
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -308,22 +277,13 @@ namespace SimsCCManager.SortingUIResults {
 
         public object Resources { get; private set; }
         ObservableCollection<SimsPackage> packages = new ObservableCollection<SimsPackage>();
+        public static ObservableCollection<TagsList> tags = new ObservableCollection<TagsList>();
 
         public PackagesViewModel(){
             packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
+            _tagsView = CollectionViewSource.GetDefaultView(tags);
             _packagesView = CollectionViewSource.GetDefaultView(packages);
-            
-            /*this.Packages.SortDescriptions.Add(new SortDescription("PackageName", ListSortDirection.Ascending));
-            this.Packages.SortDescriptions.Add(new SortDescription("Title", ListSortDirection.Ascending));
-            this.Packages.SortDescriptions.Add(new SortDescription("Game", ListSortDirection.Ascending));
-            this.Packages.SortDescriptions.Add(new SortDescription("Location", ListSortDirection.Ascending));
-            this.Packages.SortDescriptions.Add(new SortDescription("Type", ListSortDirection.Ascending));
-            this.Packages.SortDescriptions.Add(new SortDescription("Size", ListSortDirection.Ascending));
-            this.Packages.SortDescriptions.Add(new SortDescription("Function", ListSortDirection.Ascending));
-            this.Packages.SortDescriptions.Add(new SortDescription("Tags", ListSortDirection.Ascending));
-            this.Packages.SortDescriptions.Add(new SortDescription("Override", ListSortDirection.Ascending));
-            _packagesView.CurrentChanged += PackagesSelectionChanged;*/
-            
+            _packagesView.Filter = SearchFilter;            
         }
 
         public PackagesViewModel SelectedFileInfo  
@@ -337,68 +297,242 @@ namespace SimsCCManager.SortingUIResults {
                     this.OnPropertyChanged("SelectedFileInfo");  
                 }  
             }  
-        }  
+        }
+
+        private bool SearchFilter(object item)
+		{
+
+
+
+            SimsPackage package = (SimsPackage)item;
+            List<string> notnull = new List<string>();
+
+            if (!String.IsNullOrWhiteSpace(package.PackageName)) notnull.Add("PackageName");
+            if (!String.IsNullOrWhiteSpace(package.Type)) notnull.Add("Type");
+            if (!String.IsNullOrWhiteSpace(package.GameString)) notnull.Add("GameString");
+            if (!String.IsNullOrWhiteSpace(package.Description)) notnull.Add("Description");
+            if (!String.IsNullOrWhiteSpace(package.Title)) notnull.Add("Title");
+            if (package.InstanceIDs != null) notnull.Add("InstancesBlobbed");
+            if (!String.IsNullOrWhiteSpace(package.Category)) notnull.Add("Category");
+            if (!String.IsNullOrWhiteSpace(package.ModelName)) notnull.Add("ModelName");
+            if (package.GUIDs != null) notnull.Add("GuidsBlobbed");
+            if (!String.IsNullOrWhiteSpace(package.Creator)) notnull.Add("Creator");
+            if (!String.IsNullOrWhiteSpace(package.Age)) notnull.Add("Age");
+            if (!String.IsNullOrWhiteSpace(package.Gender)) notnull.Add("Gender");
+            if (package.RequiredEPs != null) notnull.Add("RequiredEPsBlob");
+            if (!String.IsNullOrWhiteSpace(package.Function)) notnull.Add("Function");
+            if (!String.IsNullOrWhiteSpace(package.FunctionSubcategory)) notnull.Add("FunctionSubcategory");
+            if (package.RoomSort != null) notnull.Add("RoomsBlobbed");
+            if (package.Flags != null) notnull.Add("FlagsBlobbed");
+            if (package.CatalogTags != null) notnull.Add("CatalogTags");
+            if (package.OverriddenInstances != null) notnull.Add("OverriddenInstancesBlobbed");
+            if (package.OverriddenItems != null) notnull.Add("OverriddenItemsBlobbed");
+            if (package.MatchingRecolors != null) notnull.Add("MatchingRecolorsBlobbed");
+            if (package.MatchingConflicts != null) notnull.Add("MatchingConflictsBlobbed");
+            if (!String.IsNullOrWhiteSpace(package.MatchingMesh)) notnull.Add("MatchingMesh");
+
+            string searchcriteria = ResultsWindow.comboBox.Text;
+            
+			if(String.IsNullOrEmpty(ResultsWindow.searchbox.Text)){
+                return true;
+            } else {
+                if (searchcriteria != null || String.IsNullOrEmpty(searchcriteria) || String.IsNullOrWhiteSpace(searchcriteria)){
+                    foreach (string property in notnull){
+                        if (property == "CatalogTags"){                            
+                            foreach (TagsList tag in package.GetPropertyTagsList(property)){
+                                if (tag.TypeID.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase) >= 0 || tag.Description.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase)>= 0){
+                                    return true;
+                                }                               
+                            }                            
+                        } else {
+                            if (package.GetPropertyString(property).IndexOf    (ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase)>= 0){
+                                return true;
+                            }
+                        }  
+                    }
+                    return false;
+                }
+                foreach (KeyValuePair<string,string> criteria in ResultsWindow.comboboxoptions){
+                    if (searchcriteria == criteria.Key){
+                        if (criteria.Value == "CatalogTags"){
+                            foreach (TagsList tag in package.GetPropertyTagsList(criteria.Value)){
+                                if (tag.TypeID.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase) >= 0 || tag.Description.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase)>= 0){
+                                    return true;
+                                }
+                            }
+                        } else {
+                            if (package.GetPropertyString(criteria.Value).IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase) >= 0 ) {
+                                return true;
+                            }
+                        }                        
+                    }
+                }
+                return false;
+            }                
+		}
+
+
+        public ICommand ShowTags  
+        {  
+            get { return new DelegateCommand(this.OnShowTags); }  
+        } 
+        
+ 
+        private void OnShowTags()  
+        {   
+            ResultsWindow.tagsgrid.Visibility = Visibility.Visible;
+            SimsPackage item = (SimsPackage)_packagesView.CurrentItem;
+            foreach (TagsList tag in item.CatalogTags){
+                tags.Add(tag);
+            }
+        }
+		
  
         public ICommand DeleteFile  
         {  
             get { return new DelegateCommand(this.OnDelete); }  
         } 
+        
  
+        private void OnDelete()  
+        {   
+            string sourcefile = "";
+            string package = "";
+            string stuff = "";
+            int selection = ResultsWindow.resultsView.SelectedItems.Count;
+            if (selection == 1){
+                SimsPackage item = (SimsPackage)_packagesView.CurrentItem;
+                sourcefile = item.Location;
+                package = item.PackageName;
+                if (System.Windows.Forms.MessageBox.Show
+                (string.Format("Are you sure you want to delete: {0}", ((SimsPackage)_packagesView.CurrentItem).PackageName), "Confirm Delete",
+                System.Windows.Forms.MessageBoxButtons.YesNo, 
+                System.Windows.Forms.MessageBoxIcon.Question)
+                ==System.Windows.Forms.DialogResult.Yes){
+                    if (File.Exists(sourcefile)){                        
+                        File.Delete(sourcefile);                        
+                        GlobalVariables.DatabaseConnection.Delete(item);                        
+                        packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
+                        _packagesView = CollectionViewSource.GetDefaultView(packages);
+                        System.Windows.Forms.MessageBox.Show(string.Format("Deleted {0}!", package));
+                    } else {
+                        System.Windows.Forms.MessageBox.Show(string.Format("File {0} not found at source. Did it get deleted?", sourcefile));    
+                    }                       
+                } else {
+                    //do not delete
+                }
+            } else if (selection != 1 && selection != 0){
+                foreach (var item in ResultsWindow.resultsView.SelectedItems){
+                    SimsPackage thing = (SimsPackage)item;
+                    if (String.IsNullOrEmpty(stuff)){
+                        stuff = string.Format("{0}", thing.PackageName);
+                    } else {
+                        stuff += string.Format("\n {0}", thing.PackageName);
+                    }                
+                }
+                if (System.Windows.Forms.MessageBox.Show
+                (string.Format("Are you sure you want to delete: {0}", stuff), "Confirm Delete",
+                System.Windows.Forms.MessageBoxButtons.YesNo, 
+                System.Windows.Forms.MessageBoxIcon.Question)
+                ==System.Windows.Forms.DialogResult.Yes){
+                    
+                    if (System.Windows.Forms.MessageBox.Show
+                    (string.Format("Are you sure you want to delete: {0}", ((SimsPackage)_packagesView.CurrentItem).PackageName), "Confirm Delete",
+                    System.Windows.Forms.MessageBoxButtons.YesNo, 
+                    System.Windows.Forms.MessageBoxIcon.Question)
+                    ==System.Windows.Forms.DialogResult.Yes){
+                        foreach (var selecteditem in ResultsWindow.resultsView.SelectedItems){
+                            SimsPackage item = (SimsPackage)selecteditem;
+                            sourcefile = item.Location;
+                            package = item.PackageName;
+                            if (File.Exists(sourcefile)){                        
+                                File.Delete(sourcefile);                        
+                                GlobalVariables.DatabaseConnection.Delete(item);                        
+                                packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
+                                _packagesView = CollectionViewSource.GetDefaultView(packages);
+                            } else {
+                                System.Windows.Forms.MessageBox.Show(string.Format("File not found: {0}", sourcefile));    
+                            }
+                        } 
+                        System.Windows.Forms.MessageBox.Show(string.Format("Deleted {0}", stuff));
+                    } else {
+                        //do not delete
+                    }
+                }
+            } 
+        } 
         public ICommand MoveFile  
         {  
             get { return new DelegateCommand(this.OnMove); }  
         }  
- 
-        private void OnDelete()  
-        {   
-            var selection = _selectedFile.Cast<SimsPackage>().Count();
-            var items = _packagesView.Cast<SimsPackage>().ToList();
-            if (selection == 1){
-                System.Windows.Forms.MessageBox.Show(string.Format("You will be deleting one item: {0}", ((SimsPackage)_packagesView.CurrentItem).PackageName));
-            } else if (selection != 1 && selection != 0){
-                string stuff = "";
-                foreach (SimsPackage item in items){
-                    if (String.IsNullOrEmpty(stuff)){
-                        stuff = string.Format("{0}", item.PackageName);
-                    } else {
-                        stuff += string.Format("\n {0}", item.PackageName);
-                    }
-                }
-                System.Windows.Forms.MessageBox.Show(string.Format("You will be deleting {1} items: {0}", stuff, selection));
-            }
-            System.Windows.Forms.MessageBox.Show(string.Format("Deleted {0}!", ((SimsPackage)_packagesView.CurrentItem).PackageName));
-        }  
- 
         private void OnMove()  
         {  
+            string stuff = "";
             string movefolder = "";
             string sourcefile = ((SimsPackage)_packagesView.CurrentItem).Location;
             string filename = ((SimsPackage)_packagesView.CurrentItem).PackageName;
             string destination = "";
-            
-            using(var MoveFolder = new FolderBrowserDialog())
-            {
-                DialogResult result = MoveFolder.ShowDialog();
-                if (result == System.Windows.Forms.DialogResult.OK) {
-                    movefolder = MoveFolder.SelectedPath;
-                    destination = System.IO.Path.Combine(movefolder, filename);
-                    if (File.Exists(sourcefile)){
-                        SimsPackage item = (SimsPackage)_packagesView.CurrentItem;
-                        item.Location = destination;
-                        File.Move(sourcefile, destination);                        
-                        GlobalVariables.DatabaseConnection.UpdateWithChildren(item);                        
-                        packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
-                        _packagesView = CollectionViewSource.GetDefaultView(packages);
+            int selection = ResultsWindow.resultsView.SelectedItems.Count;
+            if (selection == 1){                
+                using(var MoveFolder = new FolderBrowserDialog())
+                {
+                    DialogResult result = MoveFolder.ShowDialog();
+                    if (result == System.Windows.Forms.DialogResult.OK) {
+                        movefolder = MoveFolder.SelectedPath;
+                        destination = System.IO.Path.Combine(movefolder, filename);
+                        if (File.Exists(sourcefile)){
+                            SimsPackage item = (SimsPackage)_packagesView.CurrentItem;
+                            item.Location = destination;
+                            File.Move(sourcefile, destination);                        
+                            GlobalVariables.DatabaseConnection.UpdateWithChildren(item);                        
+                            packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
+                            _packagesView = CollectionViewSource.GetDefaultView(packages);
+                            _packagesView.Refresh();
+                        } else {
+                            System.Windows.Forms.MessageBox.Show(string.Format("File {0} not found at source. Did it get deleted?", sourcefile));    
+                        }
+                        
                     } else {
-                        System.Windows.Forms.MessageBox.Show(string.Format("File {0} not found at source. Did it get deleted?", sourcefile));    
+                        System.Windows.Forms.MessageBox.Show(string.Format("Please pick somewhere to move file."));
                     }
-                    
-                } else {
-                    System.Windows.Forms.MessageBox.Show(string.Format("Please pick somewhere to move file."));
                 }
-            }
             System.Windows.Forms.MessageBox.Show(string.Format("Moved {0}!", ((SimsPackage)_packagesView.CurrentItem).PackageName));
-
+            } else if (selection != 1 && selection != 0){
+                foreach (var item in ResultsWindow.resultsView.SelectedItems){
+                    SimsPackage thing = (SimsPackage)item;
+                    if (String.IsNullOrEmpty(stuff)){
+                        stuff = string.Format("{0}", thing.PackageName);
+                    } else {
+                        stuff += string.Format("\n {0}", thing.PackageName);
+                    }                
+                }
+                using(var MoveFolder = new FolderBrowserDialog())
+                {
+                    DialogResult result = MoveFolder.ShowDialog();
+                    if (result == System.Windows.Forms.DialogResult.OK) {
+                        movefolder = MoveFolder.SelectedPath;
+                        foreach (var thing in ResultsWindow.resultsView.SelectedItems){
+                            SimsPackage item = ((SimsPackage)thing);
+                            filename = item.PackageName;
+                            destination = System.IO.Path.Combine(movefolder, filename);
+                            sourcefile = item.Location;
+                            if (File.Exists(sourcefile)){                            
+                                item.Location = destination;
+                                File.Move(sourcefile, destination);                        
+                                GlobalVariables.DatabaseConnection.UpdateWithChildren(item);                        
+                                packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
+                                _packagesView = CollectionViewSource.GetDefaultView(packages);
+                                _packagesView.Refresh();
+                            } else {
+                                System.Windows.Forms.MessageBox.Show(string.Format("File not found: {0}", item.PackageName));    
+                            }
+                        }
+                    } else {
+                        System.Windows.Forms.MessageBox.Show(string.Format("Please pick somewhere to move file."));
+                    }
+                }
+                System.Windows.Forms.MessageBox.Show(string.Format("Moved {0}", stuff));
+            }
         }  
   
         protected virtual void OnPropertyChanged(string propertyName)  

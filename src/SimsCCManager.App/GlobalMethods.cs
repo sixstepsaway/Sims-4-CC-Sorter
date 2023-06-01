@@ -547,6 +547,7 @@ namespace SSAGlobals {
             AllTypes.Add(new typeList{typeID="07576A17", desc="MCOR", info="Model Cutout Resource"});
             AllTypes.Add(new typeList{typeID="7FB6AD8A", desc="S4SM", info="Sims 4 Studio Merged Package Manifest"});
             AllTypes.Add(new typeList{typeID="2BC04EDF", desc="LRLE", info="LRLE Image"});
+            AllTypes.Add(new typeList{typeID="7DF2169C", desc="SNTR", info="Snippet Tuning Resource"});
 
             return AllTypes;
         }
@@ -753,8 +754,11 @@ namespace SSAGlobals {
         public static bool loadedSaveData = false;
         public static string ModFolder;
         public static string logfile;
+        
+        public static string currentpackage;
         public static int PackageCount = 0;       
         public static int packagesRead = 0;
+        public static int packagesReadReading = 0;
         public static string S4_Overrides_All = @"data\S4_Instances.sqlite";
         public static string S4_Overrides_List = @"data\S4_SpecificOverrides.sqlite";
 

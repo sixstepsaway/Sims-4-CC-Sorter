@@ -914,8 +914,8 @@ namespace SimsCCManager.Packages.Sims2Search
             thisPackage.InstanceIDs.AddRange(distinctInstanceIDs);
             distinctGUIDS = allGUIDS.Distinct().ToList();
             thisPackage.GUIDs.AddRange(distinctGUIDS);
-            log.MakeLog("Package Summary: " + thisPackage.ToString(), true);
-            log.MakeLog(thisPackage.ToString(), false);
+            log.MakeLog("Package Summary: " + thisPackage.SimsPackagetoString(), true);
+            log.MakeLog(thisPackage.SimsPackagetoString(), false);
             //Containers.Containers.allSimsPackages.Add(thisPackage);
             log.MakeLog(string.Format("Adding {0} to packages database.", thisPackage.PackageName), true);
             try {
@@ -954,6 +954,8 @@ namespace SimsCCManager.Packages.Sims2Search
             string elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
                                 ts.Hours, ts.Minutes, ts.Seconds,
                                 ts.Milliseconds / 10);
+            GlobalVariables.currentpackage = packageinfo.Name;
+            GlobalVariables.packagesRead++;
             log.MakeLog(string.Format("Reading file {0} took {1}", packageinfo.Name, elapsedtime), true);
             
         }

@@ -895,8 +895,8 @@ namespace SimsCCManager.Packages.Sims4Search
                     string elapsedtimee = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
                                         tss.Hours, tss.Minutes, tss.Seconds,
                                         tss.Milliseconds / 10);
-                    log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtimee), true);
                     GlobalVariables.packagesRead++;
+                    log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtimee), true);
                     log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
                     return;
                 }
@@ -1752,71 +1752,75 @@ namespace SimsCCManager.Packages.Sims4Search
             }
 
             }
+
+            if (thisPackage.AgeGenderFlags.Any()){
+                if ((thisPackage.AgeGenderFlags.Female == true) && (thisPackage.AgeGenderFlags.Male == true)){
+                    thisPackage.Gender = "Both";
+                } else if (thisPackage.AgeGenderFlags.Female == true){
+                    thisPackage.Gender = "Female";
+                } else if (thisPackage.AgeGenderFlags.Male == true){
+                    thisPackage.Gender = "Male";
+                }
+
+
+                string age = string.Empty;
+                if (thisPackage.AgeGenderFlags.Adult == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age += "Adult";
+                    } else {
+                        age += string.Format(", Adult");
+                    }
+                } else if (thisPackage.AgeGenderFlags.Baby == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age += "Baby";
+                    } else {
+                        age += string.Format(", Baby");
+                    }
+                } else if (thisPackage.AgeGenderFlags.Child == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age += "Child";
+                    } else {
+                        age += string.Format(", Child");
+                    }
+                } else if (thisPackage.AgeGenderFlags.Elder == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age += "Elder";
+                    } else {
+                        age += string.Format(", Elder");
+                    }
+                } else if (thisPackage.AgeGenderFlags.Infant == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age += "Infant";
+                    } else {
+                        age += string.Format(", Infant");
+                    }
+                } else if (thisPackage.AgeGenderFlags.Teen == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age += "Teen";
+                    } else {
+                        age += string.Format(", Teen");
+                    }
+                } else if (thisPackage.AgeGenderFlags.Toddler == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age += "Toddler";
+                    } else {
+                        age += string.Format(", Toddler");
+                    }
+                } else if (thisPackage.AgeGenderFlags.YoungAdult == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age += "Young Adult";
+                    } else {
+                        age += string.Format(", Young Adult");
+                    }
+                }
+
+                thisPackage.Age = age;           
+            }
             
-            if ((thisPackage.AgeGenderFlags.Female == true) && (thisPackage.AgeGenderFlags.Male == true)){
-                thisPackage.Gender = "Both";
-            } else if (thisPackage.AgeGenderFlags.Female == true){
-                thisPackage.Gender = "Female";
-            } else if (thisPackage.AgeGenderFlags.Male == true){
-                thisPackage.Gender = "Male";
-            }
+            
 
-
-            string age = string.Empty;
-            if (thisPackage.AgeGenderFlags.Adult == true){
-                if (string.IsNullOrEmpty(age)){
-                    age += "Adult";
-                } else {
-                    age += string.Format(", Adult");
-                }
-            } else if (thisPackage.AgeGenderFlags.Baby == true){
-                if (string.IsNullOrEmpty(age)){
-                    age += "Baby";
-                } else {
-                    age += string.Format(", Baby");
-                }
-            } else if (thisPackage.AgeGenderFlags.Child == true){
-                if (string.IsNullOrEmpty(age)){
-                    age += "Child";
-                } else {
-                    age += string.Format(", Child");
-                }
-            } else if (thisPackage.AgeGenderFlags.Elder == true){
-                if (string.IsNullOrEmpty(age)){
-                    age += "Elder";
-                } else {
-                    age += string.Format(", Elder");
-                }
-            } else if (thisPackage.AgeGenderFlags.Infant == true){
-                if (string.IsNullOrEmpty(age)){
-                    age += "Infant";
-                } else {
-                    age += string.Format(", Infant");
-                }
-            } else if (thisPackage.AgeGenderFlags.Teen == true){
-                if (string.IsNullOrEmpty(age)){
-                    age += "Teen";
-                } else {
-                    age += string.Format(", Teen");
-                }
-            } else if (thisPackage.AgeGenderFlags.Toddler == true){
-                if (string.IsNullOrEmpty(age)){
-                    age += "Toddler";
-                } else {
-                    age += string.Format(", Toddler");
-                }
-            } else if (thisPackage.AgeGenderFlags.YoungAdult == true){
-                if (string.IsNullOrEmpty(age)){
-                    age += "Young Adult";
-                } else {
-                    age += string.Format(", Young Adult");
-                }
-            }
-
-            thisPackage.Age = age;           
-
-            log.MakeLog("Package Summary: " + thisPackage.ToString(), true);
-            log.MakeLog(thisPackage.ToString(), false);
+            log.MakeLog("Package Summary: " + thisPackage.SimsPackagetoString(), true);
+            log.MakeLog(thisPackage.SimsPackagetoString(), false);
             //Containers.Containers.allSimsPackages.Add(thisPackage);
             log.MakeLog(string.Format("Adding {0} to packages database.", thisPackage.PackageName), true);
             try {
@@ -1836,6 +1840,8 @@ namespace SimsCCManager.Packages.Sims4Search
             string elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
                                 ts.Hours, ts.Minutes, ts.Seconds,
                                 ts.Milliseconds / 10);
+            GlobalVariables.currentpackage = packageinfo.Name;
+            GlobalVariables.packagesRead++;
             log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime), true);
             log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
         }

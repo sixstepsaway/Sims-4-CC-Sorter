@@ -22,6 +22,13 @@
                 <Setter Property="Width" Value="85"/>
                 <Setter Property="Height" Value="30"/>
             </Style>
+            <Style x:Key="MainButtons" TargetType="Button">                        
+                <Setter Property="Width" Value="150"/>  
+                <Setter Property="Height" Value="30"/>
+                <Setter Property="Margin" Value="0, 10, 10, 0"/> 
+                <Setter Property="Background" Value="#f1f6f9"/>
+                <Setter Property="Foreground" Value="#FF5F646E"/>
+            </Style>
         </Window.Resources>
     <Grid Visibility="Visible"> 
         <Grid x:Name="MainMenuGrid" Background="#212a3e" Visibility="Visible" Width="500" Height="650">
@@ -30,7 +37,7 @@
                 <TextBlock FontFamily="fonts/#Piximisa" Text="Sims CC Manager" Height="75" Width="800" FontSize="50" Foreground="#FF7CC96D" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
                 <TextBlock Text="Welcome to the Sims CC Manager." Height="20" Width="800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
                 <TextBlock Text="Pick the folder you want to manage below, or load prior data." Height="20" Width="800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
-                <Button x:Name="LoadButton" Click="loadData_Click" Content="Load Data" Height="35" Width="127" Margin="5" Visibility="Hidden"/>
+                
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <StackPanel.Resources>
                         <Style TargetType="Button">                        
@@ -47,32 +54,22 @@
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Width="400">
                     <TextBlock Foreground="AliceBlue" TextAlignment="Left" TextWrapping="Wrap">
                         <TextBlock.Inlines>
-                            <Run Text="If you have a folder full of package files loose or in weird subfolders, and you're unsure of whether your download spree accidentally brought packages for the wrong game with it or even if you like what you downloaded, you'll want to use"/>
-                            <Run FontWeight="Bold" FontSize="16" Text="Sort New Folder"/>
+                            <Run Text="Depending on how many CPU cores you have, reading through a large number of packages can take a long time. If you have to stop the scan midway through, it can be restarted later. You can also run the scan in batches if you so wish, adding one folder at a time to your database."/>
                         </TextBlock.Inlines>
                     </TextBlock>
                     <Rectangle Height="10"/>
                     <TextBlock Foreground="AliceBlue" TextAlignment="Left" TextWrapping="Wrap">
                         <TextBlock.Inlines>
-                            <Run Text="If you want to manage your current folder, find overrides, delete things you don't like, rename packages to internal references, you want"/>
-                            <Run FontWeight="Bold" FontSize="16" Text="Manage Old Folder"/>
+                            <Run Text="Changes made to packages within the app are reflected in the stored data. Changes made outside of it (moving files between folders, for instance) are not. If you have moved files around, you may need to do a full rescan, or remove certain files from the database in the viewer."/>
                         </TextBlock.Inlines>
                     </TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <StackPanel.Resources>
-                        <Style TargetType="Button">                        
-                            <Setter Property="Width" Value="150"/>  
-                            <Setter Property="Height" Value="30"/>
-                            <Setter Property="Margin" Value="10"/> 
-                            <Setter Property="Background" Value="#f1f6f9"/>
-                            <Setter Property="Foreground" Value="#FF5F646E"/>
-                        </Style>
-                    </StackPanel.Resources>
-                    <Button x:Name="NewFolder" Content="Sort New Folder" Click="SortNewFolder_Click"/>
-                    <Button x:Name="OldFolder" Content="Manage Old Folder" Click="ManageOldFolder_Click"/>
+                    <Button x:Name="NewFolder" Content="Find New Items" Click="FindNewItems_Click" Style="{StaticResource MainButtons}"/> 
+                    <Button x:Name="LoadButton" Click="loadData_Click" Content="Manage CC" Visibility="Collapsed" Style="{StaticResource MainButtons}"/>
                 </StackPanel>                
-                <Rectangle Height="0"/>                
+                <Rectangle Height="0"/>                                
+                <Button x:Name="StartOverButton" Click="StartOver_Click" Content="Start Over" Visibility="Collapsed" Width="200" Style="{StaticResource MainButtons}"/>
             </StackPanel>
             <StackPanel Orientation="Vertical" Visibility="Visible" Margin="0, 475, 0, 0">
                 <StackPanel.Resources>
@@ -116,7 +113,7 @@
         Padding="0" CornerRadius="10 10 10 10" ClipToBounds="True" Margin="-0,0,0,0">
 
         </Border>
-        <StackPanel>
+        <StackPanel x:Name="Progressing" Visibility="Hidden">
             <TextBlock x:Name="completionAlert" Text="Waiting for Input" Foreground="AliceBlue" TextAlignment="Center" Visibility="Visible" Margin="0, 35, 0, 0"/>
             <Grid>
                 <ProgressBar x:Name="mainProgressBar" Width="400" Height="25" Visibility="Visible" Maximum="100" Foreground="#FF5CACD1"/>
@@ -127,46 +124,12 @@
             <StackPanel Margin="0, 10, 0, 0" Orientation="Vertical" VerticalAlignment="Top">
                 <TextBlock x:Name="DevReport" Foreground="AliceBlue" Text="blah" TextAlignment="Center" Visibility="Collapsed"/>
                 <Button Name="CancelButton" Click="CancelScan_Click" Content="Cancel" Height="30" Width="125" Style="{StaticResource PriorDataButtons}"/>
-            </StackPanel>
-            
+            </StackPanel>            
         </StackPanel>
-            
-        </Grid>
-
-        <Grid x:Name="FoundPastItems" Width="350" Height="175" Panel.ZIndex="2" Visibility="Hidden">            
-            <Border x:Name="TopShadowBorder" 
-                    Background="#5B66A1" BorderBrush="#C2BAC9" BorderThickness="5,5,5,5" 
-                    Padding="0" CornerRadius="20 20 20 20" ClipToBounds="True" Margin="-0,0,0,0">
-            </Border>
-            <Grid Margin="15, 25, 15, 15" x:Name="ContinueQuestion" Visibility="Hidden" VerticalAlignment="Center">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <TextBlock FontFamily="Arial" Text="The app has detected a search that didn't conclude before." Foreground="#D2BDD1" FontSize="15" TextWrapping="Wrap" TextAlignment="Center" Grid.Row="0"/>
-                <TextBlock FontFamily="Arial" Text="Should we continue from there?" Foreground="#D2BDD1" FontSize="15" TextWrapping="Wrap" TextAlignment="Center" Grid.Row="1" Margin="0, 0, 0, 15"/>
-                <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Visible">
-                    <Button Click="ContinueSearch_Click" Content="Continue" Margin="5, 0, 5, 0" Style="{StaticResource PriorDataButtons}"/>
-                    <Button Click="RestartSearch_Click" Content="Restart" Margin="5, 0, 5, 0" Style="{StaticResource PriorDataButtons}"/>
-                    <Button Click="CancelSearch_Click" Content="Cancel" Margin="5, 0, 5, 0" Style="{StaticResource PriorDataButtons}"/>
-                </StackPanel>
+            <Grid x:Name="Cancelling" Visibility="Hidden">
+                <Label x:Name="CancelLabel" Content="Cancelling, please wait." HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
-            <Grid Margin="15, 25, 15, 15" x:Name="FindNewItemsQuestion" VerticalAlignment="Center" Visibility="Hidden">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <TextBlock FontFamily="Arial" Text="Search for new additions first?" Foreground="#D2BDD1" FontSize="15" TextWrapping="Wrap" TextAlignment="Center" Grid.Row="0" Margin="0, 0, 0, 15"/>                
-                <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Visible">
-                    <Button Click="YesFindNewItems_Click" Content="Yes" Margin="5, 0, 5, 0" Style="{StaticResource PriorDataButtons}"/>
-                    <Button Click="NoDontFindNew_Click" Content="No" Margin="5, 0, 5, 0" Style="{StaticResource PriorDataButtons}"/>
-                </StackPanel>
-            </Grid>
-            
-
-        </Grid>        
+        </Grid>      
     </Grid>
 
 </Window>

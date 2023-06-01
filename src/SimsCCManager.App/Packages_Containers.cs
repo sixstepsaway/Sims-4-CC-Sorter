@@ -187,19 +187,31 @@ namespace SimsCCManager.Packages.Containers
         public string MatchingConflictsBlobbed {get; set;}
 
         public SimsPackage() {
-            InstanceIDs = new List<string>();
-            GUIDs = new List<string>();
-            RequiredEPs = new List<string>();
-            RoomSort = new List<string>();
-            MatchingRecolors = new List<string>();
-            Components = new List<string>();
-            MatchingConflicts = new List<string>();
-            Entries = new List<TypeCounter>();
-            FileHas = new List<fileHasList>();
-            Flags = new List<string>();
-            CatalogTags = new List<TagsList>();
-            OverriddenInstances = new List<string>();
-            OverriddenItems = new List<string>();
+            this.InstanceIDs = new List<string>();
+            this.GUIDs = new List<string>();
+            this.RequiredEPs = new List<string>();
+            this.RoomSort = new List<string>();
+            this.MatchingRecolors = new List<string>();
+            this.Components = new List<string>();
+            this.MatchingConflicts = new List<string>();
+            this.Entries = new List<TypeCounter>();
+            this.FileHas = new List<fileHasList>();
+            this.Flags = new List<string>();
+            this.CatalogTags = new List<TagsList>();
+            this.OverriddenInstances = new List<string>();
+            this.OverriddenItems = new List<string>();
+            this.AgeGenderFlags = new AgeGenderFlags();
+        }
+
+        public string GetPropertyString(string propName){
+            return this.ProcessProperty(propName).ToString();
+        }
+        public List<TagsList> GetPropertyTagsList(string propName){
+            return (List<TagsList>)this.ProcessProperty(propName);
+        }
+
+        public object ProcessProperty(string propName){
+            return this.GetType().GetProperty(propName).GetValue (this, null);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -242,16 +254,382 @@ namespace SimsCCManager.Packages.Containers
             return retVal;
         }
 
-        public override string ToString()
+        static readonly string[] SizeSuffixes = 
+                   { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+        static string SizeSuffix(Int64 value, int decimalPlaces = 1)
         {
-            //https://regex101.com/r/0VWSR7/1
-            //https://regex101.com/r/9MiSh9/1
+            //From https://stackoverflow.com/a/14488941 
+            if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
+            if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); } 
+            if (value == 0) { return string.Format("{0:n" + decimalPlaces + "} bytes", 0); }
 
-            
-            return string.Format("Title: {0} \n Description: {1} \n Location: {2} \n PackageName: {3} \n Type: {4} \n Game: {5} \n InstanceIDs: {6} \n Subtype: {7} \n Category: {8} \n Model Name: {9} \n GUID: {10} \n Creator: {11} \n Age: {12} \n Gender: {13} \n Required EPs: {14} \n Function: {15} \n FunctionSubcategory: {16} \n AgeGenderFlags: {17} \n RoomSort: {18} \n Components: {19} \n Entries: {20} \n Flags: {21} \n CatalogTags: {22} \n Broken: {23} \n Mesh: {24} \n Recolor: {25} \n Orphan: {26} \n Override: {27} \n OverriddenInstances: {28} \n OverriddenItems: {29} \n MatchingMesh: {30} \n MatchingRecolors: {31} \n MatchingConflicts: {32}", this.Title, this.Description, this.Location, this.PackageName, this.Type, this.Game, GetFormatListString(this.InstanceIDs), this.Subtype, this.Category, this.ModelName, GetFormatListString(this.GUIDs), this.Creator, this.Age, this.Gender, GetFormatListString(this.RequiredEPs), this.Function, this.FunctionSubcategory, this.AgeGenderFlags, GetFormatListString(this.RoomSort), GetFormatListString(this.Components), GetFormatTypeCounter(this.Entries), GetFormatListString(this.Flags), GetFormatTagsList(this.CatalogTags), this.Broken, this.Mesh, this.Recolor, this.Orphan, this.Override, GetFormatListString(this.OverriddenInstances), GetFormatListString(this.OverriddenItems), this.MatchingMesh, GetFormatListString(this.MatchingRecolors), GetFormatListString(this.MatchingConflicts));
+            // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
+            int mag = (int)Math.Log(value, 1024);
+
+            // 1L << (mag * 10) == 2 ^ (10 * mag) 
+            // [i.e. the number of bytes in the unit corresponding to mag]
+            decimal adjustedSize = (decimal)value / (1L << (mag * 10));
+
+            // make adjustment when the value is large enough that
+            // it would round up to 1000 or more
+            if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
+            {
+                mag += 1;
+                adjustedSize /= 1024;
+            }
+
+            return string.Format("{0:n" + decimalPlaces + "} {1}", 
+                adjustedSize, 
+                SizeSuffixes[mag]);
         }
 
+        //public override string ToString()
+
+        public string SimsPackagetoString(){
+
+            //https://regex101.com/r/0VWSR7/1
+            //https://regex101.com/r/9MiSh9/1
+            string complete = "";
+            if (!string.IsNullOrEmpty(this.PackageName)){
+                complete = string.Format("Package: {0}", this.PackageName);
+            }
+            if (!string.IsNullOrEmpty(this.Title)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Title: {0}", this.Title);
+                } else {
+                    complete = string.Format("Title: {0}", this.Title);
+                }
+            }
+            if (!string.IsNullOrEmpty(this.Description)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Description: {0}", this.Description);
+                } else {
+                    complete = string.Format("Description: {0}", this.Description);
+                }
+            }
+            if (!string.IsNullOrEmpty(this.Location)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Location: {0}", this.Location);
+                } else {
+                    complete = string.Format("Location: {0}", this.Location);
+                }
+            }
+            if (this.FileSize != 0){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n File Size: {0}", SizeSuffix(this.FileSize));
+                } else {
+                    complete = string.Format("File Size: {0}", SizeSuffix(this.FileSize));
+                }
+            }
+            if (!string.IsNullOrEmpty(this.GameString)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Game: {0}", this.GameString);
+                } else {
+                    complete = string.Format("Game: {0}", this.GameString);
+                }
+            }
+            if (!string.IsNullOrEmpty(this.Type)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Type: {0}", this.Type);
+                } else {
+                    complete = string.Format("Type: {0}", this.Type);
+                }
+            }
+            if (!string.IsNullOrEmpty(this.Function)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Function: {0}", this.Function);
+                } else {
+                    complete = string.Format("Function: {0}", this.Function);
+                }
+            }
+            if (!string.IsNullOrEmpty(this.FunctionSubcategory)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Function Subcategory: {0}", this.FunctionSubcategory);
+                } else {
+                    complete = string.Format("Function Subcategory: {0}", this.FunctionSubcategory);
+                }
+            }
+            if (this.InstanceIDs.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Instance IDs: {0}", GetFormatListString(this.InstanceIDs));
+                } else {
+                    complete = string.Format("Instance IDs: {0}", GetFormatListString(this.InstanceIDs));
+                }
+            }
+            if (this.GUIDs.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n GUIDs: {0}", GetFormatListString(this.GUIDs));
+                } else {
+                    complete = string.Format("GUIDs: {0}", GetFormatListString(this.GUIDs));
+                }
+            }
+            if (!string.IsNullOrEmpty(this.Creator)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Creator: {0}", this.Creator);
+                } else {
+                    complete = string.Format("Creator: {0}", this.Creator);
+                }
+            }
+            if (!string.IsNullOrEmpty(this.Gender)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Gender: {0}", this.Gender);
+                } else {
+                    complete = string.Format("Gender: {0}", this.Gender);
+                }
+            }
+            if (!string.IsNullOrEmpty(this.Age)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Age: {0}", this.Age);
+                } else {
+                    complete = string.Format("Age: {0}", this.Age);
+                }
+            }
+            if (this.RoomSort.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Rooms: ");
+                    string eps = "";
+                    foreach (string ep in this.RoomSort){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0}", ep);
+                        } else {
+                            eps += string.Format(", {0}", ep);
+                        }
+                    }
+                    complete += eps;
+                } else {
+                    complete = string.Format("Rooms: ");
+                    string eps = "";
+                    foreach (string ep in this.RoomSort){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0}", ep);
+                        } else {
+                            eps += string.Format(", {0}", ep);
+                        }
+                    }
+                    complete += eps;
+                }                
+            }
+            if (this.RequiredEPs.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Required EPs: ");
+                    string eps = "";
+                    foreach (string ep in this.RequiredEPs){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0}", ep);
+                        } else {
+                            eps += string.Format(", {0}", ep);
+                        }
+                    }
+                    complete += eps;
+                } else {
+                    complete = string.Format("Required EPs:");
+                    string eps = "";
+                    foreach (string ep in this.RequiredEPs){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0}", ep);
+                        } else {
+                            eps += string.Format(", {0}", ep);
+                        }
+                    }
+                    complete += eps;
+                }
+            }
+            if (this.FileHas.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n File Has: ");
+                    string eps = "";
+                    foreach (fileHasList ep in this.FileHas){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0} at {1}", ep.TypeID, ep.Location);
+                        } else {
+                            eps += string.Format("\n {0} at {1}", ep.TypeID, ep.Location);
+                        }
+                    }
+                    complete += eps;
+                } else {
+                    complete = string.Format("File Has:");
+                    string eps = "";
+                    foreach (fileHasList ep in this.FileHas){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0} at {1}", ep.TypeID, ep.Location);
+                        } else {
+                            eps += string.Format("\n {0} at {1}", ep.TypeID, ep.Location);
+                        }
+                    }
+                    complete += eps;
+                }
+            }
+            if (this.Flags.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Flags: ");
+                    string eps = "";
+                    foreach (string ep in this.Flags){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0}", ep);
+                        } else {
+                            eps += string.Format(", {0}", ep);
+                        }
+                    }
+                    complete += eps;
+                } else {
+                    complete = string.Format("Flags:");
+                    string eps = "";
+                    foreach (string ep in this.Flags){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0}", ep);
+                        } else {
+                            eps += string.Format(", {0}", ep);
+                        }
+                    }
+                    complete += eps;
+                }
+            }
+            if (this.CatalogTags.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Tags: ");
+                    string eps = "";
+                    foreach (TagsList ep in this.CatalogTags){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format(" - {0}: {1}", ep.TypeID, ep.Description);
+                        } else {
+                            eps += string.Format("\n - {0}: {1}", ep.TypeID, ep.Description);
+                        }
+                    }
+                    complete += eps;
+                } else {
+                    complete = string.Format("Tags:");
+                    string eps = "";
+                    foreach (TagsList ep in this.CatalogTags){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format(" - {0}: {1}", ep.TypeID, ep.Description);
+                        } else {
+                            eps += string.Format("\n - {0}: {1}", ep.TypeID, ep.Description);
+                        }
+                    }
+                    complete += eps;
+                }
+            }
+            if (this.Override == true){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n This package is an override.");
+                    if (this.OverriddenInstances.Any()){
+                        complete += string.Format("\n Overridden Instances: ");
+                        string ov = "";
+                        foreach (string instance in this.OverriddenInstances){
+                            if (string.IsNullOrEmpty(ov)){
+                                ov = string.Format("{0}", instance);
+                            } else {
+                                ov += string.Format("\n {0}", instance);
+                            }
+                        }
+                        complete += ov;
+                    }
+                    if (this.OverriddenItems.Any()){
+                        complete += string.Format("\n Overridden Items: ");
+                        string ov = "";
+                        foreach (string instance in this.OverriddenItems){
+                            if (string.IsNullOrEmpty(ov)){
+                                ov = string.Format("{0}", instance);
+                            } else {
+                                ov += string.Format("\n {0}", instance);
+                            }
+                        }
+                        complete += ov;
+                    }
+                } else {
+                    complete = string.Format("This package is an override.");
+                }
+            }
+            if (this.Mesh == true && this.Recolor == false){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n This package has a mesh but no accompanying recolor.");                    
+                } else {
+                    complete = string.Format("This package has a mesh but no accompanying recolor.");
+                }
+            }
+            if (this.Mesh == false && this.Recolor == true){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n This package is a recolor with no mesh.");                    
+                } else {
+                    complete = string.Format("This package is a recolor with no mesh.");
+                }
+            }
+            if (this.Mesh == true && this.Recolor == true){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n This package has both a mesh and its recolor.");                    
+                } else {
+                    complete = string.Format("This package has both a mesh and its recolor.");
+                }
+            }
+            if (this.Orphan == true){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n This package is an orphan.");                    
+                } else {
+                    complete = string.Format("This package is an orphan.");
+                }
+            }
+            if (!string.IsNullOrEmpty(this.MatchingMesh)){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n The matching mesh for this file is in : {0}.", this.MatchingMesh);                    
+                } else {
+                    complete = string.Format("The matching mesh for this file is in : {0}.", this.MatchingMesh);
+                }
+            }
+            if (this.MatchingRecolors.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Matching recolors for this package can be found in: ");
+                    string ov = "";
+                    foreach (string instance in this.MatchingRecolors){
+                        if (!string.IsNullOrEmpty(ov)){
+                            ov += string.Format("{0}", instance);
+                        } else {
+                            ov = string.Format("\n {0}", instance);
+                        }
+                    }
+                    complete += ov;
+                } else {
+                    complete += string.Format("Matching recolors for this package can be found in: ");
+                    string ov = "";
+                    foreach (string instance in this.MatchingRecolors){
+                        if (!string.IsNullOrEmpty(ov)){
+                            ov += string.Format("{0}", instance);
+                        } else {
+                            ov = string.Format("\n {0}", instance);
+                        }
+                    }
+                    complete += ov;
+                }
+            }
+            if (this.MatchingConflicts.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n This file conflicts with: ");
+                    string ov = "";
+                    foreach (string instance in this.MatchingConflicts){
+                        if (!string.IsNullOrEmpty(ov)){
+                            ov += string.Format("{0}", instance);
+                        } else {
+                            ov = string.Format("\n {0}", instance);
+                        }
+                    }
+                    complete += ov;
+                } else {
+                    complete += string.Format("This file conflicts with: ");
+                    string ov = "";
+                    foreach (string instance in this.MatchingConflicts){
+                        if (!string.IsNullOrEmpty(ov)){
+                            ov += string.Format("{0}", instance);
+                        } else {
+                            ov = string.Format("\n {0}", instance);
+                        }
+                    }
+                    complete += ov;
+                }
+            }            
+            return complete;
+        }   
     }
+
+    
 
     [Table("SP_TypeCounter")]
     public class TypeCounter {
@@ -331,6 +709,14 @@ namespace SimsCCManager.Packages.Containers
         [Column("SimsPackage")]
         [OneToOne]
         public SimsPackage SimsPackage {get; set;}
+
+        public bool Any(){
+            if (this.Adult == true || this.Baby == true || this.Infant == true || this.Child == true || this.Elder == true || this.Teen == true || this.YoungAdult == true || this.Female == true || this.Male == true){
+                return true;
+            } else {
+                return false;
+            }
+        }
     } 
     
     public class Containers {

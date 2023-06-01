@@ -68,8 +68,8 @@ namespace SimsCCManager.Packages.Initial {
         }
 
         public void CheckThrough (string input){
-            int count = GlobalVariables.packagesRead;
-            GlobalVariables.packagesRead++;
+            int count = GlobalVariables.packagesReadReading;
+            GlobalVariables.packagesReadReading++;
             FileInfo pack = new FileInfo(input);
             MemoryStream msPackage = Methods.ReadBytesToFile(input);
             BinaryReader packagereader = new BinaryReader(msPackage);
