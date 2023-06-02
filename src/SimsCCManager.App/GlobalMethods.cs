@@ -396,7 +396,7 @@ namespace SSAGlobals {
             AllTypes.Add(new typeList{typeID="00DE5AC5", desc="", info="rmi "});
             AllTypes.Add(new typeList{typeID="010FAF71", desc="", info=""});
             AllTypes.Add(new typeList{typeID="015A1849", desc="GEOM", info="geom"});
-            AllTypes.Add(new typeList{typeID="0166038C", desc="", info=""});
+            AllTypes.Add(new typeList{typeID="0166038C", desc="_KEY", info=""});
             AllTypes.Add(new typeList{typeID="01661233", desc="MODL", info="scene "});
             AllTypes.Add(new typeList{typeID="01942E2C", desc="", info=""});
             AllTypes.Add(new typeList{typeID="01A527DB", desc="_AUD", info="mm "});
@@ -477,7 +477,7 @@ namespace SSAGlobals {
             AllTypes.Add(new typeList{typeID="81CA1A10", desc="MTBL", info=""});
             AllTypes.Add(new typeList{typeID="84C23219", desc="CFLT", info=""});
             AllTypes.Add(new typeList{typeID="892C4B8A", desc="", info=""});
-            AllTypes.Add(new typeList{typeID="8B18FF6E", desc="SHCR", info="Sim Hotspot Control Resource"});
+            AllTypes.Add(new typeList{typeID="8B18FF6E", desc="HOTC", info="Sim Hotspot Control Resource"});
             AllTypes.Add(new typeList{typeID="8EAF13DE", desc="_RIG", info="skeleton "});
             AllTypes.Add(new typeList{typeID="90624C1B", desc="", info=""});
             AllTypes.Add(new typeList{typeID="9063660D", desc="WTXT", info="World texture map "});
@@ -768,6 +768,8 @@ namespace SSAGlobals {
         public static string PackagesReadDS = string.Format("Data Source={0}", PackagesRead);
 
         public static SQLite.SQLiteConnection DatabaseConnection;
+        public static SQLite.SQLiteConnection OverridesConnection;
+        public static SQLite.SQLiteConnection SpecificOverridesConnection;
         
         
         //vars that hold package files 

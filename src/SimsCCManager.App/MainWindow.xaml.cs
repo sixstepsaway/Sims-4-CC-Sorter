@@ -42,6 +42,7 @@ using SQLiteNetExtensions.Attributes;
 using SQLitePCL;
 using SQLiteNetExtensions.Extensions.TextBlob;
 using System.Data.SQLite;
+using SimsCCManager.Misc.TrayReader;
 
 
 namespace Sims_CC_Sorter
@@ -974,7 +975,7 @@ namespace Sims_CC_Sorter
             new Thread(() => RunUpdateElapsed(sw)) {IsBackground = true}.Start();
             new Thread(() => RunUpdateProgressBar()) {IsBackground = true}.Start();
             Task ReadPackages = Task.Run(() => {                
-                if (GlobalVariables.debugMode == false){
+                if (GlobalVariables.debugMode == true){
                     foreach (PackageFile p in allp){
                         if (token.IsCancellationRequested)
                         {
@@ -1126,9 +1127,8 @@ namespace Sims_CC_Sorter
               
 
         private void testbutton_Click(object sender, EventArgs e) {
-            SimsPackage sp = new SimsPackage();
-            sp.FileSize = 143866046;
-            log.MakeLog(sp.ToString(), true);
+            TrayFilesReader tfr = new TrayFilesReader();
+            tfr.ReadTray(new FileInfo(@"M:\The Sims 4 (Documents)\!Current\The Sims 4\Tray\0x00000000!0x00fa10e862d00030.householdbinary"));
         }        
     }
 

@@ -828,8 +828,14 @@ namespace SimsCCManager.Packages.Sims4Search
             thisPackage.FileSize = (int)packageinfo.Length;
             log.MakeLog(string.Format("Package #{0} registered as {1} and meant for Sims 4", packageparsecount, packageinfo.FullName), true);
 
+            readFile.BaseStream.Position = 0;
             //start actually reading the package             
             //entrycount
+
+            /*for (int l = 0; l < 1000; l++){
+                uint x = readFile.ReadUInt32();
+                log.MakeLog(string.Format("Browsing file: {0} ({1})", x, x.ToString("X8")), true);
+            }*/
 
             readFile.BaseStream.Position = entrycountloc;
 
@@ -854,6 +860,90 @@ namespace SimsCCManager.Packages.Sims4Search
             byte[] headersize = new byte[96];
             long here = 100;
             long movedto = 0;
+
+            /*            //dbpf
+            test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
+            log.MakeLog("DBPF: " + test, true);
+            
+            //major
+            uint testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Major :" + test, true);
+            
+            //minor
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Minor : " + test, true);
+            
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unknown : " + test, true);
+            
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unknown : " + test, true);
+            
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unknown : " + test, true);
+            
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Created : " + test, true);
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Modified : " + test, true);
+            
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Index Major : " + test, true);
+            
+            //entrycount
+            uint entrycount = readFile.ReadUInt32();
+            test = entrycount.ToString();
+            log.MakeLog("Entry Count: " + test, true);
+            
+            //record position low
+            uint indexRecordPositionLow = readFile.ReadUInt32();
+            test = indexRecordPositionLow.ToString();
+            log.MakeLog("indexRecordPositionLow: " + test, true);
+            
+            //index record size
+            uint indexRecordSize = readFile.ReadUInt32();
+            test = indexRecordSize.ToString();
+            log.MakeLog("indexRecordSize: " + test, true);
+            //unused
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unused Trash Index offset: " + test, true);
+            
+            //unused
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unused Trash Index size: " + test, true);
+            
+            //unused
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unused Index Minor Version: " + test, true);
+            
+            //unused but 3 for historical reasons
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unused, 3 for historical reasons: " + test, true);
+            
+            ulong indexRecordPosition = readFile.ReadUInt64();
+            test = indexRecordPosition.ToString();
+            log.MakeLog("Inded Record Position: " + test, true);
+            //unused
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unused Unknown:" + test, true);
+            
+            //unused six bytes
+            test = Encoding.ASCII.GetString(readFile.ReadBytes(24));
+            log.MakeLog("Unused: " + test, true);*/
+
             if (indexRecordPosition != 0){
                 long indexseek = (long)indexRecordPosition - headersize.Length;
                 movedto = here + indexseek;
@@ -862,83 +952,172 @@ namespace SimsCCManager.Packages.Sims4Search
                 movedto = here + indexRecordPositionLow;
                 readFile.BaseStream.Position = here + indexRecordPositionLow;
             }
-            
-            long movedhere = readFile.BaseStream.Position;
-            uint testpos = readFile.ReadUInt32();
-            if (testpos != 0){
-                log.MakeLog(string.Format("Read first entry TypeID and it read as {0}, returning to read entries.", testpos.ToString("X8")), true);
-                readFile.BaseStream.Position = movedto;
-            } else if (testpos == 80000000) {
-                long moveback = movedhere - 4;
-                readFile.BaseStream.Position = moveback;
+
+            readFile.BaseStream.Position = (long)indexRecordPosition;
+            uint indextype = readFile.ReadUInt32();            
+
+            long streamsize = readFile.BaseStream.Length;
+            int indexbytes = ((int)entrycount * 32);
+            long indexpos = 0;
+            log.MakeLog(string.Format("Streamsize is {0}", streamsize), true);
+            if ((int)movedto + indexbytes != streamsize){
+                int entriesfound = 0;
+                long spacebetween = 0;
+                log.MakeLog("Streamsize does not match!", true);
+                readFile.BaseStream.Position = movedto - 400;
+                List<long> entrylocs = new List<long>();
+                uint item;
+                while(readFile.BaseStream.Length > readFile.BaseStream.Position){                    
+                    item = readFile.ReadUInt32();
+                    var result = TypeListings.AllTypesS4.Where(x => x.typeID == item.ToString("X8"));
+                    //log.MakeLog(string.Format("Read byte at {0}: {1}", readFile.BaseStream.Position, item.ToString("X8")), true);
+                    if (result.Any()){
+                        indexEntry holderEntry = new indexEntry();
+                        holderEntry.typeID = item.ToString("X8");
+                        log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, entriesfound, holderEntry.typeID), true);
+                        log.MakeLog(string.Format("Found entry{2} - {0} at location {1}!", item, readFile.BaseStream.Position, entriesfound), true);
+                        entrylocs.Add(readFile.BaseStream.Position);
+                        if (entriesfound == 0){
+                            indexpos = readFile.BaseStream.Position - 4;
+                        }
+                        entriesfound++;
+                        if (entriesfound == entrycount){
+                            log.MakeLog(string.Format("Found {0} entries. Breaking.", entrycount), true);
+                            break;
+                        }
+                    }
+                }
+                readFile.BaseStream.Position = indexpos;
+                entrycount = 0;
+                foreach (int loc in entrylocs){
+                    indexEntry holderEntry = new indexEntry(); 
+                    readFile.BaseStream.Position = loc - 4;
+                    if (indextype == 2){
+                        holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
+                        log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, entrycount, holderEntry.typeID), true);
+
+                        if(TypeListings.AllTypesS4.Exists(x => x.typeID == holderEntry.typeID)){
+                        var tid = from types in TypeListings.AllTypesS4
+                                where types.typeID == holderEntry.typeID
+                                select types.desc;
+                        var ih = tid.ToList();
+                        fileHas.Add(new fileHasList {TypeID = ih[0], Location = loc});
+                        log.MakeLog(string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, ih[0], loc), true);
+                        } else {
+                            fileHas.Add(new fileHasList() { TypeID = holderEntry.typeID, Location = loc});
+                        }              
+
+                        string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
+                        string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
+                        holderEntry.instanceID = string.Format("{0}{1}", instanceid1,instanceid2);
+                        if (holderEntry.instanceID != "0000000000000000"){
+                            allInstanceIDs.Add(holderEntry.instanceID);
+                        }
+                        
+                        log.MakeLog(string.Format("P{0}/E{1} - InstanceID: {2}", packageparsecount, entrycount, holderEntry.instanceID), true);
+                        
+                        holderEntry.position = readFile.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/E{1} - Index Entry Position: {2}", packageparsecount, entrycount, holderEntry.position.ToString("X8")), true);                        
+
+                        holderEntry.fileSize = readFile.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/E{1} - File Size: {2}", packageparsecount, entrycount, holderEntry.fileSize.ToString("X8")), true);
+
+                        holderEntry.memSize = readFile.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/E{1} - Mem Size: {2}", packageparsecount, entrycount, holderEntry.memSize.ToString("X8")), true);
+
+                        //holderEntry.compressionType = readFile.ReadUInt16().ToString("X4");
+                        //log.MakeLog(string.Format("P{0}/E{1} - Compression Type: {2}", packageparsecount, entrycount, holderEntry.compressionType), true);
+
+                        //readFile.BaseStream.Position = readFile.BaseStream.Position + 2;
+
+                        indexData.Add(holderEntry);
+
+                        holderEntry = null;
+
+
+
+
+                        entrycount++;
+                    }
+                }
             } else {
-                log.MakeLog(string.Format("Read first entry TypeID and it read as {0}, moving forward.", testpos.ToString("X8")), true);
-            }
-            
-
-            for (int i = 0; i < entrycount; i++){
-                indexEntry holderEntry = new indexEntry();                
-                holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
-                log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, i, holderEntry.typeID), true);
-
-                if (holderEntry.typeID == "7FB6AD8A"){
-                    thisPackage.Type = "Merged Package";
-                    GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage);
-                    log.MakeLog(string.Format("Package {0} is a merged package, and cannot be processed in this manner right now. Package will either need unmerging or to be sorted manually.", thisPackage.Location), false);
-                    log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
-                    txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
-                    var mergedquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);                    
-                    GlobalVariables.DatabaseConnection.Delete(mergedquery[0]);            
-                    readFile.Dispose();
-                    sw.Stop();
-                    TimeSpan tss = sw.Elapsed;
-                    string elapsedtimee = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-                                        tss.Hours, tss.Minutes, tss.Seconds,
-                                        tss.Milliseconds / 10);
-                    GlobalVariables.packagesRead++;
-                    log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtimee), true);
-                    log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
-                    return;
+                log.MakeLog("Streamsize matches.", true);
+                long movedhere = readFile.BaseStream.Position;
+                uint testpos = readFile.ReadUInt32();
+                if (testpos != 0){
+                    log.MakeLog(string.Format("Read first entry TypeID and it read as {0}, returning to read entries.", testpos.ToString("X8")), true);
+                    readFile.BaseStream.Position = movedto;
+                } else if (testpos == 80000000) {
+                    long moveback = movedhere - 4;
+                    readFile.BaseStream.Position = moveback;
+                } else {
+                    log.MakeLog(string.Format("Read first entry TypeID and it read as {0}, moving forward.", testpos.ToString("X8")), true);
                 }
 
-                if(TypeListings.AllTypesS4.Exists(x => x.typeID == holderEntry.typeID)){
-                    var tid = from types in TypeListings.AllTypesS4
-                            where types.typeID == holderEntry.typeID
-                            select types.desc;
-                    var ih = tid.ToList();
-                    fileHas.Add(new fileHasList {TypeID = ih[0], Location = i});
-                    log.MakeLog(string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, ih[0], i), true);
-                } else {
-                    fileHas.Add(new fileHasList() { TypeID = holderEntry.typeID, Location = i});
-                }                
+                for (int i = 0; i < entrycount; i++){
+                    indexEntry holderEntry = new indexEntry();                
+                    holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
+                    log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, i, holderEntry.typeID), true);
 
-                holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
-                log.MakeLog(string.Format("P{0}/E{1} - Index Entry GroupID: {2}", packageparsecount, i, holderEntry.groupID), true);
-                
-                string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
-                string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
-                holderEntry.instanceID = string.Format("{0}{1}", instanceid1,instanceid2);
-                allInstanceIDs.Add(holderEntry.instanceID);
-                log.MakeLog(string.Format("P{0}/E{1} - InstanceID: {2}", packageparsecount, i, holderEntry.instanceID), true);
+                    if (holderEntry.typeID == "7FB6AD8A"){
+                        thisPackage.Type = "Merged Package";
+                        GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage);
+                        log.MakeLog(string.Format("Package {0} is a merged package, and cannot be processed in this manner right now. Package will either need unmerging or to be sorted manually.", thisPackage.Location), false);
+                        log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
+                        txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
+                        var mergedquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);                    
+                        GlobalVariables.DatabaseConnection.Delete(mergedquery[0]);            
+                        readFile.Dispose();
+                        sw.Stop();
+                        TimeSpan tss = sw.Elapsed;
+                        string elapsedtimee = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                                            tss.Hours, tss.Minutes, tss.Seconds,
+                                            tss.Milliseconds / 10);
+                        GlobalVariables.packagesRead++;
+                        log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtimee), true);
+                        log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
+                        return;
+                    }
 
-                uint testin = readFile.ReadUInt32();
-                holderEntry.position = (long)testin;
-                log.MakeLog(string.Format("P{0}/E{1} - Position: {2}", packageparsecount, i, holderEntry.position), true);
+                    if(TypeListings.AllTypesS4.Exists(x => x.typeID == holderEntry.typeID)){
+                        var tid = from types in TypeListings.AllTypesS4
+                                where types.typeID == holderEntry.typeID
+                                select types.desc;
+                        var ih = tid.ToList();
+                        fileHas.Add(new fileHasList {TypeID = ih[0], Location = i});
+                        log.MakeLog(string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, ih[0], i), true);
+                    } else {
+                        fileHas.Add(new fileHasList() { TypeID = holderEntry.typeID, Location = i});
+                    }                
 
-                holderEntry.fileSize = readFile.ReadUInt32();
-                log.MakeLog(string.Format("P{0}/E{1} - File Size: {2}", packageparsecount, i, holderEntry.fileSize), true);
+                    holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
+                    log.MakeLog(string.Format("P{0}/E{1} - Index Entry GroupID: {2}", packageparsecount, i, holderEntry.groupID), true);
+                    
+                    string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
+                    string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
+                    holderEntry.instanceID = string.Format("{0}{1}", instanceid1,instanceid2);
+                    allInstanceIDs.Add(holderEntry.instanceID);
+                    log.MakeLog(string.Format("P{0}/E{1} - InstanceID: {2}", packageparsecount, i, holderEntry.instanceID), true);
 
-                holderEntry.memSize = readFile.ReadUInt32();
-                log.MakeLog(string.Format("P{0}/E{1} - Mem Size: {2}", packageparsecount, i, holderEntry.memSize), true);
+                    uint testin = readFile.ReadUInt32();
+                    holderEntry.position = (long)testin;
+                    log.MakeLog(string.Format("P{0}/E{1} - Position: {2}", packageparsecount, i, holderEntry.position), true);
 
-                holderEntry.compressionType = readFile.ReadUInt16().ToString("X4");
-                log.MakeLog(string.Format("P{0}/E{1} - Compression Type: {2}", packageparsecount, i, holderEntry.compressionType), true);
+                    holderEntry.fileSize = readFile.ReadUInt32();
+                    log.MakeLog(string.Format("P{0}/E{1} - File Size: {2}", packageparsecount, i, holderEntry.fileSize), true);
 
-                readFile.BaseStream.Position = readFile.BaseStream.Position + 2;
+                    holderEntry.memSize = readFile.ReadUInt32();
+                    log.MakeLog(string.Format("P{0}/E{1} - Mem Size: {2}", packageparsecount, i, holderEntry.memSize), true);
 
-                indexData.Add(holderEntry);
+                    holderEntry.compressionType = readFile.ReadUInt16().ToString("X4");
+                    log.MakeLog(string.Format("P{0}/E{1} - Compression Type: {2}", packageparsecount, i, holderEntry.compressionType), true);
 
-                holderEntry = null;
+                    readFile.BaseStream.Position = readFile.BaseStream.Position + 2;
+
+                    indexData.Add(holderEntry);
+
+                    holderEntry = null;
+                }
             }
 
             //log.MakeLog("This package contains: ", true);            

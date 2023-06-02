@@ -37,7 +37,7 @@ namespace SimsCCManager.SortingUIResults {
 
     public partial class ResultsWindow : Window {
         LoggingGlobals log = new LoggingGlobals();
-        public int gameNum = 0;
+        public static int gameNum = 0;
         private bool showallfiles = false;
         private DataTable packagesDataTable = new DataTable();
         private DataTable allFilesDataTable = new DataTable();
@@ -63,6 +63,7 @@ namespace SimsCCManager.SortingUIResults {
             Loaded += ResultsWindow_Loaded;
             resultsView = ResultsView;
             tagslist = TagsListBox;
+            tagsgrid = this.TagsList;
             contextmenu = ResultsView.ContextMenu;
             DataContext = new PackagesViewModel(); 
             searchbox = SearchBox;
@@ -99,23 +100,29 @@ namespace SimsCCManager.SortingUIResults {
 
         private void GameCheck(object sender, RoutedEventArgs e) {
             System.Windows.Controls.RadioButton rb = sender as System.Windows.Controls.RadioButton; 
-            Console.WriteLine("You chose: " + rb.GroupName + ": " + rb.Name); 
+            if (rb.Name == "radioButton_None"){
+                gameNum = 0;
+            }
+            if (rb.Name == "radioButton_Sims2"){
+                gameNum = 2;
+            }
+            if (rb.Name == "radioButton_Sims3"){
+                gameNum = 3;
+            }
+            if (rb.Name == "radioButton_Sims4"){
+                gameNum = 4;
+            }
+            //Console.WriteLine("Game number is: " + gameNum); 
         }
         private void SearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
 		{
 			CollectionViewSource.GetDefaultView(ResultsWindow.resultsView.ItemsSource).Refresh();
 		}
 
-        private void ListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-             e.Handled = true;
-             contextmenu.IsOpen = true;
-        }
-        private void ListViewItem_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        {
-             e.Handled = true;
-        }
 
+        
+
+        
         private void showallfiles_Click(object sender, EventArgs e){
                         
         }        
@@ -299,12 +306,34 @@ namespace SimsCCManager.SortingUIResults {
             }  
         }
 
+        private void RefreshResults(){
+            packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
+            ResultsWindow.resultsView.ItemsSource = _packagesView;
+            _packagesView = CollectionViewSource.GetDefaultView(packages);
+        }
+
+        private void RefreshTagViewer(){
+            _tagsView = CollectionViewSource.GetDefaultView(tags);
+            ResultsWindow.tagslist.ItemsSource = _tagsView;
+        }
+
         private bool SearchFilter(object item)
 		{
-
-
-
             SimsPackage package = (SimsPackage)item;
+            string gameSearch = "";
+            if (ResultsWindow.gameNum == 2){
+                gameSearch = "2";
+            }
+            if (ResultsWindow.gameNum == 3){
+                gameSearch = "3";
+            }
+            if (ResultsWindow.gameNum == 4){
+                gameSearch = "4";
+            }
+            if (ResultsWindow.gameNum == 0){
+                gameSearch = "";
+            }
+
             List<string> notnull = new List<string>();
 
             if (!String.IsNullOrWhiteSpace(package.PackageName)) notnull.Add("PackageName");
@@ -340,12 +369,12 @@ namespace SimsCCManager.SortingUIResults {
                     foreach (string property in notnull){
                         if (property == "CatalogTags"){                            
                             foreach (TagsList tag in package.GetPropertyTagsList(property)){
-                                if (tag.TypeID.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase) >= 0 || tag.Description.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase)>= 0){
+                                if ((tag.TypeID.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase) >= 0 || tag.Description.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase)>= 0) && package.GameString.IndexOf(gameSearch, StringComparison.OrdinalIgnoreCase) >= 0){
                                     return true;
                                 }                               
                             }                            
                         } else {
-                            if (package.GetPropertyString(property).IndexOf    (ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase)>= 0){
+                            if ((package.GetPropertyString(property).IndexOf    (ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase)>= 0) && package.GameString.IndexOf(gameSearch, StringComparison.OrdinalIgnoreCase) >= 0){
                                 return true;
                             }
                         }  
@@ -356,12 +385,12 @@ namespace SimsCCManager.SortingUIResults {
                     if (searchcriteria == criteria.Key){
                         if (criteria.Value == "CatalogTags"){
                             foreach (TagsList tag in package.GetPropertyTagsList(criteria.Value)){
-                                if (tag.TypeID.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase) >= 0 || tag.Description.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase)>= 0){
+                                if ((tag.TypeID.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase) >= 0 || tag.Description.IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase)>= 0) && package.GameString.IndexOf(gameSearch, StringComparison.OrdinalIgnoreCase) >= 0){
                                     return true;
                                 }
                             }
                         } else {
-                            if (package.GetPropertyString(criteria.Value).IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase) >= 0 ) {
+                            if ((package.GetPropertyString(criteria.Value).IndexOf(ResultsWindow.searchbox.Text, StringComparison.OrdinalIgnoreCase) >= 0 ) && package.GameString.IndexOf(gameSearch, StringComparison.OrdinalIgnoreCase) >= 0) {
                                 return true;
                             }
                         }                        
@@ -380,11 +409,14 @@ namespace SimsCCManager.SortingUIResults {
  
         private void OnShowTags()  
         {   
-            ResultsWindow.tagsgrid.Visibility = Visibility.Visible;
             SimsPackage item = (SimsPackage)_packagesView.CurrentItem;
+            Console.WriteLine("Showing tags for " + item.PackageName);            
             foreach (TagsList tag in item.CatalogTags){
+                Console.WriteLine(tag.TypeID + " | " + tag.Description);
                 tags.Add(tag);
             }
+            RefreshTagViewer();
+            ResultsWindow.tagsgrid.Visibility = Visibility.Visible;
         }
 		
  
@@ -413,7 +445,7 @@ namespace SimsCCManager.SortingUIResults {
                         File.Delete(sourcefile);                        
                         GlobalVariables.DatabaseConnection.Delete(item);                        
                         packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
-                        _packagesView = CollectionViewSource.GetDefaultView(packages);
+                        RefreshResults();
                         System.Windows.Forms.MessageBox.Show(string.Format("Deleted {0}!", package));
                     } else {
                         System.Windows.Forms.MessageBox.Show(string.Format("File {0} not found at source. Did it get deleted?", sourcefile));    
@@ -448,8 +480,7 @@ namespace SimsCCManager.SortingUIResults {
                             if (File.Exists(sourcefile)){                        
                                 File.Delete(sourcefile);                        
                                 GlobalVariables.DatabaseConnection.Delete(item);                        
-                                packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
-                                _packagesView = CollectionViewSource.GetDefaultView(packages);
+                                RefreshResults();                                
                             } else {
                                 System.Windows.Forms.MessageBox.Show(string.Format("File not found: {0}", sourcefile));    
                             }
@@ -484,19 +515,16 @@ namespace SimsCCManager.SortingUIResults {
                             SimsPackage item = (SimsPackage)_packagesView.CurrentItem;
                             item.Location = destination;
                             File.Move(sourcefile, destination);                        
-                            GlobalVariables.DatabaseConnection.UpdateWithChildren(item);                        
-                            packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
-                            _packagesView = CollectionViewSource.GetDefaultView(packages);
-                            _packagesView.Refresh();
+                            GlobalVariables.DatabaseConnection.UpdateWithChildren(item);
+                            RefreshResults();
                         } else {
                             System.Windows.Forms.MessageBox.Show(string.Format("File {0} not found at source. Did it get deleted?", sourcefile));    
                         }
-                        
+                        System.Windows.Forms.MessageBox.Show(string.Format("Moved {0}!", ((SimsPackage)_packagesView.CurrentItem).PackageName));
                     } else {
                         System.Windows.Forms.MessageBox.Show(string.Format("Please pick somewhere to move file."));
                     }
-                }
-            System.Windows.Forms.MessageBox.Show(string.Format("Moved {0}!", ((SimsPackage)_packagesView.CurrentItem).PackageName));
+                }            
             } else if (selection != 1 && selection != 0){
                 foreach (var item in ResultsWindow.resultsView.SelectedItems){
                     SimsPackage thing = (SimsPackage)item;
@@ -519,19 +547,18 @@ namespace SimsCCManager.SortingUIResults {
                             if (File.Exists(sourcefile)){                            
                                 item.Location = destination;
                                 File.Move(sourcefile, destination);                        
-                                GlobalVariables.DatabaseConnection.UpdateWithChildren(item);                        
-                                packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
-                                _packagesView = CollectionViewSource.GetDefaultView(packages);
-                                _packagesView.Refresh();
+                                GlobalVariables.DatabaseConnection.UpdateWithChildren(item);
+                                RefreshResults();
                             } else {
                                 System.Windows.Forms.MessageBox.Show(string.Format("File not found: {0}", item.PackageName));    
                             }
                         }
+                        System.Windows.Forms.MessageBox.Show(string.Format("Moved {0}", stuff));
                     } else {
                         System.Windows.Forms.MessageBox.Show(string.Format("Please pick somewhere to move file."));
                     }
                 }
-                System.Windows.Forms.MessageBox.Show(string.Format("Moved {0}", stuff));
+                
             }
         }  
   

@@ -18,6 +18,19 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
+             <Style TargetType="ListViewItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            </Style>
+            <Style TargetType="{x:Type ListViewItem}">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Override}" Value="True">
+                      <Setter Property="Background" Value="Red" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding GameString}" Value="The Sims 2">
+                      <Setter Property="Background" Value="Green" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
             <ContextMenu x:Key="cmButton">
                 <MenuItem Header="Menu item 1" />
                 <MenuItem Header="Menu item 2" />
@@ -29,10 +42,16 @@
                   <CheckBox IsChecked="{Binding Path=IsSelected, 
                     RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/>
                 </StackPanel>
-              </DataTemplate>              
+            </DataTemplate> 
+            <ControlTemplate x:Key="Override" 
+              TargetType='{x:Type ListViewItem}'>
+                <GridViewRowPresenter Content="{TemplateBinding Content}"
+                    Columns="{TemplateBinding GridView.ColumnCollection}"/>
+            </ControlTemplate>
+    
         </Window.Resources>  
-        <Grid>
-            <Grid Background="#FF231636">
+        <Grid Visibility="Visible">
+            <Grid Background="#FF231636" Visibility="Visible">
                 <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="60" /> 
                 <ColumnDefinition/>   
@@ -60,6 +79,22 @@
                     </Button>
                 </StackPanel>                   
                 <ListView x:Name="ResultsView" Validation.ErrorTemplate="{x:Null}" IsSynchronizedWithCurrentItem="True" Style="{StaticResource ResultsDataGridStyle}" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Packages}" SelectedItem="{Binding SelectedFileInfo}" GridViewColumnHeader.Click="ListViewHeader_Click" SelectionMode="Extended">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListViewItem}"  >
+                          <Setter Property="Template"
+                                Value="{StaticResource Default}"/>
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding XPath=@Rating}" Value="5">
+                                    <Setter Property="Template" 
+                                    Value="{StaticResource Override}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding XPath=@Rating}" Value="4">
+                              <Setter Property="Template" 
+                                    Value="{StaticResource Recommended}"/>
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </ListView.ItemContainerStyle>
                     <ListView.Resources>
                         <Style TargetType="{x:Type ListViewItem}">                        
                             <Style.Triggers>
@@ -90,65 +125,59 @@
                         </GroupStyle>
                     </ListView.GroupStyle>
                     <ListView.View>
-                        <GridView AllowsColumnReorder="True">
+                        <GridView AllowsColumnReorder="True"  >
                             <GridViewColumn CellTemplate="{StaticResource FirstCell}" Width="30">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="IsSelected" Click="ListViewHeader_Click"></GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding PackageName}">
+                            <GridViewColumn DisplayMemberBinding="{Binding PackageName}" Width="Auto">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="PackageName" Click="ListViewHeader_Click">PackageName</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Title}">
+                            <GridViewColumn DisplayMemberBinding="{Binding Title}" Width="Auto">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Title" Click="ListViewHeader_Click">Title</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Type}">
+                            <GridViewColumn DisplayMemberBinding="{Binding Type}" Width="Auto">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Type" Click="ListViewHeader_Click">Type</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Description}">
+                            <GridViewColumn DisplayMemberBinding="{Binding Description}" Width="Auto">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Description" Click="ListViewHeader_Click">Description</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding FileSize}">
+                            <GridViewColumn DisplayMemberBinding="{Binding FileSize}" Width="Auto">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Size" Click="ListViewHeader_Click">Size</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding GameString}">
+                            <GridViewColumn DisplayMemberBinding="{Binding GameString}" Width="Auto">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Game" Click="ListViewHeader_Click">Game</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Function}">
+                            <GridViewColumn DisplayMemberBinding="{Binding Function}" Width="Auto">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Function" Click="ListViewHeader_Click">Function</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding FunctionSubcategory}">
+                            <GridViewColumn DisplayMemberBinding="{Binding FunctionSubcategory}" Width="Auto">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="FunctionSubcategory" Click="ListViewHeader_Click">Function Subcategory</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Location}">
+                            <GridViewColumn DisplayMemberBinding="{Binding Location}" Width="Auto">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Location" Click="ListViewHeader_Click">Location</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                         </GridView>
-                    </ListView.View>    
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListViewItem_PreviewMouseRightButtonDown" />
-                            <EventSetter Event="PreviewMouseRightButtonUp" Handler="ListViewItem_PreviewMouseRightButtonUp" />
-                        </Style>
-                    </ListView.ItemContainerStyle>    
+                    </ListView.View>
                 </ListView>
                 <Grid Grid.Column="1" VerticalAlignment="Bottom" Margin="15, 15, 0, 10" Grid.Row="3">
                     <Grid.ColumnDefinitions>
@@ -209,11 +238,25 @@
                 
             </Grid>
             
-            <Grid x:Name="TagsList" ZIndex="2" Background="Transparent" Width="200" Height="350" Visibility="Hidden">
+            <Grid x:Name="TagsList" ZIndex="2" Background="Transparent" Width="250" Height="350" Visibility="Hidden">
                 <Border x:Name="ProgressBorder" Background="#9183C1" BorderBrush="#B2BCE9" BorderThickness="2,2,2,2" Padding="0" CornerRadius="10 10 10 10" ClipToBounds="True" Margin="-0,0,0,0"/>
-                <ListView ItemsSource="{Binding Packages}" Margin="5" x:Name="TagsListBox"/>
-            </Grid>
-
+                <ListView ItemsSource="{Binding Packages}" Margin="5" x:Name="TagsListBox">            
+                    <ListView.View>
+                        <GridView AllowsColumnReorder="True">
+                            <GridViewColumn DisplayMemberBinding="{Binding TypeID}" Width="15">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="ID">ID</GridViewColumnHeader>
+                                </GridViewColumn.Header>
+                            </GridViewColumn>                                        
+                            <GridViewColumn DisplayMemberBinding="{Binding Description}" Width="Auto">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="Tag">Tag</GridViewColumnHeader>
+                                </GridViewColumn.Header>
+                            </GridViewColumn>                    
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>    
         </Grid>
         
         
