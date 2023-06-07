@@ -43,7 +43,8 @@ using SQLitePCL;
 using SQLiteNetExtensions.Extensions.TextBlob;
 using System.Data.SQLite;
 using SimsCCManager.Misc.TrayReader;
-
+using System.Runtime;
+using SimsCCManager.Packages.Sorting;
 
 namespace Sims_CC_Sorter
 {
@@ -54,19 +55,13 @@ namespace Sims_CC_Sorter
     public partial class MainWindow : Window    
 
     {
-        S2PackageSearch s2packs = new S2PackageSearch();
-        S4PackageSearch s4packs = new S4PackageSearch();
         LoggingGlobals log = new LoggingGlobals();
         GlobalVariables globalVars = new GlobalVariables();
         InitialProcessing initialprocess = new InitialProcessing();
         ParallelOptions parallelSettings = new ParallelOptions();
-        ConcurrentQueue<Task> TaskList = new ConcurrentQueue<Task>();
         public Stopwatch sw = new Stopwatch();
         string SelectedFolder = "";
         string statement = "";
-        int gameNum = 0;
-        bool keepgoing = true;
-        bool continuing = true;
         bool hascancelled = false;
         bool stop = false;
         bool eatenturecpu = true;
@@ -74,12 +69,8 @@ namespace Sims_CC_Sorter
         private bool FindNewAdditions;
         public static bool dataExists;
         public bool runprogress = false;
-        private int workerThreads;
         private bool fullystopped = false;
-        private int portThreads;
         public int countprogress = 0;
-        private int batchsize = 250;
-        private int totalbatches = 0;
         int threads = Environment.ProcessorCount;
         int threadstouse = 0;
         bool complete = false;
@@ -96,24 +87,19 @@ namespace Sims_CC_Sorter
         private List<FileInfo> compressed = new List<FileInfo>();
         private List<FileInfo> trayitems = new List<FileInfo>();
 
-        private List<PackageFile> packagesPending = new List<PackageFile>();
-        private List<PackageFile> packagesProcessing = new List<PackageFile>();
-        private List<SimsPackage> packagesDone = new List<SimsPackage>();
         private List<AllFiles> notpack = new List<AllFiles>();
         private List<FileInfo> files = new List<FileInfo>(); 
         private List<AllFiles> allfiles = new List<AllFiles>();
         private List<PackageFile> packagefiles = new List<PackageFile>();
 
-        private CancellationTokenSource cts = new CancellationTokenSource();        
-        public static int progresstracker = 0;
+        private CancellationTokenSource cts = new CancellationTokenSource();    
+
         public static int maxi = 0;
 
         public MainWindow()
         {           
             InitializeComponent();
-            Task.Run(() => {
-                StartIt();
-            });
+            new Thread(() => StartIt()) {IsBackground = true}.Start();
         }
 
         private void StartIt(){
@@ -146,11 +132,8 @@ namespace Sims_CC_Sorter
 
         #region Load 
 
-        private void loadData_Click(object sender, RoutedEventArgs e){
-            Task.Run(() => {
-                GetResults(); 
-            });
-            
+        private void loadData_Click(object sender, RoutedEventArgs e){            
+            new Thread(() => GetResults()) {IsBackground = true}.Start();
         }
 
         private bool DetectHalfRun(){
@@ -186,10 +169,18 @@ namespace Sims_CC_Sorter
             parallelSettings.MaxDegreeOfParallelism = threadstouse;
             log.MakeLog(string.Format("Threads set to {0}", threadstouse), true);
         }  
+        private void sortonthego_Check(object sender, RoutedEventArgs e){
+            GlobalVariables.sortonthego = true;
+            log.MakeLog("Sorting on the go!", true);
+        }
+        private void sortonthego_Uncheck(object sender, RoutedEventArgs e){
+            GlobalVariables.sortonthego = false;
+            log.MakeLog("No longer planning to sort on the go.", true);
+        }  
 
         private void Kofi_Click(object sender, EventArgs e){
             if (System.Windows.Forms.MessageBox.Show
-            ("Are you sure you want to go to Kofi?", "Opening External URL",
+            ("Open Kofi?", "Opening External URL",
             System.Windows.Forms.MessageBoxButtons.YesNo, 
             System.Windows.Forms.MessageBoxIcon.Question)
             ==System.Windows.Forms.DialogResult.Yes)
@@ -202,39 +193,117 @@ namespace Sims_CC_Sorter
                 //React as needed.
                 }
         }
+        private void Git_Click(object sender, EventArgs e){
+            if (System.Windows.Forms.MessageBox.Show
+            ("Open the Sims CC Manager Github Repo?", "Opening External URL",
+            System.Windows.Forms.MessageBoxButtons.YesNo, 
+            System.Windows.Forms.MessageBoxIcon.Question)
+            ==System.Windows.Forms.DialogResult.Yes)
+                {
+                    Process.Start(new ProcessStartInfo("https://github.com/sixstepsaway/Sims-CC-Manager") { UseShellExecute = true });
+                }
+
+            else
+                {
+                //React as needed.
+                }
+        }
+        private void Twitter_Click(object sender, EventArgs e){
+            if (System.Windows.Forms.MessageBox.Show
+            ("Open SinfulSimming's Twitter?", "Opening External URL",
+            System.Windows.Forms.MessageBoxButtons.YesNo, 
+            System.Windows.Forms.MessageBoxIcon.Question)
+            ==System.Windows.Forms.DialogResult.Yes)
+                {
+                    Process.Start(new ProcessStartInfo("https://twitter.com/sinfulsimming") { UseShellExecute = true });
+                }
+
+            else
+                {
+                //React as needed.
+                }
+        }
+        private void Discord_Click(object sender, EventArgs e){
+            if (System.Windows.Forms.MessageBox.Show
+            ("Open Discord?", "Opening External URL",
+            System.Windows.Forms.MessageBoxButtons.YesNo, 
+            System.Windows.Forms.MessageBoxIcon.Question)
+            ==System.Windows.Forms.DialogResult.Yes)
+                {
+                    Process.Start(new ProcessStartInfo("https://discord.gg/M6vnf842Fp") { UseShellExecute = true });
+                    ReportABugGrid.Visibility = Visibility.Hidden;  
+                }
+
+            else
+                {
+                //React as needed.
+                }
+                          
+        }
+
+        private void ReportBug_Click(object sender, EventArgs e){
+            ReportABugGrid.Visibility = Visibility.Visible;
+        }
+
+        private void CancelIssue_Click(object sender, EventArgs e){
+            ReportABugGrid.Visibility = Visibility.Hidden;
+        }
+
+        private void GitIssues_Click(object sender, EventArgs e){
+            if (System.Windows.Forms.MessageBox.Show
+            ("Open the Sims CC Manager Github Repo Issue Tracker?", "Opening External URL",
+            System.Windows.Forms.MessageBoxButtons.YesNo, 
+            System.Windows.Forms.MessageBoxIcon.Question)
+            ==System.Windows.Forms.DialogResult.Yes)
+                {
+                    Process.Start(new ProcessStartInfo("https://github.com/sixstepsaway/Sims-CC-Manager/issues") { UseShellExecute = true });
+                    ReportABugGrid.Visibility = Visibility.Hidden;
+                }
+
+            else
+                {
+                //React as needed.
+                }
+        }
+
 
         private void CancelScan_Click(object sender, EventArgs e) {
             stop = true;
             cts.Cancel();
-            CancelButton.Background = Brushes.LightGray;
+            Dispatcher.Invoke(new Action(() => CancelButton.Background = Brushes.LightGray));
             runprogress = false;
             hascancelled = true;
             Dispatcher.Invoke(new Action(() => Progressing.Visibility = Visibility.Hidden ));
             Dispatcher.Invoke(new Action(() => Cancelling.Visibility = Visibility.Visible ));
-            while (fullystopped == false){
-                Thread.Sleep(1);
-            }
+            Task ct = Task.Run(() => {
+                CancellingTick();
+            });
+            ct.Wait();
+            ct.Dispose();
             // Cancellation should have happened, so call Dispose.
             HideProgressGrid();            
         }
 
         private async void CancellingTick(){
-            while (fullystopped == false){
+            while (fullystopped == false){                
                 Task one = Task.Run(() => {
                     Dispatcher.Invoke(new Action(() => CancelLabel.Content = "Cancelling, please wait."));
                     Thread.Sleep(15);
                 });
                 one.Wait();
+                one.Dispose();
                 Task two = Task.Run(() => {
                     Dispatcher.Invoke(new Action(() => CancelLabel.Content = "Cancelling, please wait.."));
                     Thread.Sleep(15);
                 });
                 two.Wait();
+                two.Dispose();
                 Task three = Task.Run(() => {
                     Dispatcher.Invoke(new Action(() => CancelLabel.Content = "Cancelling, please wait..."));
                     Thread.Sleep(15);
                 });
                 three.Wait();
+                three.Dispose();
             }
         }
 
@@ -261,9 +330,7 @@ namespace Sims_CC_Sorter
             } else {
                 log.MakeLog("Starting over.", true);
                 FindNewAdditions = false;
-                Task.Run(() => {
-                    SortNewPrep();
-                });                
+                new Thread(() => SortNewPrep()) {IsBackground = true}.Start();    
             }            
         }
 
@@ -274,14 +341,12 @@ namespace Sims_CC_Sorter
                 log.MakeLog("Sorting new folder.", true);
                 if (dataExists == true){
                     FindNewAdditions = true;
-                    Task.Run(() => {
-                        SortNewFolder(cts.Token);
-                    }); 
+                    Dispatcher.Invoke(new Action(() => NewFolder.IsEnabled = false));
+                    new Thread(() => SortNewFolder(cts.Token)) {IsBackground = true}.Start();
                 } else {
                     FindNewAdditions = false;
-                    Task.Run(() => {
-                        SortNewPrep();
-                    });  
+                    Dispatcher.Invoke(new Action(() => NewFolder.IsEnabled = false));
+                    new Thread(() => SortNewPrep()) {IsBackground = true}.Start();
                 }                
                                
             }   
@@ -305,23 +370,27 @@ namespace Sims_CC_Sorter
             Dispatcher.Invoke(new Action(() => Progressing.Visibility = Visibility.Visible));
             try {
                 Dispatcher.Invoke(new Action(() => ProgressGrid.Visibility = Visibility.Visible));
+                Dispatcher.Invoke(new Action(() => NewFolder.IsEnabled = true));
             } catch (Exception e) {
                 Console.WriteLine("Show Progress Grid Failed: " + e.Message);
             }
 
             try {
                 Dispatcher.Invoke(new Action(() => MainMenuGrid.Visibility = Visibility.Hidden));
+                Dispatcher.Invoke(new Action(() => NewFolder.IsEnabled = true));
             } catch (Exception e) {
                 Console.WriteLine("Hide Main Menu Grid Failed: " + e.Message);
             }
             try {
                 Dispatcher.Invoke(new Action(() => completionAlert.Visibility = Visibility.Visible)); 
+                Dispatcher.Invoke(new Action(() => NewFolder.IsEnabled = true));
             } catch (Exception e) {
                 Console.WriteLine("Show Completion Alert Failed: " + e.Message);
             } 
 
             try {
                 Dispatcher.Invoke(new Action(() => mainProgressBar.Visibility = Visibility.Visible));
+                Dispatcher.Invoke(new Action(() => NewFolder.IsEnabled = true));
             } catch (Exception e) {
                 Console.WriteLine("Show Main Progress Bar Failed: " + e.Message);
             }
@@ -421,6 +490,12 @@ namespace Sims_CC_Sorter
                 GlobalVariables.DatabaseConnection.CreateTable <fileHasList>();
             } catch (Exception e){
                 log.MakeLog(string.Format("Ran into an error making File Has table: {0}", e), true);
+            }              
+            log.MakeLog("Making Overridden table", true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <OverriddenList>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making Overridden List table: {0}", e), true);
             } 
             
             
@@ -435,9 +510,7 @@ namespace Sims_CC_Sorter
                 log.MakeLog(string.Format("Executing: {0}", pragma), true);
                 var result=GlobalVariables.DatabaseConnection.ExecuteScalar<string>(pragma);
             }   
-            Task.Run(() => {
-               SortNewFolder(cts.Token); 
-            });      
+                new Thread(() => SortNewFolder(cts.Token)) {IsBackground = true}.Start();
             
         }
 
@@ -452,31 +525,35 @@ namespace Sims_CC_Sorter
                     GlobalVariables.DatabaseConnection.Close();
                 }
                 globalVars.ConnectDatabase(false);
-            }
+            }            
 
             Task ff = Task.Run(() => {
                 FindFiles(token);
             }, token);
-            ff.Wait();
+            ff.Wait(token);
+            ff.Dispose();
             log.MakeLog("Finished finding files.", true);
 
             sw.Stop();
             Task stopwatch = Task.Run(() => {
                 ElapsedProcessing("Categorizing files"); 
             }, token);
-            stopwatch.Wait();
+            stopwatch.Wait(token);
+            stopwatch.Dispose();
             sw.Restart();
 
                         
             Task countdata = Task.Run(() => {
                CountDatabase(token);
             }, token);
-            countdata.Wait();   
+            countdata.Wait(token);  
+            countdata.Dispose(); 
 
             Task rp = Task.Run(() => {
                 ReadPackages(token);
             }, token);
-            rp.Wait();
+            rp.Wait(token);
+            rp.Dispose();
             
             sw.Stop();
             Task updatesw = Task.Run(() => {
@@ -486,7 +563,7 @@ namespace Sims_CC_Sorter
             if (complete == true){
                 runprogress = false;
             }
-
+            updatesw.Dispose();
             //new Thread(() => ) {IsBackground = true}.Start();
 
             if (!token.IsCancellationRequested) {
@@ -510,36 +587,43 @@ namespace Sims_CC_Sorter
         #region Methods of Processing
 
         private void FindFiles(CancellationToken token){
-            string[] filesS = Directory.GetFiles(GlobalVariables.ModFolder, "*", SearchOption.AllDirectories);
-            
+            var directory = new DirectoryInfo(GlobalVariables.ModFolder);
+            var VilesS = directory.EnumerateFiles("*.*", SearchOption.AllDirectories).Where(file => !file.DirectoryName.Contains("_SORTED"));;
+            List<FileInfo> files = new();
+            files.AddRange(VilesS);
+            string[] filesS = new string[files.Count];
+            for (int f = 0; f < files.Count; f++){
+                filesS[f] = files[f].FullName;
+            }
             
             Task task0 = Task.Run(() => {
                 log.MakeLog("Sorting packages files from non-package files.", true);
                 log.MakeLog(string.Format("Setting maxi to {0}", filesS.Length), true);
-                maxi = (filesS.Length + 7);             
+                maxi = filesS.Length + 7;             
                 log.MakeLog(string.Format("Maxi set to {0}.", maxi), true);                        
                 log.MakeLog("Setting progress bar.", true);
                 SetProgressBar();
                 completionAlertValue("Sorting package files from non-package files.");
             }, token);
-            task0.Wait();  
+            task0.Wait(token);  
 
             if (FindNewAdditions == true){
                 Task taskfna = Task.Run(() => {
-                    log.MakeLog("Getting packagesPending.", true);
-                    var packagesPendingV = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending'");
-                    packagesPending.AddRange(packagesPendingV);
-                    log.MakeLog("Getting packagesProcessing.", true);
-                    var packagesProcessingV = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Processing'");
-                    packagesProcessing.AddRange(packagesPendingV);
-                    log.MakeLog("Getting packagesDone.", true);
-                    var packagesDoneV = GlobalVariables.DatabaseConnection.Query<SimsPackage>("SELECT * FROM Packages");
-                    packagesDone.AddRange(packagesDoneV);
-                    log.MakeLog("Getting notpack.", true);
+                    //log.MakeLog("Getting packagesPending.", true);
+                    //var packagesPendingV = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending'");
+                    //packagesPending.AddRange(packagesPendingV);
+                    //log.MakeLog("Getting packagesProcessing.", true);
+                    //var packagesProcessingV = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Processing'");
+                    //packagesProcessing.AddRange(packagesPendingV);
+                    //log.MakeLog("Getting packagesDone.", true);
+                    //var packagesDoneV = GlobalVariables.DatabaseConnection.Query<SimsPackage>("SELECT * FROM Packages");
+                    //packagesDone.AddRange(packagesDoneV);
+                    //log.MakeLog("Getting notpack.", true);
                     var notpackV = GlobalVariables.DatabaseConnection.Query<AllFiles>("SELECT * FROM AllFiles");
                     notpack.AddRange(notpackV);
                 });
-                taskfna.Wait();
+                taskfna.Wait(token);
+                taskfna.Dispose();
             }                 
             
 
@@ -551,14 +635,33 @@ namespace Sims_CC_Sorter
                         log.MakeLog("Process cancelled.", true);
                         stop = true;
                         return;
-                    }                     
-                    files.Add(new FileInfo(file));
-                    UpdateProgressBar(file, "Acquiring");
-                    log.MakeLog(string.Format("Adding {0} to list.", file), true);
+                    }
+                    if (FindNewAdditions == true){
+                        Task taskfna = Task.Run(() => {
+                            var packagesPending = GlobalVariables.DatabaseConnection.Query<PackageFile>(string.Format("SELECT * FROM Processing_Reader where Location = '{0}'", file));
+                            var packagesDone = GlobalVariables.DatabaseConnection.Query<SimsPackage>(string.Format("SELECT * FROM Packages where Location = '{0}'", file));
+                            var notPack = GlobalVariables.DatabaseConnection.Query<AllFiles>(string.Format("SELECT * FROM AllFiles where Location = '{0}'", file));
+                            if (packagesPending.Any()){
+                                log.MakeLog(string.Format("File {0} already exists in database and is awaiting processing.", file), true);
+                            } else if (packagesDone.Any()){
+                                log.MakeLog(string.Format("File {0} already exists in database and has been read.", file), true);                                
+                            } else if (notPack.Any()){
+                                log.MakeLog(string.Format("File {0} already exists in database isn't a package.", file), true);
+                            } else {
+                                files.Add(new FileInfo(file));
+                                UpdateProgressBar(file, "Acquiring");
+                                log.MakeLog(string.Format("Adding {0} to list.", file), true); 
+                            }
+                        });
+                    } else {
+                        files.Add(new FileInfo(file));
+                        UpdateProgressBar(file, "Acquiring");
+                        log.MakeLog(string.Format("Adding {0} to list.", file), true); 
+                    }
                     c++;
                 }
             }, token);
-            task1.Wait();
+            task1.Wait(token);
             
             Task task2 = Task.Run(() => {
                 if (token.IsCancellationRequested)
@@ -578,34 +681,8 @@ namespace Sims_CC_Sorter
                         stop = true;
                         return;
                     }
-                    bool foundfile = false;                 
-                    if (FindNewAdditions == true){                        
-                        var isinpending = from pending in packagesPending
-                            where pending.Location == s3.FullName
-                            select pending.Location;
-                            foundfile = isinpending.Any();
-                        var isinprocessing = from processing in packagesProcessing
-                            where processing.Location == s3.FullName
-                            select processing.Location;
-                            foundfile = isinprocessing.Any();
-                        var isindone = from done in packagesDone
-                            where done.Location == s3.FullName
-                            select done.Location;
-                            foundfile = isindone.Any();
-                        var isinnp = from np in notpack
-                            where np.Location == s3.FullName
-                            select np.Location;
-                            foundfile = isinnp.Any();
-                    }
-
-                    if (foundfile == true){
-                        log.MakeLog(string.Format("File {0} already exists in database.", s3.Name), true);
-                    } 
-                    else 
-                    { 
-                        allfiles.Add(new AllFiles { Name = s3.Name, Location = s3.FullName, Type = "sims3pack", Status = "Fine"});
-                        log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", s3.Name), true);
-                    }
+                    allfiles.Add(new AllFiles { Name = s3.Name, Location = s3.FullName, Type = "sims3pack", Status = "Fine"});
+                    log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", s3.Name), true);
                 });
                 UpdateProgressBar("sims3packs", "Sorting");
             }, token);
@@ -627,37 +704,10 @@ namespace Sims_CC_Sorter
                         stop = true;
                         return;
                     }  
-                    bool foundfile = false;                 
-                    if (FindNewAdditions == true){                        
-                        var isinpending = from pending in packagesPending
-                            where pending.Location == s2.FullName
-                            select pending.Location;
-                            foundfile = isinpending.Any();
-                        var isinprocessing = from processing in packagesProcessing
-                            where processing.Location == s2.FullName
-                            select processing.Location;
-                            foundfile = isinprocessing.Any();
-                        var isindone = from done in packagesDone
-                            where done.Location == s2.FullName
-                            select done.Location;
-                            foundfile = isindone.Any();
-                        var isinnp = from np in notpack
-                            where np.Location == s2.FullName
-                            select np.Location;
-                            foundfile = isinnp.Any();
-                    }
-
-                    if (foundfile == true){
-                        log.MakeLog(string.Format("File {0} already exists in database.", s2.Name), true);
-                    } 
-                    else 
-                    { 
-                        allfiles.Add(new AllFiles { Name = s2.Name, Location = s2.FullName, Type = "sims2pack", Status = "Fine"});                        
-                        log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", s2.Name), true);
-                    }
+                    allfiles.Add(new AllFiles { Name = s2.Name, Location = s2.FullName, Type = "sims2pack", Status = "Fine"});                        
+                    log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", s2.Name), true);
                 });
-                UpdateProgressBar("sims2packs", "Sorting");
-                
+                UpdateProgressBar("sims2packs", "Sorting");                
             }, token);
             
             Task task5 = Task.Run(() => {
@@ -676,36 +726,10 @@ namespace Sims_CC_Sorter
                         log.MakeLog("Process cancelled.", true);
                         stop = true;
                         return;
-                    }     
-                    bool foundfile = false;                 
-                    if (FindNewAdditions == true){                        
-                        var isinpending = from pending in packagesPending
-                            where pending.Location == t4.FullName
-                            select pending.Location;
-                            foundfile = isinpending.Any();
-                        var isinprocessing = from processing in packagesProcessing
-                            where processing.Location == t4.FullName
-                            select processing.Location;
-                            foundfile = isinprocessing.Any();
-                        var isindone = from done in packagesDone
-                            where done.Location == t4.FullName
-                            select done.Location;
-                            foundfile = isindone.Any();
-                        var isinnp = from np in notpack
-                            where np.Location == t4.FullName
-                            select np.Location;
-                            foundfile = isinnp.Any();
-                    }
-
-                    if (foundfile == true){
-                        log.MakeLog(string.Format("File {0} already exists in database.", t4.Name), true);
-                    }
-                    else 
-                    {                          
-                        allfiles.Add(new AllFiles { Name = t4.Name, Location = t4.FullName, Type = "ts4script", Status = "Fine"});  
-                        log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", t4.Name), true);
-                        countprogress++;
-                    }
+                    } 
+                    allfiles.Add(new AllFiles { Name = t4.Name, Location = t4.FullName, Type = "ts4script", Status = "Fine"});  
+                    log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", t4.Name), true);
+                    countprogress++;
                 });
                 UpdateProgressBar("sims4scripts", "Sorting");
             }, token);            
@@ -726,35 +750,9 @@ namespace Sims_CC_Sorter
                         log.MakeLog("Process cancelled.", true);
                         stop = true;
                         return;
-                    }      
-                    bool foundfile = false;                 
-                    if (FindNewAdditions == true){                        
-                        var isinpending = from pending in packagesPending
-                            where pending.Location == c.FullName
-                            select pending.Location;
-                            foundfile = isinpending.Any();
-                        var isinprocessing = from processing in packagesProcessing
-                            where processing.Location == c.FullName
-                            select processing.Location;
-                            foundfile = isinprocessing.Any();
-                        var isindone = from done in packagesDone
-                            where done.Location == c.FullName
-                            select done.Location;
-                            foundfile = isindone.Any();
-                        var isinnp = from np in notpack
-                            where np.Location == c.FullName
-                            select np.Location;
-                            foundfile = isinnp.Any();
                     }
-
-                    if (foundfile == true){
-                        log.MakeLog(string.Format("File already exists in database.", c.Name), true);
-                    } 
-                    else 
-                    {                         
                     allfiles.Add(new AllFiles { Name = c.Name, Location = c.FullName, Type = "compressed file", Status = "Fine"});
                     log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", c.Name), true);
-                    }
                 }); 
                 UpdateProgressBar("compressed files", "Sorting");
             }, token);
@@ -775,35 +773,9 @@ namespace Sims_CC_Sorter
                         log.MakeLog("Process cancelled.", true);
                         stop = true;
                         return;
-                    }    
-                    bool foundfile = false;                 
-                    if (FindNewAdditions == true){                        
-                        var isinpending = from pending in packagesPending
-                            where pending.Location == t.FullName
-                            select pending.Location;
-                            foundfile = isinpending.Any();
-                        var isinprocessing = from processing in packagesProcessing
-                            where processing.Location == t.FullName
-                            select processing.Location;
-                            foundfile = isinprocessing.Any();
-                        var isindone = from done in packagesDone
-                            where done.Location == t.FullName
-                            select done.Location;
-                            foundfile = isindone.Any();
-                        var isinnp = from np in notpack
-                            where np.Location == t.FullName
-                            select np.Location;
-                            foundfile = isinnp.Any();
-                    }
-
-                    if (foundfile == true){
-                        log.MakeLog(string.Format("File {0} already exists in database.", t.Name), true);
-                    } 
-                    else 
-                    { 
-                        allfiles.Add(new AllFiles { Name = t.Name, Location = t.FullName, Type = "tray file", Status = "Fine"});
-                        log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", t.Name), true);
-                    }
+                    }  
+                    allfiles.Add(new AllFiles { Name = t.Name, Location = t.FullName, Type = "tray file", Status = "Fine"});
+                    log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", t.Name), true);
                 });
                 UpdateProgressBar("tray files", "Sorting");
             }, token);              
@@ -824,35 +796,9 @@ namespace Sims_CC_Sorter
                         log.MakeLog("Process cancelled.", true);
                         stop = true;
                         return;
-                    }     
-                    bool foundfile = false;                 
-                    if (FindNewAdditions == true){                        
-                        var isinpending = from pending in packagesPending
-                            where pending.Location == o.FullName
-                            select pending.Location;
-                            foundfile = isinpending.Any();
-                        var isinprocessing = from processing in packagesProcessing
-                            where processing.Location == o.FullName
-                            select processing.Location;
-                            foundfile = isinprocessing.Any();
-                        var isindone = from done in packagesDone
-                            where done.Location == o.FullName
-                            select done.Location;
-                            foundfile = isindone.Any();
-                        var isinnp = from np in notpack
-                            where np.Location == o.FullName
-                            select np.Location;
-                            foundfile = isinnp.Any();
                     }
-
-                    if (foundfile == true){
-                        log.MakeLog(string.Format("File {0} already exists in database.", o.Name), true);
-                    } 
-                    else 
-                    {                           
-                        allfiles.Add(new AllFiles { Name = o.Name, Location = o.FullName, Type = "other", Status = "Fine"});           
-                        log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", o.Name), true);
-                    }
+                    allfiles.Add(new AllFiles { Name = o.Name, Location = o.FullName, Type = "other", Status = "Fine"});           
+                    log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", o.Name), true);
                 });
                 UpdateProgressBar("other files", "Sorting");
             }, token);   
@@ -873,54 +819,27 @@ namespace Sims_CC_Sorter
                         log.MakeLog("Process cancelled.", true);
                         stop = true;
                         return;
-                    }      
-                    bool foundfile = false;                 
-                    if (FindNewAdditions == true){                        
-                        var isinpending = from pending in packagesPending
-                            where pending.Location == p.FullName
-                            select pending.Location;
-                            foundfile = isinpending.Any();
-                        var isinprocessing = from processing in packagesProcessing
-                            where processing.Location == p.FullName
-                            select processing.Location;
-                            foundfile = isinprocessing.Any();
-                        var isindone = from done in packagesDone
-                            where done.Location == p.FullName
-                            select done.Location;
-                            foundfile = isindone.Any();
-                        var isinnp = from np in notpack
-                            where np.Location == p.FullName
-                            select np.Location;
-                            foundfile = isinnp.Any();
-                    }
-
-                    if (foundfile == true){
-                        log.MakeLog(string.Format("File {0} already exists in database.", p.Name), true);
-                    } 
-                    else 
-                    { 
-                        log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", p.Name), true);
-                        packagefiles.Add(new PackageFile { Name = p.Name, Location = p.FullName, Status = "Pending"});
-                        allfiles.Add(new AllFiles { Name = p.Name, Location = p.FullName, Type = "package", Status = "Fine"});
-                    }
+                    }log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", p.Name), true);
+                    packagefiles.Add(new PackageFile { Name = p.Name, Location = p.FullName, Status = "Pending"});
+                    allfiles.Add(new AllFiles { Name = p.Name, Location = p.FullName, Type = "package", Status = "Fine"});
                 });
                 UpdateProgressBar("package files", "Sorting");
             }, token);
 
 
-            task2.Wait();
+            task2.Wait(token);
             task2.Dispose();
-            task3.Wait();
+            task3.Wait(token);
             task3.Dispose();
-            task5.Wait();
+            task5.Wait(token);
             task5.Dispose();
-            task6.Wait();
+            task6.Wait(token);
             task6.Dispose();
-            task7.Wait();
+            task7.Wait(token);
             task7.Dispose();
-            task8.Wait();
+            task8.Wait(token);
             task8.Dispose();
-            task9.Wait();  
+            task9.Wait(token);  
             task9.Dispose();  
             log.MakeLog(string.Format("Found {0} sims3packs.", sims3pack.Count), true);
             log.MakeLog(string.Format("Found {0} sims2packs.", sims2pack.Count), true);
@@ -945,7 +864,7 @@ namespace Sims_CC_Sorter
                     Console.WriteLine(string.Format("Inserting sorted files to database failed. Exception: {0}", e.Message));
                 }                    
             }, token);
-            task10.Wait();
+            task10.Wait(token);
             task10.Dispose();
             files = new List<FileInfo>();
             sims3pack = new List<FileInfo>();
@@ -956,6 +875,8 @@ namespace Sims_CC_Sorter
             compressed = new List<FileInfo>();
             trayitems = new List<FileInfo>();
             allfiles = new List<AllFiles>();
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
             return;
         }              
 
@@ -971,11 +892,12 @@ namespace Sims_CC_Sorter
                 countprogress = 0;
                 runprogress = true;            
             });
-            getPackages.Wait();            
+            getPackages.Wait(token);
+            getPackages.Dispose();
             new Thread(() => RunUpdateElapsed(sw)) {IsBackground = true}.Start();
-            new Thread(() => RunUpdateProgressBar()) {IsBackground = true}.Start();
+            new Thread(() => RunUpdateProgressBar(token)) {IsBackground = true}.Start();
             Task ReadPackages = Task.Run(() => {                
-                if (GlobalVariables.debugMode == true){
+                if (GlobalVariables.debugMode == false){
                     foreach (PackageFile p in allp){
                         if (token.IsCancellationRequested)
                         {
@@ -984,9 +906,13 @@ namespace Sims_CC_Sorter
                             return;
                         }
                         Task read = Task.Run(() => {
-                            initialprocess.CheckThrough(p.Location);
+                            try {
+                                initialprocess.CheckThrough(p.Location);
+                            } catch (Exception e) {
+                                log.MakeLog(string.Format("Caught exception running initial process on {1}: {0}", e.Message, p.Location), true);
+                            }
                         });
-                        read.Wait();                        
+                        read.Wait(token);                        
                     };
                 } else {
                     Parallel.ForEach(allp, p => {
@@ -996,11 +922,21 @@ namespace Sims_CC_Sorter
                             stop = true;
                             return;
                         }
-                        initialprocess.CheckThrough(p.Location);
+                        try {
+                            initialprocess.CheckThrough(p.Location);
+                        } catch (Exception e) {
+                            log.MakeLog(string.Format("Caught exception running initial process on {1}: {0}", e.Message, p.Location), true);
+                        }
                     });
                 }
             }, token);
-            ReadPackages.Wait();
+            ReadPackages.Wait(token);
+            ReadPackages.Dispose();
+        }
+
+        private void FindConflicts(){
+            //GlobalVariables.DatabaseConnection.Query("select Packages.InstanceID from Packages INNER JOIN Ingredient_Recipe ON recipe_ID = Ingredient_Recipe.recipe_ID
+            //Where Ingredient_ID = "oregano")            
         }
 
         private void GetResults(){
@@ -1012,8 +948,7 @@ namespace Sims_CC_Sorter
                 } catch (Exception e) {
                     Console.WriteLine("Failed to open results window. Error: " + e.Message);
                     throw;
-                }
-                
+                }                
                 this.Close();
             }));
         }
@@ -1068,7 +1003,7 @@ namespace Sims_CC_Sorter
             Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
         }
 
-        private async void RunUpdateProgressBar(){  
+        private async void RunUpdateProgressBar(CancellationToken token){  
             Task rp = Task.Run(() => {
                while (runprogress == true)
                 {   
@@ -1081,7 +1016,8 @@ namespace Sims_CC_Sorter
                     }                
                 } 
             });
-            rp.Wait();
+            rp.Wait(token);
+            rp.Dispose();
             return;            
         }
 
@@ -1119,6 +1055,7 @@ namespace Sims_CC_Sorter
                 }
             });
             rue.Wait();
+            rue.Dispose();
             return;            
         }
 
@@ -1127,8 +1064,7 @@ namespace Sims_CC_Sorter
               
 
         private void testbutton_Click(object sender, EventArgs e) {
-            TrayFilesReader tfr = new TrayFilesReader();
-            tfr.ReadTray(new FileInfo(@"M:\The Sims 4 (Documents)\!Current\The Sims 4\Tray\0x00000000!0x00fa10e862d00030.householdbinary"));
+
         }        
     }
 

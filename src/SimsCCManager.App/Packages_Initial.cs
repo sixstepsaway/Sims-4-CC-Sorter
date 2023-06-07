@@ -42,7 +42,7 @@ namespace SimsCCManager.Packages.Initial {
         
                 
         private void NotPtoDb(string type, string location){
-            log.MakeLog("Adding item to database as " + type, true);
+            log.MakeLog(string.Format("Adding {0} to database as {1}", location, type), true);
             using (var db = new System.Data.SQLite.SQLiteConnection(GlobalVariables.PackagesReadDS)){
                 db.Open();
                 string cmdtext = string.Format("INSERT INTO NotPackages(type, location) VALUES('{0}', '{1}')", type, location);
@@ -50,7 +50,7 @@ namespace SimsCCManager.Packages.Initial {
                 sqm.ExecuteNonQuery();                
                 db.Close();
             }
-            log.MakeLog("Added! Returning.", true);
+            log.MakeLog(string.Format("{0} added! Returning.", location), true);
         }
 
         private int CountItems(string type) {
@@ -71,14 +71,14 @@ namespace SimsCCManager.Packages.Initial {
             int count = GlobalVariables.packagesReadReading;
             GlobalVariables.packagesReadReading++;
             FileInfo pack = new FileInfo(input);
-            MemoryStream msPackage = Methods.ReadBytesToFile(input);
+            //MemoryStream msPackage = Methods.ReadBytesToFile(input, 12);
+            FileStream msPackage = new FileStream(input, FileMode.Open, FileAccess.Read);
             BinaryReader packagereader = new BinaryReader(msPackage);
             string test = "";
             test = Encoding.ASCII.GetString(packagereader.ReadBytes(4));
             if (test != "DBPF") {
-                var statement = pack.FullName + " is either not a package or is broken.";
-                log.MakeLog("Adding broken file to list.", true);
-                string qcmd = string.Format("SELECT * FROM AllFiles where Name='{0}'", pack.FullName);
+                log.MakeLog(string.Format("Adding broken file {0} to list.", pack.Name), true);
+                string qcmd = string.Format("SELECT * FROM AllFiles where Name = '{0}'", pack.Name);
                 var fileq = GlobalVariables.DatabaseConnection.Query<AllFiles>(qcmd);
                 AllFiles query = fileq[0];
                 string qtype = query.Type;
@@ -90,34 +90,33 @@ namespace SimsCCManager.Packages.Initial {
                 return;
             } else {
                 counter++;
-                uint major = packagereader.ReadUInt32();
-                log.MakeLog(pack.Name + " has " + major + " as a major.", true);                
+                uint major = packagereader.ReadUInt32();                
                 uint minor = packagereader.ReadUInt32();
-                log.MakeLog(pack.Name + " has " + minor + " as a minor.", true);
+                log.MakeLog(string.Format("{0} has {1} as a major and {2} as a minor.", pack.Name, major, minor), true);
                 if ((major is 1 && minor is 1) || (major is 1 && minor is 2)) {
-                    log.MakeLog(pack.FullName + " is a sims 2 file.", false);
+                    log.MakeLog(string.Format("{0} is a Sims 2 file.", pack.FullName), false);
                     PtoDb(pack, 2);
                     try {
-                      s2s.SearchS2Packages(packagereader, pack, minor, count);
+                      s2s.SearchS2Packages(msPackage, pack, minor, count);
                     } catch (Exception e) {
                         log.MakeLog(string.Format("Caught exception reading Sims 2 package {0}, Exception: {1}", pack.Name, e), true);
                     }
                     
                 } else if (major is 2 && minor is 0) {
-                    log.MakeLog(pack.FullName + " is a sims 3 file.", false);
+                    log.MakeLog(string.Format("{0} is a Sims 3 file.", pack.FullName), false);
                     PtoDb(pack, 3);
-                    //s3s.SearchS3Packages(packagereader, pack);
+                    //s3s.SearchS3Packages(pack, count);
                 } else if (major is 2 && minor is 1) {
-                    log.MakeLog(pack.FullName + " is a sims 4 file.", false);
+                    log.MakeLog(string.Format("{0} is a Sims 4 file.", pack.FullName), false);
                     PtoDb(pack, 4);
                     try {
-                        s4s.SearchS4Packages(packagereader, pack, count);
+                        s4s.SearchS4Packages(msPackage, pack, count);
                     } catch (Exception e) {
                         log.MakeLog(string.Format("Caught exception reading Sims 4 package {0}, Exception: {1}", pack.Name, e), true);
                     }
                     
                 } else if (major is 3 && minor is 0) {
-                    log.MakeLog(pack.FullName + " is a Sim City 5 file.", false);
+                    log.MakeLog(string.Format("{0} is a Sims 5 file.", pack.FullName), false);
                     AllFiles af = new AllFiles();
                     af.Location = pack.FullName;
                     af.Name = pack.Name;
@@ -125,7 +124,7 @@ namespace SimsCCManager.Packages.Initial {
                     af.Status = "SimCity 5 Package";
                     GlobalVariables.DatabaseConnection.Update(af);
                 } else {
-                    log.MakeLog(pack.FullName + " was unidentifiable.", false);
+                    log.MakeLog(string.Format("{0} was unidentifiable.", pack.FullName), false);
                     AllFiles af = new AllFiles();
                     af.Location = pack.FullName;
                     af.Name = pack.Name;

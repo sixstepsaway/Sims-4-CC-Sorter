@@ -25,8 +25,8 @@ namespace SimsCCManager.Packages.Decryption
 	/// </summary>
     public class DecryptByteStream
     {
-        public int currOffset = 0;
-        public byte[] byteStream;
+        private int currOffset = 0;
+        private byte[] byteStream;
 
 		public DecryptByteStream(byte[] inputBytes) 
         {

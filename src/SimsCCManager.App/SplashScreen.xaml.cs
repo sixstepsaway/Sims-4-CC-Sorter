@@ -124,8 +124,14 @@ namespace SimsCCManager.SplashScreen
                 log.MakeLog("Loading actual application.", true);
                 this.Dispatcher.Invoke(new Action(() => LoadingText.Content = "Loading Manager"));
                 this.Dispatcher.Invoke(new Action(() => {
-                    var mainWindow = new MainWindow();
-                    mainWindow.Show();
+                    try {
+                        var mainWindow = new MainWindow();
+                        mainWindow.Show();
+                    } catch (Exception e) {
+                        Console.WriteLine("Caught exception opening Main Window: " + e.Message + " - " + e.StackTrace);
+                    }
+
+
                 }));
                 this.Dispatcher.Invoke(new Action(() => this.Close()));
             }));

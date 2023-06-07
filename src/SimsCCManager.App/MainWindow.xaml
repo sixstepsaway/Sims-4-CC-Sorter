@@ -87,6 +87,12 @@
                         <CheckBox Checked="noeatcpu_Check" Unchecked="eatcpu_Uncheck" Width="15" Height="15"/>
                     </Grid>
                 </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0, 0, 0, 10">
+                    <Label Content="Sort as we go?     " VerticalAlignment="Center" FontSize="13" Foreground="AliceBlue" HorizontalContentAlignment="Center"/>
+                    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <CheckBox Checked="sortonthego_Check" Unchecked="sortonthego_Uncheck" Width="15" Height="15"/>
+                    </Grid>
+                </StackPanel>
                 <Button x:Name="exitButton" Click="exitButton_Click" Content="Exit" Height="40" Width="350" Margin="5"/>
                 <Button x:Name="testButton" Click="testbutton_Click" Content="Dev Test Button" Height="35" Width="127" Margin="5" Visibility="Hidden"/>
             </StackPanel>        
@@ -96,15 +102,42 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Column="1">
-                    <TextBlock FontSize="14" FontFamily="fonts/#Accidental Presidency" HorizontalAlignment="Right" VerticalAlignment="Bottom" TextAlignment="Right" Foreground="AliceBlue">Sims CC Sorter developed by sinfulsimming</TextBlock>
-                    <TextBlock  FontSize="14" FontFamily="fonts/#Accidental Presidency" HorizontalAlignment="Right" VerticalAlignment="Bottom" TextAlignment="Right" Foreground="AliceBlue">Development Alpha</TextBlock>
+                    <TextBlock FontSize="16" FontFamily="fonts/#Accidental Presidency" HorizontalAlignment="Right" VerticalAlignment="Bottom" TextAlignment="Right" Foreground="AliceBlue">Sims CC Sorter developed by sinfulsimming</TextBlock>
+                    <TextBlock  FontSize="16" FontFamily="fonts/#Accidental Presidency" HorizontalAlignment="Right" VerticalAlignment="Bottom" TextAlignment="Right" Foreground="AliceBlue">Development Alpha</TextBlock>
+                    <Button Background="Transparent" HorizontalAlignment="Right" Click="ReportBug_Click">
+                        <TextBlock  FontSize="16" FontFamily="fonts/#Accidental Presidency" HorizontalAlignment="Right" VerticalAlignment="Bottom" TextAlignment="Right" Foreground="AliceBlue">Report a Bug</TextBlock>
+                    </Button>
+                    
                 </StackPanel>
-                <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Column="0">
-                    <Button Name="KofiButton" Height="50" Width="70" Margin="15" Padding="0" Click="Kofi_Click" Background="Transparent" BorderThickness="0">
-                        <Image Source="img\ko-fi_logo-2039355488.png"/>
-                    </Button>                
-                </StackPanel>
+                
             </Grid>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Column="0">
+                <Button Name="TwitterButton" Height="30" Margin="10" Padding="0" Click="Twitter_Click" Background="Transparent" BorderThickness="0">
+                    <Image Source="img\twittericon_w.png"/>
+                </Button> 
+                <Button Name="KofiButton" Height="30" Margin="10" Padding="0" Click="Kofi_Click" Background="Transparent" BorderThickness="0">
+                    <Image Source="img\kofiicon_w.png"/>
+                </Button> 
+                <Button Name="GitButton" Height="35" Margin="10" Padding="0" Click="Git_Click" Background="Transparent" BorderThickness="0">
+                    <Image Source="img\githubicon_w.png"/>
+                </Button> 
+                <Button Name="DiscordButton" Height="35" Margin="10" Padding="0" Click="Discord_Click" Background="Transparent" BorderThickness="0">
+                    <Image Source="img\discordicon_w.png"/>
+                </Button>                
+            </StackPanel>
+        </Grid>
+
+        <Grid x:Name="ReportABugGrid" Visibility="Hidden" Width="350" Height="175" ZIndex="2">
+            <Border Background="#212a3e" BorderBrush="#D3C4D0" BorderThickness="2,2,2,2" Padding="0" CornerRadius="10 10 10 10" ClipToBounds="True" Margin="0,0,0,0">
+            </Border>
+            <StackPanel Orientation="Vertical">
+                <TextBlock Text="There are two ways to report an issue. If you have a pressing concern you need a reply about as soon as possible, you might want to use Discord. If you have just found a bug you want to report for fixing in the next version, Github issues are the best option." Grid.Row="0" Margin="10, 10, 10, 20"  TextWrapping="Wrap" Foreground="AliceBlue" FontSize="16" TextAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Content="Github Issues" Click="GitIssues_Click" Grid.Row="1" Width="100" Height="25" Padding="0" FontSize="12" Margin="0, 0, 5, 0"/>
+                    <Button Content="Discord" Click="Discord_Click" Grid.Row="1" Width="100" Height="25" Padding="0" FontSize="12" Margin="0, 0, 5, 0"/>
+                    <Button Content="Cancel" Click="CancelIssue_Click" Grid.Row="1" Width="100" Height="25" Padding="0" FontSize="12"/>
+                </StackPanel>
+            </StackPanel>            
         </Grid>
         
         

@@ -26,6 +26,8 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using SQLiteNetExtensions.Attributes;
 using SQLiteNetExtensions.Extensions;
+using System.Collections.Concurrent;
+using SimsCCManager.Packages.Sorting;
 
 namespace SimsCCManager.Packages.Sims4Search
 {
@@ -57,117 +59,90 @@ namespace SimsCCManager.Packages.Sims4Search
         public static List<TagsList> GetTagInfo(CASTag16Bit tags, uint count){
             
             List<TagsList> taglist = new List<TagsList>();
-
+            TagsList tagg = new TagsList();
+            List<TagsList> tl = new List<TagsList>();
+            List<TagsList> tag = new List<TagsList>();
             for (int i = 0; i < count; i++)
-            {
-                using (var dataConnection = new SQLiteConnection(TypeListings.functionSortsListDB)){                    
-                    try
-                    {
-                        dataConnection.Open();
-                        string cmdtxt = string.Format("SELECT * FROM S4CategoryTags where typeID='{0}' OR typeID='{1}'", tags.tagKey[i], tags.catKey[i]);
-
-                        using (SQLiteCommand sqcmd = new SQLiteCommand(cmdtxt, dataConnection)){
-                            using (SQLiteDataReader sqlreader = sqcmd.ExecuteReader()){
-                                while (sqlreader.Read())
-                                {
-                                    string tid = sqlreader["typeID"].ToString();
-                                    string info = sqlreader["info"].ToString();
-                                    taglist.Add(new TagsList{ TypeID = tid, Description = info});
-                                    log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, info), true);
-                                }
-                            }
-                        }        
-                    }
-                    catch (System.Exception ex)
-                    { 
-                        System.Windows.Forms.MessageBox.Show("Database Error: " + ex.Message.ToString(),
-                        "Tagsearch failed. Please notify developer..",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    finally
-                    {
-                        dataConnection.Close();
-                    }                    
+            {   
+                if (tags.tagKey[i] != 0){
+                    tag = GlobalVariables.S4FunctionTypesConnection.Query<TagsList>(string.Format("SELECT * FROM S4CategoryTags where TypeID='{0}'", tags.tagKey[i]));
+                    if (tag.Any()){                    
+                        tl.AddRange(tag);
+                        tagg.TypeID = tl[0].TypeID;
+                        tagg.Description = tl[0].Info;
+                        taglist.Add(tagg);
+                        log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, tagg.TypeID, tagg.Info), true);
+                    } else {
+                        log.MakeLog(string.Format("Tag {0} matched nothing.", tags.tagKey[i]), true);
+                    }  
                 }
+                if (tags.catKey[i] != 0){
+                    tag = GlobalVariables.S4FunctionTypesConnection.Query<TagsList>(string.Format("SELECT * FROM S4CategoryTags where TypeID='{0}'", tags.catKey[i]));
+                    if (tag.Any()){                    
+                        tl.AddRange(tag);
+                        tagg.TypeID = tl[0].TypeID;
+                        tagg.Description = tl[0].Info;
+                        taglist.Add(tagg);
+                        log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, tagg.TypeID, tagg.Info), true);
+                    } else {
+                        log.MakeLog(string.Format("Tag {0} matched nothing.", tags.catKey[i]), true);
+                    }  
+                }                                            
             }
-            return taglist;            
+            tagg = new TagsList();
+            tl = new List<TagsList>();
+            tag = new List<TagsList>();
+            return taglist;
         }
         
         public static List<TagsList> GetTagInfo(Tag tags, uint count){
             List<TagsList> taglist = new List<TagsList>();
-
+            TagsList tagg = new TagsList();
+            List<TagsList> tl = new List<TagsList>();
+            List<TagsList> tag = new List<TagsList>();
             for (int i = 0; i < count; i++)
             {
-
-                using (var dataConnection = new SQLiteConnection(TypeListings.functionSortsListDB)){                    
-                    try
-                    {
-                        dataConnection.Open();
-                        string cmdtxt = string.Format("SELECT * FROM S4CategoryTags where typeID='{0}'", tags.tagKey[i]);
-
-                        using (SQLiteCommand sqcmd = new SQLiteCommand(cmdtxt, dataConnection)){
-                            using (SQLiteDataReader sqlreader = sqcmd.ExecuteReader()){
-                                while (sqlreader.Read())
-                                {
-                                    string tid = sqlreader["typeID"].ToString();
-                                    string info = sqlreader["info"].ToString();
-                                    taglist.Add(new TagsList{ TypeID = tid, Description = info});
-                                    log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, info), true);
-                                }
-                            }
-                        }        
-                    }
-                    catch (System.Exception ex)
-                    { 
-                        System.Windows.Forms.MessageBox.Show("Database Error: " + ex.Message.ToString(),
-                        "Tagsearch failed. Please notify developer..",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    finally
-                    {
-                        dataConnection.Close();
-                    }                    
+                tag = GlobalVariables.S4FunctionTypesConnection.Query<TagsList>(string.Format("SELECT * FROM S4CategoryTags where TypeID='{0}'", tags.tagKey[i]));
+                if (tag.Any()){
+                    
+                    tl.AddRange(tag);
+                    tagg.TypeID = tl[0].TypeID;
+                    tagg.Description = tl[0].Info;
+                    taglist.Add(tagg);
+                    log.MakeLog(string.Format("Tag {0} ({2}) was matched to {1}.", i, taglist[i].Info, tags.tagKey[i]), true);
+                } else {
+                    log.MakeLog(string.Format("Tag {0} matched nothing.", tags.tagKey[i]), true);
                 }
             }
-            return taglist;            
+            tagg = new TagsList();
+            tl = new List<TagsList>();
+            tag = new List<TagsList>();
+            return taglist;
         }        
         
         public static List<TagsList> GetTagInfo(List<uint> tags, uint count){
             List<TagsList> taglist = new List<TagsList>();
-
+            TagsList tagg = new TagsList();
+            List<TagsList> tl = new List<TagsList>();
+            List<TagsList> tag = new List<TagsList>();            
             for (int i = 0; i < count; i++)
             {
-                using (var dataConnection = new SQLiteConnection(TypeListings.functionSortsListDB)){                    
-                    try
-                    {
-                        dataConnection.Open();
-                        string cmdtxt = string.Format("SELECT * FROM S4CategoryTags where typeID='{0}'", tags[i]);
-
-                        using (SQLiteCommand sqcmd = new SQLiteCommand(cmdtxt, dataConnection)){
-                            using (SQLiteDataReader sqlreader = sqcmd.ExecuteReader()){
-                                while (sqlreader.Read())
-                                {
-                                    string tid = sqlreader["typeID"].ToString();
-                                    string info = sqlreader["info"].ToString();
-                                    taglist.Add(new TagsList{ TypeID = tid, Description = info});
-                                    log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, info), true);
-                                }
-                            }
-                        }        
-                    }
-                    catch (System.Exception ex)
-                    { 
-                        System.Windows.Forms.MessageBox.Show("Database Error: " + ex.Message.ToString(),
-                        "Tagsearch failed. Please notify developer..",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    finally
-                    {
-                        dataConnection.Close();
-                    }                    
+                tag = GlobalVariables.S4FunctionTypesConnection.Query<TagsList>(string.Format("SELECT * FROM S4CategoryTags where TypeID='{0}'", tags[i]));
+                if (tag.Any()){
+                    
+                    tl.AddRange(tag);
+                    tagg.TypeID = tl[0].TypeID;
+                    tagg.Description = tl[0].Info;
+                    taglist.Add(tagg);
+                    log.MakeLog(string.Format("Tag {0} ({2}) was matched to {1}.", i, taglist[i].Info, tags[i]), true);
+                } else {
+                    log.MakeLog(string.Format("Tag {0} matched nothing.", taglist[i]), true);
                 }
             }
-            return taglist;            
+            tagg = new TagsList();
+            tl = new List<TagsList>();
+            tag = new List<TagsList>();
+            return taglist;
         }
     }
 
@@ -183,11 +158,11 @@ namespace SimsCCManager.Packages.Sims4Search
         
         public ResourceKeyITG(BinaryReader reader){
             this.instance = reader.ReadUInt64(); 
-            log.MakeLog("GUID Instance: " + this.instance, true);
+            log.MakeLog(string.Format("GUID Instance: {0}", this.instance), true);
             this.type = reader.ReadUInt32(); 
-            log.MakeLog("GUID Type: " + this.type, true);
+            log.MakeLog(string.Format("GUID Type: {0}", this.type), true);
             this.group = reader.ReadUInt32();     
-            log.MakeLog("GUID Group: " + this.group, true);  
+            log.MakeLog(string.Format("GUID Group: {0}", this.group), true);  
         }
 
         public override string ToString() => $"{type.ToString("X8")}-{group.ToString("X8")}-{instance.ToString("X16")}";
@@ -208,11 +183,11 @@ namespace SimsCCManager.Packages.Sims4Search
             ulong longleft = left;
             longleft = (longleft << 32);
             this.instance = longleft | right;
-            log.MakeLog("GUID Instance: " + this.instance, true);
+            log.MakeLog(string.Format("GUID Instance: {0}", this.instance), true);
             this.type = reader.ReadUInt32(); 
-            log.MakeLog("GUID Type: " + this.type, true);
-            this.group = reader.ReadUInt32();  
-            log.MakeLog("GUID Group: " + this.group, true);       
+            log.MakeLog(string.Format("GUID Type: {0}", this.type), true);
+            this.group = reader.ReadUInt32();     
+            log.MakeLog(string.Format("GUID Group: {0}", this.group), true);    
         }
 
         public override string ToString() => $"{type.ToString("X8")}-{group.ToString("X8")}-{instance.ToString("X16")}";
@@ -311,90 +286,88 @@ namespace SimsCCManager.Packages.Sims4Search
         public List<TagsList> itemtags = new List<TagsList>();
         LoggingGlobals log = new LoggingGlobals();
         GlobalVariables globals = new GlobalVariables();
+        public ulong instanceid;
+        public uint typeid;
+        public uint groupid;
 
         public ReadCOBJ(BinaryReader readFile, int packageparsecount, int e, List<TagsList> itemtags){
             uint version = readFile.ReadUInt32();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - Version: " + version, true);
-            log.MakeLog("-- As hex: " + version.ToString("X8"), true);
+            log.MakeLog(string.Format("P{0}/E{1} - Version: {2} \n-- As hex: {3}", packageparsecount, e, version, version.ToString("X8")), true);
             uint commonblockversion = readFile.ReadUInt32();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - Common Block Version: " + commonblockversion, true);
-            log.MakeLog("-- As hex: " + commonblockversion.ToString("X8"), true);
+            log.MakeLog(string.Format("P{0}/E{1} - Common Block Version: {2} \n-- As hex: {3}", packageparsecount, e, commonblockversion, commonblockversion.ToString("X8")), true);
             uint namehash = readFile.ReadUInt32();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - NameHash: " + namehash, true);
-            log.MakeLog("-- As hex: " + namehash.ToString("X8"), true);
+            log.MakeLog(string.Format("P{0}/E{1} - Name Hash: {2} \n-- As hex: {3}", packageparsecount, e, namehash, namehash.ToString("X8")), true);
             uint descriptionhash = readFile.ReadUInt32();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - DescriptionHash: " + descriptionhash, true);
-            log.MakeLog("-- As hex: " + descriptionhash.ToString("X8"), true);                            
+            log.MakeLog(string.Format("P{0}/E{1} - Description Hash: {2} \n-- As hex: {3}", packageparsecount, e, descriptionhash, descriptionhash.ToString("X8")), true);
             uint price = readFile.ReadUInt32();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - Price: " + price, true);
-            log.MakeLog("-- As hex: " + price.ToString("X8"), true);
+            log.MakeLog(string.Format("P{0}/E{1} - Price: {2} \n-- As hex: {3}", packageparsecount, e, price, price.ToString("X8")), true);
 
             ulong thumbhash = readFile.ReadUInt64();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - Thumbnail Hash: " + thumbhash, true);
-            log.MakeLog("-- As hex: " + thumbhash.ToString("X8"), true);
+            log.MakeLog(string.Format("P{0}/E{1} - Thumb Hash: {2} \n-- As hex: {3}", packageparsecount, e, thumbhash, thumbhash.ToString("X8")), true);
 
             uint devcatflags = readFile.ReadUInt32();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - Dev Category Flags: " + devcatflags, true);
-            log.MakeLog("-- As hex: " + devcatflags.ToString("X8"), true);
+            log.MakeLog(string.Format("P{0}/E{1} - Dev Cat Flags: {2} \n-- As hex: {3}", packageparsecount, e, devcatflags, devcatflags.ToString("X8")), true);
             
             int tgicount = readFile.ReadByte();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - TGI Count: " + tgicount, true);
+            log.MakeLog(string.Format("P{0}/E{1}, - TGI Count: {2}", packageparsecount, e, tgicount), true);
+            instanceid = 0;
+            typeid = 0;
+            groupid = 0;
 
             if (tgicount != 0){
-                log.MakeLog("P" + packageparsecount + "/E" + e + " - TGI Count is not zero. Reading resources.", true);
+                log.MakeLog(string.Format("P{0}/E{1}, - TGI Count is not zero. Reading Resources.", packageparsecount, e), true);
                 ResourceKeyITG resourcekey = new ResourceKeyITG(readFile);
-                log.MakeLog(resourcekey.ToString(), true);
-                log.MakeLog("GUID: " + resourcekey.ToString(), true);
-                GUID = resourcekey.ToString();
+                log.MakeLog(string.Format("P{0}/E{1}, - GUID: {2}", packageparsecount, e, resourcekey.ToString()), true);
+                instanceid = resourcekey.instance;
+                typeid = resourcekey.type;
+                groupid = resourcekey.group;
             }                           
             
             if (commonblockversion >= 10)
             {
                 int packId = readFile.ReadInt16();
-                log.MakeLog("P" + packageparsecount + "/E" + e + " - Pack ID: " + packId, true);
+                log.MakeLog(string.Format("P{0}/E{1}, - Pack ID: {2}", packageparsecount, e, packId), true);
                 int packFlags = readFile.ReadByte();
-                log.MakeLog("P" + packageparsecount + "/E" + e + " - Pack Flags: " + packFlags, true);
-                byte[] reservedBytes = readFile.ReadBytes(9);
+                log.MakeLog(string.Format("P{0}/E{1}, - PackFlags: {2}", packageparsecount, e, packFlags), true);
+                readFile.ReadBytes(9);
             } else {
                 int unused2 = readFile.ReadByte();
                 if (unused2 > 0)
                 {
-                    int unused3 = readFile.ReadByte();
+                    readFile.ReadByte();
                 }
             }
 
             if (commonblockversion >= 11){
                 uint count = readFile.ReadUInt32();
-                log.MakeLog("P" + packageparsecount + "/E" + e + " - Tags Count: " + count, true);
+                log.MakeLog(string.Format("P{0}/E{1}, - Tags Count: {2}", packageparsecount, e, count), true);
                 Tag tags = new Tag(readFile, count);
 
                 List<TagsList> gottags = Readers.GetTagInfo(tags, count);
                 foreach (TagsList tag in gottags){
-                                if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
-                                    itemtags.Add(tag);  
-                                }
-                            }
+                    if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
+                        itemtags.Add(tag);  
+                    }
+                }
                 
             } else {
                 uint count = readFile.ReadUInt32();
-                List<uint> tagsread = new List<uint>();                
-                log.MakeLog("Num tags: " + count, true);
+                List<uint> tagsread = new List<uint>(); 
+                log.MakeLog(string.Format("P{0}/E{1}, - Num Tags: {2}", packageparsecount, e, count), true);
                 for (int t = 0; t < count; t++){                    
                     uint tagvalue = readFile.ReadUInt16();
                     tagsread.Add(tagvalue);
                 }
-
                 List<TagsList> gottags = Readers.GetTagInfo(tagsread, count);
                 foreach (TagsList tag in gottags){
-                                if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
-                                    itemtags.Add(tag);  
-                                }
-                            }
+                    if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
+                        itemtags.Add(tag);  
+                    }
+                }
             }
             long location = readFile.BaseStream.Position;
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - Reader location: " + location, true);
             uint count2 = readFile.ReadUInt32();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - Selling Point Count: " + count2, true);
+            log.MakeLog(string.Format("P{0}/E{1}, - Selling Point Count: {2}", packageparsecount, e, count2), true);
             if (count2 > 5){
                 log.MakeLog("Selling point count is too high, something went wrong.", true);
             } else {
@@ -402,24 +375,24 @@ namespace SimsCCManager.Packages.Sims4Search
 
                 List<TagsList> gottags = Readers.GetTagInfo(sellingtags, count2);
                 foreach (TagsList tag in gottags){
-                                if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
-                                    itemtags.Add(tag);  
-                                }
-                            }
+                    if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
+                        itemtags.Add(tag);  
+                    }
+                }
                 
             }            
 
             uint unlockByHash = readFile.ReadUInt32();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - UnlockBy Hash: " + unlockByHash, true);
+            log.MakeLog(string.Format("P{0}/E{1}, - UnlockBy Hash: {2}", packageparsecount, e, unlockByHash), true);
             
             uint unlockedByHash = readFile.ReadUInt32();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - UnlockedBy Hash: " + unlockedByHash, true);
+            log.MakeLog(string.Format("P{0}/E{1}, - UnlockedBy Hash: {2}", packageparsecount, e, unlockedByHash), true);
 
             int swatchColorSortPriority = readFile.ReadUInt16();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - Swatch Sort Priority: " + swatchColorSortPriority, true);
+            log.MakeLog(string.Format("P{0}/E{1}, - Swatch Sort Priority: {2}", packageparsecount, e, swatchColorSortPriority), true);
 
             ulong varientThumbImageHash = readFile.ReadUInt64();
-            log.MakeLog("P" + packageparsecount + "/E" + e + " - Varient Thumb Image Hash: " + varientThumbImageHash, true);
+            log.MakeLog(string.Format("P{0}/E{1}, - Varient Thumb Image Hash: {2}", packageparsecount, e, varientThumbImageHash), true);
         }            
     }
     
@@ -434,9 +407,10 @@ namespace SimsCCManager.Packages.Sims4Search
         public uint[] entrytype;
         public uint[] position;
 
-        public ReadOBJDIndex(BinaryReader reader){
+        public ReadOBJDIndex(BinaryReader reader, int packageparsecount, int e){
             this.version = reader.ReadUInt16();
             log.MakeLog("Version: " + this.version, true);
+            log.MakeLog(string.Format("P{0}/OBJD{1}, - Version: {2}", packageparsecount, e, this.version), true);
             if (this.version > 150){
                 log.MakeLog("Version is not legitimate.", true);
                 this.refposition = 0; 
@@ -482,7 +456,10 @@ namespace SimsCCManager.Packages.Sims4Search
         public string[] model;
         public string[] footprint;
         private bool tuningidmissing = false;
-        public ReadOBJDEntry(BinaryReader reader, string[] entries, int[] positions){
+        public uint type;
+        public uint group;
+        public ulong instance; 
+        public ReadOBJDEntry(BinaryReader reader, string[] entries, int[] positions, int packageparsecount, int e){
             uint preceeding;
             uint preceedingDiv;
 
@@ -504,36 +481,41 @@ namespace SimsCCManager.Packages.Sims4Search
             slot = new string[0];
             model = new string[0];
             footprint = new string[0];
-            tuningidmissing = false;
+            tuningidmissing = false;  
+            instance = 0;
+            group = 0;
+            type = 0;          
 
-            for (int e = 0; e < entries.Length; e++){
-                string entryid = entries[e];
-                int entrypos = positions[e];
+            for (int j = 0; j < entries.Length; j++){
+                string entryid = entries[j];
+                int entrypos = positions[j];
                 switch (entryid)
                 {
                     case "E7F07786": // name
                         reader.BaseStream.Position = entrypos;
                         this.namelength = reader.ReadByte();
-                        log.MakeLog("Name Length: " + namelength, true);
-                        log.MakeLog("Reading three empty bytes.", true);
-                        log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
-                        log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
-                        log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Name Length: {2}", packageparsecount, e, namelength), true);
+                        reader.BaseStream.Position = reader.BaseStream.Position + 3;
+                        //log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
+                        //log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
+                        //log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
                         this.namebit = reader.ReadBytes(namelength);
                         this.name = Encoding.UTF8.GetString(namebit);
-                        log.MakeLog("Name: " + name, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Name: {2}", packageparsecount, e, name), true);
                         break;
                     case "790FA4BC": //tuning
                         reader.BaseStream.Position = entrypos;
                         this.tuningnamelength = reader.ReadByte();
-                        log.MakeLog("Tuning Name Length: " + tuningnamelength, true);
-                        log.MakeLog("Reading three empty bytes.", true);
-                        log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
-                        log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
-                        log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Tuning Name Length: {2}", packageparsecount, e, tuningnamelength), true);
+                        reader.BaseStream.Position = reader.BaseStream.Position + 3;
+                        //log.MakeLog("Reading three empty bytes.", true);
+                        //log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
+                        //log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
+                        //log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
                         this.tuningbit = reader.ReadBytes(tuningnamelength);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Tuning Name Length: {2}", packageparsecount, e, tuningbit), true);
                         this.tuningname = Encoding.UTF8.GetString(tuningbit);
-                        log.MakeLog("Tuning Name: " + tuningname, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Tuning Name: {2}", packageparsecount, e, tuningname), true);
                         break;
                     case "B994039B": //TuningID
                         reader.BaseStream.Position = entrypos;
@@ -542,80 +524,87 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "CADED888": //Icon
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        log.MakeLog("Reading preceeding UInt32: " + preceeding, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Reading Preceeding UInt32: {2}", packageparsecount, e, preceeding), true);
                         preceedingDiv = preceeding / 4;            
-                        log.MakeLog("Number of Icon GUIDs: " + preceedingDiv, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Number of Icon GUIDs: {2}", packageparsecount, e, preceedingDiv), true);
                         this.icon = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
                             ResourceKeyITGFlip ricon = new ResourceKeyITGFlip(reader);
-                            log.MakeLog(ricon.ToString(), true);
-                            log.MakeLog("Icon GUID: " + ricon.ToString(), true);
+                            log.MakeLog(string.Format("P{0}/OBJD{1}, - Icon GUID: {2}", packageparsecount, e, ricon.ToString()), true);
                             this.icon[p] = ricon.ToString();
+                            this.type = ricon.type;
+                            this.group = ricon.group;
+                            this.instance = ricon.instance;
                         }
                         break;
                     case "E206AE4F": //Rig
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        log.MakeLog("Reading preceeding UInt32: " + preceeding, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding), true);                        
                         preceedingDiv = preceeding / 4;
-                        log.MakeLog("Number of Rig GUIDs: " + preceedingDiv, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Number of Rig GUIDs: {2}", packageparsecount, e, preceedingDiv), true);
                         this.rig = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
                             ResourceKeyITGFlip rkrig = new ResourceKeyITGFlip(reader);
-                            log.MakeLog(rkrig.ToString(), true);
-                            log.MakeLog("Rig GUID: " + rkrig.ToString(), true);
+                            log.MakeLog(string.Format("P{0}/OBJD{1}, - Rig GUID: {2}", packageparsecount, e, rkrig.ToString()), true);
                             this.rig[p] = rkrig.ToString();
+                            this.type = rkrig.type;
+                            this.group = rkrig.group;
+                            this.instance = rkrig.instance;
                         }   
                         break;
                     case "8A85AFF3": //Slot
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        log.MakeLog("Reading preceeding UInt32: " + preceeding, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding), true);                        
                         preceedingDiv = preceeding / 4;
-                        log.MakeLog("Number of Slot GUIDs: " + preceedingDiv, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Number of Slot GUIDs: {2}", packageparsecount, e, preceedingDiv), true);
                         this.slot = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
                             ResourceKeyITGFlip rkslot = new ResourceKeyITGFlip(reader);
-                            log.MakeLog(rkslot.ToString(), true);
-                            log.MakeLog("Slot GUID: " + rkslot.ToString(), true);
-                            this.slot[p] = rkslot.ToString();
+                            log.MakeLog(string.Format("P{0}/OBJD{1}, - Slot GUID: {2}", packageparsecount, e, rkslot.ToString()), true);
+                            this.slot[p] = rkslot.ToString();                            
+                            this.type = rkslot.type;
+                            this.group = rkslot.group;
+                            this.instance = rkslot.instance;
                         }            
                         break;
                     case "8D20ACC6": //Model
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        log.MakeLog("Reading preceeding UInt32: " + preceeding, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding), true);                        
                         preceedingDiv = preceeding / 4;
-                        log.MakeLog("Number of Model GUIDs: " + preceedingDiv, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Number of Model GUIDs: {2}", packageparsecount, e, preceedingDiv), true);
                         this.model = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip rkmodel = new ResourceKeyITGFlip(reader);
-                            log.MakeLog(rkmodel.ToString(), true);
-                            log.MakeLog("Reader is at " + reader.BaseStream.Position, true);
-                            log.MakeLog("Model GUID: " + rkmodel.ToString(), true);
+                            ResourceKeyITGFlip rkmodel = new ResourceKeyITGFlip(reader);                            
+                            log.MakeLog(string.Format("P{0}/OBJD{1}, - Model GUID: {2}", packageparsecount, e, rkmodel.ToString()), true);
                             this.model[p] = rkmodel.ToString();
+                            this.type = rkmodel.type;
+                            this.group = rkmodel.group;
+                            this.instance = rkmodel.instance;
                         }
                         break;
                     case "6C737AD8": //Footprint
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        log.MakeLog("Reading preceeding UInt32: " + preceeding, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding), true);                        
                         preceedingDiv = preceeding / 4;
-                        log.MakeLog("Number of Footprint GUIDs: " + preceedingDiv, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Number of Footprint GUIDs: {2}", packageparsecount, e, preceedingDiv), true);
                         this.footprint = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
                             ResourceKeyITGFlip rkft = new ResourceKeyITGFlip(reader);
-                            log.MakeLog(rkft.ToString(), true);
-                            log.MakeLog("Reader is at " + reader.BaseStream.Position, true);
-                            log.MakeLog("Footprint GUID: " + rkft.ToString(), true);
-                            this.footprint[p] = rkft.ToString();                
+                            log.MakeLog(string.Format("P{0}/OBJD{1}, - Footprint GUID: {2}", packageparsecount, e, rkft.ToString()), true);
+                            this.footprint[p] = rkft.ToString();
+                            this.type = rkft.type;
+                            this.group = rkft.group;
+                            this.instance = rkft.instance;                
                         }
                         break;
                     case "E6E421FB": //Components
                         reader.BaseStream.Position = entrypos;
-                        this.componentcount = reader.ReadUInt32();
-                        log.MakeLog("Reader is at " + reader.BaseStream.Position, true);
-                        log.MakeLog("Component count: " + componentcount, true);
+                        this.componentcount = reader.ReadUInt32();                        
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Component Count: {2}", packageparsecount, e, componentcount), true);
                         this.components = new uint[this.componentcount];
                         for (int i = 0; i < this.componentcount; i++){
                             components[i] = reader.ReadUInt32();
@@ -623,15 +612,16 @@ namespace SimsCCManager.Packages.Sims4Search
                         break;
                     case "ECD5A95F": //MaterialVariant
                         reader.BaseStream.Position = entrypos;
-                        this.materialvariantlength = reader.ReadByte();
-                        log.MakeLog("Material Variant Length: " + materialvariantlength, true);
-                        log.MakeLog("Reading three empty bytes.", true);
-                        log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
-                        log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
-                        log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
+                        this.materialvariantlength = reader.ReadByte();                        
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Material Variant Length: {2}", packageparsecount, e, materialvariantlength), true);
+                        reader.BaseStream.Position = reader.BaseStream.Position + 3;
+                        //log.MakeLog("Reading three empty bytes.", true);
+                        //log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
+                        //log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
+                        //log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
                         this.materialvariantbyte = reader.ReadBytes(materialvariantlength);
                         this.materialvariant = Encoding.UTF8.GetString(materialvariantbyte);
-                        log.MakeLog("Material Variant: " + materialvariant, true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Material Variant: {2}", packageparsecount, e, materialvariant), true);
                         break;
                     case "AC8E1BC0": //Unknown1
                         reader.BaseStream.Position = entrypos;
@@ -639,8 +629,8 @@ namespace SimsCCManager.Packages.Sims4Search
                         break;
                     case "E4F4FAA4": //SimoleonPrice
                         reader.BaseStream.Position = entrypos;
-                        this.price = reader.ReadUInt32();
-                        log.MakeLog("Price: " + price, true);
+                        this.price = reader.ReadUInt32();                        
+                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Price: {2}", packageparsecount, e, price), true);
                         break;
                     case "7236BEEA": //PositiveEnvironmentScore
                         reader.BaseStream.Position = entrypos;
@@ -730,16 +720,9 @@ namespace SimsCCManager.Packages.Sims4Search
         public string typeID;
         public string groupID;
         public string instanceID;
-        public string instanceID2;
-        public uint offset;
         public long position;
         public uint fileSize;
         public uint memSize;
-        
-        public uint filesize;
-        public uint truesize;
-        public bool compressed;
-        public string unused;
         public string compressionType;
         
         
@@ -753,9 +736,8 @@ namespace SimsCCManager.Packages.Sims4Search
         
         // Class References
         LoggingGlobals log = new LoggingGlobals();
-        ReadEntries readentries = new ReadEntries();   
         System.Text.Encoding encoding = System.Text.Encoding.BigEndianUnicode;
-        GlobalVariables globals = new GlobalVariables();
+        FilesSort filesort = new FilesSort();
 
         //lists
 
@@ -763,30 +745,25 @@ namespace SimsCCManager.Packages.Sims4Search
 
         //Vars
         uint chunkOffset = 0;
-        int contentposition = 64;
-        int contentpositionalt = 40;
-        int contentcount = 36;
         public string[] parameters = {"DefaultForBodyType","DefaultThumbnailPart","AllowForCASRandom","ShowInUI","ShowInSimInfoPanel","ShowInCasDemo","AllowForLiveRandom","DisableForOppositeGender","DisableForOppositeFrame","DefaultForBodyTypeMale","DefaultForBodyTypeFemale","Unk","Unk","Unk","Unk","Unk"};
         
 
-        public void SearchS4Packages(BinaryReader readFile, FileInfo packageinfo, int packageparsecount) {
+        public void SearchS4Packages(FileStream dbpfFile, FileInfo packageinfo, int packageparsecount) {
             Stopwatch sw = new Stopwatch();
             sw.Start();
             log.MakeLog(string.Format("File {0} arrived for processing as Sims 4 file.", packageinfo.Name), true);            
             string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
-            var queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
-            var query = queries[0];
+            List<PackageFile> queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            PackageFile query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
-            var pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
+            queries = new List<PackageFile>();
+            query = new PackageFile();
+            PackageFile pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
             GlobalVariables.DatabaseConnection.Insert(pk);
+            pk = new PackageFile();
             log.MakeLog("Got package parse count.", true);   
             log.MakeLog("Incrementing packages read.", true);
-            
-                     
-        
-            //Misc Vars
-            string test = "";
-            
+                        
             //locations
 
             long entrycountloc = 36;
@@ -795,7 +772,7 @@ namespace SimsCCManager.Packages.Sims4Search
             SimsPackage thisPackage = new SimsPackage();          
 
             //Lists 
-                
+            
             List<TagsList> itemtags = new List<TagsList>();
             List<TagsList> distinctItemTags = new List<TagsList>();
             List<string> allFlags = new List<string>();      
@@ -816,8 +793,8 @@ namespace SimsCCManager.Packages.Sims4Search
             distinctItemTags = new List<TagsList>();
 
             //create readers  
-            //MemoryStream dbpfFile = Methods.ReadBytesToFile(packageinfo.FullName);
-            //BinaryReader readFile = new BinaryReader(dbpfFile);
+            //MemoryStream dbpfFile = Methods.ReadBytesToFile(packageinfo.FullName, (int)packageinfo.Length);
+            BinaryReader readFile = new BinaryReader(dbpfFile);
             
             //log opening file
             log.MakeLog(string.Format("Reading package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
@@ -829,19 +806,11 @@ namespace SimsCCManager.Packages.Sims4Search
             log.MakeLog(string.Format("Package #{0} registered as {1} and meant for Sims 4", packageparsecount, packageinfo.FullName), true);
 
             readFile.BaseStream.Position = 0;
-            //start actually reading the package             
-            //entrycount
-
-            /*for (int l = 0; l < 1000; l++){
-                uint x = readFile.ReadUInt32();
-                log.MakeLog(string.Format("Browsing file: {0} ({1})", x, x.ToString("X8")), true);
-            }*/
 
             readFile.BaseStream.Position = entrycountloc;
 
             uint entrycount = readFile.ReadUInt32();
             log.MakeLog(string.Format("Entry Count: {0}", entrycount.ToString()), true);
-            log.MakeLog("Entry Count Location: " + readFile.BaseStream.Position, true);
             
             //record position low
             uint indexRecordPositionLow = readFile.ReadUInt32();
@@ -955,23 +924,24 @@ namespace SimsCCManager.Packages.Sims4Search
 
             readFile.BaseStream.Position = (long)indexRecordPosition;
             uint indextype = readFile.ReadUInt32();            
-
+            
             long streamsize = readFile.BaseStream.Length;
             int indexbytes = ((int)entrycount * 32);
             long indexpos = 0;
             log.MakeLog(string.Format("Streamsize is {0}", streamsize), true);
             if ((int)movedto + indexbytes != streamsize){
                 int entriesfound = 0;
-                long spacebetween = 0;
                 log.MakeLog("Streamsize does not match!", true);
                 readFile.BaseStream.Position = movedto - 400;
                 List<long> entrylocs = new List<long>();
                 uint item;
+                List<typeList> types = new List<typeList>();
+                
                 while(readFile.BaseStream.Length > readFile.BaseStream.Position){                    
                     item = readFile.ReadUInt32();
-                    var result = TypeListings.AllTypesS4.Where(x => x.typeID == item.ToString("X8"));
+                    GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S4Types WHERE TypeID='{0}'", item.ToString("X8")));
                     //log.MakeLog(string.Format("Read byte at {0}: {1}", readFile.BaseStream.Position, item.ToString("X8")), true);
-                    if (result.Any()){
+                    if (types.Any()){
                         indexEntry holderEntry = new indexEntry();
                         holderEntry.typeID = item.ToString("X8");
                         log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, entriesfound, holderEntry.typeID), true);
@@ -987,6 +957,9 @@ namespace SimsCCManager.Packages.Sims4Search
                         }
                     }
                 }
+
+                types = new List<typeList>();
+
                 readFile.BaseStream.Position = indexpos;
                 entrycount = 0;
                 foreach (int loc in entrylocs){
@@ -995,17 +968,16 @@ namespace SimsCCManager.Packages.Sims4Search
                     if (indextype == 2){
                         holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
                         log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, entrycount, holderEntry.typeID), true);
-
-                        if(TypeListings.AllTypesS4.Exists(x => x.typeID == holderEntry.typeID)){
-                        var tid = from types in TypeListings.AllTypesS4
-                                where types.typeID == holderEntry.typeID
-                                select types.desc;
-                        var ih = tid.ToList();
-                        fileHas.Add(new fileHasList {TypeID = ih[0], Location = loc});
-                        log.MakeLog(string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, ih[0], loc), true);
+                        
+                        List<typeList> type = GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S4Types where TypeID='{0}'", holderEntry.typeID));
+                    
+                        if(type.Any()){                        
+                            fileHas.Add(new fileHasList {TypeID = type[0].desc, Location = (int)entrycount});
+                            log.MakeLog(string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, type[0].desc, (int)entrycount), true);
                         } else {
-                            fileHas.Add(new fileHasList() { TypeID = holderEntry.typeID, Location = loc});
-                        }              
+                            fileHas.Add(new fileHasList() { TypeID = holderEntry.typeID, Location = (int)entrycount});
+                        }
+                        type = new List<typeList>();                                    
 
                         string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
                         string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
@@ -1025,17 +997,9 @@ namespace SimsCCManager.Packages.Sims4Search
                         holderEntry.memSize = readFile.ReadUInt32();
                         log.MakeLog(string.Format("P{0}/E{1} - Mem Size: {2}", packageparsecount, entrycount, holderEntry.memSize.ToString("X8")), true);
 
-                        //holderEntry.compressionType = readFile.ReadUInt16().ToString("X4");
-                        //log.MakeLog(string.Format("P{0}/E{1} - Compression Type: {2}", packageparsecount, entrycount, holderEntry.compressionType), true);
-
-                        //readFile.BaseStream.Position = readFile.BaseStream.Position + 2;
-
                         indexData.Add(holderEntry);
 
                         holderEntry = null;
-
-
-
 
                         entrycount++;
                     }
@@ -1052,9 +1016,8 @@ namespace SimsCCManager.Packages.Sims4Search
                     readFile.BaseStream.Position = moveback;
                 } else {
                     log.MakeLog(string.Format("Read first entry TypeID and it read as {0}, moving forward.", testpos.ToString("X8")), true);
-                }
-
-                for (int i = 0; i < entrycount; i++){
+                }                
+                for (int i = 0; i < entrycount; i++){                    
                     indexEntry holderEntry = new indexEntry();                
                     holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
                     log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, i, holderEntry.typeID), true);
@@ -1065,8 +1028,9 @@ namespace SimsCCManager.Packages.Sims4Search
                         log.MakeLog(string.Format("Package {0} is a merged package, and cannot be processed in this manner right now. Package will either need unmerging or to be sorted manually.", thisPackage.Location), false);
                         log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
                         txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
-                        var mergedquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);                    
-                        GlobalVariables.DatabaseConnection.Delete(mergedquery[0]);            
+                        List<PackageFile> mergedquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);                    
+                        GlobalVariables.DatabaseConnection.Delete(mergedquery[0]);
+                        mergedquery = new List<PackageFile>();
                         readFile.Dispose();
                         sw.Stop();
                         TimeSpan tss = sw.Elapsed;
@@ -1079,16 +1043,15 @@ namespace SimsCCManager.Packages.Sims4Search
                         return;
                     }
 
-                    if(TypeListings.AllTypesS4.Exists(x => x.typeID == holderEntry.typeID)){
-                        var tid = from types in TypeListings.AllTypesS4
-                                where types.typeID == holderEntry.typeID
-                                select types.desc;
-                        var ih = tid.ToList();
-                        fileHas.Add(new fileHasList {TypeID = ih[0], Location = i});
-                        log.MakeLog(string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, ih[0], i), true);
+                    List<typeList> type = GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S4Types where TypeID='{0}'", holderEntry.typeID));
+                    
+                    if(type.Any()){                        
+                        fileHas.Add(new fileHasList {TypeID = type[0].desc, Location = i});
+                        log.MakeLog(string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, type[0].desc, i), true);
                     } else {
                         fileHas.Add(new fileHasList() { TypeID = holderEntry.typeID, Location = i});
-                    }                
+                    }
+                    type = new List<typeList>();
 
                     holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
                     log.MakeLog(string.Format("P{0}/E{1} - Index Entry GroupID: {2}", packageparsecount, i, holderEntry.groupID), true);
@@ -1120,521 +1083,470 @@ namespace SimsCCManager.Packages.Sims4Search
                 }
             }
 
-            //log.MakeLog("This package contains: ", true);            
-            /*foreach (fileHasList type in fileHas){
-                log.MakeLog(type.term + " at location " + type.location, true);
-            }*/
+            if ((fileHas.Exists(x => x.TypeID == "CASP"))){
+                List<int> entryspots = new List<int>();
 
-            if(fileHas.Exists(x => x.TypeID == "S4SM")) {
-                log.MakeLog(string.Format("P{0} - {2} is a merged package and cannot be processed until it has been unmerged.", packageparsecount, thisPackage.PackageName), true);
-                thisPackage.Type = "Merged Package";
-            } else {
-                if ((fileHas.Exists(x => x.TypeID == "CASP"))){
-                    List<int> entryspots = new List<int>();
-                    /*int fh = 0;
-                    foreach (fileHasList item in fileHas) {
-                        if (item.term == "CASP"){
-                            entryspots.Add(fh);                       
-                        }
-                        fh++;
-                    }*/
+                IEnumerable<int> csp = from has in fileHas
+                        where has.TypeID == "CASP"
+                        select has.Location;
+                entryspots = csp.ToList();
+                csp = Enumerable.Empty<int>();
 
-                    var csp = from has in fileHas
-                            where has.TypeID == "CASP"
-                            select has.Location;
-                    entryspots = csp.ToList();
+                int caspc = 0;
+                foreach (int e in entryspots){
+                    log.MakeLog(string.Format("P{0} - Opening CASP #{1}", packageparsecount, e), true);
+                    if (indexData[e].compressionType == "5A42"){
+                    readFile.BaseStream.Position = indexData[e].position;
+                    long entryEnd = indexData[e].position + indexData[e].memSize;
 
-                    int caspc = 0;
-                    foreach (int e in entryspots){
-                        log.MakeLog(string.Format("P{0} - Opening CASP #{1}", packageparsecount, e), true);
-                        if (indexData[e].compressionType == "5A42"){
-                        readFile.BaseStream.Position = indexData[e].position;
-                        long entryEnd = indexData[e].position + indexData[e].memSize;
+                    log.MakeLog(string.Format("P{0}/CASP{1} - Position: {2}", packageparsecount, e, indexData[e].position), true);
+                    log.MakeLog(string.Format("P{0}/CASP{1} - Filesize: {2}", packageparsecount, e, indexData[e].fileSize), true);
+                    log.MakeLog(string.Format("P{0}/CASP{1} - Memsize: {2}", packageparsecount, e, indexData[e].memSize), true);
+                    log.MakeLog(string.Format("P{0}/CASP{1} - Ends at: {2}", packageparsecount, e, entryEnd), true);
 
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Position: {2}", packageparsecount, e, indexData[e].position), true);
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Filesize: {2}", packageparsecount, e, indexData[e].fileSize), true);
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Memsize: {2}", packageparsecount, e, indexData[e].memSize), true);
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Ends at: {2}", packageparsecount, e, entryEnd), true);
+                    Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
+                    
+                    BinaryReader decompbr = new BinaryReader(decomps);
 
-                        Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
-                        
-                        BinaryReader decompbr = new BinaryReader(decomps);
+                    uint version = decompbr.ReadUInt32();
+                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Version: {2}", packageparsecount, e, version), true);
+                    uint tgioffset = decompbr.ReadUInt32() +8;
+                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - TGI Offset: {2} \n -- As Hex: {3}", packageparsecount, e, tgioffset, tgioffset.ToString("X8")), true);
+                    uint numpresets = decompbr.ReadUInt32();
+                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Number of Presets: {2} \n -- As Hex: {3}", packageparsecount, e, numpresets, numpresets.ToString("X8")), true);
+                    using (BinaryReader reader = new BinaryReader(decomps, Encoding.BigEndianUnicode, true))
+                    {
+                        thisPackage.Title = reader.ReadString();
+                    }
+                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Title: {2}", packageparsecount, e, thisPackage.Title), true);
 
-                        uint version = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Version: {2}", packageparsecount, e, version), true);
-                        uint tgioffset = decompbr.ReadUInt32() +8;
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - TGI Offset: {2} \n -- As Hex: {3}", packageparsecount, e, tgioffset, tgioffset.ToString("X8")), true);
-                        uint numpresets = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Number of Presets: {2} \n -- As Hex: {3}", packageparsecount, e, numpresets, numpresets.ToString("X8")), true);
-                        using (var reader = new BinaryReader(decomps, Encoding.BigEndianUnicode, true))
+                    float sortpriority = decompbr.ReadSingle();
+                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Sort Priority: {2}", packageparsecount, e, sortpriority), true);
+
+                    int secondarySortIndex = decompbr.ReadUInt16();
+                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Secondary Sort Index: {2}", packageparsecount, e, secondarySortIndex), true);
+
+                    uint propertyid = decompbr.ReadUInt32();
+                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Property ID: {2}", packageparsecount, e, propertyid), true);
+                    
+                    uint auralMaterialHash = decompbr.ReadUInt32();
+                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Aural Material Hash: {2}", packageparsecount, e, sortpriority), true);
+
+                    if (version <= 42){
+                        log.MakeLog(string.Format("Version is <= 42: {0}", version), true);
+                        int[] parameterFlag = new int[1];
+                        parameterFlag[0] = (int)decompbr.ReadUInt16();
+                        BitArray parameterFlags = new BitArray(parameterFlag);
+                        log.MakeLog(parameterFlags.Length.ToString(), true);
+                        for(int p = 0; p < 16; p++)
                         {
-                            thisPackage.Title = reader.ReadString();
-                        }
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Title: {2}", packageparsecount, e, thisPackage.Title), true);
-
-                        float sortpriority = decompbr.ReadSingle();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Sort Priority: {2}", packageparsecount, e, sortpriority), true);
-
-                        int secondarySortIndex = decompbr.ReadUInt16();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Secondary Sort Index: {2}", packageparsecount, e, secondarySortIndex), true);
-
-                        uint propertyid = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Property ID: {2}", packageparsecount, e, propertyid), true);
-                        
-                        uint auralMaterialHash = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Aural Material Hash: {2}", packageparsecount, e, sortpriority), true);
-
-                        if (version <= 42){
-                            log.MakeLog(string.Format("Version is <= 42: {0}", version), true);
-                            int[] parameterFlag = new int[1];
-                            parameterFlag[0] = (int)decompbr.ReadUInt16();
-                            BitArray parameterFlags = new BitArray(parameterFlag);
-                            log.MakeLog(parameterFlags.Length.ToString(), true);
-                            for(int p = 0; p < 16; p++)
-                            {
-                                if (parameterFlags[p] == true) {
-                                    allFlags.Add(parameters[p]);
-                                }
-                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString()), true);
-                            } 
-                            
-                        } else if (version >= 43){
-                            log.MakeLog(string.Format("Version is >= 43: {0}", version), true);
-                            int[] parameterFlag = new int[1];
-                            parameterFlag[0] = (int)decompbr.ReadUInt16();
-                            BitArray parameterFlags = new BitArray(parameterFlag);
-
-                            for(int pfc = 0; pfc < 16; pfc++){
-                                if (parameterFlags[pfc] == true) {
-                                    allFlags.Add(parameters[pfc]);
-                                }
-                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString()), true);
-                            }                            
-                        }
-                            ulong excludePartFlags = decompbr.ReadUInt64();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags: {2}", packageparsecount, e, excludePartFlags.ToString("X16")), true);
-                            ulong excludePartFlags2 = decompbr.ReadUInt64();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags 2: {2}", packageparsecount, e, excludePartFlags2.ToString("X16")), true);
-                            ulong excludeModifierRegionFlags = decompbr.ReadUInt64();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Modifier Region Flags: {2}", packageparsecount, e, excludeModifierRegionFlags.ToString("X16")), true);
-
-                        if (version >= 37){
-                            log.MakeLog(string.Format(">= 37, Version: {0}", version), true);
-                            uint count = decompbr.ReadByte();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
-                            decompbr.ReadByte();
-                            CASTag16Bit tags = new CASTag16Bit(decompbr, count);                            
-                            List<TagsList> gottags = Readers.GetTagInfo(tags, count);
-                            foreach (TagsList tag in gottags){
-                                if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
-                                    itemtags.Add(tag);  
-                                }
+                            if (parameterFlags[p] == true) {
+                                allFlags.Add(parameters[p]);
                             }
-                                                      
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString()), true);
                         } 
-                        else 
-                        {
-                            uint count = decompbr.ReadByte();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
-                            decompbr.ReadByte();
-                            CASTag16Bit tags = new CASTag16Bit(decompbr, count);
-                            
-                            List<TagsList> gottags = Readers.GetTagInfo(tags, count);
-                            foreach (TagsList tag in gottags){
-                                if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
-                                    itemtags.Add(tag);  
-                                }
-                            }
-
-                            }
-
-                            uint simoleonprice = decompbr.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Simoleon Price: {2}", packageparsecount, e, simoleonprice.ToString()), true);
-                            uint partTitleKey = decompbr.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Title Key: {2}", packageparsecount, e, partTitleKey.ToString()), true);
-                            uint partDescriptionKey = decompbr.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Description Key: {2}", packageparsecount, e, partDescriptionKey.ToString()), true);                            
-                            if (version >= 43) {
-                                uint createDescriptionKey = decompbr.ReadUInt32();
-                            }
-                            int uniqueTextureSpace = decompbr.ReadByte();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Unique Texture Space: {2}", packageparsecount, e, uniqueTextureSpace.ToString("X8")), true);
-                            uint bodytype = decompbr.ReadUInt32();
-                            bool foundmatch = false;
-                            foreach (FunctionListing item in InitializedLists.S4BodyTypes){
-                                if (item.bodytype == bodytype){
-                                    foundmatch = true;
-                                    thisPackage.Function = item.Function;
-                                    if (!String.IsNullOrWhiteSpace(item.Subfunction)) {
-                                        thisPackage.FunctionSubcategory = item.Subfunction;
-                                    }                                
-                                }
-                            }
-                            if (foundmatch == false){
-                                thisPackage.Function = string.Format("Unidentified function (contact SinfulSimming). Code: {0}", bodytype.ToString());
-                            }                            
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Bodytype: {2}", packageparsecount, e, bodytype.ToString()), true);
-                            uint bodytypesubtype = decompbr.ReadUInt16();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Body Sub Type: {2}", packageparsecount, e, bodytypesubtype.ToString()), true);
-                            decompbr.ReadUInt32();                        
-                            uint agflags = decompbr.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Ag Flags: {2}", packageparsecount, e, agflags.ToString("X8")), true);
-
-                            string AGFlag = agflags.ToString("X8");
-                            
-                            AgeGenderFlags agegenderset = new AgeGenderFlags();
-
-                            if (AGFlag == "00000000") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = false, 
-                                Baby = false, 
-                                Child = false, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = false, 
-                                YoungAdult = false, 
-                                Female = false, 
-                                Male = false};
-                                log.MakeLog("No age/gender flags present.", true);
-                            } else if (AGFlag == "00000020") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = true, 
-                                Baby = false, 
-                                Child = false, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = false, 
-                                YoungAdult = false, 
-                                Female = false, 
-                                Male = false};
-                                log.MakeLog("Adult (nothing else)", true);
-                            } else if (AGFlag == "00002020") {
-                                agegenderset = new AgeGenderFlags{
-                                    Adult = true, 
-                                Baby = false, 
-                                Child = false, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = false, 
-                                YoungAdult = false, 
-                                Female = true, 
-                                Male = false};
-                                log.MakeLog("Adult Female", true);
-                            } else if (AGFlag == "00020000") {
-                                agegenderset = new AgeGenderFlags{
-                                    Adult = true, 
-                                    Baby = false, 
-                                    Child = false, 
-                                    Elder = false, 
-                                    Infant = false, 
-                                    Teen = false, 
-                                    Toddler = false, 
-                                    YoungAdult = false, 
-                                    Female = false, 
-                                    Male = true};
-                                log.MakeLog("Adult Male", true);
-                            } else if (AGFlag == "00002078") {
-                                agegenderset = new AgeGenderFlags{
-                                    Adult = true, 
-                                    Baby = false, 
-                                    Child = false, 
-                                    Elder = true, 
-                                    Infant = false, 
-                                    Teen = true, 
-                                    Toddler = false, 
-                                    YoungAdult = true, 
-                                    Female = true, 
-                                    Male = false};
-                                log.MakeLog("Adult/Elder/Teen, Female", true);
-                            } else if (AGFlag == "000030FF") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = true, 
-                                Baby = true, 
-                                Child = true, 
-                                Elder = true, 
-                                Infant = true, 
-                                Teen = true, 
-                                Toddler = true, 
-                                YoungAdult = true, 
-                                Female = true, 
-                                Male = true};
-                                log.MakeLog("Everything", true);
-                            } else if (AGFlag == "00003004") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = false, 
-                                Baby = false, 
-                                Child = true, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = false, 
-                                YoungAdult = false, 
-                                Female = true, 
-                                Male = true};
-                                log.MakeLog("Child of either gender", true);
-                            } else if (AGFlag == "00001078") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = true, 
-                                Baby = false, 
-                                Child = false, 
-                                Elder = true, 
-                                Infant = false, 
-                                Teen = true, 
-                                Toddler = false, 
-                                YoungAdult = true, 
-                                Female = false, 
-                                Male = true};
-                            } else if (AGFlag == "00003078") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = true, 
-                                Baby = false, 
-                                Child = false, 
-                                Elder = true, 
-                                Infant = false, 
-                                Teen = true, 
-                                Toddler = false, 
-                                YoungAdult = true, 
-                                Female = true, 
-                                Male = true};
-                            } else if (AGFlag == "000030BE") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = true, 
-                                Baby = false, 
-                                Child = true, 
-                                Elder = false, 
-                                Infant = true, 
-                                Teen = true, 
-                                Toddler = true, 
-                                YoungAdult = true, 
-                                Female = true, 
-                                Male = true};
-                            } else if (AGFlag == "00002002") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = false, 
-                                Baby = false, 
-                                Child = false, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = true, 
-                                YoungAdult = false, 
-                                Female = true, 
-                                Male = false};
-                            }  else if (AGFlag == "00002004") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = false, 
-                                Baby = false, 
-                                Child = true, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = false, 
-                                YoungAdult = false, 
-                                Female = true, 
-                                Male = false};
-                            }  else if (AGFlag == "00003002") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = false, 
-                                Baby = false, 
-                                Child = false, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = true, 
-                                YoungAdult = false, 
-                                Female = true, 
-                                Male = true};
-                            }  else if (AGFlag == "00003004") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = false, 
-                                Baby = false, 
-                                Child = true, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = false, 
-                                YoungAdult = false, 
-                                Female = true, 
-                                Male = true};
-                            }  else if (AGFlag == "00001002") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = false, 
-                                Baby = false, 
-                                Child = false, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = true, 
-                                YoungAdult = false, 
-                                Female = false, 
-                                Male = true};
-                            }  else if (AGFlag == "00001004") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = false, 
-                                Baby = false, 
-                                Child = true, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = false, 
-                                YoungAdult = false, 
-                                Female = false, 
-                                Male = true};
-                            } else if (AGFlag == "00100101") {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = false, 
-                                Baby = true, 
-                                Child = false, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = false, 
-                                YoungAdult = false, 
-                                Female = false, 
-                                Male = false};                            
-                            } else if (AGFlag == "0000307E"){
-                                agegenderset = new AgeGenderFlags{
-                                Adult = true, 
-                                Baby = false, 
-                                Child = true, 
-                                Elder = true, 
-                                Infant = false, 
-                                Teen = true, 
-                                Toddler = true, 
-                                YoungAdult = true, 
-                                Female = true, 
-                                Male = true};
-                            } else if (AGFlag == "000030FE"){
-                                agegenderset = new AgeGenderFlags{
-                                Adult = true, 
-                                Baby = false, 
-                                Child = true, 
-                                Elder = true, 
-                                Infant = true, 
-                                Teen = true, 
-                                Toddler = true, 
-                                YoungAdult = true, 
-                                Female = true, 
-                                Male = true};
-                            } else {
-                                agegenderset = new AgeGenderFlags{
-                                Adult = false, 
-                                Baby = false, 
-                                Child = false, 
-                                Elder = false, 
-                                Infant = false, 
-                                Teen = false, 
-                                Toddler = false, 
-                                YoungAdult = false, 
-                                Female = false, 
-                                Male = false};
-                            }
-
-                            thisPackage.AgeGenderFlags = agegenderset;
-
-                            
-
-
-                            if (version >= 0x20)
-                            {
-                                uint species = decompbr.ReadUInt32();
-                            }
-                            if (version >= 34)
-                            {
-                                int packID = decompbr.ReadInt16();
-                                int packFlags = decompbr.ReadByte();
-                                for(int p = 0; p < packFlags; p++)
-                                {
-                                    bool check = decompbr.ReadBoolean();
-                                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Packflag is: {2}", packageparsecount, e, check.ToString()), true);
-                                } 
-                                byte[] reserved2 = decompbr.ReadBytes(9);
-                            }
-                            else
-                            {
-                                int packID = 0;
-                                byte unused2 = decompbr.ReadByte();
-                                if (unused2 > 0) {
-                                    int unused3 = decompbr.ReadByte();
-                                }
-                            }
-
-                            decompbr.Dispose();
-                            decomps.Dispose();
-
-                        }
-
-                        caspc++;
                         
-                    }                     
+                    } else if (version >= 43){
+                        log.MakeLog(string.Format("Version is >= 43: {0}", version), true);
+                        int[] parameterFlag = new int[1];
+                        parameterFlag[0] = (int)decompbr.ReadUInt16();
+                        BitArray parameterFlags = new BitArray(parameterFlag);
 
-                }
+                        for(int pfc = 0; pfc < 16; pfc++){
+                            if (parameterFlags[pfc] == true) {
+                                allFlags.Add(parameters[pfc]);
+                            }
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString()), true);
+                        }                            
+                    }
+                        ulong excludePartFlags = decompbr.ReadUInt64();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags: {2}", packageparsecount, e, excludePartFlags.ToString("X16")), true);
+                        ulong excludePartFlags2 = decompbr.ReadUInt64();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags 2: {2}", packageparsecount, e, excludePartFlags2.ToString("X16")), true);
+                        ulong excludeModifierRegionFlags = decompbr.ReadUInt64();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Modifier Region Flags: {2}", packageparsecount, e, excludeModifierRegionFlags.ToString("X16")), true);
 
-
-                if ((fileHas.Exists(x => x.TypeID == "COBJ"))){
-                    List<int> entryspots = new List<int>();
-                    /*int fh = 0;
-                    foreach (fileHasList item in fileHas) {
-                        if (item.term == "CASP"){
-                            entryspots.Add(fh);                       
+                    if (version >= 37){
+                        log.MakeLog(string.Format(">= 37, Version: {0}", version), true);
+                        uint count = decompbr.ReadByte();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
+                        decompbr.ReadByte();
+                        CASTag16Bit tags = new CASTag16Bit(decompbr, count);                            
+                        List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                        foreach (TagsList tag in gottags){
+                            if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
+                                itemtags.Add(tag);  
+                            }
                         }
-                        fh++;
-                    }*/
-
-                    var csp = from has in fileHas
-                            where has.TypeID == "COBJ"
-                            select has.Location;
-                    entryspots = csp.ToList();
-
-                    /*int fh = 0;
-                    foreach (fileHasList item in fileHas) {
-                        if (item.term == "COBJ"){
-                            entryspots.Add(fh);                       
+                                                    
+                    } 
+                    else 
+                    {
+                        uint count = decompbr.ReadByte();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
+                        decompbr.ReadByte();
+                        CASTag16Bit tags = new CASTag16Bit(decompbr, count);
+                        
+                        List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                        foreach (TagsList tag in gottags){
+                            if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
+                                itemtags.Add(tag);  
+                            }
                         }
-                        fh++;
-                    }    */
-                    int cobjc = 0;
-                    foreach (int e in entryspots){
-                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Opening COBJ #" + cobjc, true);
-                        if (indexData[e].compressionType == "5A42"){                                
-                                //var here = readFile.BaseStream.Position;
-                                readFile.BaseStream.Position = indexData[e].position;
-                                //dbpfFile.Seek(, SeekOrigin.Begin);                            
-                                int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
-                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
-                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
-                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
-                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
-                                Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
-                                
-                                BinaryReader decompbr = new BinaryReader(decomps);                           
-                                
-                                ReadCOBJ rc = new ReadCOBJ(decompbr, packageparsecount, e, itemtags);
 
-                                if((!allGUIDS.Contains(rc.GUID)) && rc.GUID != "null"){
-                                    allGUIDS.Add(rc.GUID);
-                                }
+                        }
 
-                                foreach (TagsList tag in rc.itemtags) {
-                                    if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
-                                        itemtags.Add(tag);  
-                                    }                                    
-                                }
-                            decompbr.Dispose();
-                            decomps.Dispose();
-                                
-                        } else if (indexData[e].compressionType == "00"){
-                            //dbpfFile.Seek(, SeekOrigin.Begin); 
-                            readFile.BaseStream.Position = indexData[e].position;                           
+                        uint simoleonprice = decompbr.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Simoleon Price: {2}", packageparsecount, e, simoleonprice.ToString()), true);
+                        uint partTitleKey = decompbr.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Title Key: {2}", packageparsecount, e, partTitleKey.ToString()), true);
+                        uint partDescriptionKey = decompbr.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Description Key: {2}", packageparsecount, e, partDescriptionKey.ToString()), true);                            
+                        if (version >= 43) {
+                            uint createDescriptionKey = decompbr.ReadUInt32();
+                        }
+                        int uniqueTextureSpace = decompbr.ReadByte();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Unique Texture Space: {2}", packageparsecount, e, uniqueTextureSpace.ToString("X8")), true);
+                        uint bodytype = decompbr.ReadUInt32();
+                        bool foundmatch = false;
+
+                        List<FunctionListing> bodytypes = GlobalVariables.S4FunctionTypesConnection.Query<FunctionListing>(string.Format("SELECT * FROM S4CASFunctions where BodyType='{0}'", bodytype)); 
+
+                        if (bodytypes.Any()){
+                            foundmatch = true;
+                            thisPackage.Function = bodytypes[0].Function;
+                            if (!String.IsNullOrWhiteSpace(bodytypes[0].Subfunction)) {
+                                thisPackage.FunctionSubcategory = bodytypes[0].Subfunction;
+                            } 
+                        }
+
+                        if (foundmatch == false){
+                            thisPackage.Function = string.Format("Unidentified function (contact SinfulSimming). Code: {0}", bodytype.ToString());
+                        }                            
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Bodytype: {2}", packageparsecount, e, bodytype.ToString()), true);
+                        uint bodytypesubtype = decompbr.ReadUInt16();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Body Sub Type: {2}", packageparsecount, e, bodytypesubtype.ToString()), true);
+                        decompbr.ReadUInt32();                        
+                        uint agflags = decompbr.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Ag Flags: {2}", packageparsecount, e, agflags.ToString("X8")), true);
+
+                        string AGFlag = agflags.ToString("X8");
+                        
+                        AgeGenderFlags agegenderset = new AgeGenderFlags();
+
+                        if (AGFlag == "00000000") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = false, 
+                            Baby = false, 
+                            Child = false, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = false, 
+                            YoungAdult = false, 
+                            Female = false, 
+                            Male = false};
+                        } else if (AGFlag == "00000020") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = true, 
+                            Baby = false, 
+                            Child = false, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = false, 
+                            YoungAdult = false, 
+                            Female = false, 
+                            Male = false};
+                        } else if (AGFlag == "00002020") {
+                            agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                            Baby = false, 
+                            Child = false, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = false, 
+                            YoungAdult = false, 
+                            Female = true, 
+                            Male = false};
+                        } else if (AGFlag == "00020000") {
+                            agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = true};
+                        } else if (AGFlag == "00002078") {
+                            agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = true, 
+                                Infant = false, 
+                                Teen = true, 
+                                Toddler = false, 
+                                YoungAdult = true, 
+                                Female = true, 
+                                Male = false};
+                        } else if (AGFlag == "000030FF") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = true, 
+                            Baby = true, 
+                            Child = true, 
+                            Elder = true, 
+                            Infant = true, 
+                            Teen = true, 
+                            Toddler = true, 
+                            YoungAdult = true, 
+                            Female = true, 
+                            Male = true};
+                        } else if (AGFlag == "00003004") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = false, 
+                            Baby = false, 
+                            Child = true, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = false, 
+                            YoungAdult = false, 
+                            Female = true, 
+                            Male = true};
+                        } else if (AGFlag == "00001078") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = true, 
+                            Baby = false, 
+                            Child = false, 
+                            Elder = true, 
+                            Infant = false, 
+                            Teen = true, 
+                            Toddler = false, 
+                            YoungAdult = true, 
+                            Female = false, 
+                            Male = true};
+                        } else if (AGFlag == "00003078") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = true, 
+                            Baby = false, 
+                            Child = false, 
+                            Elder = true, 
+                            Infant = false, 
+                            Teen = true, 
+                            Toddler = false, 
+                            YoungAdult = true, 
+                            Female = true, 
+                            Male = true};
+                        } else if (AGFlag == "000030BE") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = true, 
+                            Baby = false, 
+                            Child = true, 
+                            Elder = false, 
+                            Infant = true, 
+                            Teen = true, 
+                            Toddler = true, 
+                            YoungAdult = true, 
+                            Female = true, 
+                            Male = true};
+                        } else if (AGFlag == "00002002") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = false, 
+                            Baby = false, 
+                            Child = false, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = true, 
+                            YoungAdult = false, 
+                            Female = true, 
+                            Male = false};
+                        }  else if (AGFlag == "00002004") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = false, 
+                            Baby = false, 
+                            Child = true, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = false, 
+                            YoungAdult = false, 
+                            Female = true, 
+                            Male = false};
+                        }  else if (AGFlag == "00003002") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = false, 
+                            Baby = false, 
+                            Child = false, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = true, 
+                            YoungAdult = false, 
+                            Female = true, 
+                            Male = true};
+                        }  else if (AGFlag == "00003004") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = false, 
+                            Baby = false, 
+                            Child = true, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = false, 
+                            YoungAdult = false, 
+                            Female = true, 
+                            Male = true};
+                        }  else if (AGFlag == "00001002") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = false, 
+                            Baby = false, 
+                            Child = false, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = true, 
+                            YoungAdult = false, 
+                            Female = false, 
+                            Male = true};
+                        }  else if (AGFlag == "00001004") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = false, 
+                            Baby = false, 
+                            Child = true, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = false, 
+                            YoungAdult = false, 
+                            Female = false, 
+                            Male = true};
+                        } else if (AGFlag == "00100101") {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = false, 
+                            Baby = true, 
+                            Child = false, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = false, 
+                            YoungAdult = false, 
+                            Female = false, 
+                            Male = false};                            
+                        } else if (AGFlag == "0000307E"){
+                            agegenderset = new AgeGenderFlags{
+                            Adult = true, 
+                            Baby = false, 
+                            Child = true, 
+                            Elder = true, 
+                            Infant = false, 
+                            Teen = true, 
+                            Toddler = true, 
+                            YoungAdult = true, 
+                            Female = true, 
+                            Male = true};
+                        } else if (AGFlag == "000030FE"){
+                            agegenderset = new AgeGenderFlags{
+                            Adult = true, 
+                            Baby = false, 
+                            Child = true, 
+                            Elder = true, 
+                            Infant = true, 
+                            Teen = true, 
+                            Toddler = true, 
+                            YoungAdult = true, 
+                            Female = true, 
+                            Male = true};
+                        } else {
+                            agegenderset = new AgeGenderFlags{
+                            Adult = false, 
+                            Baby = false, 
+                            Child = false, 
+                            Elder = false, 
+                            Infant = false, 
+                            Teen = false, 
+                            Toddler = false, 
+                            YoungAdult = false, 
+                            Female = false, 
+                            Male = false};
+                        }
+                        
+                        log.MakeLog(string.Format("P{0}/CASP{1} Ages:\n -- Adult: {0}, \n -- Baby: {1}, \n -- Child: {2}, \n -- Elder: {3}, \n -- Infant: {4}, \n -- Teen: {5}, \n -- Toddler: {6}, \n -- Young Adult: {7}\n\nGender: \n -- Male: {8}\n -- Female: {9}.", packageparsecount, e, agegenderset.Adult.ToString(), agegenderset.Baby.ToString(), agegenderset.Child.ToString(), agegenderset.Elder.ToString(), agegenderset.Infant.ToString(), agegenderset.Teen.ToString(), agegenderset.Toddler.ToString(), agegenderset.YoungAdult.ToString(), agegenderset.Female.ToString(), agegenderset.Male.ToString()), true);
+
+                        thisPackage.AgeGenderFlags = agegenderset;
+
+                        
+
+
+                        if (version >= 0x20)
+                        {
+                            uint species = decompbr.ReadUInt32();
+                        }
+                        if (version >= 34)
+                        {
+                            int packID = decompbr.ReadInt16();
+                            int packFlags = decompbr.ReadByte();
+                            for(int p = 0; p < packFlags; p++)
+                            {
+                                bool check = decompbr.ReadBoolean();
+                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Packflag is: {2}", packageparsecount, e, check.ToString()), true);
+                            } 
+                            byte[] reserved2 = decompbr.ReadBytes(9);
+                        }
+                        else
+                        {
+                            byte unused2 = decompbr.ReadByte();
+                            if (unused2 > 0) {
+                                int unused3 = decompbr.ReadByte();
+                            }
+                        }
+
+                        decompbr.Dispose();
+                        decomps.Dispose();
+
+                    }
+
+                    caspc++;
+                    
+                }                     
+
+            }
+
+
+            if ((fileHas.Exists(x => x.TypeID == "COBJ"))){
+                List<int> entryspots = new List<int>();
+
+                IEnumerable<int> csp = from has in fileHas
+                        where has.TypeID == "COBJ"
+                        select has.Location;
+                entryspots = csp.ToList();
+                csp = Enumerable.Empty<int>();
+
+                int cobjc = 0;
+                foreach (int e in entryspots){
+                    
+                    log.MakeLog(string.Format("P{0} - Opening COBJ #{1}", packageparsecount, cobjc), true);
+                    if (indexData[e].compressionType == "5A42"){                                
+                            readFile.BaseStream.Position = indexData[e].position;                  
                             int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
-                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
-                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
-                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
-                            log.MakeLog("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
-                            ReadCOBJ rc = new ReadCOBJ(readFile, packageparsecount, e, itemtags);                            
+
+                            log.MakeLog(string.Format("P{0}/COBJ{1} - Position: {2}", packageparsecount, cobjc, indexData[e].position), true);
+                            log.MakeLog(string.Format("P{0}/COBJ{1} - File Size: {2}", packageparsecount, cobjc, indexData[e].fileSize), true);
+                            log.MakeLog(string.Format("P{0}/COBJ{1} - Memory Size: {2}", packageparsecount, cobjc, indexData[e].memSize), true);
+                            log.MakeLog(string.Format("P{0}/COBJ{1} - Entry Ends At: {2}", packageparsecount, cobjc, entryEnd), true);
+                            Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
+                            
+                            BinaryReader decompbr = new BinaryReader(decomps);                           
+                            
+                            ReadCOBJ rc = new ReadCOBJ(decompbr, packageparsecount, e, itemtags);
+                            if (!allInstanceIDs.Contains(rc.instanceid.ToString("X8"))){
+                                allInstanceIDs.Add(rc.instanceid.ToString("X8"));  
+                            }                                                      
                             if((!allGUIDS.Contains(rc.GUID)) && rc.GUID != "null"){
                                 allGUIDS.Add(rc.GUID);
                             }
@@ -1644,127 +1556,143 @@ namespace SimsCCManager.Packages.Sims4Search
                                     itemtags.Add(tag);  
                                 }                                    
                             }
+                        decompbr.Dispose();
+                        decomps.Dispose();
+                            
+                    } else if (indexData[e].compressionType == "00"){
+                        readFile.BaseStream.Position = indexData[e].position;                           
+                        int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
+                        
+                        log.MakeLog(string.Format("P{0}/COBJ{1} - Position: {2}", packageparsecount, cobjc, indexData[e].position), true);
+                        log.MakeLog(string.Format("P{0}/COBJ{1} - File Size: {2}", packageparsecount, cobjc, indexData[e].fileSize), true);
+                        log.MakeLog(string.Format("P{0}/COBJ{1} - Memory Size: {2}", packageparsecount, cobjc, indexData[e].memSize), true);
+                        log.MakeLog(string.Format("P{0}/COBJ{1} - Entry Ends At: {2}", packageparsecount, cobjc, entryEnd), true);
+                        ReadCOBJ rc = new ReadCOBJ(readFile, packageparsecount, e, itemtags);                            
+                        if (!allInstanceIDs.Contains(rc.instanceid.ToString("X8"))){
+                            allInstanceIDs.Add(rc.instanceid.ToString("X8"));  
+                        }                                                      
+                        if((!allGUIDS.Contains(rc.GUID)) && rc.GUID != "null"){
+                            allGUIDS.Add(rc.GUID);
                         }
 
-                        
-
-                        
-
-                        cobjc++;
+                        foreach (TagsList tag in rc.itemtags) {
+                            if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
+                                itemtags.Add(tag);  
+                            }                                    
+                        }
                     }
+                    cobjc++;
                 }
+            }
 
-                if ((fileHas.Exists(x => x.TypeID == "OBJD"))){
-                    List<int> entryspots = new List<int>();
-                    int fh = 0;
-                    foreach (fileHasList item in fileHas) {
-                        if (item.TypeID == "OBJD"){
-                            entryspots.Add(fh);                       
-                        }
-                        fh++;
-                    }    
-                    int objdc = 0;
-                    foreach (int e in entryspots){
-                        log.MakeLog("P" + packageparsecount + "/E" + e + " - Opening OBJD #" + objdc, true);
-                        if (indexData[e].compressionType == "5A42"){
-                                //dbpfFile.Seek(, SeekOrigin.Begin);
-                                //var here = readFile.BaseStream.Position;
-                                readFile.BaseStream.Position = indexData[e].position;                       
-                                int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
-                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Position: " + indexData[e].position, true);
-                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Filesize: " + indexData[e].fileSize, true);
-                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Memsize: " + indexData[e].memSize, true);
-                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Entry ends at " + entryEnd, true);
-                                Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
-                                
-                                BinaryReader decompbr = new BinaryReader(decomps);
-
-                                ReadOBJDIndex readOBJD = new ReadOBJDIndex(decompbr);
-                                log.MakeLog("There are " + readOBJD.count + " entries to read.", true);
-                                objdentries = new string[readOBJD.count];
-                                objdpositions = new int[readOBJD.count];
-                                for (int f = 0; f < readOBJD.count; f++){
-                                    log.MakeLog("Entry " + f + ": ", true);
-                                    log.MakeLog("--- Type: " + readOBJD.entrytype[f].ToString("X8"), true);
-                                    objdentries[f] = readOBJD.entrytype[f].ToString();
-                                    objdpositions[f] = (int)readOBJD.position[f];
-                                    log.MakeLog("--- Position " + readOBJD.position[f], true);
-                                }
-                                log.MakeLog("P" + packageparsecount + "/E" + e + " - Reader is at " + decompbr.BaseStream.Position, true);
-                                decompbr.BaseStream.Position = readOBJD.position[0];
-                                ReadOBJDEntry readobjdentry = new ReadOBJDEntry(decompbr, objdentries, objdpositions);
-                                thisPackage.Title = readobjdentry.name;
-                                log.MakeLog("Adding components to package: ", true);
-                                for (int c = 0; c < readobjdentry.componentcount; c++){
-                                    log.MakeLog(readobjdentry.components[c].ToString(), true);
-                                    log.MakeLog(readobjdentry.components[c].ToString("X8"), true);
-                                    thisPackage.Components.Add(readobjdentry.components[c].ToString("X8"));
-                                }
-                                foreach (string m in readobjdentry.model) {
-                                    if(!allGUIDS.Contains(m)){
-                                        allGUIDS.Add(m);
-                                    }  
-                                }
-                                foreach (string r in readobjdentry.rig) {
-                                    if(!allGUIDS.Contains(r)){
-                                        allGUIDS.Add(r);
-                                    }  
-                                }
-                                foreach (string s in readobjdentry.slot) {
-                                    if(!allGUIDS.Contains(s)){
-                                        allGUIDS.Add(s);
-                                    }  
-                                }
-                                foreach (string f in readobjdentry.footprint) {
-                                    if(!allGUIDS.Contains(f)){
-                                        allGUIDS.Add(f);
-                                    }
-                                }
-                                                             
-                             decompbr.Dispose();   
-                             decomps.Dispose();
-                        }
-                        
-                        objdc++;
+            if ((fileHas.Exists(x => x.TypeID == "OBJD"))){
+                List<int> entryspots = new List<int>();
+                int fh = 0;
+                foreach (fileHasList item in fileHas) {
+                    if (item.TypeID == "OBJD"){
+                        entryspots.Add(fh);                       
                     }
-                    
+                    fh++;
+                }    
+                int objdc = 0;
+                foreach (int e in entryspots){
+                    log.MakeLog(string.Format("P{0} - Opening OBJD #{1}", packageparsecount, objdc), true);
+                    if (indexData[e].compressionType == "5A42"){
+                            readFile.BaseStream.Position = indexData[e].position;                       
+                            int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
+                            log.MakeLog(string.Format("P{0}/OBJD{1} - Position: {2}", packageparsecount, objdc, indexData[e].position), true);
+                            log.MakeLog(string.Format("P{0}/OBJD{1} - File Size: {2}", packageparsecount, objdc, indexData[e].fileSize), true);
+                            log.MakeLog(string.Format("P{0}/OBJD{1} - Memory Size: {2}", packageparsecount, objdc, indexData[e].memSize), true);
+                            log.MakeLog(string.Format("P{0}/OBJD{1} - Entry Ends At: {2}", packageparsecount, objdc, entryEnd), true);
+                            Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
+                            
+                            BinaryReader decompbr = new BinaryReader(decomps);
+
+                            ReadOBJDIndex readOBJD = new ReadOBJDIndex(decompbr, packageparsecount, objdc);
+                            log.MakeLog(string.Format("P{0}/OBJD{1} - There are {2} entries to read.", packageparsecount, objdc, readOBJD.count), true);
+                            objdentries = new string[readOBJD.count];
+                            objdpositions = new int[readOBJD.count];
+                            for (int f = 0; f < readOBJD.count; f++){
+                                log.MakeLog(string.Format("P{0}/OBJD{1} - Entry {2}: \n--- Type: {3}\n --- Position: {4}", packageparsecount, objdc, f, readOBJD.entrytype[f], readOBJD.position[f]), true);
+                                objdentries[f] = readOBJD.entrytype[f].ToString();
+                                objdpositions[f] = (int)readOBJD.position[f];
+                            }
+                            decompbr.BaseStream.Position = readOBJD.position[0];
+                            ReadOBJDEntry readobjdentry = new ReadOBJDEntry(decompbr, objdentries, objdpositions, packageparsecount, objdc);
+                            thisPackage.Title = readobjdentry.name;
+                            thisPackage.Tuning = readobjdentry.tuningname;
+                            thisPackage.TuningID = (int)readobjdentry.tuningid;
+                            if(!allInstanceIDs.Contains(readobjdentry.instance.ToString("X8"))){
+                                allInstanceIDs.Add(readobjdentry.instance.ToString("X8"));
+                            }
+                            
+                            log.MakeLog("Adding components to package: ", true);
+                            for (int c = 0; c < readobjdentry.componentcount; c++){
+                                log.MakeLog(readobjdentry.components[c].ToString(), true);
+                                log.MakeLog(readobjdentry.components[c].ToString("X8"), true);
+                                thisPackage.Components.Add(readobjdentry.components[c].ToString("X8"));
+                            }
+                            foreach (string m in readobjdentry.model) {
+                                if(!allGUIDS.Contains(m)){
+                                    allGUIDS.Add(m);
+                                }  
+                            }
+                            foreach (string r in readobjdentry.rig) {
+                                if(!allGUIDS.Contains(r)){
+                                    allGUIDS.Add(r);
+                                }  
+                            }
+                            foreach (string s in readobjdentry.slot) {
+                                if(!allGUIDS.Contains(s)){
+                                    allGUIDS.Add(s);
+                                }  
+                            }
+                            foreach (string f in readobjdentry.footprint) {
+                                if(!allGUIDS.Contains(f)){
+                                    allGUIDS.Add(f);
+                                }
+                            }                                                            
+                            decompbr.Dispose();   
+                            decomps.Dispose();
+                    }                    
+                    objdc++;
                 }
-            
-
-
-
+                
+            }
 
             log.MakeLog("All methods complete, moving on to getting info.", true);
 
             List<TypeCounter> typecount = new List<TypeCounter>();
-            var typeDict = new Dictionary<string, int>();
+            Dictionary<string,int> typeDict = new Dictionary<string, int>();
 
             log.MakeLog("Making dictionary.", true);
 
+            List<typeList> typse = GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S4Types"));
+
             foreach (fileHasList item in fileHas){
-                foreach (typeList type in TypeListings.AllTypesS4){
+                foreach (typeList type in typse){
                     if (type.desc == item.TypeID){
-                        log.MakeLog("Added " + type.desc + " to dictionary.", true);
+                        log.MakeLog(string.Format("Added {0} to dictionary.", type.desc), true);
                         typeDict.Increment(type.desc);
                     }
                 }
             }
 
+            typse = new List<typeList>();
+
             foreach (KeyValuePair<string, int> type in typeDict){
                 TypeCounter tc = new TypeCounter();
                 tc.Type = type.Key;
                 tc.Count = type.Value;
-                log.MakeLog("There are " + tc.Count + " of " + tc.Type + " in this package.", true);
+                log.MakeLog(string.Format("There are {0} of {1} in this package.", tc.Count, tc.Type), true);
                 typecount.Add(tc);
             }
+            typeDict = new Dictionary<string, int>();
 
             thisPackage.Entries.AddRange(typecount);
             thisPackage.FileHas.AddRange(fileHas);
-            //ifs
 
             int casp;int geom;int rle;int rmap;int thum;int img;int xml;int clhd;int clip;int stbl;int cobj;int ftpt;int lite;int thm;int mlod;int modl;int mtbl;int objd;int rslt;int tmlt;int ssm;int lrle;int bond;int cpre;int dmap;int smod;int bgeo;int hotc;
-
-            
 
             distinctFlags = allFlags.Distinct().ToList();
             thisPackage.Flags.AddRange(distinctFlags);
@@ -1775,161 +1703,109 @@ namespace SimsCCManager.Packages.Sims4Search
             distinctInstanceIDs = allInstanceIDs.Distinct().ToList();
             thisPackage.InstanceIDs.AddRange(distinctInstanceIDs);
 
-
             distinctGUIDS = allGUIDS.Distinct().ToList();
             thisPackage.GUIDs.AddRange(distinctGUIDS);
-
-            
                      
             log.MakeLog(string.Format("P{0}: Checking {1} against override IDs.", packageparsecount,thisPackage.PackageName), true);
             
-            
-
-            ParallelOptions parallelSettings = new ParallelOptions() { MaxDegreeOfParallelism = 2000};
-            
-            bool found;
-
-            SimsPackage overrideContainer = new SimsPackage();
-
-            
-            List<string> FoundIDs = new List<string>();
-            foreach (string iid in thisPackage.InstanceIDs){ 
-                string cs = string.Format("Data Source={0}", GlobalVariables.S4_Overrides_All);                   
-                using (var dataConnection = new SQLiteConnection(cs)){                    
-                    try
-                    {
-                        dataConnection.Open();
-                        string cmdtxt = string.Format("SELECT * FROM Instances WHERE InstanceID = '{0}'", iid);
-                        using (SQLiteCommand sqcmd = new SQLiteCommand(cmdtxt, dataConnection)){
-                            using (SQLiteDataReader sqlreader = sqcmd.ExecuteReader()){
-                                while (sqlreader.Read())
-                                {
-                                    string idm = sqlreader["InstanceID"].ToString();
-                                    string ow = sqlreader["Name"].ToString();
-                                    string pack = sqlreader["Pack"].ToString();
-                                    string tp = sqlreader["Type"].ToString();
-                                    if (!String.IsNullOrWhiteSpace(idm)){
-                                        log.MakeLog(string.Format("P{0}: {1} is an override.", packageparsecount, iid), true);
-                                        thisPackage.FunctionSubcategory = tp;
-                                        thisPackage.OverriddenInstances.Add(iid);
-                                        if ((!String.IsNullOrWhiteSpace(ow)) && (ow != " ")){
-                                            thisPackage.OverriddenItems.Add(pack + ": " + ow);
-                                        }                                        
-                                        thisPackage.Override = true;
-                                        thisPackage.Type = "OVERRIDE";
-                                    }
-                                }
-                            }
-                        }        
-                    }
-                    catch (System.Exception e)
-                    { 
-                        System.Windows.Forms.MessageBox.Show("Database Error: " + e.Message.ToString(),
-                        "Error Message: Searching for Sims 4 Overrides failed, please report the issue.",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    finally
-                    {
-                        dataConnection.Close();
-                    }                    
+            List<OverridesList> overridesdb = new List<OverridesList>();
+            log.MakeLog(string.Format("P{0}: Checking instances.", packageparsecount), true);
+            List<OverriddenList> overrideslist = new List<OverriddenList>();
+            ConcurrentBag<OverridesList> concol = new ConcurrentBag<OverridesList>();
+            Parallel.ForEach(thisPackage.InstanceIDs, id => {
+                overridesdb = GlobalVariables.S4OverridesConnection.Query<OverridesList>(string.Format("SELECT * FROM Instances where InstanceID='{0}'", id));
+                
+                foreach (OverridesList ov in overridesdb){
+                    log.MakeLog(string.Format("Found {0} as an override.", ov.InstanceID), true);
+                    if (thisPackage.Override == false) thisPackage.Override = true;
+                    concol.Add(ov);
                 }
-                cs = string.Format("Data Source={0}", GlobalVariables.S4_Overrides_List);
-                foreach (string inst in thisPackage.OverriddenInstances){
-                    using (var dataConnection = new SQLiteConnection(cs)){                    
-                        try
-                        {
-                            dataConnection.Open();
-                            string cmdtxt = string.Format("SELECT * FROM Overrides WHERE Instance = '{0}'", inst);
-                            using (SQLiteCommand sqcmd = new SQLiteCommand(cmdtxt, dataConnection)){
-                                using (SQLiteDataReader sqlreader = sqcmd.ExecuteReader()){
-                                    while (sqlreader.Read())
-                                    {
-                                        string desc = sqlreader["Description"].ToString();
-                                        if (!String.IsNullOrWhiteSpace(desc)){
-                                            thisPackage.Type = "OVERRIDE: " + desc;                                            
-                                        }
-                                    }
-                                }
-                            }        
-                        }
-                        catch (System.Exception e)
-                        { 
-                            System.Windows.Forms.MessageBox.Show("Database Error: " + e.Message.ToString(),
-                            "Error Message: Searching for Sims 4 Overrides failed, please report the issue.",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                        finally
-                        {
-                            dataConnection.Close();
-                        }                    
-                    }
-                }
-            };
-
+            });
+            List<SpecificOverrides> overridematch = new List<SpecificOverrides>();
+            log.MakeLog(string.Format("P{0}: Finding specific overrides.", packageparsecount), true);
+            foreach (OverridesList iao in concol){
+                if (iao.InstanceID != "0000000000000000"){
+                    overridematch = GlobalVariables.S4SpecificOverridesConnection.Query<SpecificOverrides>(string.Format("SELECT * FROM Overrides where Instance='{0}'", iao.InstanceID));   
+                    List<SpecificOverrides> so = new List<SpecificOverrides>();
+                    so.AddRange(overridematch);                 
+                    if (overridematch.Any()){
+                        OverriddenList overriddenitem = new OverriddenList();
+                        overriddenitem.InstanceID = iao.InstanceID;
+                        overriddenitem.Name = iao.Name;
+                        overriddenitem.Pack = iao.Pack;
+                        overriddenitem.Type = iao.Type; 
+                        overriddenitem.Override = so[0].Description;
+                        overrideslist.Add(overriddenitem);
+                        overriddenitem = null; 
+                    }                                      
+                }                
+            }
+            //overridesdb = null;           
             
-
+            thisPackage.OverridesList.AddRange(overrideslist);
+            overrideslist = new List<OverriddenList>();
+            overridematch = new List<SpecificOverrides>();
+            overridesdb = new List<OverridesList>();
             
             if (thisPackage.Override != true){
                 log.MakeLog("No overrides were found. Checking other options.", true);
                 if ((typeDict.TryGetValue("S4SM", out ssm) && ssm >= 1)){
                 thisPackage.Type = "Merged Package";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if (!String.IsNullOrWhiteSpace(thisPackage.Function)) {
                     thisPackage.Type = thisPackage.Function;
                 } else if ((typeDict.TryGetValue("BGEO", out bgeo) && bgeo >= 1) && (typeDict.TryGetValue("HOTC", out hotc) && hotc >= 1) && (typeDict.TryGetValue("SMOD", out smod) && smod >= 1)){
                     thisPackage.Type = "Slider";
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("BOND", out bond) && bond >= 1) && (typeDict.TryGetValue("CPRE", out cpre) && cpre >= 1) && (typeDict.TryGetValue("DMAP", out dmap) && dmap >= 1) && (typeDict.TryGetValue("SMOD", out smod) && smod >= 1)){
                     thisPackage.Type = "Preset";
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0)){
                     thisPackage.Type = "CAS Recolor";
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("LRLE", out lrle) && lrle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0)){
                     thisPackage.Type = "Makeup";
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("CASP", out casp) && casp <= 0) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1) && (typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("RMAP", out rmap) && rmap >= 1) && (typeDict.TryGetValue("_IMG", out img) && img <= 0)){
                     thisPackage.Type = "Hair Mesh";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = false;
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0) && (typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("RMAP", out rmap) && rmap >= 1) && (typeDict.TryGetValue("_IMG", out img) && img >= 1)){
                     thisPackage.Type = "Hair Recolor";
                     thisPackage.Mesh = false;
                     thisPackage.Recolor = true;
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1) && (typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("RMAP", out rmap) && rmap >= 1) && (typeDict.TryGetValue("_IMG", out img) && img >= 1)){
                     thisPackage.Type = "Hair";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = true;
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("CLHD", out clhd) && clhd >= 1) && (typeDict.TryGetValue("STBL", out stbl) && stbl >= 1)){
                     thisPackage.Type = "Pose Pack";
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("COBJ", out cobj) && cobj >= 1) && (typeDict.TryGetValue("FTPT", out ftpt) && ftpt >= 1) && (typeDict.TryGetValue("MLOD", out mlod) && mlod >= 1) && (typeDict.TryGetValue("MODL", out modl) && modl >= 1) && (typeDict.TryGetValue("MTBL", out mtbl) && mtbl <= 0)  && (typeDict.TryGetValue("_IMG", out img) && img <= 0) && (typeDict.TryGetValue("OBJD", out objd) && objd >= 1)){
                     thisPackage.Type = "Object Mesh";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = false;
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("COBJ", out cobj) && cobj >= 1) && (typeDict.TryGetValue("FTPT", out ftpt) && ftpt >= 1) && (typeDict.TryGetValue("MLOD", out mlod) && mlod >= 1) && (typeDict.TryGetValue("MODL", out modl) && modl >= 1) && (typeDict.TryGetValue("MTBL", out mtbl) && mtbl >= 1) && (typeDict.TryGetValue("OBJD", out objd) && objd <= 0)){
                     thisPackage.Type = "Object Recolor";
                     thisPackage.Mesh = false;
                     thisPackage.Recolor = true;
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("COBJ", out cobj) && cobj >= 1) && (typeDict.TryGetValue("FTPT", out ftpt) && ftpt >= 1) && (typeDict.TryGetValue("MLOD", out mlod) && mlod >= 1) && (typeDict.TryGetValue("MODL", out modl) && modl >= 1) && (typeDict.TryGetValue("MTBL", out mtbl) && mtbl >= 1) && (typeDict.TryGetValue("OBJD", out objd) && objd >= 1)){
                     thisPackage.Type = "Object";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = true;
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if ((typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1)){
                     thisPackage.Type = "CAS Part";
-                    log.MakeLog("This is a " + thisPackage.Type + "!!", true);
+                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else {
                     log.MakeLog("Unable to identify package.", true);
                     thisPackage.Type = "UNKNOWN";
                 }
-            }
-
             }
 
             if (thisPackage.AgeGenderFlags.Any()){
@@ -1992,28 +1868,29 @@ namespace SimsCCManager.Packages.Sims4Search
                         age += string.Format(", Young Adult");
                     }
                 }
-
                 thisPackage.Age = age;           
             }
+            dbpfFile.Close();
+            readFile.Dispose();
+            dbpfFile.Dispose();
             
-            
+            if (GlobalVariables.sortonthego == true){
+                thisPackage = filesort.SortPackage(thisPackage);
+            }
 
-            log.MakeLog("Package Summary: " + thisPackage.SimsPackagetoString(), true);
-            log.MakeLog(thisPackage.SimsPackagetoString(), false);
-            //Containers.Containers.allSimsPackages.Add(thisPackage);
+            log.MakeLog(string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString()), true);
+            log.MakeLog(string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString()), false);
             log.MakeLog(string.Format("Adding {0} to packages database.", thisPackage.PackageName), true);
             try {
                 GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage, true);
-            } catch (SQLiteException e){
-                log.MakeLog(string.Format("Caught exception adding Sims 2 package to database. \n Exception: {0}", e), true);
+            } catch (SQLiteException ex){
+                log.MakeLog(string.Format("Caught exception adding Sims 4 package to database. \n Exception: {0}", ex), true);
             }
-
             log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
             txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
-            var closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);            
-            GlobalVariables.DatabaseConnection.Delete(closingquery[0]);            
-            readFile.Dispose();
-            //dbpfFile.Dispose();
+            List<PackageFile> closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);            
+            GlobalVariables.DatabaseConnection.Delete(closingquery[0]);
+            closingquery = new List<PackageFile>();
             sw.Stop();
             TimeSpan ts = sw.Elapsed;
             string elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
@@ -2022,6 +1899,8 @@ namespace SimsCCManager.Packages.Sims4Search
             GlobalVariables.currentpackage = packageinfo.Name;
             GlobalVariables.packagesRead++;
             log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime), true);
+            
+
             log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
         }
 
@@ -2053,8 +1932,5 @@ namespace SimsCCManager.Packages.Sims4Search
         public void RetunePackage(SimsPackage package, string tuning){
             //add otg tags OR add specific tuning passed in. for example, cars for transport mod
         }
-           
-        
-                
     }
 }

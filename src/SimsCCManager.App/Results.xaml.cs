@@ -120,7 +120,67 @@ namespace SimsCCManager.SortingUIResults {
 		}
 
 
-        
+        private void Kofi_Click(object sender, EventArgs e){
+            if (System.Windows.Forms.MessageBox.Show
+            ("Open Kofi?", "Opening External URL",
+            System.Windows.Forms.MessageBoxButtons.YesNo, 
+            System.Windows.Forms.MessageBoxIcon.Question)
+            ==System.Windows.Forms.DialogResult.Yes)
+                {
+                    Process.Start(new ProcessStartInfo("http://ko-fi.com/sinfulsimming") { UseShellExecute = true });
+                }
+
+            else
+                {
+                //React as needed.
+                }
+        }
+        private void Git_Click(object sender, EventArgs e){
+            if (System.Windows.Forms.MessageBox.Show
+            ("Open the Sims CC Manager Github Repo?", "Opening External URL",
+            System.Windows.Forms.MessageBoxButtons.YesNo, 
+            System.Windows.Forms.MessageBoxIcon.Question)
+            ==System.Windows.Forms.DialogResult.Yes)
+                {
+                    Process.Start(new ProcessStartInfo("https://github.com/sixstepsaway/Sims-CC-Manager") { UseShellExecute = true });
+                }
+
+            else
+                {
+                //React as needed.
+                }
+        }
+        private void Twitter_Click(object sender, EventArgs e){
+            if (System.Windows.Forms.MessageBox.Show
+            ("Open SinfulSimming's Twitter?", "Opening External URL",
+            System.Windows.Forms.MessageBoxButtons.YesNo, 
+            System.Windows.Forms.MessageBoxIcon.Question)
+            ==System.Windows.Forms.DialogResult.Yes)
+                {
+                    Process.Start(new ProcessStartInfo("https://twitter.com/sinfulsimming") { UseShellExecute = true });
+                }
+
+            else
+                {
+                //React as needed.
+                }
+        }
+        private void Discord_Click(object sender, EventArgs e){
+            if (System.Windows.Forms.MessageBox.Show
+            ("Open Discord?", "Opening External URL",
+            System.Windows.Forms.MessageBoxButtons.YesNo, 
+            System.Windows.Forms.MessageBoxIcon.Question)
+            ==System.Windows.Forms.DialogResult.Yes)
+                {
+                    Process.Start(new ProcessStartInfo("https://discord.gg/M6vnf842Fp") { UseShellExecute = true });  
+                }
+
+            else
+                {
+                //React as needed.
+                }
+                          
+        }
 
         
         private void showallfiles_Click(object sender, EventArgs e){
@@ -134,22 +194,6 @@ namespace SimsCCManager.SortingUIResults {
             Thread.Sleep(2000);
             GlobalVariables.DatabaseConnection.Close();
             System.Windows.Application.Current.Shutdown();
-        }
-        
-        private void Kofi_Click(object sender, EventArgs e){
-            if (System.Windows.Forms.MessageBox.Show
-            ("Are you sure you want to go to Kofi?", "Opening External URL",
-            System.Windows.Forms.MessageBoxButtons.YesNo, 
-            System.Windows.Forms.MessageBoxIcon.Question)
-            ==System.Windows.Forms.DialogResult.Yes)
-                {
-                    Process.Start(new ProcessStartInfo("http://ko-fi.com/sinfulsimming") { UseShellExecute = true });
-                }
-
-            else
-                {
-                //React as needed.
-                }
         }
 
         private void loadErrorFix_Click(object sender, EventArgs e){
@@ -167,6 +211,11 @@ namespace SimsCCManager.SortingUIResults {
                 //do nothing, a message will have done the job
             }
             
+        }
+        
+        private void CloseTagsList_Click(object sender, EventArgs e){
+            
+            tagsgrid.Visibility = Visibility.Hidden;            
         }
 
         private bool checkGame() {
@@ -401,6 +450,80 @@ namespace SimsCCManager.SortingUIResults {
 		}
 
 
+
+        public ICommand RenameFile  
+        {  
+            get { return new DelegateCommand(this.OnRename); }  
+        }  
+        private void OnRename()  
+        {  
+            string stuff = "";
+            string movefolder = "";
+            string sourcefile = ((SimsPackage)_packagesView.CurrentItem).Location;
+            FileInfo sf = new FileInfo(((SimsPackage)_packagesView.CurrentItem).Location);
+            string filename = ((SimsPackage)_packagesView.CurrentItem).PackageName;
+            string destination = "";
+            int selection = ResultsWindow.resultsView.SelectedItems.Count;
+            if (selection == 1){                
+                using(var MoveFolder = new FolderBrowserDialog())
+                {
+                    string newname = ((SimsPackage)_packagesView.CurrentItem).Title;
+                    destination = System.IO.Path.Combine(sf.DirectoryName, newname);
+                    if (File.Exists(sourcefile)){
+                        SimsPackage item = (SimsPackage)_packagesView.CurrentItem;
+                        item.Location = destination;
+                        File.Move(sourcefile, destination);                        
+                        GlobalVariables.DatabaseConnection.UpdateWithChildren(item);
+                        RefreshResults();
+                    } else {
+                        System.Windows.Forms.MessageBox.Show(string.Format("File {0} not found at source. Did it get deleted?", sourcefile));    
+                    }
+                    System.Windows.Forms.MessageBox.Show(string.Format("Renamed {0}!", ((SimsPackage)_packagesView.CurrentItem).PackageName));
+                    
+                }            
+            } else if (selection != 1 && selection != 0){
+                foreach (var item in ResultsWindow.resultsView.SelectedItems){
+                    SimsPackage thing = (SimsPackage)item;
+                    if (String.IsNullOrEmpty(stuff)){
+                        stuff = string.Format("{0}", thing.PackageName);
+                    } else {
+                        stuff += string.Format("\n {0}", thing.PackageName);
+                    }                
+                }
+                using(var MoveFolder = new FolderBrowserDialog())
+                {
+                    foreach (var thing in ResultsWindow.resultsView.SelectedItems){
+                        sf = new FileInfo(((SimsPackage)_packagesView.CurrentItem).Location);
+                        SimsPackage item = ((SimsPackage)thing);
+                        string newname = ((SimsPackage)_packagesView.CurrentItem).Title;
+                        destination = System.IO.Path.Combine(sf.DirectoryName, newname);
+                        filename = item.PackageName;
+                        destination = System.IO.Path.Combine(destination, newname);
+                        sourcefile = item.Location;
+                        if (File.Exists(sourcefile)){                            
+                            item.Location = destination;
+                            File.Move(sourcefile, destination);                        
+                            GlobalVariables.DatabaseConnection.UpdateWithChildren(item);
+                            RefreshResults();
+                        } else {
+                            System.Windows.Forms.MessageBox.Show(string.Format("File not found: {0}", item.PackageName));    
+                        }
+                    }
+                    System.Windows.Forms.MessageBox.Show(string.Format("Renamed {0} packages", ResultsWindow.resultsView.SelectedItems.Count));
+                    
+                }
+                
+            }
+        }  
+
+
+
+
+
+
+
+
+
         public ICommand ShowTags  
         {  
             get { return new DelegateCommand(this.OnShowTags); }  
@@ -418,7 +541,6 @@ namespace SimsCCManager.SortingUIResults {
             RefreshTagViewer();
             ResultsWindow.tagsgrid.Visibility = Visibility.Visible;
         }
-		
  
         public ICommand DeleteFile  
         {  

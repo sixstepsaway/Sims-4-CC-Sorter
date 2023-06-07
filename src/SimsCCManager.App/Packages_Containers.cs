@@ -64,6 +64,8 @@ namespace SimsCCManager.Packages.Containers
         public int Id {get; set;}
         [Column("Description")]
         public string Description {get; set;}
+        [Column("Info")]
+        public string Info {get; set;}
         [Column("TypeID")]
         public string TypeID {get; set;}
         
@@ -120,6 +122,10 @@ namespace SimsCCManager.Packages.Containers
         [TextBlob("GuidsBlobbed")]
         public List<string> GUIDs {get; set;}
         public string GuidsBlobbed {get; set;}
+        [Column("TuningID")]
+        public int TuningID {get; set;}
+        [Column("Tuning")]
+        public string Tuning {get; set;}
         [Column ("Creator")]
         public string Creator {get; set;}
         [Column ("Age")]
@@ -166,8 +172,13 @@ namespace SimsCCManager.Packages.Containers
         public bool Recolor {get; set;}
         [Column ("Orphan")]
         public bool Orphan {get; set;}
+        [Column ("Duplicate")]
+        public bool Duplicate {get; set;}
         [Column ("Override")]        
         public bool Override {get; set;}
+        [Column("OverridesList")]
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<OverriddenList> OverridesList {get; set;}
         [Column ("OverriddenInstances")]
         [TextBlob("OverriddenInstancesBlobbed")]
         public List<string> OverriddenInstances {get; set;}
@@ -185,6 +196,10 @@ namespace SimsCCManager.Packages.Containers
         [TextBlob("MatchingConflictsBlobbed")]
         public List<string> MatchingConflicts {get; set;}
         public string MatchingConflictsBlobbed {get; set;}
+        [Column ("DuplicatePackages")]
+        [TextBlob("DuplicatePackagesBlobbed")]
+        public List<string> DuplicatePackages {get; set;}
+        public string DuplicatePackagesBlobbed {get; set;}
 
         public SimsPackage() {
             this.InstanceIDs = new List<string>();
@@ -201,6 +216,7 @@ namespace SimsCCManager.Packages.Containers
             this.OverriddenInstances = new List<string>();
             this.OverriddenItems = new List<string>();
             this.AgeGenderFlags = new AgeGenderFlags();
+            this.OverridesList = new List<OverriddenList>();
         }
 
         public string GetPropertyString(string propName){
@@ -629,7 +645,26 @@ namespace SimsCCManager.Packages.Containers
         }   
     }
 
-    
+    [Table("SP_Overrides")]
+    public class OverriddenList {
+        [PrimaryKey, AutoIncrement]
+        public int Id {get; set;}
+        [Column("InstanceID")]
+        public string InstanceID {get; set;}
+        [Column("Name")]
+        public string Name {get; set;}
+        [Column("Type")]
+        public string Type {get; set;}
+        [Column("Pack")]
+        public string Pack {get; set;}
+        [Column("Override")]
+        public string Override {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public int PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
 
     [Table("SP_TypeCounter")]
     public class TypeCounter {
@@ -732,45 +767,12 @@ namespace SimsCCManager.Packages.Containers
         /// <summary>
         /// Used for getting the Sims 4 CAS part location. 
         /// </summary>
-        public uint bodytype;
-        public string Function;
-        public string Subfunction;
-    }
-
-    public class InitializedLists {
-        /// <summary>
-        /// Initializes the lists used within the program. Will be swapped to a database.
-        /// </summary>
-        public static List<FunctionListing> S4BodyTypes = new List<FunctionListing>();
-        public static List<FunctionListing> S4BB = new List<FunctionListing>();
-        public static void InitializeLists(){
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 655360, Function = "Accessory", Subfunction = "Earring" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 786432, Function = "Accessory", Subfunction = "Necklace" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 917504, Function = "Accessory", Subfunction = "Bracelet" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 131072, Function = "Hair" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 458752, Function = "Clothing", Subfunction = "Bottom" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 720896, Function = "Accessory", Subfunction = "Glasses" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 393228, Function = "Clothing", Subfunction = "Top" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 393216, Function = "Clothing", Subfunction = "Top" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 851980, Function = "Accessory", Subfunction = "Gloves" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 65536, Function = "Accessory", Subfunction = "Hat" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 327680, Function = "Clothing", Subfunction = "Full Body" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 524288, Function = "Clothing", Subfunction = "Shoes" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 2359296, Function = "Accessory", Subfunction = "Socks" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 240, Function = "Accessory", Subfunction = "Hat" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 2162688, Function = "Face Paint"});
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 65536, Function = "Accessory", Subfunction = "Hat" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 131149, Function = "Hair"});
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 65536, Function = "Accessory", Subfunction = "Hat" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 1441792, Function = "Accessory", Subfunction = "Index Finger (L)" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 1572864, Function = "Accessory", Subfunction = "Ring Finger (L)" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 1245184, Function = "Accessory", Subfunction = "Nose Ring (R)" });
-            S4BodyTypes.Add(new FunctionListing{ bodytype = 3342336, Function = "Tattoo", Subfunction = "Lower Back" });
-
-
-            //S4BB.Add(new FunctionListing{ bodytype = 65536, Function = "Accessory", Subfunction = "Hat" });
-
-        }
+        [Column("BodyType")]
+        public uint bodytype {get; set;}
+        [Column("Function")]
+        public string Function {get; set;}
+        [Column("Subfunction")]
+        public string Subfunction {get; set;}
     }
 
     public class BatchTasks {
@@ -789,5 +791,22 @@ namespace SimsCCManager.Packages.Containers
         }
     }
 
+    [Table("Instances")]
+    public class OverridesList {
+        [Column("InstanceID")]
+        public string InstanceID {get; set;}
+        [Column("Name")]
+        public string Name {get; set;}
+        [Column("Type")]
+        public string Type {get; set;}
+        [Column("Pack")]
+        public string Pack {get; set;}
+    }
 
+    public class SpecificOverrides {
+        [Column("Instance")]
+        public string Instance {get; set;}
+        [Column("Description")]
+        public string Description {get; set;}
+    }
 }

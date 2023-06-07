@@ -1,9 +1,8 @@
-I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\All_Functions_Types_Sorts.sqlite
-I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\All_Instances.sqlite
-I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\s4bbtags.json
-I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\S4_Instances.sqlite
-I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\Data\S4_SpecificOverrides.sqlite
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\SimsCCManager.App.exe
+I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\data\s4bbtags.json
+I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\data\All_Functions_Types_Sorts.sqlite
+I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\data\S4_Instances.sqlite
+I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\data\S4_SpecificOverrides.sqlite
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\SimsCCManager.App.deps.json
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\SimsCCManager.App.runtimeconfig.json
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\SimsCCManager.App.dll

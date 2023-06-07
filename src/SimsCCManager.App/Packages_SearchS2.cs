@@ -17,6 +17,7 @@ using SQLiteNetExtensions;
 using SQLiteNetExtensions.Attributes;
 using SQLiteNetExtensions.Extensions;
 using SQLite;
+using SimsCCManager.Packages.Sorting;
 
 namespace SimsCCManager.Packages.Sims2Search
 {    
@@ -49,22 +50,26 @@ namespace SimsCCManager.Packages.Sims2Search
         // References
         LoggingGlobals log = new LoggingGlobals();
         ReadEntries readentries = new ReadEntries();   
+        FilesSort filesort = new FilesSort();
 
         //Vars
         uint chunkOffset = 0;        
        
 
-        public void SearchS2Packages(BinaryReader readFile, FileInfo packageinfo, uint minor, int packageparsecount) {
+        public void SearchS2Packages(FileStream dbpfFile, FileInfo packageinfo, uint minor, int packageparsecount) {
             Stopwatch sw = new Stopwatch();
             sw.Start();
             log.MakeLog(string.Format("File {0} arrived for processing as Sims 2 file.", packageinfo.Name), true);
             string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
-            var queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
-            var query = queries[0];
+            List<PackageFile> queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            PackageFile query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
-            var pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
+            PackageFile pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
             GlobalVariables.DatabaseConnection.Insert(pk);
             //Vars for Package Info
+            queries = new List<PackageFile>();
+            query = new PackageFile();
+            pk = new PackageFile();
             string typefound = "";
             string instanceID2;
             string typeID;
@@ -112,10 +117,11 @@ namespace SimsCCManager.Packages.Sims2Search
             List<string> allInstanceIDs = new List<string>();      
             List<string> distinctInstanceIDs = new List<string>();  
             if (minor == 2) indexmajorloc = 24;
-            if (minor == 0) indexmajorloc = 32;
+            if (minor == 1) indexmajorloc = 32;
             //create readers              
-            //MemoryStream dbpfFile = Methods.ReadBytesToFile(packageinfo.FullName);
-            //BinaryReader readFile = new BinaryReader(dbpfFile);
+            //MemoryStream dbpfFile = Methods.ReadBytesToFile(packageinfo.FullName, (int)packageinfo.Length);
+            
+            BinaryReader readFile = new BinaryReader(dbpfFile);
     
             thisPackage.FileSize = (int)packageinfo.Length;   
             thisPackage.PackageName = packageinfo.Name;
@@ -130,57 +136,54 @@ namespace SimsCCManager.Packages.Sims2Search
             readFile.BaseStream.Position = indexmajorloc;
 
             uint indexMajorVersion = readFile.ReadUInt32();
-            test = indexMajorVersion.ToString();
-            log.MakeLog("P" + packageparsecount + " - Index Major: " + test, true);
+            log.MakeLog(string.Format("P{0} - Index Major: {1}", packageparsecount, indexMajorVersion.ToString()), true);
             
             uint indexCount = readFile.ReadUInt32();
-            test = indexCount.ToString();
-            log.MakeLog("P" + packageparsecount + " - Index Count: " + test, true);
+            log.MakeLog(string.Format("P{0} - Index Count: {1}", packageparsecount, indexCount.ToString()), true);
             
             uint indexOffset = readFile.ReadUInt32();
-            test = indexOffset.ToString();
-            log.MakeLog("P" + packageparsecount + " - Index Offset: " + test, true);
+            log.MakeLog(string.Format("P{0} - Index Offset: {1}", packageparsecount, indexOffset.ToString()), true);
             
             uint indexSize = readFile.ReadUInt32();
-            test = indexSize.ToString();
-            log.MakeLog("P" + packageparsecount + " - Index Size: " + test, true);
+            log.MakeLog(string.Format("P{0} - Index Size: {1}", packageparsecount, indexSize.ToString()), true);
             
             readFile.BaseStream.Position = indexminorloc;
 
             uint indexMinorVersion = readFile.ReadUInt32() -1;
-            test = indexMinorVersion.ToString();
-            log.MakeLog("P" + packageparsecount + " - Index Minor Version: " + test, true);
-            
-            log.MakeLog("P" + packageparsecount + " - ChunkOffset: " + chunkOffset, true);
+            log.MakeLog(string.Format("P{0} - Index Minor Version: {1}", packageparsecount, indexMinorVersion.ToString()), true);
+            log.MakeLog(string.Format("P{0} - Chunk Offset: {1}", packageparsecount, chunkOffset.ToString()), true);
 
             readFile.BaseStream.Position = chunkOffset + indexOffset;
             for (int i = 0; i < indexCount; i++) {
                 indexEntry holderEntry = new indexEntry();
-                log.MakeLog("P" + packageparsecount + " - Made index entry.", true);
-                holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
-                log.MakeLog("P" + packageparsecount + "/E" + i + " - Index Entry TypeID: " + holderEntry.typeID, true);
+                holderEntry.typeID = readFile.ReadUInt32().ToString("X8");               
                 
+                List<typeList> type = GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S2Types where TypeID='{0}'", holderEntry.typeID));
+                    
+                if(type.Any()){
+                    fileHas.Add(new fileHasList {TypeID = type[0].desc, Location = i});
+                    log.MakeLog(string.Format("P{0}/E{1} - {2} is at location {3}", packageparsecount, i, type[0].desc, i), true);
+                } else {
+                    fileHas.Add(new fileHasList() { TypeID = holderEntry.typeID, Location = i});
+                    log.MakeLog(string.Format("P{0}/E{1} - {2} is unidentified and at location {2}", packageparsecount, i, holderEntry.typeID, i), true);
+                }
+                type = new List<typeList>();
+
                 holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
-                log.MakeLog("P" + packageparsecount + " - Index Entry GroupID: " + holderEntry.groupID, true);
-                holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
-                
+                holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");                
                 allInstanceIDs.Add(holderEntry.instanceID.ToString());
-                log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
 
                 if ((indexMajorVersion == 7) && (indexMinorVersion == 1)) {
                     holderEntry.instanceID2 = readFile.ReadUInt32().ToString("X8");
                 } else {
                     holderEntry.instanceID2 = "00000000";
                 }
-                log.MakeLog("P" + packageparsecount + " - InstanceID2: " + holderEntry.instanceID2, true);
-
                 holderEntry.offset = readFile.ReadUInt32();
-                log.MakeLog("P" + packageparsecount + " - Offset: " + holderEntry.offset, true);
                 holderEntry.filesize = readFile.ReadUInt32();
-                log.MakeLog("P" + packageparsecount + " - Filesize: " + holderEntry.filesize, true);
                 holderEntry.truesize = 0;
-                log.MakeLog("P" + packageparsecount + " - Truesize: " + holderEntry.truesize, true);
                 holderEntry.compressed = false;
+                log.MakeLog(string.Format("P{0}/E{1} - Index Entry Information: \n-- TypeID: {2}\n-- GroupID: {3}\n-- InstanceID: {4}\n-- InstanceID2: {5}\n-- Offset: {6}\n-- FileSize: {7}\n-- TrueSize: {8}", packageparsecount, i, holderEntry.typeID, holderEntry.groupID, holderEntry.instanceID, holderEntry.instanceID2, holderEntry.offset, holderEntry.filesize, holderEntry.truesize), true);               
+
 
                 indexData.Add(holderEntry);
 
@@ -188,7 +191,7 @@ namespace SimsCCManager.Packages.Sims2Search
 
                 if (indexCount == 0) 
                 {
-                    log.MakeLog("P" + packageparsecount + " - Package is broken. Closing.", true);
+                    log.MakeLog(string.Format("P{0} - Package is broken. Closing.", packageparsecount), true);
                     readFile.Close();
                     return;
                 }
@@ -197,48 +200,28 @@ namespace SimsCCManager.Packages.Sims2Search
 
 
             
-
-
-            //Console.WriteLine(indexData[0].typeID);
-
-            var entrynum = 0;
-            foreach (indexEntry iEntry in indexData) {
-                log.MakeLog("P" + packageparsecount + " - Entry [" + entrynum + "]", true);
-                
-                switch (iEntry.typeID.ToLower()) 
-                {                    
-                    case "fc6eb1f7": linkData.Add(iEntry); log.MakeLog("P" + packageparsecount + " - File has SHPE.", true); break;
-                }
-
-                var typef = from tp in TypeListings.AllTypesS2
-                            where tp.typeID == iEntry.typeID
-                            select tp.desc;
-                
-                
-                if(typef.Any()){
-                    List<string> tps = new List<string>();
-                    tps.AddRange(typef);
-                    fileHas.Add(new fileHasList() { TypeID = tps[0], Location = entrynum});
-                    log.MakeLog(string.Format("P{0} - Found: {1}", packageparsecount, tps[0]), true);
-                }
-                entrynum++;
-            }
-
-            log.MakeLog("P" + packageparsecount + " - This file has:", true);
+            string fhh = "";
             foreach (fileHasList item in fileHas) {
-                log.MakeLog("--- " + item.TypeID + " at: " + item.Location, true);
+                if (string.IsNullOrWhiteSpace(fhh)){
+                    fhh = string.Format("{0} at {1}", item.TypeID, item.Location);                    
+                } else {
+                    fhh += string.Format("\n {0} at {1}", item.TypeID, item.Location);  
+                }
             }
+            log.MakeLog(string.Format("P{0} - This file has: \n{1}", packageparsecount, fhh), true);
 
             if (fileHas.Exists(x => x.TypeID == "DIR")) {       
                 
-                var dirget = from has in fileHas
+                IEnumerable<int> dirget = from has in fileHas
                             where has.TypeID == "DIR"
                             select has.Location;
-                var dirs = dirget.ToList();
+                List<int> dirs = dirget.ToList();
+                dirget = Enumerable.Empty<int>();
                 dirnum = dirs[0];                
 
-                log.MakeLog("P" + packageparsecount + " - DIR is at entry [" + dirnum + "]", true);
-                entrynum = 0;
+                
+                log.MakeLog(string.Format("P{0} - DIR is at entry [{1}]", packageparsecount, dirnum), true);
+                //entrynum = 0;
             
                 //go through dir entry specifically 
                 
@@ -249,8 +232,7 @@ namespace SimsCCManager.Packages.Sims2Search
                 instanceID2 = "";
                 myFilesize = 0;
                 
-                log.MakeLog("P" + packageparsecount + " - DIR entry confirmation: ", true);
-                log.MakeLog(indexData[dirnum].typeID, true);
+                log.MakeLog(string.Format("P{0} - DIR confirmation: {1}", packageparsecount, indexData[dirnum].typeID), true);
 
                 //dbpfFile.Seek(this.chunkOffset + indexData[dirnum].offset, SeekOrigin.Begin);
                 readFile.BaseStream.Position = this.chunkOffset + indexData[dirnum].offset;
@@ -263,26 +245,21 @@ namespace SimsCCManager.Packages.Sims2Search
                     numRecords = indexData[dirnum].filesize / 16;
                 }  
 
+                log.MakeLog(string.Format("P{0}/DIR - Number of compressed records in entry: {1}", packageparsecount, numRecords), true);
                 log.MakeLog("P" + packageparsecount + " - Number of compressed records in entry:" + numRecords, true);
                 
                 for (int c = 0; c < numRecords; c++)
                 {
                     indexEntry holderEntry = new indexEntry();
-                    log.MakeLog("P" + packageparsecount + " - Reading compressed record #" + c, true);
                     typeID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Type ID is " + typeID, true);
                     groupID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Group ID is " + groupID, true);
                     instanceID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Instance ID is " + instanceID, true);
                     holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
-                    //Console.WriteLine(holderEntry.instanceID);
                     allInstanceIDs.Add(holderEntry.instanceID.ToString());
-                    log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
                     if (indexMajorVersion == 7 && indexMinorVersion == 1) instanceID2 = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": InstanceID2 is " + instanceID2, true);
                     myFilesize = readFile.ReadUInt32();
-                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Filesize is " + myFilesize, true);
+
+                    log.MakeLog(string.Format("P{0}/DIR CR#{1} - Details: \n-- TypeID: {2}\n-- GroupID: {3}\n-- InstanceID: {4}\n-- InstanceID2: {5}\n-- FileSize: {6}", packageparsecount, c, typeID, groupID, instanceID, instanceID2, myFilesize), true);
 
                     foreach (indexEntry idx in indexData) 
                     {
@@ -294,16 +271,12 @@ namespace SimsCCManager.Packages.Sims2Search
                                 {
                                     idx.compressed = true;
                                     idx.truesize = myFilesize;
-                                    log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Index entry filesize is " + myFilesize, true);
-                                    break;
                                 }
                             } 
                             else
                             {
                                 idx.compressed = true;
                                 idx.truesize = myFilesize;
-                                log.MakeLog("P" + packageparsecount + " - CR#" + c + ": Index entry filesize is " + myFilesize, true);
-                                break;
                             }
                         }
                     }
@@ -311,9 +284,7 @@ namespace SimsCCManager.Packages.Sims2Search
             }
             
             if (fileHas.Exists(x => x.TypeID == "DIR")) {
-                //dbpfFile.Seek(chunkOffset + indexData[dirnum].offset, SeekOrigin.Begin);
                 readFile.BaseStream.Position = chunkOffset + indexData[dirnum].offset;
-                log.MakeLog("Entry offset: " + indexData[dirnum].offset, true);
                 if ((indexMajorVersion == 7) && indexMinorVersion == 1)
                 {
                     numRecords = indexData[dirnum].filesize / 20;
@@ -321,48 +292,41 @@ namespace SimsCCManager.Packages.Sims2Search
                     numRecords = indexData[dirnum].filesize / 16;
                 }
 
-                log.MakeLog("Reading compressed entries from " + typefound, true);
-                log.MakeLog("Number of records: " + numRecords, true);
+                log.MakeLog(string.Format("P{0}/DIR - Reading compressed entries, of which there are {1}", packageparsecount, numRecords), true);
                 
                 for (int j = 0; j < numRecords; j++) {
                     indexEntry holderEntry = new indexEntry();
-                    log.MakeLog("", true);
-                    log.MakeLog("Compressed Entry #" + j, true);
                     typeID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("TypeID: "+ typeID, true);
                     groupID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("GroupID: "+ groupID, true);
                     instanceID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog("InstanceID: "+ instanceID, true);
                     holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
-                    //Console.WriteLine(holderEntry.instanceID);
                     allInstanceIDs.Add(holderEntry.instanceID.ToString());
-                    log.MakeLog("P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID, true);
+                    instanceID2 = "";
                     if (indexMajorVersion == 7 && indexMinorVersion == 1) {
                         instanceID2 = readFile.ReadUInt32().ToString("X8");
-                        log.MakeLog("InstanceID2: "+ instanceID2, true);
                     }
                     compfilesize = readFile.ReadUInt32();
-                    log.MakeLog("Filesize: "+ compfilesize, true);
+
+                    log.MakeLog(string.Format("P{0}/DIR CR#{1} - Details: \n-- TypeID: {2}\n-- GroupID: {3}\n-- InstanceID: {4}\n-- InstanceID2: {5}\n-- FileSize: {6}", packageparsecount, j, typeID, groupID, instanceID, instanceID2, compfilesize), true);
 
                     int idxcount = 0;      
                     foreach (indexEntry idx in indexData) {
                         typefound = "";
                         idxcount++;
-                        log.MakeLog("This idx type is: " + idx.typeID, true);
-                        foreach (typeList type in TypeListings.AllTypesS2) {
-                            if (idx.typeID == type.typeID) {
-                                log.MakeLog("Matched to: " + type.desc, true);
-                                typefound = type.desc;
-                            }
+
+                        List<typeList> type = GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S2Types where TypeID='{0}'", holderEntry.typeID));
+                    
+                        if(type.Any()){                        
+                            log.MakeLog(string.Format("P{0}/DIR CR#{1} - Index Type: {1}, which is {2}", packageparsecount, j, idx.typeID, type[0].desc), true);
+                            typefound = type[0].desc;
                         }
-                        log.MakeLog("Now reading IDX " + idxcount, true);
+
+                        log.MakeLog(string.Format("P{0}/DIR CR#{1} - Now reading IDX {2}", packageparsecount, j, idxcount), true);
                         cFileSize = 0;
                         cTypeID = "";
 
                         if (typefound == "CTSS"){
-                            log.MakeLog("Confirming found " + typefound, true);
-                            //dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                            log.MakeLog(string.Format("P{0}/DIR CR#{1} - CTSS found. Confirmation: {1}", packageparsecount, j, typefound), true);
                             readFile.BaseStream.Position = this.chunkOffset + idx.offset;
                             cFileSize = readFile.ReadInt32();
 							cTypeID = readFile.ReadUInt16().ToString("X4");
@@ -378,24 +342,21 @@ namespace SimsCCManager.Packages.Sims2Search
 							} 
 							else 
 							{
-								//dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
-                                readFile.BaseStream.Position = this.chunkOffset + idx.offset;
+								readFile.BaseStream.Position = this.chunkOffset + idx.offset;
 								ctssvar = readentries.readCTSSchunk(readFile);
 							}
                         } else if (typefound == "XOBJ" || typefound == "XFNC" || typefound == "XFLR" || typefound == "XMOL" || typefound == "XROF"  || typefound == "XTOL"  || typefound == "XHTN"){
-                            log.MakeLog("Confirming found " + typefound + " and moving forward.", true);
-                            //dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
+                            log.MakeLog(string.Format("P{0}/DIR CR#{1} - Now reading IDX {2}: {3}", packageparsecount, j, idxcount, typefound), true);
                             readFile.BaseStream.Position = this.chunkOffset + idx.offset;
                             cFileSize = readFile.ReadInt32();
                             cTypeID = readFile.ReadUInt16().ToString("X4");
-                            log.MakeLog(typefound + " size: " + cFileSize + ", ctypeid: " + cTypeID, true);
+                            log.MakeLog(string.Format("P{0}/DIR CR#{1} - {2} has a size of {3} and a compression type of {4}", packageparsecount, j, idxcount, typefound, cFileSize, cTypeID), true);
                             if (cTypeID == "FB10"){
                                 log.MakeLog("FB10 confirmed.", true);
                                 byte[] tempBytes = readFile.ReadBytes(3);
                                 uint cFullSize = readentries.QFSLengthToInt(tempBytes);
-                                log.MakeLog("cFullSize is: " + cFileSize, true);
                                 string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-                                log.MakeLog("cpfTypeID is: " + cpfTypeID, true);
+                                log.MakeLog(string.Format("P{0}/DIR CR#{1} - {2} has a full size of {3} and a compression type of {4}", packageparsecount, j, idxcount, cFullSize, cpfTypeID), true);
                                 if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")){
                                     dirvar = readentries.readCPFchunk(readFile);
                                     log.MakeLog("Real CPF file. Processing as CPF chunk.",true);
@@ -408,18 +369,15 @@ namespace SimsCCManager.Packages.Sims2Search
                                     {
                                         // Read first four bytes
                                         cpfTypeID = decompressed.ReadUInt32().ToString("X8");
-                                        log.MakeLog("Secondary cpf type id: " + cpfTypeID, true);
                                         if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
                                         {
                                             log.MakeLog("Real CPF. Decompressing.", true);
                                             dirvar = readentries.readCPFchunk(decompressed);
-                                            log.MakeLog("dirvar returned with: " + dirvar.ToString(), true);
                                         } 
                                     } else 
                                     {
                                         log.MakeLog("Actually an XML. Reading.", true);
                                         dirvar = readentries.readXMLchunk(decompressed);
-                                        log.MakeLog("dirvar returned with: " + dirvar.ToString(), true);
                                     }
                                 }
 
@@ -437,35 +395,32 @@ namespace SimsCCManager.Packages.Sims2Search
 
             if (fileHas.Exists(x => x.TypeID == "OBJD")) {
                 
-                var obd = from has in fileHas
+                IEnumerable<int> obd = from has in fileHas
                             where has.TypeID == "OBJD"
                             select has.Location;
                 objdnum = obd.ToList();
+                obd = Enumerable.Empty<int>();
 
-
+                int obb = 0;
                 
                 foreach (int objloc in objdnum) {
-                    log.MakeLog(string.Format("---------- [{0}]", objloc), true);               
+                    obb++;               
                     
                     readFile.BaseStream.Position = this.chunkOffset + indexData[objloc].offset;
                     cFileSize = readFile.ReadInt32();
-                    log.MakeLog("P" + packageparsecount + " - OBJD filesize is: " + cFileSize, true);
                     cTypeID = readFile.ReadUInt16().ToString("X4");
-                    log.MakeLog("P" + packageparsecount + " - OBJD ctypeID is: " + cTypeID, true);
                     if (cTypeID == "FB10")
                     {
-                        log.MakeLog("P" + packageparsecount + " - OBJD ctypeID confirmed as: " + cTypeID, true);
                         byte[] tempBytes = readFile.ReadBytes(3);
-                        log.MakeLog("P" + packageparsecount + " - OBJD temp bytes are: " + tempBytes, true);
                         uint cFullSize = readentries.QFSLengthToInt(tempBytes);
-                        log.MakeLog("P" + packageparsecount + " - OBJD size is: " + cFullSize, true);
+
+                        log.MakeLog(string.Format("P{0}/OBJD{1} - Details: \n-- FileSize: {2}\n-- cTypeID: {3}\n-- Full Size: {4}", packageparsecount, obb, cFileSize, cTypeID, cFullSize), true);
+
                         DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
                         objdvar = readentries.readOBJDchunk(decompressed);
-                        log.MakeLog("objdvar returned with: " + objdvar.ToString(), true);
                     } else { 
                         readFile.BaseStream.Position = this.chunkOffset + indexData[objloc].offset;
                         objdvar = readentries.readOBJDchunk(readFile);
-                        log.MakeLog("objdvar returned with: " + objdvar.ToString(), true);
                     }
                 }
                 
@@ -473,20 +428,21 @@ namespace SimsCCManager.Packages.Sims2Search
 
             if (fileHas.Exists(x => x.TypeID == "STR#"))
             {
-                var strr = from has in fileHas
+                IEnumerable<int> strr = from has in fileHas
                             where has.TypeID == "STR#"
                             select has.Location;
                 strnm = strr.ToList();
+                strr = Enumerable.Empty<int>();
+
+                int st = 0;
                 
                 foreach (int strloc in strnm) {
-                    log.MakeLog("P" + packageparsecount + " - STR entry confirmation: ", true);
-                    log.MakeLog(indexData[strloc].typeID, true);
+                    st++;
                     //dbpfFile.Seek(chunkOffset + indexData[strloc].offset, SeekOrigin.Begin);
                     readFile.BaseStream.Position = chunkOffset + indexData[strloc].offset;
                     cFileSize = readFile.ReadInt32();
-                    log.MakeLog("P" + packageparsecount + " - STR entry size: " + cFileSize, true);
                     cTypeID = readFile.ReadUInt16().ToString("X4");
-                    log.MakeLog("P" + packageparsecount + " - STR entry typeid: " + cTypeID, true);
+                    log.MakeLog(string.Format("P{0}/STR{1} - Details: \n-- FileSize: {2}\n-- cTypeID: {3}", packageparsecount, st, cFileSize, cTypeID), true);
                     if (cTypeID == "FB10")
                     {
                         byte[] tempBytes = readFile.ReadBytes(3);
@@ -495,12 +451,10 @@ namespace SimsCCManager.Packages.Sims2Search
                         DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
                         strvar = readentries.readSTRchunk(decompressed);
-                        log.MakeLog("strvar returned with: " + strvar.ToString(), true);
                     } 
                     else 
                     {
                         objdvar = readentries.readSTRchunk(readFile);
-                        log.MakeLog("strvar returned with: " + strvar.ToString(), true);
                     }                    
                 }
                 
@@ -508,12 +462,12 @@ namespace SimsCCManager.Packages.Sims2Search
             if (fileHas.Exists(x => x.TypeID == "MMAT"))
             {
                 List<int> entryspots = new List<int>();
-                var csp = from has in fileHas
+                IEnumerable<int> csp = from has in fileHas
                         where has.TypeID == "MMAT"
                         select has.Location;
                 entryspots = csp.ToList();
+                csp = Enumerable.Empty<int>();
                 mmatloc = entryspots[0];
-                //dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
                 readFile.BaseStream.Position = this.chunkOffset + indexData[mmatloc].offset;
                 cFileSize = readFile.ReadInt32();
                 cTypeID = readFile.ReadUInt16().ToString("X4");
@@ -578,12 +532,13 @@ namespace SimsCCManager.Packages.Sims2Search
             if (fileHas.Exists(x => x.TypeID == "SHPE"))
             {   
                 List<int> entryspots = new List<int>();
-                var csp = from has in fileHas
+                IEnumerable<int> csp = from has in fileHas
                         where has.TypeID == "SHPE"
                         select has.Location;
                 entryspots = csp.ToList();
+                csp = Enumerable.Empty<int>();
                 int entryloc = entryspots[0];
-                //dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+                
                 readFile.BaseStream.Position = this.chunkOffset + indexData[entryloc].offset;
                 cFileSize = readFile.ReadInt32();
                 cTypeID = readFile.ReadUInt16().ToString("X4");
@@ -722,24 +677,30 @@ namespace SimsCCManager.Packages.Sims2Search
             //log.MakeLog("Strvar contains: " + strvar.ToString(), true);
 
             List<TypeCounter> typecount = new List<TypeCounter>();
-            var typeDict = new Dictionary<string, int>();
+            Dictionary<string, int> typeDict = new Dictionary<string, int>();
+
+            List<typeList> typse = GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S2Types"));
 
             foreach (fileHasList item in fileHas){
-                foreach (typeList type in TypeListings.AllTypesS2){
+                foreach (typeList type in typse){
                     if (type.desc == item.TypeID){
+                        //log.MakeLog(string.Format("Added {0} to dictionary.", type.desc), true);
                         typeDict.Increment(type.desc);
                     }
                 }
-            }
-            
+            }            
 
             foreach (KeyValuePair<string, int> type in typeDict){
                 TypeCounter tc = new TypeCounter();
                 tc.Type = type.Key;
                 tc.Count = type.Value;
-                log.MakeLog("There are " + tc.Type + " of " + tc.Count + " in this package.", true);
+                log.MakeLog(string.Format("There are {0} of {1} in this package.", tc.Type, tc.Count), true);
                 typecount.Add(tc);
             }
+            typeDict = new Dictionary<string, int>();
+            typse = new List<typeList>();
+
+
             thisPackage.FileHas.AddRange(fileHas);
             thisPackage.Entries.AddRange(typecount);
 
@@ -749,90 +710,66 @@ namespace SimsCCManager.Packages.Sims2Search
 
             if ((typeDict.TryGetValue("XNGB", out xngb) && xngb >= 1) && (typeDict.TryGetValue("STR#", out str) && str >= 1)){
                 thisPackage.Type = "Floor";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("TXTR", out txtr) && txtr >= 1) && (typeDict.TryGetValue("STR#", out str) && str >= 1) && (typeDict.TryGetValue("DIR", out dir) && dir >= 1) && (typeDict.TryGetValue("TXMT", out txmt) && txmt >= 1) && (typeDict.TryGetValue("SHPE", out shpe) && shpe <= 0) && (typeDict.TryGetValue("BCON", out bcon) && bcon <= 0) && (typeDict.TryGetValue("BHAV", out bhav) && bhav <= 0) && (typeDict.TryGetValue("MMAT", out mmat) && mmat <= 0) && (typeDict.TryGetValue("OBJF", out objf) && objf <= 0) && (typeDict.TryGetValue("OBJD", out objd) && objd <= 0) && (typeDict.TryGetValue("CLST", out clst) && clst <= 0)){
                 thisPackage.Type = "Floor";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("TXTR", out txtr) && txtr >= 1) && (typeDict.TryGetValue("STR#", out str) && str >= 1) && (typeDict.TryGetValue("DIR", out dir) && dir >= 1) && (typeDict.TryGetValue("SHPE", out shpe) && shpe <= 0) && (typeDict.TryGetValue("BCON", out bcon) && bcon <= 0) && (typeDict.TryGetValue("BHAV", out bhav) && bhav <= 0) && (typeDict.TryGetValue("MMAT", out mmat) && mmat <= 0) && (typeDict.TryGetValue("OBJF", out objf) && objf <= 0) && (typeDict.TryGetValue("OBJD", out objd) && objd <= 0) && (typeDict.TryGetValue("CLST", out clst) && clst <= 0) && (typeDict.TryGetValue("XOBJ", out xobj) && xobj <= 0)){
                 thisPackage.Type = "Terrain Paint";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("BCON", out bcon) && bcon >= 1) && (typeDict.TryGetValue("BHAV", out bhav) && bhav >= 1) && (typeDict.TryGetValue("CRES", out cres) && cres >= 1) && (typeDict.TryGetValue("CTSS", out ctss) && ctss >= 1)){
                 thisPackage.Type = "Functional Object";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("COLL", out coll) && coll >= 1)){
                 thisPackage.Type = "Collection";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("BCON", out bcon) && bcon >= 1) && (typeDict.TryGetValue("TRCN", out trcn) && trcn >= 1) && (typeDict.TryGetValue("BHAV", out bhav) && bhav <= 0) && (typeDict.TryGetValue("TTAB", out ttab) && ttab <= 0)){
                 thisPackage.Type = "Tuning Mod";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("BHAV", out bhav) && bhav >= 1) && (typeDict.TryGetValue("GLOB", out glob) && glob >= 1) && (typeDict.TryGetValue("OBJD", out objd) && objd >= 1) && (typeDict.TryGetValue("GMDC", out gmdc) && gmdc <= 0) && (typeDict.TryGetValue("GMND", out gmnd) && gmnd <= 0)){
                 thisPackage.Type = "Mod";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("MMAT", out mmat) && mmat >= 1) && (typeDict.TryGetValue("DIR", out dir) && dir >= 1) && (typeDict.TryGetValue("TXTR", out txtr) && txtr >= 1) && (typeDict.TryGetValue("GMDC", out gmdc) && gmdc <= 0) && (typeDict.TryGetValue("GMND", out gmnd) && gmnd <= 0)){
                 thisPackage.Type = "Object Recolor";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("BHAV", out bhav) && bhav >= 1) && (typeDict.TryGetValue("GMND", out gmnd) && gmnd >= 1) && (typeDict.TryGetValue("GMDC", out gmdc) && gmdc >= 1) && (typeDict.TryGetValue("SHPE", out shpe) && shpe >= 1)){
                 thisPackage.Type = "Object Mesh";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("BHAV", out bhav) && bhav >= 1) && (typeDict.TryGetValue("GMND", out gmnd) && gmnd >= 1) && (typeDict.TryGetValue("GMDC", out gmdc) && gmdc >= 1) && (typeDict.TryGetValue("CTSS", out ctss) && ctss >= 1)){
                 thisPackage.Type = "Object";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("TXMT", out txmt) && txmt >= 1) && (typeDict.TryGetValue("TXTR", out txtr) && txtr >= 1) && (typeDict.TryGetValue("GZPS", out gzps) && gzps >= 1) && (typeDict.TryGetValue("GMND", out gmnd) && gmnd <= 0) && (typeDict.TryGetValue("GMDC", out gmdc) && gmdc <= 0) && (typeDict.TryGetValue("CRES", out cres) && cres <= 0)){
                 thisPackage.Type = "Clothing Recolor";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("SHPE", out shpe) && shpe >= 1) && (typeDict.TryGetValue("CRES", out cres) && cres >= 1) && (typeDict.TryGetValue("GMDC", out gmdc) && gmdc >= 1) && (typeDict.TryGetValue("OBJD", out objd) && objd <= 0)){
                 thisPackage.Type = "Body Mesh";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("XHTN", out xhtn) && xhtn >= 1) && (typeDict.TryGetValue("SHPE", out shpe) && shpe >= 1)){
                 thisPackage.Type = "Hair";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);  
             } else if ((typeDict.TryGetValue("XHTN", out xhtn) && xhtn >= 1) && (typeDict.TryGetValue("SHPE", out shpe) && shpe == 0)){
                 thisPackage.Type = "Hair Recolor";
-                log.MakeLog("This is a " + thisPackage.Type + "!!", true);           
             } else if ((typeDict.TryGetValue("GMDC", out gmdc) && gmdc >= 1) && (typeDict.TryGetValue("GMND", out gmnd) && gmnd >= 1) && (typeDict.TryGetValue("SHPE", out shpe) && shpe >= 1)) {
                 thisPackage.Type = "Misc Mesh";
-                log.MakeLog("This is some kind of mesh!!", true);
             } else {
                 thisPackage.Type = "Currently Unknown";
-                log.MakeLog("Logging as currently unknown.", true);
             }
+            
+            log.MakeLog(string.Format("P{0} is a {1}", packageparsecount, thisPackage.Type), true);  
         
            
             #region Get Title & Description 
             
             if (!String.IsNullOrWhiteSpace(ctssvar.Title)) {
-                log.MakeLog("Getting title " + ctssvar.Title + " from ctssvar.", true);
                 thisPackage.Title = ctssvar.Title;
             } else if (!String.IsNullOrWhiteSpace(dirvar.Title)){
-                log.MakeLog("Getting title " + dirvar.Title + " from dirvar.", true);
                 thisPackage.Title = dirvar.Title;
             } else if (!String.IsNullOrWhiteSpace(objdvar.Title)) {
-                log.MakeLog("Getting title " + objdvar.Title + " from objdvar.", true);
                 thisPackage.Title = objdvar.Title;
             } else if (!String.IsNullOrWhiteSpace(strvar.Title)) {
-                log.MakeLog("Getting title " + strvar.Title + " from strvar.", true);
                 thisPackage.Title = strvar.Title;
             } else if (!String.IsNullOrWhiteSpace(mmatvar.Title)) {
-                //Console.WriteLine("Mmatvar has content.");
-                log.MakeLog("Getting title " + mmatvar.Title + " from mmatvar.", true);
+                thisPackage.Title = mmatvar.Title;
             }
 
 
             if (!String.IsNullOrWhiteSpace(ctssvar.Description)){
-                log.MakeLog("Getting description " + ctssvar.Description + " from ctssvar.", true);
                 thisPackage.Description = ctssvar.Description;
             } else if (!String.IsNullOrWhiteSpace(dirvar.Description)) {
-                log.MakeLog("Getting description " + dirvar.Description + " from dirvar.", true);
                 thisPackage.Description = dirvar.Description;
             } else if (!String.IsNullOrWhiteSpace(objdvar.Description)) {
-                log.MakeLog("Getting title " + objdvar.Title + " from objdvar.", true);
                 thisPackage.Description = objdvar.Description;
             } else if (!String.IsNullOrWhiteSpace(strvar.Description)) {
-                log.MakeLog("Getting title " + strvar.Title + " from strvar.", true);
                 thisPackage.Description = strvar.Description;
             } else if (!String.IsNullOrWhiteSpace(mmatvar.Description)) {
                 thisPackage.Title = mmatvar.Title;
-                log.MakeLog("Getting title " + mmatvar.Title + " from mmatvar.", true);
                 thisPackage.Description = mmatvar.Description;
             }
 
@@ -841,35 +778,27 @@ namespace SimsCCManager.Packages.Sims2Search
             #region Get Info
 
                 if (!String.IsNullOrWhiteSpace(dirvar.Subtype)){
-                    log.MakeLog("Getting Subtype " + dirvar.Subtype + " from dirvar.", true);
                     thisPackage.Subtype = dirvar.Subtype;
                 }
                 if (!String.IsNullOrWhiteSpace(dirvar.Type)){
-                    log.MakeLog("Getting Type " + dirvar.Type + " from dirvar.", true);
                     thisPackage.Type = dirvar.Type;
                 }
                 if (!String.IsNullOrWhiteSpace(dirvar.Category)){
-                    log.MakeLog("Getting Category " + dirvar.Category + " from dirvar.", true);
                     thisPackage.Category = dirvar.Category;
                 }
                 if (!String.IsNullOrWhiteSpace(dirvar.ModelName)){
-                    log.MakeLog("Getting ModelName " + dirvar.ModelName + " from dirvar.", true);
                     thisPackage.ModelName = dirvar.ModelName;
                 }
                 if (dirvar.GUIDs?.Any() != true){
-                    log.MakeLog("Getting GUID " + dirvar.GUIDs.ToString() + " from dirvar.", true);
                     allGUIDS.AddRange(objdvar.GUIDs);
                 }
                 if (!String.IsNullOrWhiteSpace(dirvar.Creator)){
-                    log.MakeLog("Getting Creator " + dirvar.Creator + " from dirvar.", true);
                     thisPackage.Creator = dirvar.Creator;
                 }
                 if (!String.IsNullOrWhiteSpace(dirvar.Age)){
-                    log.MakeLog("Getting Age " + dirvar.Age + " from dirvar.", true);
                     thisPackage.Age = dirvar.Age;
                 }
                 if (!String.IsNullOrWhiteSpace(dirvar.Gender)){
-                    log.MakeLog("Getting Gender " + dirvar.Gender + " from dirvar.", true);
                     thisPackage.Gender = dirvar.Gender;
                 }
 
@@ -878,18 +807,13 @@ namespace SimsCCManager.Packages.Sims2Search
             #region Get Function
 
                 if (!String.IsNullOrWhiteSpace(objdvar.Function)){
-                    log.MakeLog("Getting Function " + objdvar.Function + " from objdvar.", true);
                     thisPackage.Function = objdvar.Function;
                 }
                 if (!String.IsNullOrWhiteSpace(objdvar.Function)){
-                    log.MakeLog("Getting FunctionSubcategory " + objdvar.FunctionSubcategory + " from objdvar.", true);
                     thisPackage.FunctionSubcategory = objdvar.FunctionSubcategory;
                 }
-                log.MakeLog("Getting RequiredEPs " + objdvar.RequiredEPs.ToString() + " from objdvar.", true);
                 thisPackage.RequiredEPs = objdvar.RequiredEPs;
-                log.MakeLog("Getting RoomSort " + objdvar.RoomSort.ToString() + " from objdvar.", true);
-                thisPackage.RoomSort = objdvar.RoomSort;                
-                log.MakeLog("Getting GUID " + objdvar.GUIDs.ToString() + " from objdvar.", true);
+                thisPackage.RoomSort = objdvar.RoomSort;
                 allGUIDS.AddRange(objdvar.GUIDs);
 
             if (thisPackage.Type == "floor") {
@@ -914,8 +838,15 @@ namespace SimsCCManager.Packages.Sims2Search
             thisPackage.InstanceIDs.AddRange(distinctInstanceIDs);
             distinctGUIDS = allGUIDS.Distinct().ToList();
             thisPackage.GUIDs.AddRange(distinctGUIDS);
-            log.MakeLog("Package Summary: " + thisPackage.SimsPackagetoString(), true);
-            log.MakeLog(thisPackage.SimsPackagetoString(), false);
+            dbpfFile.Close();
+            readFile.Dispose();
+            dbpfFile.Dispose();
+            if (GlobalVariables.sortonthego == true){
+                thisPackage = filesort.SortPackage(thisPackage);
+            }
+
+            log.MakeLog(string.Format("P{0} - Package Summary: {1}", packageparsecount, thisPackage.SimsPackagetoString()), true);
+            log.MakeLog(string.Format("P{0} - Package Summary: {1}", packageparsecount, thisPackage.SimsPackagetoString()), false);
             //Containers.Containers.allSimsPackages.Add(thisPackage);
             log.MakeLog(string.Format("Adding {0} to packages database.", thisPackage.PackageName), true);
             try {
@@ -926,9 +857,10 @@ namespace SimsCCManager.Packages.Sims2Search
             
             log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
             txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
-            var closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
+            List<PackageFile> closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
             GlobalVariables.DatabaseConnection.Delete(closingquery[0]);
 
+            closingquery = new List<PackageFile>();
             objdnum = new List<int>();   
             strnm = new List<int>();
             thisPackage = new SimsPackage();
@@ -945,9 +877,7 @@ namespace SimsCCManager.Packages.Sims2Search
             allGUIDS = new List<string>();      
             distinctGUIDS = new List<string>();  
             allInstanceIDs = new List<string>();      
-            distinctInstanceIDs = new List<string>();  
-            readFile.Dispose();
-            //dbpfFile.Dispose();
+            distinctInstanceIDs = new List<string>(); 
             log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
             sw.Stop();
             TimeSpan ts = sw.Elapsed;
@@ -960,17 +890,16 @@ namespace SimsCCManager.Packages.Sims2Search
             
         }
 
-        public void S2FindOrphans(SimsPackage package) {  
+        public void S2FindOrphans(SimsPackage package, int packageparsecount) {  
             List<string> guids = new List<string>();  
-            log.MakeLog("Reading " + package.PackageName + " and checking for orphaned recolors.", true);        
+            log.MakeLog(string.Format("P{0} - Reading {1} and checking for orphaned recolors.", packageparsecount, package.PackageName), true);
             if ((package.Mesh == false) && (package.Recolor == true)){
-                log.MakeLog(package.PackageName + ": Package has no mesh.", true);                
+                log.MakeLog(string.Format("P{0} - Package has no mesh.", packageparsecount), true);     
                 foreach (string guid in package.GUIDs) {
 
                 }
             }
             if ((package.Mesh == true) && (package.Recolor == false)){
-                log.MakeLog(package.PackageName + ": Package has a mesh and no recolor.", true);  
                 foreach (string guid in package.GUIDs) {
                     
                 }
@@ -979,7 +908,8 @@ namespace SimsCCManager.Packages.Sims2Search
 
         public void S2RenamePackages(SimsPackage package){
             FileInfo og = new FileInfo(package.Location);
-            string newlocation = og.Directory + "\\" + package.Title + ".package";
+            string newname = string.Format("{0}.package", package.Title);
+            string newlocation = Path.Combine(og.DirectoryName, newname);
             if (File.Exists(newlocation)){
                 //do nothing, throw an error at some point
             } else {

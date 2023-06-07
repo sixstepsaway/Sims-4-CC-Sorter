@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:SimsCCManager.SortingUIResults"
         mc:Ignorable="d"
         Title="Results" Height="Auto" Width="Auto" SizeToContent="Manual"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        Icon="img\simsccmanagericon.ico">
         <Window.Resources>
             <Style x:Key="ResultsDataGridStyle" TargetType="ListView">
                 <Setter Property="Background" Value="#C1C0DE"/>
@@ -20,8 +21,6 @@
             </Style>
              <Style TargetType="ListViewItem">
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            </Style>
-            <Style TargetType="{x:Type ListViewItem}">
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding Override}" Value="True">
                       <Setter Property="Background" Value="Red" />
@@ -31,12 +30,6 @@
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
-            <ContextMenu x:Key="cmButton">
-                <MenuItem Header="Menu item 1" />
-                <MenuItem Header="Menu item 2" />
-                <Separator />
-                <MenuItem Header="Menu item 3" />
-            </ContextMenu>
             <DataTemplate x:Key="FirstCell">
                 <StackPanel Orientation="Horizontal">
                   <CheckBox IsChecked="{Binding Path=IsSelected, 
@@ -60,54 +53,49 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="10"/>
                     <RowDefinition/>
-                    <RowDefinition Height="150"/>
+                    <RowDefinition Height="120"/>
+                    <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
                 <Border Grid.Row="0" Grid.Column="0"  Background="#FFBABFEC" />
-                <Border Grid.Row="1" Grid.Column="0"  Background="#FFBABFEC" />
-                <Border Grid.Row="2" Grid.Column="0"  Background="#FFBABFEC" />
-                <Border Grid.Row="3" Grid.Column="2"  Background="#FFBABFEC" />
-                <Border Grid.Row="1" Grid.Column="2"  Background="#FFBABFEC" />
                 <Border Grid.Row="0" Grid.Column="2"  Background="#FFBABFEC" />
+                <Border Grid.Row="1" Grid.Column="0"  Background="#FFBABFEC" />
+                <Border Grid.Row="1" Grid.Column="2"  Background="#FFBABFEC" />
+                <Border Grid.Row="1" Grid.Column="2"  Background="#FFBABFEC" />
+                <Border Grid.Row="2" Grid.Column="0"  Background="#FFBABFEC" />
                 <Border Grid.Row="2" Grid.Column="1"  Background="#FFBABFEC" />
+                <Border Grid.Row="2" Grid.Column="2"  Background="#FFBABFEC" />
+                <Border Grid.Row="3" Grid.Column="0"  Background="#FFBABFEC" />
+                <Border Grid.Row="3" Grid.Column="1"  Background="#FFBABFEC" />
+                <Border Grid.Row="3" Grid.Column="2"  Background="#FFBABFEC" />
+                
+                
+                
                     
-                <StackPanel x:Name="MenuBar" Grid.Column="0" Orientation="Vertical" VerticalAlignment="Center" Grid.Row="1">
-                    <Button Click="menu_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
-                        <Image Source="img\icons\headline_gears 2d62d7495b01c1a8.png"/>
+                <StackPanel x:Name="MenuBar" Grid.Column="0" Orientation="Vertical" VerticalAlignment="Bottom" Grid.Row="1">
+                    <Rectangle Height="2" Fill="#AAA1CC"/>
+                    <Button Click="menu_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5" Padding="0" Background="Transparent">
+                        <Image Width="50" Source="img\icons\headline_gears 2d62d7495b01c1a8.png"/>
                     </Button>
-                    <Button Click="Kofi_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5">
-                        <Image Source="img\ko-fi_logo-2039355488.png"/>
-                    </Button>
+                    <Rectangle Height="2" Fill="#AAA1CC"/>
                 </StackPanel>                   
                 <ListView x:Name="ResultsView" Validation.ErrorTemplate="{x:Null}" IsSynchronizedWithCurrentItem="True" Style="{StaticResource ResultsDataGridStyle}" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Packages}" SelectedItem="{Binding SelectedFileInfo}" GridViewColumnHeader.Click="ListViewHeader_Click" SelectionMode="Extended">
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="{x:Type ListViewItem}"  >
-                          <Setter Property="Template"
-                                Value="{StaticResource Default}"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding XPath=@Rating}" Value="5">
-                                    <Setter Property="Template" 
-                                    Value="{StaticResource Override}"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding XPath=@Rating}" Value="4">
-                              <Setter Property="Template" 
-                                    Value="{StaticResource Recommended}"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </ListView.ItemContainerStyle>
                     <ListView.Resources>
                         <Style TargetType="{x:Type ListViewItem}">                        
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Type}" Value="OVERRIDE">
-                                    <Setter Property="Background" Value="#ffffff" />
+                                    <Setter Property="Background" Value="#D3C4D0" />
                                 </DataTrigger>
-                            </Style.Triggers>        
+                                <DataTrigger Binding="{Binding MatchingConflicts}" Value="*">
+                                    <Setter Property="Background" Value="#9274B6" />
+                                </DataTrigger>
+                            </Style.Triggers>
                         </Style>
                     </ListView.Resources>
                     <ListView.ContextMenu> 
                         <ContextMenu> 
                             <MenuItem Header="Move File" Command="{Binding MoveFile}"></MenuItem> 
                             <MenuItem Header="Delete" Command="{Binding DeleteFile}"></MenuItem> 
+                            <MenuItem Header="Rename from Title" Command="{Binding RenameFile}"></MenuItem> 
                             <MenuItem Header="Show Tags" Command="{Binding ShowTags}"></MenuItem> 
                             <MenuItem Header="Remove a Tag" Command="{Binding RemoveTag}"></MenuItem> 
                             <MenuItem Header="Add a Tag" Command="{Binding AddTag}"></MenuItem> 
@@ -179,12 +167,28 @@
                         </GridView>
                     </ListView.View>
                 </ListView>
-                <Grid Grid.Column="1" VerticalAlignment="Bottom" Margin="15, 15, 0, 10" Grid.Row="3">
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Grid.Column="1" Margin="10, 0, 0, 0" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <Button Name="TwitterButton"   Height="20" Margin="0, 0, 10, 0" Padding="0" Click="Twitter_Click" Background="Transparent" BorderThickness="0">
+                        <Image Source="img\twittericon_w.png"/>
+                    </Button> 
+                    <Button Name="KofiButton" Grid.Column="0" Grid.Row="3" Height="20" Margin="0, 0, 10, 0" Padding="0" Click="Kofi_Click" Background="Transparent" BorderThickness="0">
+                        <Image Source="img\kofiicon_w.png"/>
+                    </Button> 
+                    <Button Name="GitButton" Grid.Column="1" Grid.Row="3" Height="20" Margin="0, 0, 10, 0" Padding="0" Click="Git_Click" Background="Transparent" BorderThickness="0">
+                        <Image Source="img\githubicon_w.png"/>
+                    </Button> 
+                    <Button Name="DiscordButton" Grid.Column="1" Grid.Row="3" Height="20" Margin="0, 0, 10, 0" Padding="0" Click="Discord_Click" Background="Transparent" BorderThickness="0">
+                        <Image Source="img\discordicon_w.png"/>
+                    </Button>
+                </StackPanel>
+                  
+                <Grid Grid.Column="1" VerticalAlignment="Center" Margin="15, 15, 0, 10" Grid.Row="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="100"/>
                         <ColumnDefinition Width="100"/>
                         <ColumnDefinition Width="125"/>
                         <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="150"/>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
@@ -233,22 +237,45 @@
                         IsEditable="false"
                         IsReadOnly="true" Margin="20, 5, 0, 25" Width="180" Height="25" Foreground="#FF372C42" Background="#FFCCD3DA" Text="All"/>
                     </StackPanel>
-                    
+                    <Label Grid.Column="4" Content="Key" Margin="10, 0, 0, 0" FontWeight="ExtraBold" Foreground="#5C65AF"/>
+                    <StackPanel Orientation="Vertical" Grid.Column="4" VerticalAlignment="Center" Margin="10, 0, 0, 0">
+                        <StackPanel Orientation="Horizontal" Margin="0, 0, 0, 2">
+                            <Grid Width="25" Height="15" Background="#D3C4D0">
+                                <Border BorderBrush="#FF41434E" BorderThickness="1"/>
+                            </Grid>
+                            <Label Margin="5, 0, 0, 0" Content="Override" Foreground="#5C65AF" FontWeight="Bold"/>                    
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0, 0, 0, 2">
+                            <Grid Width="25" Height="15" Background="#9274B6">
+                                <Border BorderBrush="#FF41434E" BorderThickness="1"/>
+                            </Grid>
+                            <Label Margin="5, 0, 0, 0" Content="Conflicts" Foreground="#5C65AF" FontWeight="Bold"/>
+                        </StackPanel>
+                    </StackPanel>                 
+                
                 </Grid>
+                
                 
             </Grid>
             
             <Grid x:Name="TagsList" ZIndex="2" Background="Transparent" Width="250" Height="350" Visibility="Hidden">
                 <Border x:Name="ProgressBorder" Background="#9183C1" BorderBrush="#B2BCE9" BorderThickness="2,2,2,2" Padding="0" CornerRadius="10 10 10 10" ClipToBounds="True" Margin="-0,0,0,0"/>
+                <StackPanel Orientation="Vertical">
+                    <Grid Width="250" Height="25" Background="#B2BCE9" >
+                        <Button Click="CloseTagsList_Click" Padding="0" HorizontalAlignment="Right" Width="20" Height="20" Margin="0, 0, 5, 0" Background="Transparent">
+                            <Image  Source="img\icons\fi-sr-cross.png"/>
+                        </Button>
+                        
+                    </Grid>        
                 <ListView ItemsSource="{Binding Packages}" Margin="5" x:Name="TagsListBox">            
                     <ListView.View>
                         <GridView AllowsColumnReorder="True">
-                            <GridViewColumn DisplayMemberBinding="{Binding TypeID}" Width="15">
+                            <GridViewColumn DisplayMemberBinding="{Binding TypeID}" Width="60">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="ID">ID</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>                                        
-                            <GridViewColumn DisplayMemberBinding="{Binding Description}" Width="Auto">
+                            <GridViewColumn DisplayMemberBinding="{Binding Description}" Width="200">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Tag">Tag</GridViewColumnHeader>
                                 </GridViewColumn.Header>
@@ -256,8 +283,7 @@
                         </GridView>
                     </ListView.View>
                 </ListView>
+                </StackPanel>
             </Grid>    
         </Grid>
-        
-        
 </Window>
