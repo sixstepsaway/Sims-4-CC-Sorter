@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "is47cHIxrsKtT3jUltx6gFEYbRreJ2xNzHRGPEAMmzDMwCwo6751SHfcSXiaaVag8c376tr5T6lMB72JlejxYg==",
+  "dgSpecHash": "VXAn3rDzWseZY7A35BWHTsGG2R5m4pGsrNPPeaayTfUG1lgDrBRfsAoxRC1AIFbp7PMv1nl5hmjY6Cw3n90irA==",
   "success": true,
   "projectFilePath": "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.App\\SimsCCManager.App.csproj",
   "expectedPackageFiles": [
@@ -26,7 +26,8 @@
     "C:\\Users\\conta\\.nuget\\packages\\system.security.cryptography.pkcs\\6.0.1\\system.security.cryptography.pkcs.6.0.1.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\system.security.cryptography.xml\\6.0.1\\system.security.cryptography.xml.6.0.1.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\system.security.principal.windows\\5.0.0\\system.security.principal.windows.5.0.0.nupkg.sha512",
-    "C:\\Users\\conta\\.nuget\\packages\\system.servicemodel.primitives\\4.10.2\\system.servicemodel.primitives.4.10.2.nupkg.sha512"
+    "C:\\Users\\conta\\.nuget\\packages\\system.servicemodel.primitives\\4.10.2\\system.servicemodel.primitives.4.10.2.nupkg.sha512",
+    "C:\\Users\\conta\\.nuget\\packages\\system.threading.tasks.dataflow\\7.0.0\\system.threading.tasks.dataflow.7.0.0.nupkg.sha512"
   ],
   "logs": []
 }

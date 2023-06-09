@@ -33,6 +33,7 @@ namespace SimsCCManager.Packages.Containers
         /// </summary>
         public string Type {get; set;}
         public string Location {get; set;}
+        [PrimaryKey]
         public string Name {get; set;}
         public string Status {get; set;}
     }
@@ -90,7 +91,7 @@ namespace SimsCCManager.Packages.Containers
         /// The full package summary used for sorting and editing the items.
         /// </summary>
         [PrimaryKey, AutoIncrement]
-        public int ID {get; set;}        
+        public int ID {get; set;}           
         [Column ("Title")]
         public string Title {get; set;}  
         [Column ("Description")]

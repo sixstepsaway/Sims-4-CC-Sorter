@@ -275,6 +275,8 @@ namespace SSAGlobals {
         public static SQLite.SQLiteConnection S4OverridesConnection;
         public static SQLite.SQLiteConnection S4SpecificOverridesConnection;
         public static SQLite.SQLiteConnection S4FunctionTypesConnection;
+        public static List<OverridesList> S4OverridesList = new List<OverridesList>();
+        public static List<SpecificOverrides> S4SpecificOverridesList = new List<SpecificOverrides>();
         
         
         //vars that hold package files 
@@ -375,6 +377,15 @@ namespace SSAGlobals {
             } catch (Exception e){
                 Console.WriteLine("Caught exception connecting to Function Sort Lists: " + e.Message);
             } 
+
+            var overridescountcmd = S4OverridesConnection.CreateCommand("SELECT count(*) FROM Instances");
+            var overridescount = overridescountcmd.ExecuteScalar<int>();
+            S4OverridesList = new List<OverridesList>(overridescount);
+            S4OverridesList = S4OverridesConnection.Query<OverridesList>("SELECT * FROM Instances");
+            var specoverridescountcmd = S4SpecificOverridesConnection.CreateCommand("SELECT count(*) FROM Overrides");
+            var specovcount = specoverridescountcmd.ExecuteScalar<int>();
+            S4SpecificOverridesList = new List<SpecificOverrides>(specovcount);
+            S4SpecificOverridesList = S4SpecificOverridesConnection.Query<SpecificOverrides>("SELECT * FROM Overrides");
         }
 
         

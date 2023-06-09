@@ -741,7 +741,9 @@ namespace SimsCCManager.Packages.Sims4Search
 
         //lists
 
-        public static bool hasrunbefore;       
+        public static bool hasrunbefore;  
+        private int ovcapacity = 1781483;
+
 
         //Vars
         uint chunkOffset = 0;
@@ -761,8 +763,6 @@ namespace SimsCCManager.Packages.Sims4Search
             PackageFile pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
             GlobalVariables.DatabaseConnection.Insert(pk);
             pk = new PackageFile();
-            log.MakeLog("Got package parse count.", true);   
-            log.MakeLog("Incrementing packages read.", true);
                         
             //locations
 
@@ -928,10 +928,10 @@ namespace SimsCCManager.Packages.Sims4Search
             long streamsize = readFile.BaseStream.Length;
             int indexbytes = ((int)entrycount * 32);
             long indexpos = 0;
-            log.MakeLog(string.Format("Streamsize is {0}", streamsize), true);
+            log.MakeLog(string.Format("P{0} - Streamsize is {1}", packageparsecount, streamsize), true);
             if ((int)movedto + indexbytes != streamsize){
                 int entriesfound = 0;
-                log.MakeLog("Streamsize does not match!", true);
+                log.MakeLog(string.Format("P{0} - Streamsize does not match!", packageparsecount), true);
                 readFile.BaseStream.Position = movedto - 400;
                 List<long> entrylocs = new List<long>();
                 uint item;
@@ -1009,13 +1009,13 @@ namespace SimsCCManager.Packages.Sims4Search
                 long movedhere = readFile.BaseStream.Position;
                 uint testpos = readFile.ReadUInt32();
                 if (testpos != 0){
-                    log.MakeLog(string.Format("Read first entry TypeID and it read as {0}, returning to read entries.", testpos.ToString("X8")), true);
+                    log.MakeLog(string.Format("P{0} - Read first entry TypeID and it read as {1}, returning to read entries.", packageparsecount, testpos.ToString("X8")), true);
                     readFile.BaseStream.Position = movedto;
                 } else if (testpos == 80000000) {
                     long moveback = movedhere - 4;
                     readFile.BaseStream.Position = moveback;
                 } else {
-                    log.MakeLog(string.Format("Read first entry TypeID and it read as {0}, moving forward.", testpos.ToString("X8")), true);
+                    log.MakeLog(string.Format("P{0} - Read first entry TypeID and it read as {1}, moving forward.", packageparsecount, testpos.ToString("X8")), true);
                 }                
                 for (int i = 0; i < entrycount; i++){                    
                     indexEntry holderEntry = new indexEntry();                
@@ -1096,182 +1096,159 @@ namespace SimsCCManager.Packages.Sims4Search
                 foreach (int e in entryspots){
                     log.MakeLog(string.Format("P{0} - Opening CASP #{1}", packageparsecount, e), true);
                     if (indexData[e].compressionType == "5A42"){
-                    readFile.BaseStream.Position = indexData[e].position;
-                    long entryEnd = indexData[e].position + indexData[e].memSize;
+                        log.MakeLog(string.Format("P{0}/CASP{1} - Compression type is {2}.", packageparsecount, e, indexData[e].compressionType), true);
+                        readFile.BaseStream.Position = indexData[e].position;
+                        long entryEnd = indexData[e].position + indexData[e].memSize;
 
-                    log.MakeLog(string.Format("P{0}/CASP{1} - Position: {2}", packageparsecount, e, indexData[e].position), true);
-                    log.MakeLog(string.Format("P{0}/CASP{1} - Filesize: {2}", packageparsecount, e, indexData[e].fileSize), true);
-                    log.MakeLog(string.Format("P{0}/CASP{1} - Memsize: {2}", packageparsecount, e, indexData[e].memSize), true);
-                    log.MakeLog(string.Format("P{0}/CASP{1} - Ends at: {2}", packageparsecount, e, entryEnd), true);
+                        log.MakeLog(string.Format("P{0}/CASP{1} - Position: {2}", packageparsecount, e, indexData[e].position), true);
+                        log.MakeLog(string.Format("P{0}/CASP{1} - Filesize: {2}", packageparsecount, e, indexData[e].fileSize), true);
+                        log.MakeLog(string.Format("P{0}/CASP{1} - Memsize: {2}", packageparsecount, e, indexData[e].memSize), true);
+                        log.MakeLog(string.Format("P{0}/CASP{1} - Ends at: {2}", packageparsecount, e, entryEnd), true);
 
-                    Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
-                    
-                    BinaryReader decompbr = new BinaryReader(decomps);
+                        Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
+                        
+                        BinaryReader decompbr = new BinaryReader(decomps);
 
-                    uint version = decompbr.ReadUInt32();
-                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Version: {2}", packageparsecount, e, version), true);
-                    uint tgioffset = decompbr.ReadUInt32() +8;
-                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - TGI Offset: {2} \n -- As Hex: {3}", packageparsecount, e, tgioffset, tgioffset.ToString("X8")), true);
-                    uint numpresets = decompbr.ReadUInt32();
-                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Number of Presets: {2} \n -- As Hex: {3}", packageparsecount, e, numpresets, numpresets.ToString("X8")), true);
-                    using (BinaryReader reader = new BinaryReader(decomps, Encoding.BigEndianUnicode, true))
-                    {
-                        thisPackage.Title = reader.ReadString();
-                    }
-                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Title: {2}", packageparsecount, e, thisPackage.Title), true);
-
-                    float sortpriority = decompbr.ReadSingle();
-                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Sort Priority: {2}", packageparsecount, e, sortpriority), true);
-
-                    int secondarySortIndex = decompbr.ReadUInt16();
-                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Secondary Sort Index: {2}", packageparsecount, e, secondarySortIndex), true);
-
-                    uint propertyid = decompbr.ReadUInt32();
-                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Property ID: {2}", packageparsecount, e, propertyid), true);
-                    
-                    uint auralMaterialHash = decompbr.ReadUInt32();
-                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Aural Material Hash: {2}", packageparsecount, e, sortpriority), true);
-
-                    if (version <= 42){
-                        log.MakeLog(string.Format("Version is <= 42: {0}", version), true);
-                        int[] parameterFlag = new int[1];
-                        parameterFlag[0] = (int)decompbr.ReadUInt16();
-                        BitArray parameterFlags = new BitArray(parameterFlag);
-                        log.MakeLog(parameterFlags.Length.ToString(), true);
-                        for(int p = 0; p < 16; p++)
+                        uint version = decompbr.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Version: {2}", packageparsecount, e, version), true);
+                        uint tgioffset = decompbr.ReadUInt32() +8;
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - TGI Offset: {2} \n -- As Hex: {3}", packageparsecount, e, tgioffset, tgioffset.ToString("X8")), true);
+                        uint numpresets = decompbr.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Number of Presets: {2} \n -- As Hex: {3}", packageparsecount, e, numpresets, numpresets.ToString("X8")), true);
+                        using (BinaryReader reader = new BinaryReader(decomps, Encoding.BigEndianUnicode, true))
                         {
-                            if (parameterFlags[p] == true) {
-                                allFlags.Add(parameters[p]);
-                            }
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString()), true);
-                        } 
+                            thisPackage.Title = reader.ReadString();
+                        }
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Title: {2}", packageparsecount, e, thisPackage.Title), true);
+
+                        float sortpriority = decompbr.ReadSingle();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Sort Priority: {2}", packageparsecount, e, sortpriority), true);
+
+                        int secondarySortIndex = decompbr.ReadUInt16();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Secondary Sort Index: {2}", packageparsecount, e, secondarySortIndex), true);
+
+                        uint propertyid = decompbr.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Property ID: {2}", packageparsecount, e, propertyid), true);
                         
-                    } else if (version >= 43){
-                        log.MakeLog(string.Format("Version is >= 43: {0}", version), true);
-                        int[] parameterFlag = new int[1];
-                        parameterFlag[0] = (int)decompbr.ReadUInt16();
-                        BitArray parameterFlags = new BitArray(parameterFlag);
+                        uint auralMaterialHash = decompbr.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Aural Material Hash: {2}", packageparsecount, e, sortpriority), true);
 
-                        for(int pfc = 0; pfc < 16; pfc++){
-                            if (parameterFlags[pfc] == true) {
-                                allFlags.Add(parameters[pfc]);
-                            }
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString()), true);
-                        }                            
-                    }
-                        ulong excludePartFlags = decompbr.ReadUInt64();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags: {2}", packageparsecount, e, excludePartFlags.ToString("X16")), true);
-                        ulong excludePartFlags2 = decompbr.ReadUInt64();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags 2: {2}", packageparsecount, e, excludePartFlags2.ToString("X16")), true);
-                        ulong excludeModifierRegionFlags = decompbr.ReadUInt64();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Modifier Region Flags: {2}", packageparsecount, e, excludeModifierRegionFlags.ToString("X16")), true);
-
-                    if (version >= 37){
-                        log.MakeLog(string.Format(">= 37, Version: {0}", version), true);
-                        uint count = decompbr.ReadByte();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
-                        decompbr.ReadByte();
-                        CASTag16Bit tags = new CASTag16Bit(decompbr, count);                            
-                        List<TagsList> gottags = Readers.GetTagInfo(tags, count);
-                        foreach (TagsList tag in gottags){
-                            if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
-                                itemtags.Add(tag);  
-                            }
-                        }
-                                                    
-                    } 
-                    else 
-                    {
-                        uint count = decompbr.ReadByte();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
-                        decompbr.ReadByte();
-                        CASTag16Bit tags = new CASTag16Bit(decompbr, count);
-                        
-                        List<TagsList> gottags = Readers.GetTagInfo(tags, count);
-                        foreach (TagsList tag in gottags){
-                            if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
-                                itemtags.Add(tag);  
-                            }
-                        }
-
-                        }
-
-                        uint simoleonprice = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Simoleon Price: {2}", packageparsecount, e, simoleonprice.ToString()), true);
-                        uint partTitleKey = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Title Key: {2}", packageparsecount, e, partTitleKey.ToString()), true);
-                        uint partDescriptionKey = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Description Key: {2}", packageparsecount, e, partDescriptionKey.ToString()), true);                            
-                        if (version >= 43) {
-                            uint createDescriptionKey = decompbr.ReadUInt32();
-                        }
-                        int uniqueTextureSpace = decompbr.ReadByte();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Unique Texture Space: {2}", packageparsecount, e, uniqueTextureSpace.ToString("X8")), true);
-                        uint bodytype = decompbr.ReadUInt32();
-                        bool foundmatch = false;
-
-                        List<FunctionListing> bodytypes = GlobalVariables.S4FunctionTypesConnection.Query<FunctionListing>(string.Format("SELECT * FROM S4CASFunctions where BodyType='{0}'", bodytype)); 
-
-                        if (bodytypes.Any()){
-                            foundmatch = true;
-                            thisPackage.Function = bodytypes[0].Function;
-                            if (!String.IsNullOrWhiteSpace(bodytypes[0].Subfunction)) {
-                                thisPackage.FunctionSubcategory = bodytypes[0].Subfunction;
+                        if (version <= 42){
+                            log.MakeLog(string.Format("Version is <= 42: {0}", version), true);
+                            int[] parameterFlag = new int[1];
+                            parameterFlag[0] = (int)decompbr.ReadUInt16();
+                            BitArray parameterFlags = new BitArray(parameterFlag);
+                            log.MakeLog(parameterFlags.Length.ToString(), true);
+                            for(int p = 0; p < 16; p++)
+                            {
+                                if (parameterFlags[p] == true) {
+                                    allFlags.Add(parameters[p]);
+                                }
+                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString()), true);
                             } 
+                            
+                        } else if (version >= 43){
+                            log.MakeLog(string.Format("Version is >= 43: {0}", version), true);
+                            int[] parameterFlag = new int[1];
+                            parameterFlag[0] = (int)decompbr.ReadUInt16();
+                            BitArray parameterFlags = new BitArray(parameterFlag);
+
+                            for(int pfc = 0; pfc < 16; pfc++){
+                                if (parameterFlags[pfc] == true) {
+                                    allFlags.Add(parameters[pfc]);
+                                }
+                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString()), true);
+                            }                            
                         }
+                            ulong excludePartFlags = decompbr.ReadUInt64();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags: {2}", packageparsecount, e, excludePartFlags.ToString("X16")), true);
+                            ulong excludePartFlags2 = decompbr.ReadUInt64();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags 2: {2}", packageparsecount, e, excludePartFlags2.ToString("X16")), true);
+                            ulong excludeModifierRegionFlags = decompbr.ReadUInt64();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Modifier Region Flags: {2}", packageparsecount, e, excludeModifierRegionFlags.ToString("X16")), true);
 
-                        if (foundmatch == false){
-                            thisPackage.Function = string.Format("Unidentified function (contact SinfulSimming). Code: {0}", bodytype.ToString());
-                        }                            
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Bodytype: {2}", packageparsecount, e, bodytype.ToString()), true);
-                        uint bodytypesubtype = decompbr.ReadUInt16();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Body Sub Type: {2}", packageparsecount, e, bodytypesubtype.ToString()), true);
-                        decompbr.ReadUInt32();                        
-                        uint agflags = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Ag Flags: {2}", packageparsecount, e, agflags.ToString("X8")), true);
+                        if (version >= 37){
+                            log.MakeLog(string.Format(">= 37, Version: {0}", version), true);
+                            uint count = decompbr.ReadByte();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
+                            decompbr.ReadByte();
+                            CASTag16Bit tags = new CASTag16Bit(decompbr, count);                            
+                            List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                            foreach (TagsList tag in gottags){
+                                if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
+                                    itemtags.Add(tag);  
+                                }
+                            }
+                                                        
+                        } 
+                        else 
+                        {
+                            uint count = decompbr.ReadByte();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
+                            decompbr.ReadByte();
+                            CASTag16Bit tags = new CASTag16Bit(decompbr, count);
+                            
+                            List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                            foreach (TagsList tag in gottags){
+                                if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
+                                    itemtags.Add(tag);  
+                                }
+                            }
 
-                        string AGFlag = agflags.ToString("X8");
-                        
-                        AgeGenderFlags agegenderset = new AgeGenderFlags();
+                            }
 
-                        if (AGFlag == "00000000") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = false, 
-                            Baby = false, 
-                            Child = false, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = false, 
-                            YoungAdult = false, 
-                            Female = false, 
-                            Male = false};
-                        } else if (AGFlag == "00000020") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = true, 
-                            Baby = false, 
-                            Child = false, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = false, 
-                            YoungAdult = false, 
-                            Female = false, 
-                            Male = false};
-                        } else if (AGFlag == "00002020") {
-                            agegenderset = new AgeGenderFlags{
-                                Adult = true, 
-                            Baby = false, 
-                            Child = false, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = false, 
-                            YoungAdult = false, 
-                            Female = true, 
-                            Male = false};
-                        } else if (AGFlag == "00020000") {
-                            agegenderset = new AgeGenderFlags{
+                            uint simoleonprice = decompbr.ReadUInt32();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Simoleon Price: {2}", packageparsecount, e, simoleonprice.ToString()), true);
+                            uint partTitleKey = decompbr.ReadUInt32();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Title Key: {2}", packageparsecount, e, partTitleKey.ToString()), true);
+                            uint partDescriptionKey = decompbr.ReadUInt32();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Description Key: {2}", packageparsecount, e, partDescriptionKey.ToString()), true);                            
+                            if (version >= 43) {
+                                uint createDescriptionKey = decompbr.ReadUInt32();
+                            }
+                            int uniqueTextureSpace = decompbr.ReadByte();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Unique Texture Space: {2}", packageparsecount, e, uniqueTextureSpace.ToString("X8")), true);
+                            uint bodytype = decompbr.ReadUInt32();
+                            bool foundmatch = false;
+
+                            List<FunctionListing> bodytypes = GlobalVariables.S4FunctionTypesConnection.Query<FunctionListing>(string.Format("SELECT * FROM S4CASFunctions where BodyType='{0}'", bodytype)); 
+
+                            if (bodytypes.Any()){
+                                foundmatch = true;
+                                thisPackage.Function = bodytypes[0].Function;
+                                if (!String.IsNullOrWhiteSpace(bodytypes[0].Subfunction)) {
+                                    thisPackage.FunctionSubcategory = bodytypes[0].Subfunction;
+                                } 
+                            }
+
+                            if (foundmatch == false){
+                                thisPackage.Function = string.Format("Unidentified function (contact SinfulSimming). Code: {0}", bodytype.ToString());
+                            }                            
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Bodytype: {2}", packageparsecount, e, bodytype.ToString()), true);
+                            uint bodytypesubtype = decompbr.ReadUInt16();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Body Sub Type: {2}", packageparsecount, e, bodytypesubtype.ToString()), true);
+                            decompbr.ReadUInt32();                        
+                            uint agflags = decompbr.ReadUInt32();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Ag Flags: {2}", packageparsecount, e, agflags.ToString("X8")), true);
+
+                            string AGFlag = agflags.ToString("X8");
+                            
+                            AgeGenderFlags agegenderset = new AgeGenderFlags();
+
+                            if (AGFlag == "00000000") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = false};
+                            } else if (AGFlag == "00000020") {
+                                agegenderset = new AgeGenderFlags{
                                 Adult = true, 
                                 Baby = false, 
                                 Child = false, 
@@ -1281,9 +1258,81 @@ namespace SimsCCManager.Packages.Sims4Search
                                 Toddler = false, 
                                 YoungAdult = false, 
                                 Female = false, 
+                                Male = false};
+                            } else if (AGFlag == "00002020") {
+                                agegenderset = new AgeGenderFlags{
+                                    Adult = true, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = false};
+                            } else if (AGFlag == "00020000") {
+                                agegenderset = new AgeGenderFlags{
+                                    Adult = true, 
+                                    Baby = false, 
+                                    Child = false, 
+                                    Elder = false, 
+                                    Infant = false, 
+                                    Teen = false, 
+                                    Toddler = false, 
+                                    YoungAdult = false, 
+                                    Female = false, 
+                                    Male = true};
+                            } else if (AGFlag == "00002078") {
+                                agegenderset = new AgeGenderFlags{
+                                    Adult = true, 
+                                    Baby = false, 
+                                    Child = false, 
+                                    Elder = true, 
+                                    Infant = false, 
+                                    Teen = true, 
+                                    Toddler = false, 
+                                    YoungAdult = true, 
+                                    Female = true, 
+                                    Male = false};
+                            } else if (AGFlag == "000030FF") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = true, 
+                                Child = true, 
+                                Elder = true, 
+                                Infant = true, 
+                                Teen = true, 
+                                Toddler = true, 
+                                YoungAdult = true, 
+                                Female = true, 
                                 Male = true};
-                        } else if (AGFlag == "00002078") {
-                            agegenderset = new AgeGenderFlags{
+                            } else if (AGFlag == "00003004") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = true};
+                            } else if (AGFlag == "00001078") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = true, 
+                                Infant = false, 
+                                Teen = true, 
+                                Toddler = false, 
+                                YoungAdult = true, 
+                                Female = false, 
+                                Male = true};
+                            } else if (AGFlag == "00003078") {
+                                agegenderset = new AgeGenderFlags{
                                 Adult = true, 
                                 Baby = false, 
                                 Child = false, 
@@ -1293,222 +1342,581 @@ namespace SimsCCManager.Packages.Sims4Search
                                 Toddler = false, 
                                 YoungAdult = true, 
                                 Female = true, 
+                                Male = true};
+                            } else if (AGFlag == "000030BE") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = false, 
+                                Infant = true, 
+                                Teen = true, 
+                                Toddler = true, 
+                                YoungAdult = true, 
+                                Female = true, 
+                                Male = true};
+                            } else if (AGFlag == "00002002") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = true, 
+                                YoungAdult = false, 
+                                Female = true, 
                                 Male = false};
-                        } else if (AGFlag == "000030FF") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = true, 
-                            Baby = true, 
-                            Child = true, 
-                            Elder = true, 
-                            Infant = true, 
-                            Teen = true, 
-                            Toddler = true, 
-                            YoungAdult = true, 
-                            Female = true, 
-                            Male = true};
-                        } else if (AGFlag == "00003004") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = false, 
-                            Baby = false, 
-                            Child = true, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = false, 
-                            YoungAdult = false, 
-                            Female = true, 
-                            Male = true};
-                        } else if (AGFlag == "00001078") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = true, 
-                            Baby = false, 
-                            Child = false, 
-                            Elder = true, 
-                            Infant = false, 
-                            Teen = true, 
-                            Toddler = false, 
-                            YoungAdult = true, 
-                            Female = false, 
-                            Male = true};
-                        } else if (AGFlag == "00003078") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = true, 
-                            Baby = false, 
-                            Child = false, 
-                            Elder = true, 
-                            Infant = false, 
-                            Teen = true, 
-                            Toddler = false, 
-                            YoungAdult = true, 
-                            Female = true, 
-                            Male = true};
-                        } else if (AGFlag == "000030BE") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = true, 
-                            Baby = false, 
-                            Child = true, 
-                            Elder = false, 
-                            Infant = true, 
-                            Teen = true, 
-                            Toddler = true, 
-                            YoungAdult = true, 
-                            Female = true, 
-                            Male = true};
-                        } else if (AGFlag == "00002002") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = false, 
-                            Baby = false, 
-                            Child = false, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = true, 
-                            YoungAdult = false, 
-                            Female = true, 
-                            Male = false};
-                        }  else if (AGFlag == "00002004") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = false, 
-                            Baby = false, 
-                            Child = true, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = false, 
-                            YoungAdult = false, 
-                            Female = true, 
-                            Male = false};
-                        }  else if (AGFlag == "00003002") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = false, 
-                            Baby = false, 
-                            Child = false, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = true, 
-                            YoungAdult = false, 
-                            Female = true, 
-                            Male = true};
-                        }  else if (AGFlag == "00003004") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = false, 
-                            Baby = false, 
-                            Child = true, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = false, 
-                            YoungAdult = false, 
-                            Female = true, 
-                            Male = true};
-                        }  else if (AGFlag == "00001002") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = false, 
-                            Baby = false, 
-                            Child = false, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = true, 
-                            YoungAdult = false, 
-                            Female = false, 
-                            Male = true};
-                        }  else if (AGFlag == "00001004") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = false, 
-                            Baby = false, 
-                            Child = true, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = false, 
-                            YoungAdult = false, 
-                            Female = false, 
-                            Male = true};
-                        } else if (AGFlag == "00100101") {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = false, 
-                            Baby = true, 
-                            Child = false, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = false, 
-                            YoungAdult = false, 
-                            Female = false, 
-                            Male = false};                            
-                        } else if (AGFlag == "0000307E"){
-                            agegenderset = new AgeGenderFlags{
-                            Adult = true, 
-                            Baby = false, 
-                            Child = true, 
-                            Elder = true, 
-                            Infant = false, 
-                            Teen = true, 
-                            Toddler = true, 
-                            YoungAdult = true, 
-                            Female = true, 
-                            Male = true};
-                        } else if (AGFlag == "000030FE"){
-                            agegenderset = new AgeGenderFlags{
-                            Adult = true, 
-                            Baby = false, 
-                            Child = true, 
-                            Elder = true, 
-                            Infant = true, 
-                            Teen = true, 
-                            Toddler = true, 
-                            YoungAdult = true, 
-                            Female = true, 
-                            Male = true};
-                        } else {
-                            agegenderset = new AgeGenderFlags{
-                            Adult = false, 
-                            Baby = false, 
-                            Child = false, 
-                            Elder = false, 
-                            Infant = false, 
-                            Teen = false, 
-                            Toddler = false, 
-                            YoungAdult = false, 
-                            Female = false, 
-                            Male = false};
-                        }
-                        
-                        log.MakeLog(string.Format("P{0}/CASP{1} Ages:\n -- Adult: {0}, \n -- Baby: {1}, \n -- Child: {2}, \n -- Elder: {3}, \n -- Infant: {4}, \n -- Teen: {5}, \n -- Toddler: {6}, \n -- Young Adult: {7}\n\nGender: \n -- Male: {8}\n -- Female: {9}.", packageparsecount, e, agegenderset.Adult.ToString(), agegenderset.Baby.ToString(), agegenderset.Child.ToString(), agegenderset.Elder.ToString(), agegenderset.Infant.ToString(), agegenderset.Teen.ToString(), agegenderset.Toddler.ToString(), agegenderset.YoungAdult.ToString(), agegenderset.Female.ToString(), agegenderset.Male.ToString()), true);
-
-                        thisPackage.AgeGenderFlags = agegenderset;
-
-                        
-
-
-                        if (version >= 0x20)
-                        {
-                            uint species = decompbr.ReadUInt32();
-                        }
-                        if (version >= 34)
-                        {
-                            int packID = decompbr.ReadInt16();
-                            int packFlags = decompbr.ReadByte();
-                            for(int p = 0; p < packFlags; p++)
-                            {
-                                bool check = decompbr.ReadBoolean();
-                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Packflag is: {2}", packageparsecount, e, check.ToString()), true);
-                            } 
-                            byte[] reserved2 = decompbr.ReadBytes(9);
-                        }
-                        else
-                        {
-                            byte unused2 = decompbr.ReadByte();
-                            if (unused2 > 0) {
-                                int unused3 = decompbr.ReadByte();
+                            }  else if (AGFlag == "00002004") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = false};
+                            }  else if (AGFlag == "00003002") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = true, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = true};
+                            }  else if (AGFlag == "00003004") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = true};
+                            }  else if (AGFlag == "00001002") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = true, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = true};
+                            }  else if (AGFlag == "00001004") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = true};
+                            } else if (AGFlag == "00100101") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = true, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = false};                            
+                            } else if (AGFlag == "0000307E"){
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = true, 
+                                Infant = false, 
+                                Teen = true, 
+                                Toddler = true, 
+                                YoungAdult = true, 
+                                Female = true, 
+                                Male = true};
+                            } else if (AGFlag == "000030FE"){
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = true, 
+                                Infant = true, 
+                                Teen = true, 
+                                Toddler = true, 
+                                YoungAdult = true, 
+                                Female = true, 
+                                Male = true};
+                            } else {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = false};
                             }
+                            
+                            log.MakeLog(string.Format("P{0}/CASP{1} Ages:\n -- Adult: {0}, \n -- Baby: {1}, \n -- Child: {2}, \n -- Elder: {3}, \n -- Infant: {4}, \n -- Teen: {5}, \n -- Toddler: {6}, \n -- Young Adult: {7}\n\nGender: \n -- Male: {8}\n -- Female: {9}.", packageparsecount, e, agegenderset.Adult.ToString(), agegenderset.Baby.ToString(), agegenderset.Child.ToString(), agegenderset.Elder.ToString(), agegenderset.Infant.ToString(), agegenderset.Teen.ToString(), agegenderset.Toddler.ToString(), agegenderset.YoungAdult.ToString(), agegenderset.Female.ToString(), agegenderset.Male.ToString()), true);
+
+                            thisPackage.AgeGenderFlags = agegenderset;
+
+                            
+
+
+                            if (version >= 0x20)
+                            {
+                                uint species = decompbr.ReadUInt32();
+                            }
+                            if (version >= 34)
+                            {
+                                int packID = decompbr.ReadInt16();
+                                int packFlags = decompbr.ReadByte();
+                                for(int p = 0; p < packFlags; p++)
+                                {
+                                    bool check = decompbr.ReadBoolean();
+                                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Packflag is: {2}", packageparsecount, e, check.ToString()), true);
+                                } 
+                                byte[] reserved2 = decompbr.ReadBytes(9);
+                            }
+                            else
+                            {
+                                byte unused2 = decompbr.ReadByte();
+                                if (unused2 > 0) {
+                                    int unused3 = decompbr.ReadByte();
+                                }
+                            }
+
+                            decompbr.Dispose();
+                            decomps.Dispose();
+
+                    } else if (indexData[e].compressionType == "0000"){
+                        log.MakeLog(string.Format("P{0}/CASP{1} - Compression type is {2}.", packageparsecount, e, indexData[e].compressionType), true);
+                        readFile.BaseStream.Position = indexData[e].position;
+                        long entryEnd = indexData[e].position + indexData[e].memSize;
+
+                        log.MakeLog(string.Format("P{0}/CASP{1} - Position: {2}", packageparsecount, e, indexData[e].position), true);
+                        log.MakeLog(string.Format("P{0}/CASP{1} - Filesize: {2}", packageparsecount, e, indexData[e].fileSize), true);
+                        log.MakeLog(string.Format("P{0}/CASP{1} - Memsize: {2}", packageparsecount, e, indexData[e].memSize), true);
+                        log.MakeLog(string.Format("P{0}/CASP{1} - Ends at: {2}", packageparsecount, e, entryEnd), true);
+
+                        uint version = readFile.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Version: {2}", packageparsecount, e, version), true);
+                        uint tgioffset = readFile.ReadUInt32() +8;
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - TGI Offset: {2} \n -- As Hex: {3}", packageparsecount, e, tgioffset, tgioffset.ToString("X8")), true);
+                        uint numpresets = readFile.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Number of Presets: {2} \n -- As Hex: {3}", packageparsecount, e, numpresets, numpresets.ToString("X8")), true);
+                        using (BinaryReader reader = new BinaryReader(dbpfFile, Encoding.BigEndianUnicode, true))
+                        {
+                            thisPackage.Title = reader.ReadString();
                         }
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Title: {2}", packageparsecount, e, thisPackage.Title), true);
 
-                        decompbr.Dispose();
-                        decomps.Dispose();
+                        float sortpriority = readFile.ReadSingle();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Sort Priority: {2}", packageparsecount, e, sortpriority), true);
 
+                        int secondarySortIndex = readFile.ReadUInt16();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Secondary Sort Index: {2}", packageparsecount, e, secondarySortIndex), true);
+
+                        uint propertyid = readFile.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Property ID: {2}", packageparsecount, e, propertyid), true);
+                        
+                        uint auralMaterialHash = readFile.ReadUInt32();
+                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Aural Material Hash: {2}", packageparsecount, e, sortpriority), true);
+
+                        if (version <= 42){
+                            log.MakeLog(string.Format("Version is <= 42: {0}", version), true);
+                            int[] parameterFlag = new int[1];
+                            parameterFlag[0] = (int)readFile.ReadUInt16();
+                            BitArray parameterFlags = new BitArray(parameterFlag);
+                            log.MakeLog(parameterFlags.Length.ToString(), true);
+                            for(int p = 0; p < 16; p++)
+                            {
+                                if (parameterFlags[p] == true) {
+                                    allFlags.Add(parameters[p]);
+                                }
+                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString()), true);
+                            } 
+                            
+                        } else if (version >= 43){
+                            log.MakeLog(string.Format("Version is >= 43: {0}", version), true);
+                            int[] parameterFlag = new int[1];
+                            parameterFlag[0] = (int)readFile.ReadUInt16();
+                            BitArray parameterFlags = new BitArray(parameterFlag);
+
+                            for(int pfc = 0; pfc < 16; pfc++){
+                                if (parameterFlags[pfc] == true) {
+                                    allFlags.Add(parameters[pfc]);
+                                }
+                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString()), true);
+                            }                            
+                        }
+                            ulong excludePartFlags = readFile.ReadUInt64();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags: {2}", packageparsecount, e, excludePartFlags.ToString("X16")), true);
+                            ulong excludePartFlags2 = readFile.ReadUInt64();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags 2: {2}", packageparsecount, e, excludePartFlags2.ToString("X16")), true);
+                            ulong excludeModifierRegionFlags = readFile.ReadUInt64();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Modifier Region Flags: {2}", packageparsecount, e, excludeModifierRegionFlags.ToString("X16")), true);
+
+                        if (version >= 37){
+                            log.MakeLog(string.Format(">= 37, Version: {0}", version), true);
+                            uint count = readFile.ReadByte();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
+                            readFile.ReadByte();
+                            CASTag16Bit tags = new CASTag16Bit(readFile, count);                            
+                            List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                            foreach (TagsList tag in gottags){
+                                if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
+                                    itemtags.Add(tag);  
+                                }
+                            }
+                                                        
+                        } 
+                        else 
+                        {
+                            uint count = readFile.ReadByte();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
+                            readFile.ReadByte();
+                            CASTag16Bit tags = new CASTag16Bit(readFile, count);
+                            
+                            List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                            foreach (TagsList tag in gottags){
+                                if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
+                                    itemtags.Add(tag);  
+                                }
+                            }
+
+                            }
+
+                            uint simoleonprice = readFile.ReadUInt32();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Simoleon Price: {2}", packageparsecount, e, simoleonprice.ToString()), true);
+                            uint partTitleKey = readFile.ReadUInt32();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Title Key: {2}", packageparsecount, e, partTitleKey.ToString()), true);
+                            uint partDescriptionKey = readFile.ReadUInt32();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Description Key: {2}", packageparsecount, e, partDescriptionKey.ToString()), true);                            
+                            if (version >= 43) {
+                                uint createDescriptionKey = readFile.ReadUInt32();
+                            }
+                            int uniqueTextureSpace = readFile.ReadByte();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Unique Texture Space: {2}", packageparsecount, e, uniqueTextureSpace.ToString("X8")), true);
+                            uint bodytype = readFile.ReadUInt32();
+                            bool foundmatch = false;
+
+                            List<FunctionListing> bodytypes = GlobalVariables.S4FunctionTypesConnection.Query<FunctionListing>(string.Format("SELECT * FROM S4CASFunctions where BodyType='{0}'", bodytype)); 
+
+                            if (bodytypes.Any()){
+                                foundmatch = true;
+                                thisPackage.Function = bodytypes[0].Function;
+                                if (!String.IsNullOrWhiteSpace(bodytypes[0].Subfunction)) {
+                                    thisPackage.FunctionSubcategory = bodytypes[0].Subfunction;
+                                } 
+                            }
+
+                            if (foundmatch == false){
+                                thisPackage.Function = string.Format("Unidentified function (contact SinfulSimming). Code: {0}", bodytype.ToString());
+                            }                            
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Bodytype: {2}", packageparsecount, e, bodytype.ToString()), true);
+                            uint bodytypesubtype = readFile.ReadUInt16();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Body Sub Type: {2}", packageparsecount, e, bodytypesubtype.ToString()), true);
+                            readFile.ReadUInt32();                        
+                            uint agflags = readFile.ReadUInt32();
+                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Ag Flags: {2}", packageparsecount, e, agflags.ToString("X8")), true);
+
+                            string AGFlag = agflags.ToString("X8");
+                            
+                            AgeGenderFlags agegenderset = new AgeGenderFlags();
+
+                            if (AGFlag == "00000000") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = false};
+                            } else if (AGFlag == "00000020") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = false};
+                            } else if (AGFlag == "00002020") {
+                                agegenderset = new AgeGenderFlags{
+                                    Adult = true, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = false};
+                            } else if (AGFlag == "00020000") {
+                                agegenderset = new AgeGenderFlags{
+                                    Adult = true, 
+                                    Baby = false, 
+                                    Child = false, 
+                                    Elder = false, 
+                                    Infant = false, 
+                                    Teen = false, 
+                                    Toddler = false, 
+                                    YoungAdult = false, 
+                                    Female = false, 
+                                    Male = true};
+                            } else if (AGFlag == "00002078") {
+                                agegenderset = new AgeGenderFlags{
+                                    Adult = true, 
+                                    Baby = false, 
+                                    Child = false, 
+                                    Elder = true, 
+                                    Infant = false, 
+                                    Teen = true, 
+                                    Toddler = false, 
+                                    YoungAdult = true, 
+                                    Female = true, 
+                                    Male = false};
+                            } else if (AGFlag == "000030FF") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = true, 
+                                Child = true, 
+                                Elder = true, 
+                                Infant = true, 
+                                Teen = true, 
+                                Toddler = true, 
+                                YoungAdult = true, 
+                                Female = true, 
+                                Male = true};
+                            } else if (AGFlag == "00003004") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = true};
+                            } else if (AGFlag == "00001078") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = true, 
+                                Infant = false, 
+                                Teen = true, 
+                                Toddler = false, 
+                                YoungAdult = true, 
+                                Female = false, 
+                                Male = true};
+                            } else if (AGFlag == "00003078") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = true, 
+                                Infant = false, 
+                                Teen = true, 
+                                Toddler = false, 
+                                YoungAdult = true, 
+                                Female = true, 
+                                Male = true};
+                            } else if (AGFlag == "000030BE") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = false, 
+                                Infant = true, 
+                                Teen = true, 
+                                Toddler = true, 
+                                YoungAdult = true, 
+                                Female = true, 
+                                Male = true};
+                            } else if (AGFlag == "00002002") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = true, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = false};
+                            }  else if (AGFlag == "00002004") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = false};
+                            }  else if (AGFlag == "00003002") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = true, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = true};
+                            }  else if (AGFlag == "00003004") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = true, 
+                                Male = true};
+                            }  else if (AGFlag == "00001002") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = true, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = true};
+                            }  else if (AGFlag == "00001004") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = true};
+                            } else if (AGFlag == "00100101") {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = true, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = false};                            
+                            } else if (AGFlag == "0000307E"){
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = true, 
+                                Infant = false, 
+                                Teen = true, 
+                                Toddler = true, 
+                                YoungAdult = true, 
+                                Female = true, 
+                                Male = true};
+                            } else if (AGFlag == "000030FE"){
+                                agegenderset = new AgeGenderFlags{
+                                Adult = true, 
+                                Baby = false, 
+                                Child = true, 
+                                Elder = true, 
+                                Infant = true, 
+                                Teen = true, 
+                                Toddler = true, 
+                                YoungAdult = true, 
+                                Female = true, 
+                                Male = true};
+                            } else {
+                                agegenderset = new AgeGenderFlags{
+                                Adult = false, 
+                                Baby = false, 
+                                Child = false, 
+                                Elder = false, 
+                                Infant = false, 
+                                Teen = false, 
+                                Toddler = false, 
+                                YoungAdult = false, 
+                                Female = false, 
+                                Male = false};
+                            }
+                            
+                            log.MakeLog(string.Format("P{0}/CASP{1} Ages:\n -- Adult: {0}, \n -- Baby: {1}, \n -- Child: {2}, \n -- Elder: {3}, \n -- Infant: {4}, \n -- Teen: {5}, \n -- Toddler: {6}, \n -- Young Adult: {7}\n\nGender: \n -- Male: {8}\n -- Female: {9}.", packageparsecount, e, agegenderset.Adult.ToString(), agegenderset.Baby.ToString(), agegenderset.Child.ToString(), agegenderset.Elder.ToString(), agegenderset.Infant.ToString(), agegenderset.Teen.ToString(), agegenderset.Toddler.ToString(), agegenderset.YoungAdult.ToString(), agegenderset.Female.ToString(), agegenderset.Male.ToString()), true);
+
+                            thisPackage.AgeGenderFlags = agegenderset;
+
+                            
+
+
+                            if (version >= 0x20)
+                            {
+                                uint species = readFile.ReadUInt32();
+                            }
+                            if (version >= 34)
+                            {
+                                int packID = readFile.ReadInt16();
+                                int packFlags = readFile.ReadByte();
+                                for(int p = 0; p < packFlags; p++)
+                                {
+                                    bool check = readFile.ReadBoolean();
+                                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Packflag is: {2}", packageparsecount, e, check.ToString()), true);
+                                } 
+                                byte[] reserved2 = readFile.ReadBytes(9);
+                            }
+                            else
+                            {
+                                byte unused2 = readFile.ReadByte();
+                                if (unused2 > 0) {
+                                    int unused3 = readFile.ReadByte();
+                                }
+                            }
                     }
 
                     caspc++;
@@ -1654,25 +2062,76 @@ namespace SimsCCManager.Packages.Sims4Search
                             }                                                            
                             decompbr.Dispose();   
                             decomps.Dispose();
-                    }                    
+                    } else if (indexData[e].compressionType == "0000"){
+                        readFile.BaseStream.Position = indexData[e].position;                       
+                        int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
+                        log.MakeLog(string.Format("P{0}/OBJD{1} - Position: {2}", packageparsecount, objdc, indexData[e].position), true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1} - File Size: {2}", packageparsecount, objdc, indexData[e].fileSize), true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1} - Memory Size: {2}", packageparsecount, objdc, indexData[e].memSize), true);
+                        log.MakeLog(string.Format("P{0}/OBJD{1} - Entry Ends At: {2}", packageparsecount, objdc, entryEnd), true);
+                        ReadOBJDIndex readOBJD = new ReadOBJDIndex(readFile, packageparsecount, objdc);
+                        log.MakeLog(string.Format("P{0}/OBJD{1} - There are {2} entries to read.", packageparsecount, objdc, readOBJD.count), true);
+                        objdentries = new string[readOBJD.count];
+                        objdpositions = new int[readOBJD.count];
+                        for (int f = 0; f < readOBJD.count; f++){
+                            log.MakeLog(string.Format("P{0}/OBJD{1} - Entry {2}: \n--- Type: {3}\n --- Position: {4}", packageparsecount, objdc, f, readOBJD.entrytype[f], readOBJD.position[f]), true);
+                            objdentries[f] = readOBJD.entrytype[f].ToString();
+                            objdpositions[f] = (int)readOBJD.position[f];
+                        }
+                        readFile.BaseStream.Position = readOBJD.position[0];
+                        ReadOBJDEntry readobjdentry = new ReadOBJDEntry(readFile, objdentries, objdpositions, packageparsecount, objdc);
+                        thisPackage.Title = readobjdentry.name;
+                        thisPackage.Tuning = readobjdentry.tuningname;
+                        thisPackage.TuningID = (int)readobjdentry.tuningid;
+                        if(!allInstanceIDs.Contains(readobjdentry.instance.ToString("X8"))){
+                            allInstanceIDs.Add(readobjdentry.instance.ToString("X8"));
+                        }
+                        
+                        log.MakeLog("Adding components to package: ", true);
+                        for (int c = 0; c < readobjdentry.componentcount; c++){
+                            log.MakeLog(readobjdentry.components[c].ToString(), true);
+                            log.MakeLog(readobjdentry.components[c].ToString("X8"), true);
+                            thisPackage.Components.Add(readobjdentry.components[c].ToString("X8"));
+                        }
+                        foreach (string m in readobjdentry.model) {
+                            if(!allGUIDS.Contains(m)){
+                                allGUIDS.Add(m);
+                            }  
+                        }
+                        foreach (string r in readobjdentry.rig) {
+                            if(!allGUIDS.Contains(r)){
+                                allGUIDS.Add(r);
+                            }  
+                        }
+                        foreach (string s in readobjdentry.slot) {
+                            if(!allGUIDS.Contains(s)){
+                                allGUIDS.Add(s);
+                            }  
+                        }
+                        foreach (string f in readobjdentry.footprint) {
+                            if(!allGUIDS.Contains(f)){
+                                allGUIDS.Add(f);
+                            }
+                        }
+                    }                
                     objdc++;
                 }
                 
             }
 
-            log.MakeLog("All methods complete, moving on to getting info.", true);
+            log.MakeLog(string.Format("P{0} - All methods complete, moving on to getting info.", packageparsecount), true);
 
             List<TypeCounter> typecount = new List<TypeCounter>();
             Dictionary<string,int> typeDict = new Dictionary<string, int>();
 
-            log.MakeLog("Making dictionary.", true);
+            log.MakeLog(string.Format("P{0} - Making dictionary.", packageparsecount), true);
 
             List<typeList> typse = GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S4Types"));
 
             foreach (fileHasList item in fileHas){
                 foreach (typeList type in typse){
                     if (type.desc == item.TypeID){
-                        log.MakeLog(string.Format("Added {0} to dictionary.", type.desc), true);
+                        //log.MakeLog(string.Format("Added {0} to dictionary.", type.desc), true);
                         typeDict.Increment(type.desc);
                     }
                 }
@@ -1692,8 +2151,6 @@ namespace SimsCCManager.Packages.Sims4Search
             thisPackage.Entries.AddRange(typecount);
             thisPackage.FileHas.AddRange(fileHas);
 
-            int casp;int geom;int rle;int rmap;int thum;int img;int xml;int clhd;int clip;int stbl;int cobj;int ftpt;int lite;int thm;int mlod;int modl;int mtbl;int objd;int rslt;int tmlt;int ssm;int lrle;int bond;int cpre;int dmap;int smod;int bgeo;int hotc;
-
             distinctFlags = allFlags.Distinct().ToList();
             thisPackage.Flags.AddRange(distinctFlags);
 
@@ -1708,45 +2165,47 @@ namespace SimsCCManager.Packages.Sims4Search
                      
             log.MakeLog(string.Format("P{0}: Checking {1} against override IDs.", packageparsecount,thisPackage.PackageName), true);
             
-            List<OverridesList> overridesdb = new List<OverridesList>();
             log.MakeLog(string.Format("P{0}: Checking instances.", packageparsecount), true);
-            List<OverriddenList> overrideslist = new List<OverriddenList>();
-            ConcurrentBag<OverridesList> concol = new ConcurrentBag<OverridesList>();
-            Parallel.ForEach(thisPackage.InstanceIDs, id => {
-                overridesdb = GlobalVariables.S4OverridesConnection.Query<OverridesList>(string.Format("SELECT * FROM Instances where InstanceID='{0}'", id));
-                
-                foreach (OverridesList ov in overridesdb){
-                    log.MakeLog(string.Format("Found {0} as an override.", ov.InstanceID), true);
-                    if (thisPackage.Override == false) thisPackage.Override = true;
-                    concol.Add(ov);
+
+            var overrides = GlobalVariables.S4OverridesList.Where(p => thisPackage.InstanceIDs.Any(l => p.InstanceID == l)).ToList();
+
+            if(overrides.Count > 0){
+                log.MakeLog(string.Format("P{0}: Found {1} overrides!", packageparsecount, overrides.Count), true);
+                thisPackage.Override = true;
+                thisPackage.Type = "OVERRIDE";
+            }           
+
+            var specoverrides = GlobalVariables.S4SpecificOverridesList.Where(p => overrides.Any(l => p.Instance == l.InstanceID)).ToList();
+
+            List<SpecificOverrides> speco = new List<SpecificOverrides>(specoverrides.Count);
+
+            List<string> InstanceOverrides = new List<string>(overrides.Count);
+            List<string> ItemOverrides = new List<string>(overrides.Count);
+            foreach (OverridesList ov in overrides) {
+                SpecificOverrides sspo = new SpecificOverrides();
+                if (ov.InstanceID != "0000000000000000"){
+                    var specco = GlobalVariables.S4SpecificOverridesList.Where(p => p.Instance == ov.InstanceID).ToList();                    
+                    InstanceOverrides.Add(ov.InstanceID);
+                    ItemOverrides.Add(ov.Name);
+                    sspo.Instance = ov.InstanceID;
+                    if (specco.Any()){
+                        sspo.Description = specco[0].Description;
+                        thisPackage.Type = string.Format("OVERRIDE: {0}", sspo.Description);
+                    }
                 }
-            });
-            List<SpecificOverrides> overridematch = new List<SpecificOverrides>();
-            log.MakeLog(string.Format("P{0}: Finding specific overrides.", packageparsecount), true);
-            foreach (OverridesList iao in concol){
-                if (iao.InstanceID != "0000000000000000"){
-                    overridematch = GlobalVariables.S4SpecificOverridesConnection.Query<SpecificOverrides>(string.Format("SELECT * FROM Overrides where Instance='{0}'", iao.InstanceID));   
-                    List<SpecificOverrides> so = new List<SpecificOverrides>();
-                    so.AddRange(overridematch);                 
-                    if (overridematch.Any()){
-                        OverriddenList overriddenitem = new OverriddenList();
-                        overriddenitem.InstanceID = iao.InstanceID;
-                        overriddenitem.Name = iao.Name;
-                        overriddenitem.Pack = iao.Pack;
-                        overriddenitem.Type = iao.Type; 
-                        overriddenitem.Override = so[0].Description;
-                        overrideslist.Add(overriddenitem);
-                        overriddenitem = null; 
-                    }                                      
-                }                
             }
-            //overridesdb = null;           
+
+            if (InstanceOverrides.Any()){
+                thisPackage.OverriddenInstances.AddRange(InstanceOverrides);
+            }
+            if (ItemOverrides.Any()){
+                thisPackage.OverriddenInstances.AddRange(ItemOverrides);
+            }
+            InstanceOverrides = new List<string>(0);
+            ItemOverrides = new List<string>(0);
             
-            thisPackage.OverridesList.AddRange(overrideslist);
-            overrideslist = new List<OverriddenList>();
-            overridematch = new List<SpecificOverrides>();
-            overridesdb = new List<OverridesList>();
-            
+            int casp;int geom;int rle;int rmap;int thum;int img;int xml;int clhd;int clip;int stbl;int cobj;int ftpt;int lite;int thm;int mlod;int modl;int mtbl;int objd;int rslt;int tmlt;int ssm;int lrle;int bond;int cpre;int dmap;int smod;int bgeo;int hotc;
+
             if (thisPackage.Override != true){
                 log.MakeLog("No overrides were found. Checking other options.", true);
                 if ((typeDict.TryGetValue("S4SM", out ssm) && ssm >= 1)){
@@ -1904,9 +2363,12 @@ namespace SimsCCManager.Packages.Sims4Search
             GlobalVariables.currentpackage = packageinfo.Name;
             GlobalVariables.packagesRead++;
             log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime), true);
+            log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime), false);
+            
             
 
             log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
+            return;
         }
 
         public void FindS4ConflictsAndMatches(SimsPackage package){

@@ -68,6 +68,10 @@
               "target": "Package",
               "version": "[4.10.2, )"
             },
+            "System.Threading.Tasks.Dataflow": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
             "sqlite-net-pcl": {
               "target": "Package",
               "version": "[1.8.116, )"

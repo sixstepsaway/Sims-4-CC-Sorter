@@ -24,6 +24,7 @@ I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\System.
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\System.Security.Cryptography.Xml.dll
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\System.ServiceModel.Primitives.dll
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\System.ServiceModel.dll
+I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\System.Threading.Tasks.Dataflow.dll
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\cs\System.Private.ServiceModel.resources.dll
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\de\System.Private.ServiceModel.resources.dll
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\es\System.Private.ServiceModel.resources.dll

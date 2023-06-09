@@ -888,7 +888,8 @@ namespace SimsCCManager.Packages.Sims2Search
             GlobalVariables.currentpackage = packageinfo.Name;
             GlobalVariables.packagesRead++;
             log.MakeLog(string.Format("Reading file {0} took {1}", packageinfo.Name, elapsedtime), true);
-            
+            log.MakeLog(string.Format("Reading file {0} took {1}", packageinfo.Name, elapsedtime), false);
+            return;            
         }
 
         public void S2FindOrphans(SimsPackage package, int packageparsecount) {  

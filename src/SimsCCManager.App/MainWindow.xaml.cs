@@ -45,6 +45,7 @@ using System.Data.SQLite;
 using SimsCCManager.Misc.TrayReader;
 using System.Runtime;
 using SimsCCManager.Packages.Sorting;
+using System.Threading.Tasks.Dataflow;
 
 namespace Sims_CC_Sorter
 {
@@ -72,7 +73,7 @@ namespace Sims_CC_Sorter
         public bool runprogress = false;
         private bool fullystopped = false;
         public int countprogress = 0;
-        int threads = Environment.ProcessorCount;
+        int processors = Environment.ProcessorCount;
         int threadstouse = 0;
         bool complete = false;
         
@@ -94,6 +95,13 @@ namespace Sims_CC_Sorter
         private List<PackageFile> packagefiles = new List<PackageFile>();
 
         private CancellationTokenSource cts = new CancellationTokenSource();    
+        private ObservableCollection<Task> packagestoread = new ObservableCollection<Task>();
+        private BackgroundWorker packagereader = new BackgroundWorker();
+        private ConcurrentBag<BackgroundWorker> backgroundWorkers = new ConcurrentBag<BackgroundWorker>();
+        private int completedreads = 0;
+        private int runningthreads = 0;
+        private int workerthreads = 0;
+        private int iothreads = 0;
 
         public static int maxi = 0;
 
@@ -105,16 +113,33 @@ namespace Sims_CC_Sorter
         }
 
         private void StartIt(){
+            /*[Update: Just out of interest: .NET Thread Pool default numbers of threads:
+
+                1023 in Framework 4.0 (32-bit environment)
+                32767 in Framework 4.0 (64-bit environment)
+                250 per core in Framework 3.5
+                25 per core in Framework 2.0
+
+            (These numbers may vary depending upon the hardware and OS)]*/
+
+            ThreadPool.GetMaxThreads(out int workerThreadsCount, out int ioThreadsCount);
+            workerthreads = workerThreadsCount;
+            iothreads = ioThreadsCount;
+
+
             if (eatenturecpu == true){
-                threadstouse = threads - 2;
+                threadstouse = iothreads - 2;
             } else {
-                threadstouse = (threads - 2) / 2;
+                threadstouse = (iothreads - 2) / 2;
             }
             parallelSettings.MaxDegreeOfParallelism = threadstouse;
-
+            
             ThreadPool.SetMaxThreads(threadstouse, 0);
-            ThreadPool.SetMinThreads(threadstouse, 0);
-
+            ThreadPool.SetMinThreads(2, 0);
+            packagestoread.CollectionChanged += packagestoread_CollectionChanged;
+            //packagereader.DoWork += packagereader_DoWork;
+            //packagereader.RunWorkerCompleted += packagereader_RunWorkerCompleted;
+            //packagereader.WorkerSupportsCancellation = true;
 
             if (GlobalVariables.debugMode) {
                 Dispatcher.Invoke(new Action(() => testButton.Visibility = Visibility.Visible));
@@ -166,13 +191,13 @@ namespace Sims_CC_Sorter
 
         private void noeatcpu_Check(object sender, RoutedEventArgs e){
             eatenturecpu = false;
-            threadstouse = threads / 3;
+            threadstouse = (workerthreads - 2) / 2;
             parallelSettings.MaxDegreeOfParallelism = threadstouse;
             log.MakeLog(string.Format("Threads set to {0}", threadstouse), true);
         }
         private void eatcpu_Uncheck(object sender, RoutedEventArgs e){
             eatenturecpu = true;
-            threadstouse = threads;
+            threadstouse = workerthreads - 2;
             parallelSettings.MaxDegreeOfParallelism = threadstouse;
             log.MakeLog(string.Format("Threads set to {0}", threadstouse), true);
         }  
@@ -485,13 +510,7 @@ namespace Sims_CC_Sorter
                 GlobalVariables.DatabaseConnection.CreateTable <TagsList>();
             } catch (Exception e){
                 log.MakeLog(string.Format("Ran into an error making Tagslist table: {0}", e), true);
-            }             
-            log.MakeLog("Making BrokenChecked table", true);
-            try {
-                GlobalVariables.DatabaseConnection.CreateTable <BrokenChecked>();
-            } catch (Exception e){
-                log.MakeLog(string.Format("Ran into an error making BrokenChecked table: {0}", e), true);
-            }             
+            }
             log.MakeLog("Making FileHasList table", true);
             try {
                 GlobalVariables.DatabaseConnection.CreateTable <fileHasList>();
@@ -563,14 +582,13 @@ namespace Sims_CC_Sorter
             rp.Dispose();
             
             sw.Stop();
-            Task updatesw = Task.Run(() => {
-                complete= true;               
-            }, token);
+            
+            complete = true;  
 
             if (complete == true){
                 runprogress = false;
             }
-            updatesw.Dispose();
+            //updatesw.Dispose();
             //new Thread(() => ) {IsBackground = true}.Start();
 
             if (!token.IsCancellationRequested) {
@@ -596,16 +614,15 @@ namespace Sims_CC_Sorter
         private void FindFiles(CancellationToken token){
             var directory = new DirectoryInfo(GlobalVariables.ModFolder);
             var VilesS = directory.EnumerateFiles("*.*", SearchOption.AllDirectories).Where(file => !file.DirectoryName.Contains("_SORTED"));;
-            List<FileInfo> files = new();
-            files.AddRange(VilesS);
-            string[] filesS = new string[files.Count];
-            for (int f = 0; f < files.Count; f++){
-                filesS[f] = files[f].FullName;
+            List<FileInfo> ffiles = new();
+            ffiles.AddRange(VilesS);
+            string[] filesS = new string[ffiles.Count];
+            for (int f = 0; f < ffiles.Count; f++){
+                filesS[f] = ffiles[f].FullName;
             }
             
             Task task0 = Task.Run(() => {
                 log.MakeLog("Sorting packages files from non-package files.", true);
-                log.MakeLog(string.Format("Setting maxi to {0}", filesS.Length), true);
                 maxi = filesS.Length + 7;             
                 log.MakeLog(string.Format("Maxi set to {0}.", maxi), true);                        
                 log.MakeLog("Setting progress bar.", true);
@@ -649,26 +666,30 @@ namespace Sims_CC_Sorter
                             var packagesDone = GlobalVariables.DatabaseConnection.Query<SimsPackage>(string.Format("SELECT * FROM Packages where Location = '{0}'", file));
                             var notPack = GlobalVariables.DatabaseConnection.Query<AllFiles>(string.Format("SELECT * FROM AllFiles where Location = '{0}'", file));
                             if (packagesPending.Any()){
-                                log.MakeLog(string.Format("File {0} already exists in database and is awaiting processing.", file), true);
+                                log.MakeLog(string.Format("File {1}: File {0} already exists in database and is awaiting processing.", file, c), true);
                             } else if (packagesDone.Any()){
-                                log.MakeLog(string.Format("File {0} already exists in database and has been read.", file), true);                                
+                                log.MakeLog(string.Format("File {1}: File {0} already exists in database and has been read.", file, c), true);                                
                             } else if (notPack.Any()){
-                                log.MakeLog(string.Format("File {0} already exists in database isn't a package.", file), true);
+                                log.MakeLog(string.Format("File {1}: File {0} already exists in database isn't a package.", file, c), true);
                             } else {
                                 files.Add(new FileInfo(file));
                                 UpdateProgressBar(file, "Acquiring");
-                                log.MakeLog(string.Format("Adding {0} to list.", file), true); 
+                                log.MakeLog(string.Format("File {1}: Adding {0} to list.", file, c), true); 
+                                log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true);
                             }
                         });
                     } else {
                         files.Add(new FileInfo(file));
                         UpdateProgressBar(file, "Acquiring");
-                        log.MakeLog(string.Format("Adding {0} to list.", file), true); 
+                        log.MakeLog(string.Format("File {1}: Adding {0} to list.", file, c), true); 
+                        log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true);
                     }
                     c++;
                 }
             }, token);
             task1.Wait(token);
+
+            log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true); 
             
             Task task2 = Task.Run(() => {
                 if (token.IsCancellationRequested)
@@ -697,6 +718,8 @@ namespace Sims_CC_Sorter
                 });
                 UpdateProgressBar("sims3packs", "Sorting");
             }, token);
+
+            log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true); 
             
             Task task3 = Task.Run(() => {
                 if (token.IsCancellationRequested)
@@ -725,6 +748,8 @@ namespace Sims_CC_Sorter
                 });
                 UpdateProgressBar("sims2packs", "Sorting");                
             }, token);
+
+            log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true); 
             
             Task task5 = Task.Run(() => {
                 if (token.IsCancellationRequested)
@@ -754,7 +779,9 @@ namespace Sims_CC_Sorter
                     countprogress++;
                 });
                 UpdateProgressBar("sims4scripts", "Sorting");
-            }, token);            
+            }, token);  
+
+            log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true);           
 
             Task task6 = Task.Run(() => {
                 if (token.IsCancellationRequested)
@@ -784,6 +811,8 @@ namespace Sims_CC_Sorter
                 UpdateProgressBar("compressed files", "Sorting");
             }, token);
 
+            log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true); 
+
             Task task7 = Task.Run(() => {
                 if (token.IsCancellationRequested)
                 {
@@ -810,7 +839,9 @@ namespace Sims_CC_Sorter
                     log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", t.Name), true);
                 });
                 UpdateProgressBar("tray files", "Sorting");
-            }, token);              
+            }, token);     
+
+            log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true);          
 
             Task task8 = Task.Run(() => {
                 if (token.IsCancellationRequested)
@@ -838,7 +869,9 @@ namespace Sims_CC_Sorter
                     log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", o.Name), true);
                 });
                 UpdateProgressBar("other files", "Sorting");
-            }, token);   
+            }, token);  
+
+            log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true); 
                 
             Task task9 = Task.Run(() => {
                 if (token.IsCancellationRequested)
@@ -849,14 +882,19 @@ namespace Sims_CC_Sorter
                 }
                 log.MakeLog("Finding packages.", true);
                 var package = files.Where(x => x.Extension == ".package");
+                log.MakeLog(string.Format("There are {0} files in 'package', and {1} files in 'packages'.", package.Count().ToString(), packages.Count), true);
                 packages.AddRange(package);
+                log.MakeLog(string.Format("There are now {0} files in 'packages'.", packages.Count), true);
+                int tempcount = 0;
                 Parallel.ForEach(packages, p => { 
+                    tempcount++;
                     if (token.IsCancellationRequested)
                     {
                         log.MakeLog("Process cancelled.", true);
                         stop = true;
                         return;
-                    }log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", p.Name), true);
+                    }
+                    log.MakeLog(string.Format("Item {0}: {1} is not a duplicate, adding to database.", tempcount, p.Name), true);
                     packagefiles.Add(new PackageFile { Name = p.Name, Location = p.FullName, Status = "Pending"});
                     allfiles.Add(new AllFiles { Name = p.Name, Location = p.FullName, Type = "package", Status = "Fine"});
                 });
@@ -895,7 +933,9 @@ namespace Sims_CC_Sorter
                 }                       
                 log.MakeLog("Inserting, please wait.", true);
                 try {
+                    log.MakeLog(string.Format("Inserting 'allfiles' with {0} items.", allfiles.Count), true);
                     GlobalVariables.DatabaseConnection.InsertAll(allfiles);
+                    log.MakeLog(string.Format("Inserting 'packagefiles' with {0} items.", packagefiles.Count), true);
                     GlobalVariables.DatabaseConnection.InsertAll(packagefiles);
                 } catch (SQLite.SQLiteException e) {
                     Console.WriteLine(string.Format("Inserting sorted files to database failed. Exception: {0}", e.Message));
@@ -922,6 +962,7 @@ namespace Sims_CC_Sorter
             Task getPackages = Task.Run(() => {
                 var dbqc = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending' ORDER BY Name ASC");
                 allp.AddRange(dbqc); 
+                log.MakeLog(string.Format("Packages to read count is {0}.", allp.Count), true);
                 maxi = allp.Count;
                 GlobalVariables.PackageCount = allp.Count();
                 SetProgressBar();
@@ -931,10 +972,53 @@ namespace Sims_CC_Sorter
             });
             getPackages.Wait(token);
             getPackages.Dispose();
-            new Thread(() => RunUpdateElapsed(sw)) {IsBackground = true}.Start();
+            new Thread(() => RunUpdateElapsed(sw, token)) {IsBackground = true}.Start();
             new Thread(() => RunUpdateProgressBar(token)) {IsBackground = true}.Start();
-            Task ReadPackages = Task.Run(() => {                
-                if (GlobalVariables.debugMode == false){
+
+            
+
+
+
+
+            
+            Task ReadPackages = Task.Run(() => {
+                foreach (PackageFile p in allp)
+                {
+                    log.MakeLog(string.Format("Waiting to add {0} to tasklist.", p.Name), true);
+                    while (runningthreads >= threadstouse){
+                        Thread.Sleep(1);
+                    }
+                    log.MakeLog(string.Format("Adding {0} to tasklist.", p.Name), true);
+                    CancellationTokenSource t_cts = new CancellationTokenSource();
+                    packagestoread.Add(new Task(async () => {
+                        bool _runThread = true;
+                        Thread t = new Thread(() => {
+                            while (_localRunThread)
+                            {
+                                try {
+                                    
+                                        t_cts.CancelAfter(60*1000);
+                                        ProcessPackage(p.Location);
+                                    
+                                } catch (OperationCanceledException) {
+                                    log.MakeLog("A task timed out and was cancelled.", true);
+                                } finally {
+                                    t_cts.Dispose();
+                                }                        
+                                completedreads++;
+                                runningthreads--;
+                                log.MakeLog(string.Format("Task complete, removing task and thread.", runningthreads), true);
+                            }
+                        }) {IsBackground = true}.Start();
+                    }, t_cts.Token));
+                }
+                while (completedreads < allp.Count){
+                    //do nothing?
+                }
+
+                /*//await ReadPackagesTasks(tasklist, token);
+
+                if (GlobalVariables.debugMode == true){
                     foreach (PackageFile p in allp){
                         if (token.IsCancellationRequested)
                         {
@@ -956,7 +1040,7 @@ namespace Sims_CC_Sorter
                         read.Wait(token);                        
                     };
                 } else {
-                    Parallel.ForEach(allp, p => {
+                    Parallel.ForEach(allp, parallelSettings, p => {
                         if (token.IsCancellationRequested)
                         {
                             log.MakeLog("Process cancelled.", true);
@@ -973,10 +1057,51 @@ namespace Sims_CC_Sorter
                             log.MakeLog(string.Format("Caught exception running initial process on {1}: {0}", e.Message, p.Location), true);
                         }
                     });
-                }
+                }*/
             }, token);
             ReadPackages.Wait(token);
             ReadPackages.Dispose();
+        }
+
+        void packagereader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            
+        }
+
+        void packagereader_DoWork(object sender, DoWorkEventArgs e, Task t)
+        {
+            
+        }
+
+        private Task<bool> ProcessPackage(string location){
+            bool complete = initialprocess.CheckThrough(location);
+            return Task.FromResult(complete);
+        }
+
+
+        // ------------- task event
+        // runs when a task is added to the list
+        void packagestoread_CollectionChanged(object sender,
+            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {            
+            
+            try
+            {
+                foreach (Task t in packagestoread)
+                {
+                    log.MakeLog(string.Format("There are {0} threads currently running.", runningthreads), true);
+                    if (runningthreads <= threadstouse){
+                        log.MakeLog(string.Format("There is a free thread. Starting."), true);
+                        runningthreads++;
+                        t.Start();
+                        packagestoread.Remove(t);
+                    }
+                }
+            }
+            catch
+            {
+                log.MakeLog("Oops! Something went wrong.", true);
+            }
         }
 
         private void FindConflicts(){
@@ -1007,7 +1132,7 @@ namespace Sims_CC_Sorter
             int value;
             string cmdtext = string.Format("SELECT count(*) FROM AllFiles where type = '{0}'", type);
             var sqm = GlobalVariables.DatabaseConnection.CreateCommand(cmdtext);
-            value = sqm.ExecuteScalar<Int32>();
+            value = sqm.ExecuteScalar<int>();
             log.MakeLog("Counted! Returning.", true);
             return value;
         }
@@ -1060,7 +1185,7 @@ namespace Sims_CC_Sorter
                         Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("Preparing to read {0} packages.", maxi)));
                     }                
                 } 
-            });
+            }, token);
             rp.Wait(token);
             rp.Dispose();
             return;            
@@ -1088,7 +1213,7 @@ namespace Sims_CC_Sorter
             Dispatcher.Invoke(new Action(() => timeRemaining.Text = string.Format("Elapsed: {0} | Remaining: {1}", times[0], times[1])));
         }
 
-        private async void RunUpdateElapsed(Stopwatch sw){
+        private async void RunUpdateElapsed(Stopwatch sw, CancellationToken token){
             Task rue = Task.Run(() => {
                 //log.MakeLog("Running run update elapsed.", true);
                 Dispatcher.Invoke(new Action(() => timeRemaining.Visibility = Visibility.Visible));
@@ -1098,7 +1223,7 @@ namespace Sims_CC_Sorter
                         new Thread(() => UpdateElasped(sw)) {IsBackground = true}.Start();
                     }
                 }
-            });
+            }, token);
             rue.Wait();
             rue.Dispose();
             return;            
@@ -1109,7 +1234,8 @@ namespace Sims_CC_Sorter
               
 
         private void testbutton_Click(object sender, EventArgs e) {
-
+            ThreadPool.GetMaxThreads(out int workerThreadsCount, out int ioThreadsCount);
+            Console.WriteLine("Worker Threads Count: " + workerThreadsCount + " and iothreadscount: " + ioThreadsCount);
         }        
     }
 

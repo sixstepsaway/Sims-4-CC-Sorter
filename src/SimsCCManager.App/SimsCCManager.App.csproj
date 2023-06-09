@@ -29,6 +29,7 @@
     <Content Include="data\S4_SpecificOverrides.sqlite">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="7.0.0" />
     <Resource Include="img\*.*" />
     <Resource Include="img\flaticon\*.*" />
     <Resource Include="img\icons\*.*" />

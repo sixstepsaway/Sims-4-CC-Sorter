@@ -68,7 +68,8 @@ namespace SimsCCManager.Packages.Initial {
             return value;
         }
 
-        public void CheckThrough (string input){
+        public bool CheckThrough (string input){
+            bool complete = false;
             int count = GlobalVariables.packagesReadReading;
             GlobalVariables.packagesReadReading++;
             FileInfo pack = new FileInfo(input);
@@ -83,9 +84,16 @@ namespace SimsCCManager.Packages.Initial {
                 var fileq = GlobalVariables.DatabaseConnection.Query<AllFiles>(qcmd);
                 AllFiles query = fileq[0];
                 string qtype = query.Type;
-                GlobalVariables.DatabaseConnection.Delete(query);                
+                GlobalVariables.DatabaseConnection.Delete(query);     
+                packagereader.Close();
+                msPackage.Close();
+                packagereader.Dispose();
+                msPackage.Dispose();
                 if (GlobalVariables.sortonthego == true){
                     string newloc = Path.Combine(FilesSort.BrokenFiles, query.Name);
+                    if(!Directory.Exists(FilesSort.BrokenFiles)){
+                        Methods.MakeFolder(FilesSort.BrokenFiles);
+                    }
                     File.Move(query.Location, newloc);
                     query.Location = newloc;
                     query.Status = "Broken";
@@ -95,9 +103,8 @@ namespace SimsCCManager.Packages.Initial {
                     GlobalVariables.DatabaseConnection.Insert(query);
                 }                
                 log.MakeLog(statement, false);
-                packagereader.Dispose();
-                msPackage.Dispose();
-                return;
+                complete = true;
+                return complete;
             } else {
                 counter++;
                 uint major = packagereader.ReadUInt32();                
@@ -153,9 +160,11 @@ namespace SimsCCManager.Packages.Initial {
                     af.Type = "package";
                     af.Status = "Unidentifiable version";
                     GlobalVariables.DatabaseConnection.Update(af);
-                }
+                }                
                 packagereader.Dispose();
                 msPackage.Dispose();
+                complete = true;
+                return complete;
             }
         }
         
