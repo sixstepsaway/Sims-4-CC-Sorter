@@ -59,6 +59,7 @@ namespace Sims_CC_Sorter
         GlobalVariables globalVars = new GlobalVariables();
         InitialProcessing initialprocess = new InitialProcessing();
         ParallelOptions parallelSettings = new ParallelOptions();
+        FilesSort filesSort = new FilesSort();
         public Stopwatch sw = new Stopwatch();
         string SelectedFolder = "";
         string statement = "";
@@ -99,6 +100,7 @@ namespace Sims_CC_Sorter
         public MainWindow()
         {           
             InitializeComponent();
+            
             new Thread(() => StartIt()) {IsBackground = true}.Start();
         }
 
@@ -109,6 +111,11 @@ namespace Sims_CC_Sorter
                 threadstouse = (threads - 2) / 2;
             }
             parallelSettings.MaxDegreeOfParallelism = threadstouse;
+
+            ThreadPool.SetMaxThreads(threadstouse, 0);
+            ThreadPool.SetMinThreads(threadstouse, 0);
+
+
             if (GlobalVariables.debugMode) {
                 Dispatcher.Invoke(new Action(() => testButton.Visibility = Visibility.Visible));
             } else {
@@ -672,8 +679,7 @@ namespace Sims_CC_Sorter
                 }
                 log.MakeLog("Finding sims3packs.", true);
                 var sims3packs = files.Where(x => x.Extension == ".Sims3Pack" || x.Extension == ".sims3pack");
-                sims3pack.AddRange(sims3packs);
-                
+                sims3pack.AddRange(sims3packs);      
                 Parallel.ForEach(sims3pack, s3 => {
                     if (token.IsCancellationRequested)
                     {
@@ -681,8 +687,13 @@ namespace Sims_CC_Sorter
                         stop = true;
                         return;
                     }
-                    allfiles.Add(new AllFiles { Name = s3.Name, Location = s3.FullName, Type = "sims3pack", Status = "Fine"});
-                    log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", s3.Name), true);
+                    if (GlobalVariables.sortonthego == true){
+                        string newloc = System.IO.Path.Combine(FilesSort.S3PacksFolder, s3.Name);
+                        allfiles.Add(filesSort.MoveFile(s3.FullName, newloc, FilesSort.S3PacksFolder, new AllFiles { Name = s3.Name, Location = newloc, Type = "sims3pack", Status = "Fine"}));
+                    } else {
+                        allfiles.Add(new AllFiles { Name = s3.Name, Location = s3.FullName, Type = "sims3pack", Status = "Fine"});
+                    }
+                    log.MakeLog(string.Format("{0} is not a duplicate, handling.", s3.Name), true);
                 });
                 UpdateProgressBar("sims3packs", "Sorting");
             }, token);
@@ -703,9 +714,14 @@ namespace Sims_CC_Sorter
                         log.MakeLog("Process cancelled.", true);
                         stop = true;
                         return;
-                    }  
-                    allfiles.Add(new AllFiles { Name = s2.Name, Location = s2.FullName, Type = "sims2pack", Status = "Fine"});                        
-                    log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", s2.Name), true);
+                    }
+                    if (GlobalVariables.sortonthego == true){
+                        string newloc = System.IO.Path.Combine(FilesSort.S2PacksFolder, s2.Name);                        
+                        allfiles.Add(filesSort.MoveFile(s2.FullName, newloc, FilesSort.S2PacksFolder, new AllFiles { Name = s2.Name, Location = newloc, Type = "sims2pack", Status = "Fine"}));
+                    } else {
+                        allfiles.Add(new AllFiles { Name = s2.Name, Location = s2.FullName, Type = "sims2pack", Status = "Fine"});
+                    }
+                    log.MakeLog(string.Format("{0} is not a duplicate, handling.", s2.Name), true);
                 });
                 UpdateProgressBar("sims2packs", "Sorting");                
             }, token);
@@ -726,8 +742,14 @@ namespace Sims_CC_Sorter
                         log.MakeLog("Process cancelled.", true);
                         stop = true;
                         return;
-                    } 
-                    allfiles.Add(new AllFiles { Name = t4.Name, Location = t4.FullName, Type = "ts4script", Status = "Fine"});  
+                    }
+                    if (GlobalVariables.sortonthego == true){
+                        string newloc = System.IO.Path.Combine(FilesSort.S4ScriptsFolder, t4.Name);
+                        File.Move(t4.FullName, newloc);
+                        allfiles.Add(filesSort.MoveFile(t4.FullName, newloc, FilesSort.S4ScriptsFolder, new AllFiles { Name = t4.Name, Location = newloc, Type = "ts4script", Status = "Fine"}));
+                    } else {
+                        allfiles.Add(new AllFiles { Name = t4.Name, Location = t4.FullName, Type = "ts4script", Status = "Fine"});
+                    }
                     log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", t4.Name), true);
                     countprogress++;
                 });
@@ -751,7 +773,12 @@ namespace Sims_CC_Sorter
                         stop = true;
                         return;
                     }
-                    allfiles.Add(new AllFiles { Name = c.Name, Location = c.FullName, Type = "compressed file", Status = "Fine"});
+                    if (GlobalVariables.sortonthego == true){
+                        string newloc = System.IO.Path.Combine(FilesSort.ZipFilesFolder, c.Name);
+                        allfiles.Add(filesSort.MoveFile(c.FullName, newloc, FilesSort.ZipFilesFolder, new AllFiles { Name = c.Name, Location = newloc, Type = "compressed file", Status = "Fine"}));
+                    } else {
+                        allfiles.Add(new AllFiles { Name = c.Name, Location = c.FullName, Type = "compressed file", Status = "Fine"});
+                    }
                     log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", c.Name), true);
                 }); 
                 UpdateProgressBar("compressed files", "Sorting");
@@ -774,7 +801,12 @@ namespace Sims_CC_Sorter
                         stop = true;
                         return;
                     }  
-                    allfiles.Add(new AllFiles { Name = t.Name, Location = t.FullName, Type = "tray file", Status = "Fine"});
+                    if (GlobalVariables.sortonthego == true){
+                        string newloc = System.IO.Path.Combine(FilesSort.TrayFilesFolder, t.Name);
+                        allfiles.Add(filesSort.MoveFile(t.FullName, newloc, FilesSort.TrayFilesFolder, new AllFiles { Name = t.Name, Location = newloc, Type = "tray file", Status = "Fine"}));
+                    } else {
+                        allfiles.Add(new AllFiles { Name = t.Name, Location = t.FullName, Type = "tray file", Status = "Fine"});
+                    }
                     log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", t.Name), true);
                 });
                 UpdateProgressBar("tray files", "Sorting");
@@ -797,7 +829,12 @@ namespace Sims_CC_Sorter
                         stop = true;
                         return;
                     }
-                    allfiles.Add(new AllFiles { Name = o.Name, Location = o.FullName, Type = "other", Status = "Fine"});           
+                    if (GlobalVariables.sortonthego == true){
+                        string newloc = System.IO.Path.Combine(FilesSort.NonSimsFiles, o.Name);
+                        allfiles.Add(filesSort.MoveFile(o.FullName, newloc, FilesSort.NonSimsFiles, new AllFiles { Name = o.Name, Location = newloc, Type = "other", Status = "Fine"}));
+                    } else {
+                        allfiles.Add(new AllFiles { Name = o.Name, Location = o.FullName, Type = "other", Status = "Fine"});
+                    }
                     log.MakeLog(string.Format("{0} is not a duplicate, adding to database.", o.Name), true);
                 });
                 UpdateProgressBar("other files", "Sorting");
@@ -907,7 +944,11 @@ namespace Sims_CC_Sorter
                         }
                         Task read = Task.Run(() => {
                             try {
-                                initialprocess.CheckThrough(p.Location);
+                                if (File.Exists(p.Location)){
+                                    initialprocess.CheckThrough(p.Location);
+                                } else {
+                                    log.MakeLog(string.Format("File {0} could not be found.", p.Name), true);
+                                }                                
                             } catch (Exception e) {
                                 log.MakeLog(string.Format("Caught exception running initial process on {1}: {0}", e.Message, p.Location), true);
                             }
@@ -923,7 +964,11 @@ namespace Sims_CC_Sorter
                             return;
                         }
                         try {
-                            initialprocess.CheckThrough(p.Location);
+                            if (File.Exists(p.Location)){
+                                initialprocess.CheckThrough(p.Location);
+                            } else {
+                                log.MakeLog(string.Format("File {0} could not be found.", p.Name), true);
+                            }
                         } catch (Exception e) {
                             log.MakeLog(string.Format("Caught exception running initial process on {1}: {0}", e.Message, p.Location), true);
                         }

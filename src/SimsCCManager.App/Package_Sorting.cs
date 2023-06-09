@@ -29,12 +29,22 @@ namespace SimsCCManager.Packages.Sorting
         Dictionary<string, string> SortingRulesSS = new Dictionary<string, string>();
         Dictionary<string, string> SortingRulesGeneral = new Dictionary<string, string>();
         public static string SortedFolder = Path.Combine(GlobalVariables.ModFolder, "_SORTED");
+        public static string ZipFilesFolder = Path.Combine(SortedFolder, "_CompressedFiles");
+        public static string ZipFileDupesFolder = Path.Combine(ZipFilesFolder, "_DUPLICATES");
+        public static string NonSimsFiles = Path.Combine(SortedFolder, "_NONSIMS");
+        public static string BrokenFiles = Path.Combine(SortedFolder, "_BROKEN");
         public static string SortedS2Folder = Path.Combine(SortedFolder, "_Sims2");
+        public static string S2PacksFolder = Path.Combine(SortedS2Folder, "__Sims2Packs");
         public static string SortedS3Folder = Path.Combine(SortedFolder, "_Sims3");
+        public static string S3PacksFolder = Path.Combine(SortedS3Folder, "__Sims3Packs");
         public static string SortedS4Folder = Path.Combine(SortedFolder, "_Sims4");
+        public static string S4ScriptsFolder = Path.Combine(SortedS4Folder, "__TS4Scripts");
+        public static string TrayFilesFolder = Path.Combine(SortedS4Folder, "__Tray Files");
+        public static string TrayFileDupesFolder = Path.Combine(TrayFilesFolder, "_DUPLICATES");
         public static string S2DupesFolder = Path.Combine(SortedS2Folder, "_DUPLICATES");
         public static string S3DupesFolder = Path.Combine(SortedS3Folder, "_DUPLICATES");
         public static string S4DupesFolder = Path.Combine(SortedS4Folder, "_DUPLICATES");
+        public static string DuplicatesFolderGeneral = Path.Combine(SortedFolder, "_DUPLICATES");
         string MergedSubFolder = "_MERGED";
         //time periods
 
@@ -1093,39 +1103,38 @@ namespace SimsCCManager.Packages.Sorting
                         Methods.MakeFolder(moveloc);
                     }
                     newloc = Path.Combine(moveloc, thisPackage.PackageName);
-                }                
-                File.Move(thisPackage.Location, newloc);
-                thisPackage.Location = newloc;
+                }
+                thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
                 return thisPackage;
             }
-
-            if (thisPackage.Type.Contains("OVERRIDE")){                
-                typesortA = thisPackage.OverriddenItems[0];
-                typesortB = Path.Combine("_OVERRIDES", typesortA);
-                if(thisPackage.Game == 2){
-                    moveloc = Path.Combine(SortedS2Folder, typesortB);
-                    if (!Directory.Exists(moveloc)){
-                        Methods.MakeFolder(moveloc);
+            if (!String.IsNullOrWhiteSpace(thisPackage.Type)){
+                if (thisPackage.Type.Contains("OVERRIDE")){                
+                    typesortA = thisPackage.OverriddenItems[0];
+                    typesortB = Path.Combine("_OVERRIDES", typesortA);
+                    if(thisPackage.Game == 2){
+                        moveloc = Path.Combine(SortedS2Folder, typesortB);
+                        if (!Directory.Exists(moveloc)){
+                            Methods.MakeFolder(moveloc);
+                        }
+                        newloc = Path.Combine(moveloc, thisPackage.PackageName);
                     }
-                    newloc = Path.Combine(moveloc, thisPackage.PackageName);
-                }
-                if(thisPackage.Game == 3){
-                    moveloc = Path.Combine(SortedS3Folder, typesortB);
-                    if (!Directory.Exists(moveloc)){
-                        Methods.MakeFolder(moveloc);
+                    if(thisPackage.Game == 3){
+                        moveloc = Path.Combine(SortedS3Folder, typesortB);
+                        if (!Directory.Exists(moveloc)){
+                            Methods.MakeFolder(moveloc);
+                        }
+                        newloc = Path.Combine(moveloc, thisPackage.PackageName);
                     }
-                    newloc = Path.Combine(moveloc, thisPackage.PackageName);
-                }
-                if(thisPackage.Game == 4){
-                    moveloc = Path.Combine(SortedS4Folder, typesortB);
-                    if (!Directory.Exists(moveloc)){
-                        Methods.MakeFolder(moveloc);
+                    if(thisPackage.Game == 4){
+                        moveloc = Path.Combine(SortedS4Folder, typesortB);
+                        if (!Directory.Exists(moveloc)){
+                            Methods.MakeFolder(moveloc);
+                        }
+                        newloc = Path.Combine(moveloc, thisPackage.PackageName);
                     }
-                    newloc = Path.Combine(moveloc, thisPackage.PackageName);
+                    thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
+                    return thisPackage;
                 }
-                File.Move(thisPackage.Location, newloc);
-                thisPackage.Location = newloc;
-                return thisPackage;
             }
 
             
@@ -1136,27 +1145,51 @@ namespace SimsCCManager.Packages.Sorting
                     typesortB = "Hair Accessory";
                     if(thisPackage.Game == 2){
                         moveloc = Path.Combine(SortedS2Folder, typesortB);
-                        if (!Directory.Exists(moveloc)){
-                            Methods.MakeFolder(moveloc);
-                        }
-                        newloc = Path.Combine(moveloc, thisPackage.PackageName);
+                        newloc = Path.Combine(moveloc, thisPackage.PackageName);                        
                     }
                     if(thisPackage.Game == 3){
                         moveloc = Path.Combine(SortedS3Folder, typesortB);
-                        if (!Directory.Exists(moveloc)){
-                            Methods.MakeFolder(moveloc);
-                        }
                         newloc = Path.Combine(moveloc, thisPackage.PackageName);
                     }
                     if(thisPackage.Game == 4){
                         moveloc = Path.Combine(SortedS4Folder, typesortB);
-                        if (!Directory.Exists(moveloc)){
-                            Methods.MakeFolder(moveloc);
-                        }
                         newloc = Path.Combine(moveloc, thisPackage.PackageName);
                     }
-                    File.Move(thisPackage.Location, newloc);
-                    thisPackage.Location = newloc;
+                    thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
+                    return thisPackage;
+                }
+                if (thisPackage.Function.Contains("Unidentified")){
+                    typesortB = "Unidentified";
+                    if(thisPackage.Game == 2){
+                        moveloc = Path.Combine(SortedS2Folder, typesortB);
+                        newloc = Path.Combine(moveloc, thisPackage.PackageName);                        
+                    }
+                    if(thisPackage.Game == 3){
+                        moveloc = Path.Combine(SortedS3Folder, typesortB);
+                        newloc = Path.Combine(moveloc, thisPackage.PackageName);
+                    }
+                    if(thisPackage.Game == 4){
+                        moveloc = Path.Combine(SortedS4Folder, typesortB);
+                        newloc = Path.Combine(moveloc, thisPackage.PackageName);
+                    }
+                    thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
+                    return thisPackage;
+                }
+                if (thisPackage.Function.Contains("Accessory") && thisPackage.PackageName.Contains("Overlay")){
+                    typesortB = "Color Overlay";
+                    if(thisPackage.Game == 2){
+                        moveloc = Path.Combine(SortedS2Folder, typesortB);
+                        newloc = Path.Combine(moveloc, thisPackage.PackageName);
+                    }
+                    if(thisPackage.Game == 3){
+                        moveloc = Path.Combine(SortedS3Folder, typesortB);
+                        newloc = Path.Combine(moveloc, thisPackage.PackageName);
+                    }
+                    if(thisPackage.Game == 4){
+                        moveloc = Path.Combine(SortedS4Folder, typesortB);
+                        newloc = Path.Combine(moveloc, thisPackage.PackageName);
+                    }
+                    thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
                     return thisPackage;
                 }
                 foreach (KeyValuePair<string, string> item in SortingRulesGeneral){
@@ -1164,27 +1197,17 @@ namespace SimsCCManager.Packages.Sorting
                         typesortB = Path.Combine(typesortA, item.Value);    
                         if(thisPackage.Game == 2){
                             moveloc = Path.Combine(SortedS2Folder, typesortB);
-                            if (!Directory.Exists(moveloc)){
-                                Methods.MakeFolder(moveloc);
-                            }
                             newloc = Path.Combine(moveloc, thisPackage.PackageName);
                         }
                         if(thisPackage.Game == 3){
                             moveloc = Path.Combine(SortedS3Folder, typesortB);
-                            if (!Directory.Exists(moveloc)){
-                                Methods.MakeFolder(moveloc);
-                            }
                             newloc = Path.Combine(moveloc, thisPackage.PackageName);
                         }
                         if(thisPackage.Game == 4){
                             moveloc = Path.Combine(SortedS4Folder, typesortB);
-                            if (!Directory.Exists(moveloc)){
-                                Methods.MakeFolder(moveloc);
-                            }
                             newloc = Path.Combine(moveloc, thisPackage.PackageName);
                         }
-                        File.Move(thisPackage.Location, newloc);
-                        thisPackage.Location = newloc;
+                        thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
                         return thisPackage;
                     }
                 }
@@ -1193,27 +1216,17 @@ namespace SimsCCManager.Packages.Sorting
                         typesortB = Path.Combine(typesortA, item.Value);    
                         if(thisPackage.Game == 2){
                             moveloc = Path.Combine(SortedS2Folder, typesortB);
-                            if (!Directory.Exists(moveloc)){
-                                Methods.MakeFolder(moveloc);
-                            }
                             newloc = Path.Combine(moveloc, thisPackage.PackageName);
                         }
                         if(thisPackage.Game == 3){
                             moveloc = Path.Combine(SortedS3Folder, typesortB);
-                            if (!Directory.Exists(moveloc)){
-                                Methods.MakeFolder(moveloc);
-                            }
                             newloc = Path.Combine(moveloc, thisPackage.PackageName);
                         }
                         if(thisPackage.Game == 4){
                             moveloc = Path.Combine(SortedS4Folder, typesortB);
-                            if (!Directory.Exists(moveloc)){
-                                Methods.MakeFolder(moveloc);
-                            }
                             newloc = Path.Combine(moveloc, thisPackage.PackageName);
                         }
-                        File.Move(thisPackage.Location, newloc);
-                        thisPackage.Location = newloc;
+                        thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
                         return thisPackage;
                     }
                 }
@@ -1221,86 +1234,226 @@ namespace SimsCCManager.Packages.Sorting
                     typesortB = Path.Combine(typesortA, thisPackage.FunctionSubcategory);
                     if(thisPackage.Game == 2){
                         moveloc = Path.Combine(SortedS2Folder, typesortB);
-                            if (!Directory.Exists(moveloc)){
-                                Methods.MakeFolder(moveloc);
-                            }
                         newloc = Path.Combine(moveloc, thisPackage.PackageName);
                     }
                     if(thisPackage.Game == 3){
                         moveloc = Path.Combine(SortedS3Folder, typesortB);
-                            if (!Directory.Exists(moveloc)){
-                                Methods.MakeFolder(moveloc);
-                            }
                         newloc = Path.Combine(moveloc, thisPackage.PackageName);
                     }
                     if(thisPackage.Game == 4){
                         moveloc = Path.Combine(SortedS4Folder, typesortB);
-                            if (!Directory.Exists(moveloc)){
-                                Methods.MakeFolder(moveloc);
-                            }
                         newloc = Path.Combine(moveloc, thisPackage.PackageName);
                     }
-                    File.Move(thisPackage.Location, newloc);
-                    thisPackage.Location = newloc;
+                    thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
                     return thisPackage;   
                 } 
                 if(thisPackage.Game == 2){
                     moveloc = Path.Combine(SortedS2Folder, typesortA);
-                        if (!Directory.Exists(moveloc)){
-                            Methods.MakeFolder(moveloc);
-                        }
                     newloc = Path.Combine(moveloc, thisPackage.PackageName);
                 }
                 if(thisPackage.Game == 3){
                     moveloc = Path.Combine(SortedS3Folder, typesortA);
-                        if (!Directory.Exists(moveloc)){
-                            Methods.MakeFolder(moveloc);
-                        }
                     newloc = Path.Combine(moveloc, thisPackage.PackageName);
                 }
                 if(thisPackage.Game == 4){
-                    moveloc = Path.Combine(SortedS4Folder, typesortA);
-                        if (!Directory.Exists(moveloc)){
-                            Methods.MakeFolder(moveloc);
-                        }
+                    moveloc = Path.Combine(SortedS4Folder, typesortA);                        
                     newloc = Path.Combine(moveloc, thisPackage.PackageName);
                 }
-                File.Move(thisPackage.Location, newloc);
-                thisPackage.Location = newloc;
+                thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
                 return thisPackage;      
             }
             if(thisPackage.Game == 2){
                 moveloc = Path.Combine(SortedS2Folder, "_MISC");
-                    if (!Directory.Exists(moveloc)){
-                        Methods.MakeFolder(moveloc);
-                    }
                 newloc = Path.Combine(moveloc, thisPackage.PackageName);
-                File.Move(thisPackage.Location, newloc);
-                thisPackage.Location = newloc;
+                thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
                 return thisPackage;  
             }
             if(thisPackage.Game == 3){
                 moveloc = Path.Combine(SortedS3Folder, "_MISC");
-                    if (!Directory.Exists(moveloc)){
-                        Methods.MakeFolder(moveloc);
-                    }
                 newloc = Path.Combine(moveloc, thisPackage.PackageName);
-                File.Move(thisPackage.Location, newloc);
-                thisPackage.Location = newloc;
+                thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
                 return thisPackage;  
             }
             if(thisPackage.Game == 4){
                 moveloc = Path.Combine(SortedS4Folder, "_MISC");
-                    if (!Directory.Exists(moveloc)){
-                        Methods.MakeFolder(moveloc);
-                    }
                 newloc = Path.Combine(moveloc, thisPackage.PackageName);
-                File.Move(thisPackage.Location, newloc);
-                thisPackage.Location = newloc;
+                thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
                 return thisPackage;  
             }
-
             return thisPackage;
+        }
+
+
+        public SimsPackage MoveFile(string oldloc, string newloc, string dirloc, SimsPackage thisPackage){
+            if (!Directory.Exists(dirloc)){
+                Methods.MakeFolder(dirloc);
+            }
+            if (!File.Exists(oldloc)){
+                log.MakeLog(string.Format("Can't find file {0} for moving.", thisPackage.PackageName), true);
+                thisPackage.Location = "not found";
+                return thisPackage;
+            } else if (File.Exists(newloc)){                
+                log.MakeLog("File already exists, moving to duplicates instead.", true);
+                if (thisPackage.Game == 2){
+                    newloc = Path.Combine(S2DupesFolder, thisPackage.PackageName);
+                    if (!Directory.Exists(S2DupesFolder)){
+                        Methods.MakeFolder(S2DupesFolder);
+                    }
+                    File.Move(oldloc, newloc);
+                    thisPackage.Location = newloc;
+                    return thisPackage;
+                } else if (thisPackage.Game == 3){
+                    newloc = Path.Combine(S3DupesFolder, thisPackage.PackageName);
+                    if (!Directory.Exists(S3DupesFolder)){
+                        Methods.MakeFolder(S3DupesFolder);
+                    }
+                    File.Move(oldloc, newloc);
+                    thisPackage.Location = newloc;
+                    return thisPackage;
+                } else if (thisPackage.Game == 4){
+                    newloc = Path.Combine(S4DupesFolder, thisPackage.PackageName);
+                    if (!Directory.Exists(S4DupesFolder)){
+                        Methods.MakeFolder(S4DupesFolder);
+                    }
+                    File.Move(oldloc, newloc);
+                    thisPackage.Location = newloc;
+                    return thisPackage;
+                } else {
+                    newloc = Path.Combine(DuplicatesFolderGeneral, thisPackage.PackageName);
+                    if (!Directory.Exists(DuplicatesFolderGeneral)){
+                        Methods.MakeFolder(DuplicatesFolderGeneral);
+                    }
+                    File.Move(oldloc, newloc);
+                    thisPackage.Location = newloc;
+                    return thisPackage;
+                }            
+            } else {
+                File.Move(oldloc, newloc);
+                thisPackage.Location = newloc;
+                return thisPackage;
+            }       
+        }
+
+        public AllFiles MoveFile(string oldloc, string newloc, string dirloc, AllFiles thisFile){
+            if (!Directory.Exists(dirloc)){
+                Methods.MakeFolder(dirloc);
+            }
+            if (File.Exists(newloc)){                
+                log.MakeLog("File already exists, moving to duplicates instead.", true);
+                if (thisFile.Type == "sims2pack"){
+                    newloc = Path.Combine(S2DupesFolder, thisFile.Name);
+                    if (!Directory.Exists(S2DupesFolder)){
+                        Methods.MakeFolder(S2DupesFolder);
+                    }
+                    if(File.Exists(oldloc)){
+                        File.Move(oldloc, newloc);
+                        thisFile.Location = newloc;
+                        return thisFile;
+                    } else {
+                        thisFile.Location = "not found";
+                        thisFile.Status = "not found";
+                        return thisFile;
+                    }                    
+                } else if (thisFile.Type == "sims3pack"){
+                    newloc = Path.Combine(S3DupesFolder, thisFile.Name);
+                    if (!Directory.Exists(S3DupesFolder)){
+                        Methods.MakeFolder(S3DupesFolder);
+                    }                    
+                    if(File.Exists(oldloc)){
+                        File.Move(oldloc, newloc);
+                        thisFile.Location = newloc;
+                        return thisFile;
+                    } else {
+                        thisFile.Location = "not found";
+                        thisFile.Status = "not found";
+                        return thisFile;
+                    }  
+                } else if (thisFile.Type == "ts4script"){
+                    newloc = Path.Combine(S4DupesFolder, thisFile.Name);
+                    if (!Directory.Exists(S4DupesFolder)){
+                        Methods.MakeFolder(S4DupesFolder);
+                    }                    
+                    if(File.Exists(oldloc)){
+                        File.Move(oldloc, newloc);
+                        thisFile.Location = newloc;
+                        return thisFile;
+                    } else {
+                        thisFile.Location = "not found";
+                        thisFile.Status = "not found";
+                        return thisFile;
+                    }  
+                } else if (thisFile.Type == "compressed file"){
+                    newloc = Path.Combine(ZipFileDupesFolder, thisFile.Name);
+                    if (!Directory.Exists(ZipFileDupesFolder)){
+                        Methods.MakeFolder(ZipFileDupesFolder);
+                    }
+                    if(File.Exists(oldloc)){
+                        File.Move(oldloc, newloc);
+                        thisFile.Location = newloc;
+                        return thisFile;
+                    } else {
+                        thisFile.Location = "not found";
+                        thisFile.Status = "not found";
+                        return thisFile;
+                    }  
+                } else if (thisFile.Type == "tray file"){
+                    newloc = Path.Combine(TrayFileDupesFolder, thisFile.Name);
+                    if (!Directory.Exists(TrayFileDupesFolder)){
+                        Methods.MakeFolder(TrayFileDupesFolder);
+                    }
+                    if(File.Exists(oldloc)){
+                        File.Move(oldloc, newloc);
+                        thisFile.Location = newloc;
+                        return thisFile;
+                    } else {
+                        thisFile.Location = "not found";
+                        thisFile.Status = "not found";
+                        return thisFile;
+                    }  
+                } else if (thisFile.Type == "other"){
+                    newloc = Path.Combine(DuplicatesFolderGeneral, thisFile.Name);
+                    if (!Directory.Exists(DuplicatesFolderGeneral)){
+                        Methods.MakeFolder(DuplicatesFolderGeneral);
+                    }
+                    if(File.Exists(oldloc)){
+                        File.Move(oldloc, newloc);
+                        thisFile.Location = newloc;
+                        return thisFile;
+                    } else {
+                        thisFile.Location = "not found";
+                        thisFile.Status = "not found";
+                        return thisFile;
+                    }  
+                } else {
+                    newloc = Path.Combine(DuplicatesFolderGeneral, thisFile.Name);
+                    if (!Directory.Exists(DuplicatesFolderGeneral)){
+                        Methods.MakeFolder(DuplicatesFolderGeneral);
+                    }
+                    if(File.Exists(oldloc)){
+                        File.Move(oldloc, newloc);
+                        thisFile.Location = newloc;
+                        return thisFile;
+                    } else {
+                        thisFile.Location = "not found";
+                        thisFile.Status = "not found";
+                        return thisFile;
+                    }  
+                }
+            } else if (!File.Exists(oldloc)){
+                log.MakeLog(string.Format("Can't find file {0} for moving.", thisFile.Name), true);
+                thisFile.Location = "not found";
+                return thisFile;
+            } else {
+                if(File.Exists(oldloc)){
+                    File.Move(oldloc, newloc);
+                    thisFile.Location = newloc;
+                    return thisFile;
+                } else {
+                    thisFile.Location = "not found";
+                    thisFile.Status = "not found";
+                    return thisFile;
+                }  
+            }       
         }
     }
 }

@@ -69,9 +69,9 @@ namespace SimsCCManager.Packages.Sims4Search
                     if (tag.Any()){                    
                         tl.AddRange(tag);
                         tagg.TypeID = tl[0].TypeID;
-                        tagg.Description = tl[0].Info;
+                        tagg.Description = tl[0].Description;
                         taglist.Add(tagg);
-                        log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, tagg.TypeID, tagg.Info), true);
+                        log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, tagg.TypeID, tagg.Description), true);
                     } else {
                         log.MakeLog(string.Format("Tag {0} matched nothing.", tags.tagKey[i]), true);
                     }  
@@ -81,9 +81,9 @@ namespace SimsCCManager.Packages.Sims4Search
                     if (tag.Any()){                    
                         tl.AddRange(tag);
                         tagg.TypeID = tl[0].TypeID;
-                        tagg.Description = tl[0].Info;
+                        tagg.Description = tl[0].Description;
                         taglist.Add(tagg);
-                        log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, tagg.TypeID, tagg.Info), true);
+                        log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, tagg.TypeID, tagg.Description), true);
                     } else {
                         log.MakeLog(string.Format("Tag {0} matched nothing.", tags.catKey[i]), true);
                     }  
@@ -109,7 +109,7 @@ namespace SimsCCManager.Packages.Sims4Search
                     tagg.TypeID = tl[0].TypeID;
                     tagg.Description = tl[0].Info;
                     taglist.Add(tagg);
-                    log.MakeLog(string.Format("Tag {0} ({2}) was matched to {1}.", i, taglist[i].Info, tags.tagKey[i]), true);
+                    log.MakeLog(string.Format("Tag {0} ({1}) was matched to {2}.", i, tags.tagKey[i], tagg.Info), true);
                 } else {
                     log.MakeLog(string.Format("Tag {0} matched nothing.", tags.tagKey[i]), true);
                 }
@@ -1754,6 +1754,10 @@ namespace SimsCCManager.Packages.Sims4Search
                 log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
                 } else if (!String.IsNullOrWhiteSpace(thisPackage.Function)) {
                     thisPackage.Type = thisPackage.Function;
+                } else if (!String.IsNullOrWhiteSpace(thisPackage.Tuning)) {
+                    if (thisPackage.Tuning == "object_bassinetGEN_Empty_01"){
+                        thisPackage.Type = "Bassinet";
+                    }
                 } else if ((typeDict.TryGetValue("BGEO", out bgeo) && bgeo >= 1) && (typeDict.TryGetValue("HOTC", out hotc) && hotc >= 1) && (typeDict.TryGetValue("SMOD", out smod) && smod >= 1)){
                     thisPackage.Type = "Slider";
                     log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
@@ -1871,8 +1875,9 @@ namespace SimsCCManager.Packages.Sims4Search
                 thisPackage.Age = age;           
             }
             dbpfFile.Close();
-            readFile.Dispose();
             dbpfFile.Dispose();
+            readFile.Close();
+            readFile.Dispose();
             
             if (GlobalVariables.sortonthego == true){
                 thisPackage = filesort.SortPackage(thisPackage);

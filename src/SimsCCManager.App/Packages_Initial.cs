@@ -13,6 +13,7 @@ using System.Data.SQLite;
 using SimsCCManager.Packages.Sims2Search;
 using SimsCCManager.Packages.Sims3Search;
 using SimsCCManager.Packages.Sims4Search;
+using SimsCCManager.Packages.Sorting;
 
 
 namespace SimsCCManager.Packages.Initial {
@@ -82,8 +83,17 @@ namespace SimsCCManager.Packages.Initial {
                 var fileq = GlobalVariables.DatabaseConnection.Query<AllFiles>(qcmd);
                 AllFiles query = fileq[0];
                 string qtype = query.Type;
-                GlobalVariables.DatabaseConnection.Delete(query);
-                GlobalVariables.DatabaseConnection.Insert(new AllFiles{Name = pack.Name, Location = pack.FullName, Type = qtype, Status = "Broken"});
+                GlobalVariables.DatabaseConnection.Delete(query);                
+                if (GlobalVariables.sortonthego == true){
+                    string newloc = Path.Combine(FilesSort.BrokenFiles, query.Name);
+                    File.Move(query.Location, newloc);
+                    query.Location = newloc;
+                    query.Status = "Broken";
+                    GlobalVariables.DatabaseConnection.Insert(query);
+                } else {
+                    query.Status = "Broken";
+                    GlobalVariables.DatabaseConnection.Insert(query);
+                }                
                 log.MakeLog(statement, false);
                 packagereader.Dispose();
                 msPackage.Dispose();
@@ -104,7 +114,19 @@ namespace SimsCCManager.Packages.Initial {
                     
                 } else if (major is 2 && minor is 0) {
                     log.MakeLog(string.Format("{0} is a Sims 3 file.", pack.FullName), false);
-                    PtoDb(pack, 3);
+                    if (GlobalVariables.sortonthego == true){
+                        PackageFile pf = new PackageFile{Name = pack.Name, Location = pack.FullName, Game = 3, Broken = false, Status = "Processing"};
+                        string newloc = Path.Combine(FilesSort.SortedS3Folder, pf.Name);
+                        msPackage.Close();
+                        msPackage.Dispose();
+                        packagereader.Close();
+                        packagereader.Dispose();
+                        File.Move(pf.Location, newloc);
+                        pf.Location = newloc;                    
+                        PtoDb(pf, 3);
+                    } else {
+                        PtoDb(pack, 3);
+                    }                    
                     //s3s.SearchS3Packages(pack, count);
                 } else if (major is 2 && minor is 1) {
                     log.MakeLog(string.Format("{0} is a Sims 4 file.", pack.FullName), false);
@@ -138,6 +160,15 @@ namespace SimsCCManager.Packages.Initial {
         }
         
 
+        private void PtoDb(PackageFile f, int game){
+            log.MakeLog(string.Format("Adding {0} to database as for Sims {1}", f.Name, game), true);
+            
+            GlobalVariables.DatabaseConnection.Insert(f);
+
+            //Containers.Containers.identifiedPackages.Add(new PackageFile{Name = f.Name, Location = f.FullName, Game = game, Broken = false, Status = "Pending"});
+            
+            log.MakeLog(string.Format("Added {0}! Returning.", f.Name), true);
+        }
         private void PtoDb(FileInfo f, int game){
             log.MakeLog(string.Format("Adding {0} to database as for Sims {1}", f.Name, game), true);
             

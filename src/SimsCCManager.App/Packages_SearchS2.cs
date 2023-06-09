@@ -839,8 +839,9 @@ namespace SimsCCManager.Packages.Sims2Search
             distinctGUIDS = allGUIDS.Distinct().ToList();
             thisPackage.GUIDs.AddRange(distinctGUIDS);
             dbpfFile.Close();
-            readFile.Dispose();
             dbpfFile.Dispose();
+            readFile.Close();
+            readFile.Dispose();            
             if (GlobalVariables.sortonthego == true){
                 thisPackage = filesort.SortPackage(thisPackage);
             }
