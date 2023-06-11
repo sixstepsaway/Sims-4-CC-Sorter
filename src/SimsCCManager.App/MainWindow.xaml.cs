@@ -46,6 +46,10 @@ using SimsCCManager.Misc.TrayReader;
 using System.Runtime;
 using SimsCCManager.Packages.Sorting;
 using System.Threading.Tasks.Dataflow;
+using SimsCCManager.Packages.Orphans;
+using SQLiteNetExtensions.Extensions;
+using System.IO.Packaging;
+using System.Windows.Media.Animation;
 
 namespace Sims_CC_Sorter
 {
@@ -61,6 +65,7 @@ namespace Sims_CC_Sorter
         InitialProcessing initialprocess = new InitialProcessing();
         ParallelOptions parallelSettings = new ParallelOptions();
         FilesSort filesSort = new FilesSort();
+        FindOrphans orphanhunt = new FindOrphans();
         public Stopwatch sw = new Stopwatch();
         string SelectedFolder = "";
         string statement = "";
@@ -95,16 +100,18 @@ namespace Sims_CC_Sorter
         private List<PackageFile> packagefiles = new List<PackageFile>();
 
         private CancellationTokenSource cts = new CancellationTokenSource();    
-        private ObservableCollection<Task> packagestoread = new ObservableCollection<Task>();
         private BackgroundWorker packagereader = new BackgroundWorker();
         private ConcurrentBag<BackgroundWorker> backgroundWorkers = new ConcurrentBag<BackgroundWorker>();
         private int completedreads = 0;
         private int runningthreads = 0;
         private int workerthreads = 0;
         private int iothreads = 0;
+        private bool _runthreads = true;
 
         public static int maxi = 0;
-
+        
+        
+       
         public MainWindow()
         {           
             InitializeComponent();
@@ -136,7 +143,19 @@ namespace Sims_CC_Sorter
             
             ThreadPool.SetMaxThreads(threadstouse, 0);
             ThreadPool.SetMinThreads(2, 0);
-            packagestoread.CollectionChanged += packagestoread_CollectionChanged;
+            GlobalVariables.AddPackages.CollectionChanged += AddPackages_CollectionChanged;
+            GlobalVariables.ProcessingReader.CollectionChanged += ProcessingReader_CollectionChanged;
+            GlobalVariables.AllFiles.CollectionChanged += AllFiles_CollectionChanged;
+            GlobalVariables.InstancesRecolorsS2Col.CollectionChanged += InstancesRecolorsS2Col_CollectionChanged;
+            GlobalVariables.InstancesMeshesS2Col.CollectionChanged += InstancesMeshesS2Col_CollectionChanged;
+            GlobalVariables.InstancesRecolorsS3Col.CollectionChanged += InstancesRecolorsS3Col_CollectionChanged;
+            GlobalVariables.InstancesMeshesS3Col.CollectionChanged += InstancesMeshesS3Col_CollectionChanged;
+            GlobalVariables.InstancesRecolorsS4Col.CollectionChanged += InstancesRecolorsS4Col_CollectionChanged;
+            GlobalVariables.InstancesMeshesS4Col.CollectionChanged += InstancesMeshesS4Col_CollectionChanged;
+
+
+
+
             //packagereader.DoWork += packagereader_DoWork;
             //packagereader.RunWorkerCompleted += packagereader_RunWorkerCompleted;
             //packagereader.WorkerSupportsCancellation = true;
@@ -149,10 +168,12 @@ namespace Sims_CC_Sorter
             if (dataExists == true) 
             {
                 Dispatcher.Invoke(new Action(() => StartOverButton.Visibility = Visibility.Visible));
+                Dispatcher.Invoke(new Action(() => OrphanButton.Visibility = Visibility.Visible));
                 Dispatcher.Invoke(new Action(() => LoadButton.Visibility = Visibility.Visible));
                 Dispatcher.Invoke(new Action(() => NewFolder.Content = "Find New Items"));
             } else {
                 Dispatcher.Invoke(new Action(() => StartOverButton.Visibility = Visibility.Collapsed));
+                Dispatcher.Invoke(new Action(() => OrphanButton.Visibility = Visibility.Collapsed));
                 Dispatcher.Invoke(new Action(() => LoadButton.Visibility = Visibility.Collapsed));
                 Dispatcher.Invoke(new Action(() => NewFolder.Content = "Find Content"));
             }
@@ -305,6 +326,7 @@ namespace Sims_CC_Sorter
             Dispatcher.Invoke(new Action(() => CancelButton.Background = Brushes.LightGray));
             runprogress = false;
             hascancelled = true;
+            _runthreads = false;
             Dispatcher.Invoke(new Action(() => Progressing.Visibility = Visibility.Hidden ));
             Dispatcher.Invoke(new Action(() => Cancelling.Visibility = Visibility.Visible ));
             Task ct = Task.Run(() => {
@@ -314,6 +336,19 @@ namespace Sims_CC_Sorter
             ct.Dispose();
             // Cancellation should have happened, so call Dispose.
             HideProgressGrid();            
+        }
+
+        private void Orphan_Click(object sender, EventArgs e){
+            new Thread(() => OrphanSearch()){IsBackground = true}.Start();
+        }
+
+        private void OrphanSearch(){
+            new Thread(() => ShowProgressGrid()){IsBackground = true}.Start();
+            Task findorphans = Task.Run(() => {
+                FindOrphans(cts.Token);
+            }); 
+            findorphans.Wait();
+            new Thread(() => GetResults()){IsBackground = true}.Start();
         }
 
         private async void CancellingTick(){
@@ -393,6 +428,8 @@ namespace Sims_CC_Sorter
             log.MakeLog("Setting current text pk visibility to visible.", true);
             Dispatcher.Invoke(new Action(() => textCurrentPk.Visibility = Visibility.Visible));            
         }
+
+        //hi note to self: try adding thisPackage into an observable collection (maybe one reflecting a list or something idk) and then add that list periodically to the db from one place only?
 
         private void SetProgressBarMax(){
              Dispatcher.Invoke(new Action(() => mainProgressBar.Value = maxi));
@@ -552,51 +589,73 @@ namespace Sims_CC_Sorter
                 }
                 globalVars.ConnectDatabase(false);
             }            
-
-            Task ff = Task.Run(() => {
-                FindFiles(token);
-            }, token);
-            ff.Wait(token);
-            ff.Dispose();
-            log.MakeLog("Finished finding files.", true);
-
-            sw.Stop();
-            Task stopwatch = Task.Run(() => {
-                ElapsedProcessing("Categorizing files"); 
-            }, token);
-            stopwatch.Wait(token);
-            stopwatch.Dispose();
-            sw.Restart();
-
-                        
-            Task countdata = Task.Run(() => {
-               CountDatabase(token);
-            }, token);
-            countdata.Wait(token);  
-            countdata.Dispose(); 
-
-            Task rp = Task.Run(() => {
-                ReadPackages(token);
-            }, token);
-            rp.Wait(token);
-            rp.Dispose();
+            if(!token.IsCancellationRequested){
+                Task ff = Task.Run(() => {
+                    FindFiles(token);
+                }, token);
+                ff.Wait(token);
+                ff.Dispose();
+                log.MakeLog("Finished finding files.", true);
             
-            sw.Stop();
-            
-            complete = true;  
-
-            if (complete == true){
-                runprogress = false;
             }
-            //updatesw.Dispose();
-            //new Thread(() => ) {IsBackground = true}.Start();
+
+            if(!token.IsCancellationRequested){
+                sw.Stop();
+                Task stopwatch = Task.Run(() => {
+                    ElapsedProcessing("Categorizing files"); 
+                }, token);
+                stopwatch.Wait(token);
+                stopwatch.Dispose();
+            }
+            if(!token.IsCancellationRequested){
+                sw.Restart();                        
+                Task countdata = Task.Run(() => {
+                    CountDatabase(token);
+                }, token);
+                countdata.Wait(token);  
+                countdata.Dispose(); 
+
+                Task rp = Task.Run(() => {
+                    ReadPackages(token);
+                }, token);
+                rp.Wait(token);
+                rp.Dispose();
+                
+                sw.Stop();
+                TimeSpan ts = sw.Elapsed;
+                string elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                                    ts.Hours, ts.Minutes, ts.Seconds,
+                                    ts.Milliseconds / 10);
+                
+                complete = true;  
+
+                if (complete == true){
+                    runprogress = false;
+                }
+                log.MakeLog(string.Format("Reading {0} packages took {1}", maxi, elapsedtime), true);
+               
+                //updatesw.Dispose();
+                //new Thread(() => ) {IsBackground = true}.Start();
+            }    
+            
+            ElapsedProcessing("reading packages");
+
+            /*if(!token.IsCancellationRequested){
+                sw.Restart();   
+                Task orphans = Task.Run(() => {
+                    FindOrphans(token);
+                }, token);
+                orphans.Wait();
+                sw.Stop();
+            }*/   
+                               
 
             if (!token.IsCancellationRequested) {
                 sw.Stop();
                 completionAlertValue("Done!");
                 SetTextCurrentPkText("");
                 SetProgressBarMax();
-                ElapsedProcessing("reading packages");
+                ElapsedProcessing("identifying orphans");
                 GetResults();
             } else {
                 cts.Dispose();
@@ -611,6 +670,41 @@ namespace Sims_CC_Sorter
 
         #region Methods of Processing
 
+        private void FindOrphans(CancellationToken token){
+            var packagefiles = GlobalVariables.DatabaseConnection.Query<SimsPackage>("SELECT * from Packages");
+            maxi = packagefiles.Count;            
+            SetProgressBar();
+            completionAlertValue("Reading packages.");
+            new Thread(() => RunUpdateElapsed(sw, token)) {IsBackground = true}.Start();
+            new Thread(() => RunUpdateProgressBar(token)) {IsBackground = true}.Start();
+
+            Task findOrphansPass1 = Task.Run(() => {
+                foreach (SimsPackage package in packagefiles){
+                    if (package.Game == 2){
+                        orphanhunt.FindMatchesS2(package);
+                    } else if (package.Game == 3){
+                        //orphanhunt.FindMatchesS4(package);
+                    } else if (package.Game == 4){
+                        orphanhunt.FindMatchesS4(package);
+                    }
+                }
+            }, token);
+            findOrphansPass1.Wait();  
+            Task findOrphansPass2 = Task.Run(() => {
+                foreach (SimsPackage package in packagefiles){
+                    if (package.Game == 2){
+                        orphanhunt.FindMatchesS2(package);
+                    } else if (package.Game == 3){
+                        //orphanhunt.FindMatchesS4(package);
+                    } else if (package.Game == 4){
+                        orphanhunt.FindMatchesS4(package);
+                    }
+                }
+            }, token);
+            findOrphansPass2.Wait();            
+        }
+
+
         private void FindFiles(CancellationToken token){
             var directory = new DirectoryInfo(GlobalVariables.ModFolder);
             var VilesS = directory.EnumerateFiles("*.*", SearchOption.AllDirectories).Where(file => !file.DirectoryName.Contains("_SORTED"));;
@@ -618,9 +712,10 @@ namespace Sims_CC_Sorter
             ffiles.AddRange(VilesS);
             string[] filesS = new string[ffiles.Count];
             for (int f = 0; f < ffiles.Count; f++){
+                if(token.IsCancellationRequested) return;
                 filesS[f] = ffiles[f].FullName;
             }
-            
+            if(token.IsCancellationRequested) return;
             Task task0 = Task.Run(() => {
                 log.MakeLog("Sorting packages files from non-package files.", true);
                 maxi = filesS.Length + 7;             
@@ -649,7 +744,7 @@ namespace Sims_CC_Sorter
                 taskfna.Wait(token);
                 taskfna.Dispose();
             }                 
-            
+            if(token.IsCancellationRequested) return;
 
             Task task1 = Task.Run(() => {
                 int c = 0;
@@ -688,7 +783,7 @@ namespace Sims_CC_Sorter
                 }
             }, token);
             task1.Wait(token);
-
+            if(token.IsCancellationRequested) return;
             log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true); 
             
             Task task2 = Task.Run(() => {
@@ -810,7 +905,7 @@ namespace Sims_CC_Sorter
                 }); 
                 UpdateProgressBar("compressed files", "Sorting");
             }, token);
-
+            if(token.IsCancellationRequested) return;
             log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true); 
 
             Task task7 = Task.Run(() => {
@@ -870,7 +965,7 @@ namespace Sims_CC_Sorter
                 });
                 UpdateProgressBar("other files", "Sorting");
             }, token);  
-
+            if(token.IsCancellationRequested) return;
             log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true); 
                 
             Task task9 = Task.Run(() => {
@@ -900,7 +995,7 @@ namespace Sims_CC_Sorter
                 });
                 UpdateProgressBar("package files", "Sorting");
             }, token);
-
+            if(token.IsCancellationRequested) return;
 
             task2.Wait(token);
             task2.Dispose();
@@ -923,7 +1018,7 @@ namespace Sims_CC_Sorter
             log.MakeLog(string.Format("Found {0} tray item files.", trayitems.Count), true);
             log.MakeLog(string.Format("Found {0} other files.", other.Count), true);
             log.MakeLog(string.Format("Found {0} package files.", packages.Count), true);
-
+            if(token.IsCancellationRequested) return;
             Task task10 = Task.Run(() => { 
                 if (token.IsCancellationRequested)
                 {
@@ -958,13 +1053,40 @@ namespace Sims_CC_Sorter
         }              
 
         private void ReadPackages(CancellationToken token){
+            if(token.IsCancellationRequested) return;
             List<PackageFile> allp = new List<PackageFile>();
-            Task getPackages = Task.Run(() => {
-                var dbqc = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending' ORDER BY Name ASC");
-                allp.AddRange(dbqc); 
+            Task prepPackages = Task.Run(() => {
+                allp = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending' ORDER BY Name ASC");
                 log.MakeLog(string.Format("Packages to read count is {0}.", allp.Count), true);
                 maxi = allp.Count;
                 GlobalVariables.PackageCount = allp.Count();
+                SetProgressBar();
+                completionAlertValue("Getting Packages.");
+                countprogress = 0;
+                runprogress = true;            
+            });
+            prepPackages.Wait(token);
+            prepPackages.Dispose();
+            if(token.IsCancellationRequested) return;
+            ConcurrentQueue<Task> ReadList = new ConcurrentQueue<Task>();
+            Task makeList = Task.Run(() => {
+                foreach (PackageFile p in allp){
+                    if(token.IsCancellationRequested){
+                        break;
+                    }
+                    ReadList.Enqueue(
+                        new Task(()=> {
+                            ReadPackage(p.Location);
+                            UpdateProgressBar("package files for reading", "Getting");
+                        }, token)
+                    );
+                }
+            });
+            makeList.Wait();
+            makeList.Dispose();
+            if(token.IsCancellationRequested) return;
+            Task getPackages = Task.Run(() => {
+                log.MakeLog(string.Format("Packages to read count is {0}.", allp.Count), true);
                 SetProgressBar();
                 completionAlertValue("Reading packages.");
                 countprogress = 0;
@@ -972,137 +1094,209 @@ namespace Sims_CC_Sorter
             });
             getPackages.Wait(token);
             getPackages.Dispose();
+            if(token.IsCancellationRequested) return;
             new Thread(() => RunUpdateElapsed(sw, token)) {IsBackground = true}.Start();
             new Thread(() => RunUpdateProgressBar(token)) {IsBackground = true}.Start();
 
-            
-
-
-
-
-            
-            Task ReadPackages = Task.Run(() => {
-                foreach (PackageFile p in allp)
-                {
-                    log.MakeLog(string.Format("Waiting to add {0} to tasklist.", p.Name), true);
-                    while (runningthreads >= threadstouse){
-                        Thread.Sleep(1);
-                    }
-                    log.MakeLog(string.Format("Adding {0} to tasklist.", p.Name), true);
-                    CancellationTokenSource t_cts = new CancellationTokenSource();
-                    packagestoread.Add(new Task(async () => {
-                        bool _runThread = true;
-                        Thread t = new Thread(() => {
-                            while (_localRunThread)
-                            {
-                                try {
-                                    
-                                        t_cts.CancelAfter(60*1000);
-                                        ProcessPackage(p.Location);
-                                    
-                                } catch (OperationCanceledException) {
-                                    log.MakeLog("A task timed out and was cancelled.", true);
-                                } finally {
-                                    t_cts.Dispose();
-                                }                        
-                                completedreads++;
-                                runningthreads--;
-                                log.MakeLog(string.Format("Task complete, removing task and thread.", runningthreads), true);
-                            }
-                        }) {IsBackground = true}.Start();
-                    }, t_cts.Token));
+            Task readpackages = Task.Run(async () => {
+                foreach (Task t in ReadList){
+                    if(token.IsCancellationRequested) return;
+                    t.Start();
                 }
-                while (completedreads < allp.Count){
-                    //do nothing?
-                }
-
-                /*//await ReadPackagesTasks(tasklist, token);
-
-                if (GlobalVariables.debugMode == true){
-                    foreach (PackageFile p in allp){
-                        if (token.IsCancellationRequested)
-                        {
-                            log.MakeLog("Process cancelled.", true);
-                            stop = true;
-                            return;
-                        }
-                        Task read = Task.Run(() => {
-                            try {
-                                if (File.Exists(p.Location)){
-                                    initialprocess.CheckThrough(p.Location);
-                                } else {
-                                    log.MakeLog(string.Format("File {0} could not be found.", p.Name), true);
-                                }                                
-                            } catch (Exception e) {
-                                log.MakeLog(string.Format("Caught exception running initial process on {1}: {0}", e.Message, p.Location), true);
-                            }
-                        });
-                        read.Wait(token);                        
-                    };
-                } else {
-                    Parallel.ForEach(allp, parallelSettings, p => {
-                        if (token.IsCancellationRequested)
-                        {
-                            log.MakeLog("Process cancelled.", true);
-                            stop = true;
-                            return;
-                        }
-                        try {
-                            if (File.Exists(p.Location)){
-                                initialprocess.CheckThrough(p.Location);
-                            } else {
-                                log.MakeLog(string.Format("File {0} could not be found.", p.Name), true);
-                            }
-                        } catch (Exception e) {
-                            log.MakeLog(string.Format("Caught exception running initial process on {1}: {0}", e.Message, p.Location), true);
-                        }
-                    });
-                }*/
+                Task.WaitAll(ReadList.ToArray());
             }, token);
-            ReadPackages.Wait(token);
-            ReadPackages.Dispose();
-        }
-
-        void packagereader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            
-        }
-
-        void packagereader_DoWork(object sender, DoWorkEventArgs e, Task t)
-        {
-            
-        }
-
-        private Task<bool> ProcessPackage(string location){
-            bool complete = initialprocess.CheckThrough(location);
-            return Task.FromResult(complete);
+            readpackages.Wait();
         }
 
 
-        // ------------- task event
-        // runs when a task is added to the list
-        void packagestoread_CollectionChanged(object sender,
+        private async void ReadPackage(string location){            
+            complete = initialprocess.CheckThrough(location);
+        }
+
+
+        void AddPackages_CollectionChanged(object sender,
             System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {            
-            
-            try
-            {
-                foreach (Task t in packagestoread)
-                {
-                    log.MakeLog(string.Format("There are {0} threads currently running.", runningthreads), true);
-                    if (runningthreads <= threadstouse){
-                        log.MakeLog(string.Format("There is a free thread. Starting."), true);
-                        runningthreads++;
-                        t.Start();
-                        packagestoread.Remove(t);
-                    }
-                }
-            }
-            catch
-            {
-                log.MakeLog("Oops! Something went wrong.", true);
+        {
+            if (GlobalVariables.AddPackages.Count > 0){
+                Task rd = Task.Run(() => AddPackages_RunDatabase());
+                rd.Wait();
             }
         }
+
+        private void AddPackages_RunDatabase(){
+            lock (GlobalVariables.AddPackages){
+                log.MakeLog(string.Format("AddPackages has {0} items in it.", GlobalVariables.AddPackages.Count), true);
+                List<PackageFile> removals = new();
+                foreach (SimsPackage item in GlobalVariables.AddPackages){
+                    string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(item.PackageName));
+                    var closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);            
+                    removals.AddRange(closingquery);
+                }
+                GlobalVariables.DatabaseConnection.DeleteAll(removals);
+                GlobalVariables.DatabaseConnection.InsertAllWithChildren(GlobalVariables.AddPackages);
+                log.MakeLog(string.Format("Added {0} packages to database.", GlobalVariables.AddPackages.Count), true);
+                GlobalVariables.AddPackages.Clear();
+                log.MakeLog(string.Format("Cleared the AddPackages collection. It now has {0} items in it.", GlobalVariables.AddPackages.Count), true);
+            }
+            GlobalVariables.GetInstanceData();
+        }
+
+        void ProcessingReader_CollectionChanged(object sender,
+            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (GlobalVariables.ProcessingReader.Count > 0){
+                Task rd = Task.Run(() => ProcessingReader_RunDatabase());
+                rd.Wait();
+            }
+        }
+
+        private void ProcessingReader_RunDatabase(){
+            lock (GlobalVariables.ProcessingReader){
+                log.MakeLog(string.Format("ProcessingReader has {0} items in it.", GlobalVariables.ProcessingReader.Count), true);
+                GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(GlobalVariables.ProcessingReader);
+                log.MakeLog(string.Format("Added {0} packages to processing database.", GlobalVariables.ProcessingReader.Count), true);
+                GlobalVariables.ProcessingReader.Clear();
+                log.MakeLog(string.Format("Cleared the ProcessingReader collection. It now has {0} items in it.", GlobalVariables.ProcessingReader.Count), true);
+            }
+        }
+
+        void AllFiles_CollectionChanged(object sender,
+            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (GlobalVariables.AllFiles.Count > 0){
+                Task rd = Task.Run(() => AllFiles_RunDatabase());
+                rd.Wait();
+            }
+        }
+
+        private void AllFiles_RunDatabase(){
+            lock (GlobalVariables.AllFiles){
+                log.MakeLog(string.Format("AllFiles has {0} items in it.", GlobalVariables.AllFiles.Count), true);
+                GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(GlobalVariables.AllFiles);
+                log.MakeLog(string.Format("Added {0} packages to processing database.", GlobalVariables.AllFiles.Count), true);
+                GlobalVariables.AllFiles.Clear();
+                log.MakeLog(string.Format("Cleared the AllFiles collection. It now has {0} items in it.", GlobalVariables.AllFiles.Count), true);
+            }
+        }
+        
+        void InstancesRecolorsS2Col_CollectionChanged(object sender,
+            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (GlobalVariables.InstancesRecolorsS2Col.Count > 0){
+                Task rd = Task.Run(() => InstancesRecolorsS2Col_RunDatabase());
+                rd.Wait();
+            }
+        }
+
+        private void InstancesRecolorsS2Col_RunDatabase(){
+            lock (GlobalVariables.InstancesRecolorsS2Col){
+                log.MakeLog(string.Format("InstancesRecolorsS2Col has {0} items in it.", GlobalVariables.InstancesRecolorsS2Col.Count), true);
+                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesRecolorsS2Col);
+                log.MakeLog(string.Format("Added {0} packages to InstancesRecolorsS2Col database.", GlobalVariables.InstancesRecolorsS2Col.Count), true);
+                GlobalVariables.InstancesRecolorsS2Col.Clear();
+                log.MakeLog(string.Format("Cleared the InstancesRecolorsS2Col collection. It now has {0} items in it.", GlobalVariables.InstancesRecolorsS2Col.Count), true);
+            }
+        }
+        
+        void InstancesRecolorsS3Col_CollectionChanged(object sender,
+            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (GlobalVariables.InstancesRecolorsS2Col.Count > 0){
+                Task rd = Task.Run(() => InstancesRecolorsS3Col_RunDatabase());
+                rd.Wait();
+            }
+        }
+
+        private void InstancesRecolorsS3Col_RunDatabase(){
+            lock (GlobalVariables.InstancesRecolorsS3Col){
+                log.MakeLog(string.Format("InstancesRecolorsS3Col has {0} items in it.", GlobalVariables.InstancesRecolorsS3Col.Count), true);
+                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesRecolorsS3Col);
+                log.MakeLog(string.Format("Added {0} packages to InstancesRecolorsS3Col database.", GlobalVariables.InstancesRecolorsS3Col.Count), true);
+                GlobalVariables.InstancesRecolorsS3Col.Clear();
+                log.MakeLog(string.Format("Cleared the InstancesRecolorsS3Col collection. It now has {0} items in it.", GlobalVariables.InstancesRecolorsS3Col.Count), true);
+            }
+        }
+        
+        void InstancesRecolorsS4Col_CollectionChanged(object sender,
+            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (GlobalVariables.InstancesRecolorsS2Col.Count > 0){
+                Task rd = Task.Run(() => InstancesRecolorsS4Col_RunDatabase());
+                rd.Wait();
+            }
+        }
+
+        private void InstancesRecolorsS4Col_RunDatabase(){
+            lock (GlobalVariables.InstancesRecolorsS4Col){
+                log.MakeLog(string.Format("InstancesRecolorsS4Col has {0} items in it.", GlobalVariables.InstancesRecolorsS4Col.Count), true);
+                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesRecolorsS4Col);
+                log.MakeLog(string.Format("Added {0} packages to InstancesRecolorsS4Col database.", GlobalVariables.InstancesRecolorsS4Col.Count), true);
+                GlobalVariables.InstancesRecolorsS4Col.Clear();
+                log.MakeLog(string.Format("Cleared the InstancesRecolorsS4Col collection. It now has {0} items in it.", GlobalVariables.InstancesRecolorsS4Col.Count), true);
+            }
+        }
+        
+        void InstancesMeshesS2Col_CollectionChanged(object sender,
+            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (GlobalVariables.InstancesMeshesS2Col.Count > 0){
+                Task rd = Task.Run(() => InstancesMeshesS2Col_RunDatabase());
+                rd.Wait();
+            }
+        }
+
+        private void InstancesMeshesS2Col_RunDatabase(){
+            lock (GlobalVariables.InstancesMeshesS2Col){
+                log.MakeLog(string.Format("InstancesMeshesS2Col has {0} items in it.", GlobalVariables.InstancesMeshesS2Col.Count), true);
+                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesMeshesS2Col);
+                log.MakeLog(string.Format("Added {0} packages to InstancesMeshesS2Col database.", GlobalVariables.InstancesMeshesS2Col.Count), true);
+                GlobalVariables.InstancesMeshesS2Col.Clear();
+                log.MakeLog(string.Format("Cleared the InstancesMeshesS2Col collection. It now has {0} items in it.", GlobalVariables.InstancesMeshesS2Col.Count), true);
+            }
+        }
+        
+        void InstancesMeshesS3Col_CollectionChanged(object sender,
+            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (GlobalVariables.InstancesMeshesS2Col.Count > 0){
+                Task rd = Task.Run(() => InstancesMeshesS3Col_RunDatabase());
+                rd.Wait();
+            }
+        }
+
+        private void InstancesMeshesS3Col_RunDatabase(){
+            lock (GlobalVariables.InstancesMeshesS3Col){
+                log.MakeLog(string.Format("InstancesMeshesS3Col has {0} items in it.", GlobalVariables.InstancesMeshesS3Col.Count), true);
+                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesMeshesS3Col);
+                log.MakeLog(string.Format("Added {0} packages to InstancesMeshesS3Col database.", GlobalVariables.InstancesMeshesS3Col.Count), true);
+                GlobalVariables.InstancesMeshesS3Col.Clear();
+                log.MakeLog(string.Format("Cleared the InstancesMeshesS3Col collection. It now has {0} items in it.", GlobalVariables.InstancesMeshesS3Col.Count), true);
+            }
+        }
+        
+        void InstancesMeshesS4Col_CollectionChanged(object sender,
+            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (GlobalVariables.InstancesMeshesS2Col.Count > 0){
+                Task rd = Task.Run(() => InstancesMeshesS4Col_RunDatabase());
+                rd.Wait();
+            }
+        }
+
+        private void InstancesMeshesS4Col_RunDatabase(){
+            lock (GlobalVariables.InstancesMeshesS4Col){
+                log.MakeLog(string.Format("InstancesMeshesS4Col has {0} items in it.", GlobalVariables.InstancesMeshesS4Col.Count), true);
+                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesMeshesS4Col);
+                log.MakeLog(string.Format("Added {0} packages to InstancesMeshesS4Col database.", GlobalVariables.InstancesMeshesS4Col.Count), true);
+                GlobalVariables.InstancesMeshesS4Col.Clear();
+                log.MakeLog(string.Format("Cleared the InstancesMeshesS4Col collection. It now has {0} items in it.", GlobalVariables.InstancesMeshesS4Col.Count), true);
+            }
+        }
+
+
+
+
+
 
         private void FindConflicts(){
             //GlobalVariables.DatabaseConnection.Query("select Packages.InstanceID from Packages INNER JOIN Ingredient_Recipe ON recipe_ID = Ingredient_Recipe.recipe_ID

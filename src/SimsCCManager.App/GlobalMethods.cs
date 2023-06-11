@@ -16,6 +16,7 @@ using SQLitePCL;
 using SQLite;
 using SQLiteNetExtensions.Attributes;
 using System.Text.RegularExpressions;
+using System.Collections.ObjectModel;
 
 namespace SSAGlobals {
 
@@ -268,15 +269,34 @@ namespace SSAGlobals {
         public static string S4_Overrides_All = @"data\S4_Instances.sqlite";
         public static string S4_Overrides_List = @"data\S4_SpecificOverrides.sqlite";
         private static string PackagesCacheLoc = @"Sims CC Manager\data\PackagesCache.sqlite";
+        private static string InstancesCacheLoc = @"Sims CC Manager\cache\InstancesCache.sqlite";
         public static string PackagesRead = Path.Combine(LoggingGlobals.mydocs, PackagesCacheLoc); 
+        public static string InstancesCache = Path.Combine(LoggingGlobals.mydocs, InstancesCacheLoc);
         public static string PackagesReadDS = string.Format("Data Source={0}", PackagesRead);
+
 
         public static SQLite.SQLiteConnection DatabaseConnection;
         public static SQLite.SQLiteConnection S4OverridesConnection;
         public static SQLite.SQLiteConnection S4SpecificOverridesConnection;
         public static SQLite.SQLiteConnection S4FunctionTypesConnection;
+        public static SQLite.SQLiteConnection InstancesCacheConnection;
         public static List<OverridesList> S4OverridesList = new List<OverridesList>();
         public static List<SpecificOverrides> S4SpecificOverridesList = new List<SpecificOverrides>();
+        public static List<InstancesCacheRecolors> S2InstancesCacheRecolors = new();
+        public static List<InstancesCacheRecolors> S3InstancesCacheRecolors = new();
+        public static List<InstancesCacheRecolors> S4InstancesCacheRecolors = new();
+        public static List<InstancesCacheMeshes> S2InstancesCacheMeshes = new();
+        public static List<InstancesCacheMeshes> S3InstancesCacheMeshes = new();
+        public static List<InstancesCacheMeshes> S4InstancesCacheMeshes = new();
+        public static ObservableCollection<SimsPackage> AddPackages = new();
+        public static ObservableCollection<PackageFile> ProcessingReader = new();
+        public static ObservableCollection<InstancesRecolorsS4> InstancesRecolorsS4Col = new();
+        public static ObservableCollection<InstancesMeshesS4> InstancesMeshesS4Col = new();
+        public static ObservableCollection<InstancesRecolorsS2> InstancesRecolorsS2Col = new();
+        public static ObservableCollection<InstancesMeshesS2> InstancesMeshesS2Col = new();
+        public static ObservableCollection<InstancesRecolorsS3> InstancesRecolorsS3Col = new();
+        public static ObservableCollection<InstancesMeshesS3> InstancesMeshesS3Col = new();
+        public static ObservableCollection<AllFiles> AllFiles = new();
         
         
         //vars that hold package files 
@@ -376,6 +396,44 @@ namespace SSAGlobals {
                 S4FunctionTypesConnection = new SQLite.SQLiteConnection(TypeListings.functionSortsListLoc);
             } catch (Exception e){
                 Console.WriteLine("Caught exception connecting to Function Sort Lists: " + e.Message);
+            }             
+            log.MakeLog("Connecting to Instances Cache.", true);    
+            if (!File.Exists(InstancesCache)){
+                log.MakeLog("Instances Cache doesn't exist, creating.", true); 
+                try {
+                    System.Data.SQLite.SQLiteConnection.CreateFile(InstancesCache);
+                } catch (System.Data.SQLite.SQLiteException e) {
+                    Console.WriteLine(e.Message);
+                }
+                log.MakeLog("Connecting to created cache.", true); 
+                try {
+                    InstancesCacheConnection = new SQLite.SQLiteConnection(InstancesCache);
+                } catch (Exception e){
+                    Console.WriteLine("Caught exception connecting to Function Sort Lists: " + e.Message);
+                }
+                log.MakeLog("Making tables.", true);
+                InstancesCacheConnection.CreateTable<InstancesMeshesS2>();
+                InstancesCacheConnection.CreateTable<InstancesMeshesS3>();
+                InstancesCacheConnection.CreateTable<InstancesMeshesS4>();
+                InstancesCacheConnection.CreateTable<InstancesRecolorsS2>();
+                InstancesCacheConnection.CreateTable<InstancesRecolorsS3>();
+                InstancesCacheConnection.CreateTable<InstancesRecolorsS4>();
+                var tables = new List<string>(){"PRAGMA journal_mode=MEMORY",
+                    "PRAGMA synchronous=EXTRA",
+                    "PRAGMA auto_vacuum=FULL",
+                    "PRAGMA journal_size_limit=5000",
+                    "PRAGMA default_cache_size=200"
+                };
+                foreach (string table in tables){
+                    log.MakeLog(string.Format("Making table: {0}.", table), true);
+                    InstancesCacheConnection.ExecuteScalar<string>(table);
+                }                
+            } else {
+                try {
+                    InstancesCacheConnection = new SQLite.SQLiteConnection(InstancesCache);
+                } catch (Exception e){
+                    Console.WriteLine("Caught exception connecting to Function Sort Lists: " + e.Message);
+                } 
             } 
 
             var overridescountcmd = S4OverridesConnection.CreateCommand("SELECT count(*) FROM Instances");
@@ -386,14 +444,54 @@ namespace SSAGlobals {
             var specovcount = specoverridescountcmd.ExecuteScalar<int>();
             S4SpecificOverridesList = new List<SpecificOverrides>(specovcount);
             S4SpecificOverridesList = S4SpecificOverridesConnection.Query<SpecificOverrides>("SELECT * FROM Overrides");
+
+            GetInstanceData();
         }
 
-        
-        
-        
-        
+        public static void GetInstanceData(){
+            lock (S2InstancesCacheRecolors)
+            {
+                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims2Recolors");
+                var count = countcmd.ExecuteScalar<int>();
+                S2InstancesCacheRecolors = new List<InstancesCacheRecolors>(count);
+                S2InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesCacheRecolors>("SELECT * FROM Sims2Recolors");
+            }
 
+            lock (S3InstancesCacheRecolors)
+            {
+                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims3Recolors");
+                var count = countcmd.ExecuteScalar<int>();
+                S3InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesCacheRecolors>("SELECT * FROM Sims3Recolors");
+            }
 
+            lock(S4InstancesCacheRecolors) 
+            {
+                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims4Recolors");
+                var count = countcmd.ExecuteScalar<int>();
+                S4InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesCacheRecolors>("SELECT * FROM Sims4Recolors");
+            } 
+
+            lock(S2InstancesCacheMeshes)
+            {
+                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims2Meshes");
+                var count = countcmd.ExecuteScalar<int>();
+                S2InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesCacheMeshes>("SELECT * FROM Sims2Meshes");
+            }
+
+            lock(S3InstancesCacheMeshes)
+            {
+                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims3Meshes");
+                var count = countcmd.ExecuteScalar<int>();
+                S3InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesCacheMeshes>("SELECT * FROM Sims3Meshes");
+            }
+            
+            lock(S4InstancesCacheMeshes)
+            {
+                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims4Meshes");
+                var count = countcmd.ExecuteScalar<int>();
+                S4InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesCacheMeshes>("SELECT * FROM Sims4Meshes");
+            }
+        }
     }
 
     public class SaveData {

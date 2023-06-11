@@ -71,7 +71,7 @@ namespace SimsCCManager.Packages.Containers
         public string TypeID {get; set;}
         
         [ForeignKey(typeof(SimsPackage))]
-        public int PackageID {get; set;}
+        public string PackageID {get; set;}
         [Column("SimsPackage")]
         
         [ManyToOne]
@@ -90,8 +90,6 @@ namespace SimsCCManager.Packages.Containers
         /// <summary>
         /// The full package summary used for sorting and editing the items.
         /// </summary>
-        [PrimaryKey, AutoIncrement]
-        public int ID {get; set;}           
         [Column ("Title")]
         public string Title {get; set;}  
         [Column ("Description")]
@@ -101,7 +99,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("FileSize")]
         public int FileSize {get; set;}
         [Column ("PackageName")]
-        [Indexed]
+        [Indexed, PrimaryKey]
         public string PackageName {get; set;}
         [Column ("Type")]
         public string Type {get; set;}
@@ -188,6 +186,17 @@ namespace SimsCCManager.Packages.Containers
         [TextBlob("OverriddenItemsBlobbed")]   
         public List<string> OverriddenItems {get; set;}
         public string OverriddenItemsBlobbed {get; set;}
+        [Column("Key")]
+        public string Key {get; set;}
+        [Column("MeshKeys")]
+        [TextBlob("MeshKeysBlobbed")]
+        public List<string> MeshKeys {get; set;}
+        public string MeshKeysBlobbed {get; set;}
+        [Column("CASPartKeys")]
+        [TextBlob("CASPartKeysBlobbed")]
+        public List<string> CASPartKeys {get; set;}
+        public string CASPartKeysBlobbed {get; set;}
+        [Column("MatchingMesh")]
         public string MatchingMesh {get; set;}
         [Column ("MatchingRecolors")]
         [TextBlob("MatchingRecolorsBlobbed")]
@@ -218,6 +227,8 @@ namespace SimsCCManager.Packages.Containers
             this.OverriddenItems = new List<string>();
             this.AgeGenderFlags = new AgeGenderFlags();
             this.OverridesList = new List<OverriddenList>();
+            this.MeshKeys = new List<string>();
+            this.CASPartKeys = new List<string>();
         }
 
         public string GetPropertyString(string propName){
@@ -585,6 +596,57 @@ namespace SimsCCManager.Packages.Containers
                     complete = string.Format("This package is an orphan.");
                 }
             }
+
+            if (this.MeshKeys.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n Mesh Keys: ");
+                    string eps = "";
+                    foreach (string ep in this.MeshKeys){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0}", ep);
+                        } else {
+                            eps += string.Format(", {0}", ep);
+                        }
+                    }
+                    complete += eps;
+                } else {
+                    complete = string.Format("Mesh Keys: ");
+                    string eps = "";
+                    foreach (string ep in this.MeshKeys){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0}", ep);
+                        } else {
+                            eps += string.Format(", {0}", ep);
+                        }
+                    }
+                    complete += eps;
+                }                
+            }
+            if (this.CASPartKeys.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n CAS Part Keys: ");
+                    string eps = "";
+                    foreach (string ep in this.CASPartKeys){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0}", ep);
+                        } else {
+                            eps += string.Format(", {0}", ep);
+                        }
+                    }
+                    complete += eps;
+                } else {
+                    complete = string.Format("CAS Part Keys: ");
+                    string eps = "";
+                    foreach (string ep in this.CASPartKeys){
+                        if (string.IsNullOrEmpty(eps)){
+                            eps = string.Format("{0}", ep);
+                        } else {
+                            eps += string.Format(", {0}", ep);
+                        }
+                    }
+                    complete += eps;
+                }                
+            }
             if (!string.IsNullOrEmpty(this.MatchingMesh)){
                 if (!string.IsNullOrEmpty(complete)){
                     complete += string.Format("\n The matching mesh for this file is in : {0}.", this.MatchingMesh);                    
@@ -661,7 +723,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("Override")]
         public string Override {get; set;}
         [ForeignKey(typeof(SimsPackage))]
-        public int PackageID {get; set;}
+        public string PackageID {get; set;}
         [Column("SimsPackage")]
         [ManyToOne]
         public SimsPackage SimsPackage {get; set;}
@@ -679,7 +741,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("Count")]
         public int Count {get; set;}    
         [ForeignKey(typeof(SimsPackage))]
-        public int PackageID {get; set;}
+        public string PackageID {get; set;}
         [Column("SimsPackage")]
         [ManyToOne]
         public SimsPackage SimsPackage {get; set;}
@@ -697,7 +759,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("Location")]
         public int Location {get; set;}
         [ForeignKey(typeof(SimsPackage))]
-        public int PackageID {get; set;}
+        public string PackageID {get; set;}
         [Column("SimsPackage")]
         [ManyToOne]
         public SimsPackage SimsPackage {get; set;}
@@ -741,7 +803,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("Male")]
         public bool Male {get; set;}
         [ForeignKey(typeof(SimsPackage))]
-        public int PackageID {get; set;}
+        public string PackageID {get; set;}
         [Column("SimsPackage")]
         [OneToOne]
         public SimsPackage SimsPackage {get; set;}
@@ -810,4 +872,44 @@ namespace SimsCCManager.Packages.Containers
         [Column("Description")]
         public string Description {get; set;}
     }
+
+    public class InstancesCacheRecolors {
+        [PrimaryKey]
+        [Column("Key")]
+        public string Key {get; set;}
+        [Column("PackageName")]
+        public string PackageName {get; set;}
+        [Column("MatchingMesh")]
+        public string MatchingMesh {get; set;}        
+    }
+    public class InstancesCacheMeshes {
+        [PrimaryKey]
+        [Column("Key")]
+        public string Key {get; set;}
+        [Column("PackageName")]
+        public string PackageName {get; set;}
+        [Column("MatchingRecolors")]
+        [TextBlob("MatchingRecolorsBlobbed")]
+        public List<string> MatchingRecolors {get; set;}        
+        public string MatchingRecolorsBlobbed {get; set;}    
+
+        public InstancesCacheMeshes(){
+            MatchingRecolors = new List<string>();
+        }
+    }
+
+    [Table("Sims2Meshes")]
+    public class InstancesMeshesS2 : InstancesCacheMeshes {};
+    [Table("Sims3Meshes")]
+    public class InstancesMeshesS3 : InstancesCacheMeshes {};
+    [Table("Sims4Meshes")]
+    public class InstancesMeshesS4 : InstancesCacheMeshes {};
+    [Table("Sims2Recolors")]
+    public class InstancesRecolorsS2 : InstancesCacheRecolors {};
+    [Table("Sims3Recolors")]
+    public class InstancesRecolorsS3 : InstancesCacheRecolors {};
+    [Table("Sims4Recolors")]
+    public class InstancesRecolorsS4 : InstancesCacheRecolors {};
+
+
 }

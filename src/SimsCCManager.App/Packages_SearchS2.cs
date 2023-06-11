@@ -60,7 +60,7 @@ namespace SimsCCManager.Packages.Sims2Search
             Stopwatch sw = new Stopwatch();
             sw.Start();
             log.MakeLog(string.Format("File {0} arrived for processing as Sims 2 file.", packageinfo.Name), true);
-            string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
+            /*string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
             List<PackageFile> queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
             PackageFile query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
@@ -69,7 +69,7 @@ namespace SimsCCManager.Packages.Sims2Search
             //Vars for Package Info
             queries = new List<PackageFile>();
             query = new PackageFile();
-            pk = new PackageFile();
+            pk = new PackageFile();*/
             string typefound = "";
             string instanceID2;
             string typeID;
@@ -850,7 +850,7 @@ namespace SimsCCManager.Packages.Sims2Search
             log.MakeLog(string.Format("P{0} - Package Summary: {1}", packageparsecount, thisPackage.SimsPackagetoString()), false);
             //Containers.Containers.allSimsPackages.Add(thisPackage);
             log.MakeLog(string.Format("Adding {0} to packages database.", thisPackage.PackageName), true);
-            try {
+            /*try {
                 GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage, true);
             } catch (Exception e) {
                 log.MakeLog(string.Format("Caught exception adding Sims 2 package to database. \n Exception: {0}", e), true);
@@ -861,7 +861,10 @@ namespace SimsCCManager.Packages.Sims2Search
             List<PackageFile> closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
             GlobalVariables.DatabaseConnection.Delete(closingquery[0]);
 
-            closingquery = new List<PackageFile>();
+            closingquery = new List<PackageFile>();*/
+            lock (GlobalVariables.AddPackages){
+                GlobalVariables.AddPackages.Add(thisPackage);
+            }
             objdnum = new List<int>();   
             strnm = new List<int>();
             thisPackage = new SimsPackage();

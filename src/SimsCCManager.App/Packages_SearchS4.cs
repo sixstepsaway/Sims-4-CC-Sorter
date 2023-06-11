@@ -28,6 +28,8 @@ using SQLiteNetExtensions.Attributes;
 using SQLiteNetExtensions.Extensions;
 using System.Collections.Concurrent;
 using SimsCCManager.Packages.Sorting;
+using System.Windows.Input;
+using SimsCCManager.Packages.Orphans;
 
 namespace SimsCCManager.Packages.Sims4Search
 {
@@ -321,7 +323,7 @@ namespace SimsCCManager.Packages.Sims4Search
                 instanceid = resourcekey.instance;
                 typeid = resourcekey.type;
                 groupid = resourcekey.group;
-            }                           
+            }
             
             if (commonblockversion >= 10)
             {
@@ -738,6 +740,7 @@ namespace SimsCCManager.Packages.Sims4Search
         LoggingGlobals log = new LoggingGlobals();
         System.Text.Encoding encoding = System.Text.Encoding.BigEndianUnicode;
         FilesSort filesort = new FilesSort();
+        FindOrphans findOrphans = new FindOrphans();
 
         //lists
 
@@ -754,7 +757,7 @@ namespace SimsCCManager.Packages.Sims4Search
             Stopwatch sw = new Stopwatch();
             sw.Start();
             log.MakeLog(string.Format("File {0} arrived for processing as Sims 4 file.", packageinfo.Name), true);            
-            string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
+            /*string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
             List<PackageFile> queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
             PackageFile query = queries[0];
             GlobalVariables.DatabaseConnection.Delete(query);
@@ -762,7 +765,7 @@ namespace SimsCCManager.Packages.Sims4Search
             query = new PackageFile();
             PackageFile pk = new PackageFile { ID = query.ID, Name = packageinfo.Name, Location = packageinfo.FullName, Game = 4, Broken = false, Status = "Processing"};
             GlobalVariables.DatabaseConnection.Insert(pk);
-            pk = new PackageFile();
+            pk = new PackageFile();*/
                         
             //locations
 
@@ -1024,13 +1027,17 @@ namespace SimsCCManager.Packages.Sims4Search
 
                     if (holderEntry.typeID == "7FB6AD8A"){
                         thisPackage.Type = "Merged Package";
-                        GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage);
+                        lock (GlobalVariables.AddPackages){
+                            GlobalVariables.AddPackages.Add(thisPackage);
+                        }                       
                         log.MakeLog(string.Format("Package {0} is a merged package, and cannot be processed in this manner right now. Package will either need unmerging or to be sorted manually.", thisPackage.Location), false);
+
+                        /*GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage);
                         log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
                         txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
                         List<PackageFile> mergedquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);                    
                         GlobalVariables.DatabaseConnection.Delete(mergedquery[0]);
-                        mergedquery = new List<PackageFile>();
+                        mergedquery = new List<PackageFile>();*/
                         readFile.Dispose();
                         sw.Stop();
                         TimeSpan tss = sw.Elapsed;
@@ -1083,14 +1090,13 @@ namespace SimsCCManager.Packages.Sims4Search
                 }
             }
 
-            if ((fileHas.Exists(x => x.TypeID == "CASP"))){
-                List<int> entryspots = new List<int>();
+            if (fileHas.Exists(x => x.TypeID == "CASP")){
 
-                IEnumerable<int> csp = from has in fileHas
+                var entryspots = (from has in fileHas
                         where has.TypeID == "CASP"
-                        select has.Location;
-                entryspots = csp.ToList();
-                csp = Enumerable.Empty<int>();
+                        select has.Location).ToList();
+
+                thisPackage.Recolor = true;
 
                 int caspc = 0;
                 foreach (int e in entryspots){
@@ -1162,24 +1168,29 @@ namespace SimsCCManager.Packages.Sims4Search
                         }
                             ulong excludePartFlags = decompbr.ReadUInt64();
                             log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags: {2}", packageparsecount, e, excludePartFlags.ToString("X16")), true);
+
                             ulong excludePartFlags2 = decompbr.ReadUInt64();
                             log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags 2: {2}", packageparsecount, e, excludePartFlags2.ToString("X16")), true);
+
                             ulong excludeModifierRegionFlags = decompbr.ReadUInt64();
                             log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Modifier Region Flags: {2}", packageparsecount, e, excludeModifierRegionFlags.ToString("X16")), true);
 
                         if (version >= 37){
                             log.MakeLog(string.Format(">= 37, Version: {0}", version), true);
+
                             uint count = decompbr.ReadByte();
                             log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
                             decompbr.ReadByte();
-                            CASTag16Bit tags = new CASTag16Bit(decompbr, count);                            
+
+                            CASTag16Bit tags = new CASTag16Bit(decompbr, count);      
+
+
                             List<TagsList> gottags = Readers.GetTagInfo(tags, count);
                             foreach (TagsList tag in gottags){
                                 if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
                                     itemtags.Add(tag);  
                                 }
-                            }
-                                                        
+                            }                                                        
                         } 
                         else 
                         {
@@ -1507,6 +1518,40 @@ namespace SimsCCManager.Packages.Sims4Search
                                 }
                             }
 
+                            uint buffResKey = decompbr.ReadByte();
+                            uint varientThumbnailKey = decompbr.ReadByte();
+                            if (version >= 28){
+                                ulong voiceEffecthash = decompbr.ReadUInt64();
+                            }
+                            if (version >= 30){
+                                uint usedMaterialCount = decompbr.ReadByte();
+                                if (usedMaterialCount > 0){
+                                    uint materialSetUpperBodyHash = decompbr.ReadUInt32();
+                                    uint materialSetLowerBodyHash = decompbr.ReadUInt32();
+                                    uint materialSetShoesBodyHash = decompbr.ReadUInt32();
+                                }
+                            }
+                            if (version >= 38){
+                                //idk
+                            }
+
+                            uint nakedKey = decompbr.ReadByte();
+                            uint parentKey = decompbr.ReadByte();
+                            uint sortLayer = decompbr.ReadUInt32();
+
+                            decompbr.BaseStream.Position = tgioffset;
+                            var tginum = decompbr.ReadByte();
+                            for (int t = 0; t < tginum; t++){
+                                ulong iid = decompbr.ReadUInt64();
+                                uint gid = decompbr.ReadUInt32();
+                                uint tid = decompbr.ReadUInt32();
+                                string key = string.Format("{0}-{1}-{2}", tid.ToString("X8"), gid.ToString("X8"), iid.ToString("X16"));
+                                if (key != "00000000-00000000-0000000000000000"){
+                                    if (!thisPackage.CASPartKeys.Contains(key)){
+                                        thisPackage.CASPartKeys.Add(key);
+                                    } 
+                                }  
+                            }
                             decompbr.Dispose();
                             decomps.Dispose();
 
@@ -1917,6 +1962,20 @@ namespace SimsCCManager.Packages.Sims4Search
                                     int unused3 = readFile.ReadByte();
                                 }
                             }
+
+                            readFile.BaseStream.Position = tgioffset;
+                            var tginum = readFile.ReadByte();
+                            for (int t = 0; t < tginum; t++){
+                                ulong iid = readFile.ReadUInt64();
+                                uint gid = readFile.ReadUInt32();
+                                uint tid = readFile.ReadUInt32();
+                                string key = string.Format("{0}-{1}-{2}", tid.ToString("X8"), gid.ToString("X8"), iid.ToString("X16"));
+                                if (key != "00000000-00000000-0000000000000000"){
+                                    if (!thisPackage.CASPartKeys.Contains(key)){
+                                        thisPackage.CASPartKeys.Add(key);
+                                    } 
+                                }                                
+                            }
                     }
 
                     caspc++;
@@ -1926,14 +1985,11 @@ namespace SimsCCManager.Packages.Sims4Search
             }
 
 
-            if ((fileHas.Exists(x => x.TypeID == "COBJ"))){
-                List<int> entryspots = new List<int>();
+            if (fileHas.Exists(x => x.TypeID == "COBJ")){
 
-                IEnumerable<int> csp = from has in fileHas
+                var entryspots = (from has in fileHas
                         where has.TypeID == "COBJ"
-                        select has.Location;
-                entryspots = csp.ToList();
-                csp = Enumerable.Empty<int>();
+                        select has.Location).ToList();
 
                 int cobjc = 0;
                 foreach (int e in entryspots){
@@ -1993,15 +2049,11 @@ namespace SimsCCManager.Packages.Sims4Search
                 }
             }
 
-            if ((fileHas.Exists(x => x.TypeID == "OBJD"))){
-                List<int> entryspots = new List<int>();
-                int fh = 0;
-                foreach (fileHasList item in fileHas) {
-                    if (item.TypeID == "OBJD"){
-                        entryspots.Add(fh);                       
-                    }
-                    fh++;
-                }    
+            if (fileHas.Exists(x => x.TypeID == "OBJD")){
+                var entryspots = (from has in fileHas
+                        where has.TypeID == "OBJD"
+                        select has.Location).ToList();
+
                 int objdc = 0;
                 foreach (int e in entryspots){
                     log.MakeLog(string.Format("P{0} - Opening OBJD #{1}", packageparsecount, objdc), true);
@@ -2118,6 +2170,25 @@ namespace SimsCCManager.Packages.Sims4Search
                 }
                 
             }
+
+            if (fileHas.Exists(x => x.TypeID == "GEOM")){
+                var entryspots = (from has in fileHas
+                        where has.TypeID == "GEOM"
+                        select has.Location).ToList();                
+                
+                thisPackage.Mesh = true;
+
+                foreach (int e in entryspots){
+                    string key = string.Format("{0}-{1}-{2}", indexData[e].typeID, indexData[e].groupID, indexData[e].instanceID);
+                    if (key != "00000000-00000000-0000000000000000"){
+                        if (!thisPackage.MeshKeys.Contains(key)){
+                            thisPackage.MeshKeys.Add(key);
+                        } 
+                    }
+                                       
+                }
+            }
+
 
             log.MakeLog(string.Format("P{0} - All methods complete, moving on to getting info.", packageparsecount), true);
 
@@ -2337,6 +2408,13 @@ namespace SimsCCManager.Packages.Sims4Search
             dbpfFile.Dispose();
             readFile.Close();
             readFile.Dispose();
+
+            
+            if (thisPackage.Mesh == false && thisPackage.Recolor == true){
+                thisPackage.Orphan = true;  
+            } else if (thisPackage.Mesh == true && thisPackage.Recolor == false && thisPackage.Override == false){
+                thisPackage.Orphan = true;
+            }
             
             if (GlobalVariables.sortonthego == true){
                 thisPackage = filesort.SortPackage(thisPackage);
@@ -2345,7 +2423,14 @@ namespace SimsCCManager.Packages.Sims4Search
             log.MakeLog(string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString()), true);
             log.MakeLog(string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString()), false);
             log.MakeLog(string.Format("Adding {0} to packages database.", thisPackage.PackageName), true);
-            try {
+
+            thisPackage = findOrphans.FindMatchesS4(thisPackage);
+
+            lock (GlobalVariables.AddPackages){
+                GlobalVariables.AddPackages.Add(thisPackage);
+            }
+
+            /*try {
                 GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage, true);
             } catch (SQLiteException ex){
                 log.MakeLog(string.Format("Caught exception adding Sims 4 package to database. \n Exception: {0}", ex), true);
@@ -2354,7 +2439,7 @@ namespace SimsCCManager.Packages.Sims4Search
             txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
             List<PackageFile> closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);            
             GlobalVariables.DatabaseConnection.Delete(closingquery[0]);
-            closingquery = new List<PackageFile>();
+            closingquery = new List<PackageFile>();*/
             sw.Stop();
             TimeSpan ts = sw.Elapsed;
             string elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
@@ -2365,7 +2450,7 @@ namespace SimsCCManager.Packages.Sims4Search
             log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime), true);
             log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime), false);
             
-            
+
 
             log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
             return;

@@ -68,8 +68,11 @@
                     <Button x:Name="NewFolder" Content="Find New Items" Click="FindNewItems_Click" Style="{StaticResource MainButtons}"/> 
                     <Button x:Name="LoadButton" Click="loadData_Click" Content="Manage CC" Visibility="Collapsed" Style="{StaticResource MainButtons}"/>
                 </StackPanel>                
-                <Rectangle Height="0"/>                                
-                <Button x:Name="StartOverButton" Click="StartOver_Click" Content="Start Over" Visibility="Collapsed" Width="200" Style="{StaticResource MainButtons}"/>
+                <Rectangle Height="0"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">                                
+                    <Button x:Name="StartOverButton" Click="StartOver_Click" Content="Start Over" Visibility="Collapsed" Width="200" Style="{StaticResource MainButtons}"/>
+                    <Button x:Name="OrphanButton" Click="Orphan_Click" Content="Identify Orphans" Visibility="Collapsed" Width="200" Style="{StaticResource MainButtons}"/>
+                </StackPanel>
             </StackPanel>
             <StackPanel Orientation="Vertical" Visibility="Visible" Margin="0, 475, 0, 0">
                 <StackPanel.Resources>
