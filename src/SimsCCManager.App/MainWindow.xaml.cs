@@ -107,6 +107,18 @@ namespace Sims_CC_Sorter
         private int workerthreads = 0;
         private int iothreads = 0;
         private bool _runthreads = true;
+        private int databaseBatchSize = 100;
+
+        private bool CurrentlyMovingAP = false;
+        private bool CurrentlyMovingRP = false;
+        private bool CurrentlyMovingPR = false;
+        private bool CurrentlyMovingAF = false;
+        private bool CurrentlyMovingIRS2 = false;
+        private bool CurrentlyMovingIRS3 = false;
+        private bool CurrentlyMovingIRS4 = false;
+        private bool CurrentlyMovingIMS2 = false;
+        private bool CurrentlyMovingIMS3 = false;
+        private bool CurrentlyMovingIMS4 = false;
 
         public static int maxi = 0;
         
@@ -141,17 +153,16 @@ namespace Sims_CC_Sorter
             }
             parallelSettings.MaxDegreeOfParallelism = threadstouse;
             
-            ThreadPool.SetMaxThreads(threadstouse, 0);
-            ThreadPool.SetMinThreads(2, 0);
-            GlobalVariables.AddPackages.CollectionChanged += AddPackages_CollectionChanged;
-            GlobalVariables.ProcessingReader.CollectionChanged += ProcessingReader_CollectionChanged;
-            GlobalVariables.AllFiles.CollectionChanged += AllFiles_CollectionChanged;
-            GlobalVariables.InstancesRecolorsS2Col.CollectionChanged += InstancesRecolorsS2Col_CollectionChanged;
-            GlobalVariables.InstancesMeshesS2Col.CollectionChanged += InstancesMeshesS2Col_CollectionChanged;
-            GlobalVariables.InstancesRecolorsS3Col.CollectionChanged += InstancesRecolorsS3Col_CollectionChanged;
-            GlobalVariables.InstancesMeshesS3Col.CollectionChanged += InstancesMeshesS3Col_CollectionChanged;
-            GlobalVariables.InstancesRecolorsS4Col.CollectionChanged += InstancesRecolorsS4Col_CollectionChanged;
-            GlobalVariables.InstancesMeshesS4Col.CollectionChanged += InstancesMeshesS4Col_CollectionChanged;
+            GlobalVariables.AddPackages.ContentChanged += AddPackages_CollectionChanged;
+            GlobalVariables.ProcessingReader.ContentChanged += ProcessingReader_CollectionChanged;
+            GlobalVariables.RemovePackages.ContentChanged += RemovePackages_CollectionChanged;
+            GlobalVariables.AllFiles.ContentChanged += AllFiles_CollectionChanged;
+            GlobalVariables.InstancesRecolorsS2Col.ContentChanged += InstancesRecolorsS2Col_CollectionChanged;
+            GlobalVariables.InstancesMeshesS2Col.ContentChanged += InstancesMeshesS2Col_CollectionChanged;
+            GlobalVariables.InstancesRecolorsS3Col.ContentChanged += InstancesRecolorsS3Col_CollectionChanged;
+            GlobalVariables.InstancesMeshesS3Col.ContentChanged += InstancesMeshesS3Col_CollectionChanged;
+            GlobalVariables.InstancesRecolorsS4Col.ContentChanged += InstancesRecolorsS4Col_CollectionChanged;
+            GlobalVariables.InstancesMeshesS4Col.ContentChanged += InstancesMeshesS4Col_CollectionChanged;
 
 
 
@@ -197,7 +208,7 @@ namespace Sims_CC_Sorter
                 FileInfo pr = new FileInfo(GlobalVariables.PackagesRead);
                 log.MakeLog(string.Format("Cache size: {0}", pr.Length), true);
                 if (pr.Length != 0){                    
-                    var packagesQuery = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending'");
+                    var packagesQuery = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader");
                     if (packagesQuery.Count > 0){
                         value = true;
                     }
@@ -378,6 +389,14 @@ namespace Sims_CC_Sorter
         {
             statement = "Closing application.";
             log.MakeLog(statement, false);
+            GlobalVariables.InstancesCacheConnection.Commit();
+            GlobalVariables.InstancesCacheConnection.Close();
+            GlobalVariables.S4FunctionTypesConnection.Commit();
+            GlobalVariables.S4FunctionTypesConnection.Close();
+            GlobalVariables.S4OverridesConnection.Commit();
+            GlobalVariables.S4OverridesConnection.Close();
+            GlobalVariables.S4SpecificOverridesConnection.Commit();
+            GlobalVariables.S4SpecificOverridesConnection.Close();
             GlobalVariables.DatabaseConnection.Commit();
             GlobalVariables.DatabaseConnection.Close();
             System.Windows.Application.Current.Shutdown();
@@ -614,9 +633,27 @@ namespace Sims_CC_Sorter
                 }, token);
                 countdata.Wait(token);  
                 countdata.Dispose(); 
+                List<AllFiles> allp = new();
+                Task getPackages = Task.Run(() => {
+                    allp = GlobalVariables.DatabaseConnection.Query<AllFiles>("SELECT * FROM AllFiles where Type='package'");
+                    log.MakeLog(string.Format("Packages to read count is {0}.", allp.Count), true);
+                    maxi = allp.Count;
+                    GlobalVariables.PackageCount = allp.Count();
+                    log.MakeLog(string.Format("Packages to read count is {0}.", allp.Count), true);
+                    SetProgressBar();
+                    completionAlertValue("Reading packages.");
+                    countprogress = 0;
+                    runprogress = true;            
+                });
+                getPackages.Wait(token);
+                getPackages.Dispose();
+
+                new Thread(() => RunUpdateElapsed(sw, token)) {IsBackground = true}.Start();
+                new Thread(() => RunUpdateProgressBar(token)) {IsBackground = true}.Start();
 
                 Task rp = Task.Run(() => {
-                    ReadPackages(token);
+                    //ReadPackages(token);
+                    ReadPackagesPFE(allp);
                 }, token);
                 rp.Wait(token);
                 rp.Dispose();
@@ -636,18 +673,14 @@ namespace Sims_CC_Sorter
                
                 //updatesw.Dispose();
                 //new Thread(() => ) {IsBackground = true}.Start();
-            }    
+            }   
             
-            ElapsedProcessing("reading packages");
-
-            /*if(!token.IsCancellationRequested){
-                sw.Restart();   
-                Task orphans = Task.Run(() => {
-                    FindOrphans(token);
-                }, token);
-                orphans.Wait();
-                sw.Stop();
-            }*/   
+            if (!token.IsCancellationRequested) {
+                Task CheckCollections = Task.Run(() => {
+                    CheckObservableCollections();
+                });
+                CheckCollections.Wait();    
+            }
                                
 
             if (!token.IsCancellationRequested) {
@@ -670,6 +703,89 @@ namespace Sims_CC_Sorter
 
         #region Methods of Processing
 
+        private void ReadPackagesPFE(List<AllFiles> allp){
+            ParallelOptions ps = new();
+            ps.MaxDegreeOfParallelism = 250;
+            Task reader = Task.Run(() => {
+                /*foreach (AllFiles p in allp){
+                    initialprocess.CheckThrough(p.Location);
+                }*/
+                Parallel.ForEach(allp, p => {
+                    initialprocess.CheckThrough(p.Location);
+                });
+            });
+            reader.Wait();
+        }
+
+        private async void CheckObservableCollections(){
+            Task checker = Task.Run(() => {
+                if (!GlobalVariables.AddPackages.IsEmpty){
+                    for (int i = 0; i < GlobalVariables.AddPackages.Count; i++){
+                        GlobalVariables.AddPackages.TryDequeue(out SimsPackage package);
+                        GlobalVariables.DatabaseConnection.InsertOrReplaceWithChildren(package);
+                    }
+                }                
+                if (!GlobalVariables.RemovePackages.IsEmpty){
+                    for (int i = 0; i < GlobalVariables.RemovePackages.Count; i++){
+                        GlobalVariables.RemovePackages.TryDequeue(out PackageFile item);
+                        GlobalVariables.DatabaseConnection.Delete(item);
+                    }
+                }
+                if (!GlobalVariables.ProcessingReader.IsEmpty){
+                    for (int i = 0; i < GlobalVariables.ProcessingReader.Count; i++){
+                        GlobalVariables.ProcessingReader.TryDequeue(out PackageFile item);
+                        GlobalVariables.DatabaseConnection.InsertOrReplaceWithChildren(item);
+                    }
+                }
+                if (!GlobalVariables.AllFiles.IsEmpty){
+                    for (int i = 0; i < GlobalVariables.AllFiles.Count; i++){
+                        GlobalVariables.AllFiles.TryDequeue(out AllFiles item);
+                        GlobalVariables.DatabaseConnection.InsertOrReplaceWithChildren(item);
+                    }
+                }
+                if (!GlobalVariables.InstancesRecolorsS2Col.IsEmpty){
+                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS2Col.Count; i++){
+                        GlobalVariables.InstancesRecolorsS2Col.TryDequeue(out var item);
+                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
+                    }
+                }
+                if (!GlobalVariables.InstancesRecolorsS3Col.IsEmpty){
+                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS3Col.Count; i++){
+                        GlobalVariables.InstancesRecolorsS3Col.TryDequeue(out var item);
+                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
+                    }
+                }
+                if (!GlobalVariables.InstancesRecolorsS4Col.IsEmpty){
+                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS4Col.Count; i++){
+                        GlobalVariables.InstancesRecolorsS4Col.TryDequeue(out var item);
+                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
+                    }
+                }
+                if (!GlobalVariables.InstancesMeshesS2Col.IsEmpty){
+                    for (int i = 0; i < GlobalVariables.InstancesMeshesS2Col.Count; i++){
+                        GlobalVariables.InstancesMeshesS2Col.TryDequeue(out var item);
+                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
+                    }
+                }
+                if (!GlobalVariables.InstancesMeshesS3Col.IsEmpty){
+                    for (int i = 0; i < GlobalVariables.InstancesMeshesS3Col.Count; i++){
+                        GlobalVariables.InstancesMeshesS3Col.TryDequeue(out var item);
+                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
+                    }
+                }
+                if (!GlobalVariables.InstancesMeshesS4Col.IsEmpty){
+                    for (int i = 0; i < GlobalVariables.InstancesMeshesS4Col.Count; i++){
+                        GlobalVariables.InstancesMeshesS4Col.TryDequeue(out var item);
+                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
+                    }
+                }
+            });
+            checker.Wait();
+        }
+
+
+
+        
         private void FindOrphans(CancellationToken token){
             var packagefiles = GlobalVariables.DatabaseConnection.Query<SimsPackage>("SELECT * from Packages");
             maxi = packagefiles.Count;            
@@ -990,7 +1106,6 @@ namespace Sims_CC_Sorter
                         return;
                     }
                     log.MakeLog(string.Format("Item {0}: {1} is not a duplicate, adding to database.", tempcount, p.Name), true);
-                    packagefiles.Add(new PackageFile { Name = p.Name, Location = p.FullName, Status = "Pending"});
                     allfiles.Add(new AllFiles { Name = p.Name, Location = p.FullName, Type = "package", Status = "Fine"});
                 });
                 UpdateProgressBar("package files", "Sorting");
@@ -1054,9 +1169,9 @@ namespace Sims_CC_Sorter
 
         private void ReadPackages(CancellationToken token){
             if(token.IsCancellationRequested) return;
-            List<PackageFile> allp = new List<PackageFile>();
+            List<AllFiles> allp = new List<AllFiles>();
             Task prepPackages = Task.Run(() => {
-                allp = GlobalVariables.DatabaseConnection.Query<PackageFile>("SELECT * FROM Processing_Reader where Status = 'Pending' ORDER BY Name ASC");
+                allp = GlobalVariables.DatabaseConnection.Query<AllFiles>("SELECT * FROM AllFiles where Type='package'");
                 log.MakeLog(string.Format("Packages to read count is {0}.", allp.Count), true);
                 maxi = allp.Count;
                 GlobalVariables.PackageCount = allp.Count();
@@ -1070,7 +1185,7 @@ namespace Sims_CC_Sorter
             if(token.IsCancellationRequested) return;
             ConcurrentQueue<Task> ReadList = new ConcurrentQueue<Task>();
             Task makeList = Task.Run(() => {
-                foreach (PackageFile p in allp){
+                foreach (AllFiles p in allp){
                     if(token.IsCancellationRequested){
                         break;
                     }
@@ -1105,7 +1220,7 @@ namespace Sims_CC_Sorter
                 }
                 Task.WaitAll(ReadList.ToArray());
             }, token);
-            readpackages.Wait();
+            readpackages.Wait();                
         }
 
 
@@ -1113,185 +1228,452 @@ namespace Sims_CC_Sorter
             complete = initialprocess.CheckThrough(location);
         }
 
+        void AddToDatabase(string source){
+                       
+            if (source == "AddPackages"){
+                CurrentlyMovingAP = true; 
+                Task get = Task.Run(() => {
+                    List<SimsPackage> sp = new();
+                    for (int i = 0; i < GlobalVariables.AddPackages.Count; i++){
+                        GlobalVariables.AddPackages.TryDequeue(out var item);
+                        sp.Add(item);                        
+                    }
+                    GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(sp, true);
+                });
+                get.Wait();   
+                CurrentlyMovingAP = false;            
+            }
+            if (source == "RemovePackages"){
+                CurrentlyMovingRP = true;
+                Task get = Task.Run(() => {
+                    List<PackageFile> pf = new();
+                    for (int i = 0; i < GlobalVariables.RemovePackages.Count; i++){
+                        GlobalVariables.RemovePackages.TryDequeue(out var item); 
+                        pf.Add(item);                         
+                    }
+                    GlobalVariables.DatabaseConnection.DeleteAll(pf, true);
+                });
+                get.Wait();
+                CurrentlyMovingRP = false;                
+            }
 
-        void AddPackages_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+            
+            if (source == "ProcessingReader"){
+                CurrentlyMovingPR = true;
+                Task get = Task.Run(() => {
+                    List<PackageFile> pf = new();
+                    for (int i = 0; i < GlobalVariables.ProcessingReader.Count; i++){
+                        GlobalVariables.ProcessingReader.TryDequeue(out var item);
+                        pf.Add(item);
+                    }
+                    GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(pf, true);
+                });
+                get.Wait();      
+                CurrentlyMovingPR = false;          
+            }
+
+            if (source == "AllFiles"){
+                CurrentlyMovingAF = true;
+                Task get = Task.Run(() => {
+                    List<AllFiles> af = new();
+                    for (int i = 0; i < GlobalVariables.AllFiles.Count; i++){
+                        GlobalVariables.AllFiles.TryDequeue(out var item);
+                        af.Add(item);
+                    }
+                    GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(af, true);
+                });
+                get.Wait();
+                CurrentlyMovingAF = false;
+            }
+
+            if (source == "IRS2"){
+                CurrentlyMovingIRS2 = true;
+                Task get = Task.Run(() => {
+                    List<InstancesRecolorsS2> irs2 = new();
+                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS2Col.Count; i++){
+                        GlobalVariables.InstancesRecolorsS2Col.TryDequeue(out var item);
+                        irs2.Add(item);
+                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(irs2, true);
+                });
+                get.Wait();  
+                CurrentlyMovingIRS2 = false;
+            }
+            if (source == "IRS3"){
+                CurrentlyMovingIRS3 = true;
+                Task get = Task.Run(() => {
+                    List<InstancesRecolorsS3> irs3 = new();
+                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS3Col.Count; i++){
+                        GlobalVariables.InstancesRecolorsS3Col.TryDequeue(out var item);
+                        irs3.Add(item);
+                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(irs3, true);
+                });
+                get.Wait();  
+                CurrentlyMovingIRS3 = false;
+            }
+            if (source == "IRS4"){
+                CurrentlyMovingIRS4 = true;
+                Task get = Task.Run(() => {
+                    List<InstancesRecolorsS4> irs4 = new();
+                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS4Col.Count; i++){
+                        GlobalVariables.InstancesRecolorsS4Col.TryDequeue(out var item);
+                        irs4.Add(item);
+                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(irs4, true);
+                });
+                get.Wait();
+                CurrentlyMovingIRS4 = false;
+            }
+            
+            if (source == "IMS2"){
+                CurrentlyMovingIMS2 = true;
+                Task get = Task.Run(() => {
+                    List<InstancesMeshesS2> ims2 = new();
+                    for (int i = 0; i < GlobalVariables.InstancesMeshesS2Col.Count; i++){
+                        GlobalVariables.InstancesMeshesS2Col.TryDequeue(out var item);
+                        ims2.Add(item);                        
+                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(ims2, true);
+                });
+                get.Wait();
+                CurrentlyMovingIMS2 = false;
+            }
+            if (source == "IMS3"){
+                CurrentlyMovingIMS3 = true;
+                Task get = Task.Run(() => {
+                    List<InstancesMeshesS3> ims3 = new();
+                    for (int i = 0; i < GlobalVariables.InstancesMeshesS3Col.Count; i++){
+                        GlobalVariables.InstancesMeshesS3Col.TryDequeue(out var item);
+                        ims3.Add(item);
+                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(ims3, true);
+                });
+                get.Wait();   
+                CurrentlyMovingIMS3 = false;
+            }
+            if (source == "IMS4"){
+                CurrentlyMovingIMS4 = true;
+                Task get = Task.Run(() => {
+                    List<InstancesMeshesS4> ims4 = new();
+                    for (int i = 0; i < GlobalVariables.InstancesMeshesS4Col.Count; i++){
+                        GlobalVariables.InstancesMeshesS4Col.TryDequeue(out var item);
+                        ims4.Add(item);
+                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(ims4, true);
+                });
+                get.Wait();
+                CurrentlyMovingIMS4 = false;
+            }
+        }
+
+
+
+        void AddPackages_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<SimsPackage> args)
         {
-            if (GlobalVariables.AddPackages.Count > 0){
-                Task rd = Task.Run(() => AddPackages_RunDatabase());
-                rd.Wait();
+            switch (args.Action)
+            {
+                case NotifyConcurrentQueueChangedAction.Enqueue:
+                    {
+                        if (CurrentlyMovingAP == true) break;
+                        int vcount = GlobalVariables.AddPackages.Count;                        
+                        if (vcount >= databaseBatchSize){
+                            new Thread(() => AddToDatabase("AddPackages")){IsBackground = true}.Start();
+                        }                        
+                        break;
+                    }
+                case NotifyConcurrentQueueChangedAction.Dequeue:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Peek:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Empty:
+                    {
+                        break;
+                    }
             }
         }
-
-        private void AddPackages_RunDatabase(){
-            lock (GlobalVariables.AddPackages){
-                log.MakeLog(string.Format("AddPackages has {0} items in it.", GlobalVariables.AddPackages.Count), true);
-                List<PackageFile> removals = new();
-                foreach (SimsPackage item in GlobalVariables.AddPackages){
-                    string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(item.PackageName));
-                    var closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);            
-                    removals.AddRange(closingquery);
-                }
-                GlobalVariables.DatabaseConnection.DeleteAll(removals);
-                GlobalVariables.DatabaseConnection.InsertAllWithChildren(GlobalVariables.AddPackages);
-                log.MakeLog(string.Format("Added {0} packages to database.", GlobalVariables.AddPackages.Count), true);
-                GlobalVariables.AddPackages.Clear();
-                log.MakeLog(string.Format("Cleared the AddPackages collection. It now has {0} items in it.", GlobalVariables.AddPackages.Count), true);
-            }
-            GlobalVariables.GetInstanceData();
-        }
-
-        void ProcessingReader_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void RemovePackages_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<PackageFile> args)
         {
-            if (GlobalVariables.ProcessingReader.Count > 0){
-                Task rd = Task.Run(() => ProcessingReader_RunDatabase());
-                rd.Wait();
+            switch (args.Action)
+            {
+                case NotifyConcurrentQueueChangedAction.Enqueue:
+                    {
+                        if (CurrentlyMovingRP == true) break;
+                        int vcount = GlobalVariables.RemovePackages.Count;
+                        if (vcount >= databaseBatchSize){
+                            new Thread(() => AddToDatabase("RemovePackages")){IsBackground = true}.Start();                         
+                        }
+                        break;
+                    }
+                case NotifyConcurrentQueueChangedAction.Dequeue:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Peek:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Empty:
+                    {
+                        break;
+                    }
             }
         }
 
-        private void ProcessingReader_RunDatabase(){
-            lock (GlobalVariables.ProcessingReader){
-                log.MakeLog(string.Format("ProcessingReader has {0} items in it.", GlobalVariables.ProcessingReader.Count), true);
-                GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(GlobalVariables.ProcessingReader);
-                log.MakeLog(string.Format("Added {0} packages to processing database.", GlobalVariables.ProcessingReader.Count), true);
-                GlobalVariables.ProcessingReader.Clear();
-                log.MakeLog(string.Format("Cleared the ProcessingReader collection. It now has {0} items in it.", GlobalVariables.ProcessingReader.Count), true);
-            }
-        }
-
-        void AllFiles_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void ProcessingReader_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<PackageFile> args)
         {
-            if (GlobalVariables.AllFiles.Count > 0){
-                Task rd = Task.Run(() => AllFiles_RunDatabase());
-                rd.Wait();
+            switch (args.Action)
+            {
+                case NotifyConcurrentQueueChangedAction.Enqueue:
+                    {                        
+                        if (CurrentlyMovingPR == true) break;
+                        int vcount = GlobalVariables.ProcessingReader.Count;
+                        if (vcount >= databaseBatchSize){
+                            new Thread(() => AddToDatabase("ProcessingReader")){IsBackground = true}.Start();
+                        }
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Dequeue:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Peek:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Empty:
+                    {
+                        break;
+                    }
             }
         }
+        void AllFiles_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<AllFiles> args)
+        {
+            switch (args.Action)
+            {
+                case NotifyConcurrentQueueChangedAction.Enqueue:
+                    {
+                        if (CurrentlyMovingAF == true) break;
+                        int vcount = GlobalVariables.AllFiles.Count;
+                        if (vcount >= databaseBatchSize){
+                            new Thread(() => AddToDatabase("AllFiles")){IsBackground = true}.Start();
+                        }
+                        break;
+                    }
 
-        private void AllFiles_RunDatabase(){
-            lock (GlobalVariables.AllFiles){
-                log.MakeLog(string.Format("AllFiles has {0} items in it.", GlobalVariables.AllFiles.Count), true);
-                GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(GlobalVariables.AllFiles);
-                log.MakeLog(string.Format("Added {0} packages to processing database.", GlobalVariables.AllFiles.Count), true);
-                GlobalVariables.AllFiles.Clear();
-                log.MakeLog(string.Format("Cleared the AllFiles collection. It now has {0} items in it.", GlobalVariables.AllFiles.Count), true);
+                case NotifyConcurrentQueueChangedAction.Dequeue:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Peek:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Empty:
+                    {
+                        break;
+                    }
+            }
+        }        
+        void InstancesRecolorsS2Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesRecolorsS2> args)
+        {
+            switch (args.Action)
+            {
+                case NotifyConcurrentQueueChangedAction.Enqueue:
+                    {
+                        if (CurrentlyMovingIRS2 == true) break;
+                        int vcount = GlobalVariables.InstancesRecolorsS2Col.Count;
+                        if (vcount >= databaseBatchSize){
+                            new Thread(() => AddToDatabase("IRS2")){IsBackground = true}.Start();
+                        }
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Dequeue:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Peek:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Empty:
+                    {
+                        break;
+                    }
             }
         }
         
-        void InstancesRecolorsS2Col_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void InstancesRecolorsS3Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesRecolorsS3> args)
         {
-            if (GlobalVariables.InstancesRecolorsS2Col.Count > 0){
-                Task rd = Task.Run(() => InstancesRecolorsS2Col_RunDatabase());
-                rd.Wait();
-            }
-        }
+            switch (args.Action)
+            {
+                case NotifyConcurrentQueueChangedAction.Enqueue:
+                    {
+                        if (CurrentlyMovingIRS3 == true) break;
+                        int vcount = GlobalVariables.InstancesRecolorsS3Col.Count;
+                        if (vcount >= databaseBatchSize){    
+                            new Thread(() => AddToDatabase("IRS3")){IsBackground = true}.Start();
+                        }
+                        break;
+                    }
 
-        private void InstancesRecolorsS2Col_RunDatabase(){
-            lock (GlobalVariables.InstancesRecolorsS2Col){
-                log.MakeLog(string.Format("InstancesRecolorsS2Col has {0} items in it.", GlobalVariables.InstancesRecolorsS2Col.Count), true);
-                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesRecolorsS2Col);
-                log.MakeLog(string.Format("Added {0} packages to InstancesRecolorsS2Col database.", GlobalVariables.InstancesRecolorsS2Col.Count), true);
-                GlobalVariables.InstancesRecolorsS2Col.Clear();
-                log.MakeLog(string.Format("Cleared the InstancesRecolorsS2Col collection. It now has {0} items in it.", GlobalVariables.InstancesRecolorsS2Col.Count), true);
+                case NotifyConcurrentQueueChangedAction.Dequeue:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Peek:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Empty:
+                    {
+                        break;
+                    }
             }
         }
         
-        void InstancesRecolorsS3Col_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void InstancesRecolorsS4Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesRecolorsS4> args)
         {
-            if (GlobalVariables.InstancesRecolorsS2Col.Count > 0){
-                Task rd = Task.Run(() => InstancesRecolorsS3Col_RunDatabase());
-                rd.Wait();
+            switch (args.Action)
+            {
+                case NotifyConcurrentQueueChangedAction.Enqueue:
+                    {
+                        if (CurrentlyMovingIRS4 == true) break;
+                        int vcount = GlobalVariables.InstancesRecolorsS4Col.Count;
+                        if (vcount >= databaseBatchSize){
+                            new Thread(() => AddToDatabase("IRS4")){IsBackground = true}.Start();
+                        }
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Dequeue:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Peek:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Empty:
+                    {
+                        break;
+                    }
             }
         }
+        void InstancesMeshesS2Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesMeshesS2> args)
+        {
+            switch (args.Action)
+            {
+                case NotifyConcurrentQueueChangedAction.Enqueue:
+                    {
+                        if (CurrentlyMovingIMS2 == true) break;
+                        int vcount = GlobalVariables.InstancesMeshesS2Col.Count;
+                        if (vcount >= databaseBatchSize){   
+                            new Thread(() => AddToDatabase("IMS2")){IsBackground = true}.Start(); 
+                        }
+                        break;
+                    }
 
-        private void InstancesRecolorsS3Col_RunDatabase(){
-            lock (GlobalVariables.InstancesRecolorsS3Col){
-                log.MakeLog(string.Format("InstancesRecolorsS3Col has {0} items in it.", GlobalVariables.InstancesRecolorsS3Col.Count), true);
-                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesRecolorsS3Col);
-                log.MakeLog(string.Format("Added {0} packages to InstancesRecolorsS3Col database.", GlobalVariables.InstancesRecolorsS3Col.Count), true);
-                GlobalVariables.InstancesRecolorsS3Col.Clear();
-                log.MakeLog(string.Format("Cleared the InstancesRecolorsS3Col collection. It now has {0} items in it.", GlobalVariables.InstancesRecolorsS3Col.Count), true);
+                case NotifyConcurrentQueueChangedAction.Dequeue:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Peek:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Empty:
+                    {
+                        break;
+                    }
             }
         }
         
-        void InstancesRecolorsS4Col_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void InstancesMeshesS3Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesMeshesS3> args)
         {
-            if (GlobalVariables.InstancesRecolorsS2Col.Count > 0){
-                Task rd = Task.Run(() => InstancesRecolorsS4Col_RunDatabase());
-                rd.Wait();
-            }
-        }
+            switch (args.Action)
+            {
+                case NotifyConcurrentQueueChangedAction.Enqueue:
+                    {
+                        if (CurrentlyMovingIMS3 == true) break;
+                        int vcount = GlobalVariables.InstancesMeshesS3Col.Count;
+                        if (vcount >= databaseBatchSize){       
+                            new Thread(() => AddToDatabase("IMS3")){IsBackground = true}.Start();
+                        }
+                        break;
+                    }
 
-        private void InstancesRecolorsS4Col_RunDatabase(){
-            lock (GlobalVariables.InstancesRecolorsS4Col){
-                log.MakeLog(string.Format("InstancesRecolorsS4Col has {0} items in it.", GlobalVariables.InstancesRecolorsS4Col.Count), true);
-                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesRecolorsS4Col);
-                log.MakeLog(string.Format("Added {0} packages to InstancesRecolorsS4Col database.", GlobalVariables.InstancesRecolorsS4Col.Count), true);
-                GlobalVariables.InstancesRecolorsS4Col.Clear();
-                log.MakeLog(string.Format("Cleared the InstancesRecolorsS4Col collection. It now has {0} items in it.", GlobalVariables.InstancesRecolorsS4Col.Count), true);
+                case NotifyConcurrentQueueChangedAction.Dequeue:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Peek:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Empty:
+                    {
+                        break;
+                    }
             }
         }
         
-        void InstancesMeshesS2Col_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void InstancesMeshesS4Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesMeshesS4> args)
         {
-            if (GlobalVariables.InstancesMeshesS2Col.Count > 0){
-                Task rd = Task.Run(() => InstancesMeshesS2Col_RunDatabase());
-                rd.Wait();
+            switch (args.Action)
+            {
+                case NotifyConcurrentQueueChangedAction.Enqueue:
+                    {
+                        if (CurrentlyMovingIMS4 == true) break;
+                        int vcount = GlobalVariables.InstancesMeshesS4Col.Count;
+                        if (vcount >= databaseBatchSize){  
+                            new Thread(() => AddToDatabase("IMS4")){IsBackground = true}.Start(); 
+                        }
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Dequeue:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Peek:
+                    {
+                        break;
+                    }
+
+                case NotifyConcurrentQueueChangedAction.Empty:
+                    {
+                        break;
+                    }
             }
         }
 
-        private void InstancesMeshesS2Col_RunDatabase(){
-            lock (GlobalVariables.InstancesMeshesS2Col){
-                log.MakeLog(string.Format("InstancesMeshesS2Col has {0} items in it.", GlobalVariables.InstancesMeshesS2Col.Count), true);
-                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesMeshesS2Col);
-                log.MakeLog(string.Format("Added {0} packages to InstancesMeshesS2Col database.", GlobalVariables.InstancesMeshesS2Col.Count), true);
-                GlobalVariables.InstancesMeshesS2Col.Clear();
-                log.MakeLog(string.Format("Cleared the InstancesMeshesS2Col collection. It now has {0} items in it.", GlobalVariables.InstancesMeshesS2Col.Count), true);
-            }
-        }
-        
-        void InstancesMeshesS3Col_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            if (GlobalVariables.InstancesMeshesS2Col.Count > 0){
-                Task rd = Task.Run(() => InstancesMeshesS3Col_RunDatabase());
-                rd.Wait();
-            }
-        }
 
-        private void InstancesMeshesS3Col_RunDatabase(){
-            lock (GlobalVariables.InstancesMeshesS3Col){
-                log.MakeLog(string.Format("InstancesMeshesS3Col has {0} items in it.", GlobalVariables.InstancesMeshesS3Col.Count), true);
-                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesMeshesS3Col);
-                log.MakeLog(string.Format("Added {0} packages to InstancesMeshesS3Col database.", GlobalVariables.InstancesMeshesS3Col.Count), true);
-                GlobalVariables.InstancesMeshesS3Col.Clear();
-                log.MakeLog(string.Format("Cleared the InstancesMeshesS3Col collection. It now has {0} items in it.", GlobalVariables.InstancesMeshesS3Col.Count), true);
-            }
-        }
-        
-        void InstancesMeshesS4Col_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            if (GlobalVariables.InstancesMeshesS2Col.Count > 0){
-                Task rd = Task.Run(() => InstancesMeshesS4Col_RunDatabase());
-                rd.Wait();
-            }
-        }
-
-        private void InstancesMeshesS4Col_RunDatabase(){
-            lock (GlobalVariables.InstancesMeshesS4Col){
-                log.MakeLog(string.Format("InstancesMeshesS4Col has {0} items in it.", GlobalVariables.InstancesMeshesS4Col.Count), true);
-                GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesMeshesS4Col);
-                log.MakeLog(string.Format("Added {0} packages to InstancesMeshesS4Col database.", GlobalVariables.InstancesMeshesS4Col.Count), true);
-                GlobalVariables.InstancesMeshesS4Col.Clear();
-                log.MakeLog(string.Format("Cleared the InstancesMeshesS4Col collection. It now has {0} items in it.", GlobalVariables.InstancesMeshesS4Col.Count), true);
-            }
-        }
 
 
 

@@ -19,184 +19,116 @@ namespace SimsCCManager.Packages.Orphans
         }
 
         public SimsPackage FindMatchesS4(SimsPackage thisPackage){
-            if (thisPackage.Recolor == true && thisPackage.Mesh == false && thisPackage.Override == false){
-                //if the package has a texture but no mesh
-                var indb = (from r in GlobalVariables.S4InstancesCacheRecolors
+            if (thisPackage.Recolor == true && thisPackage.Mesh == false){
+                if (thisPackage.CASPartKeys.Any()){
+                    foreach (var rec in thisPackage.CASPartKeys){
+                        if (rec != "000000-000000-0000000000000000"){
+                            string[] split = rec.Split('-');
+                            var foundoverrides = (from overrides in GlobalVariables.S4OverridesList
+                                                    where overrides.InstanceID == split[2]
+                                                    select overrides).ToList();
+                            if (foundoverrides.Any()){
+                                thisPackage.Orphan = false;
+                                return thisPackage;
+                            }
+                        }
+                    }
+                }
+                
+            }
+            if (thisPackage.Mesh == true){
+                foreach (var meshkey in thisPackage.MeshKeys){
+                    InstancesMeshesS4 Mesh = new();
+                    var MatchingRecolors = (from r in GlobalVariables.S4InstancesCacheRecolors
+                                where thisPackage.CASPartKeys.Any(mr => r.Key == mr) && thisPackage.PackageName == r.PackageName
+                                select r).ToList();
+                    //see if the mesh is already listed somewhere
+                    var MatchingMeshes = (from r in GlobalVariables.S4InstancesCacheMeshes
+                                where thisPackage.CASPartKeys.Any(mr => r.Key == mr)
+                                select r).ToList();
+                    if (MatchingMeshes.Any()){
+                        Mesh = MatchingMeshes[0];
+                    } else {
+                        Mesh.Key = meshkey;
+                        Mesh.PackageName = thisPackage.PackageName;
+                    }
+                    if (thisPackage.CASPartKeys.Any()){
+                        foreach (var rec in thisPackage.CASPartKeys){
+                            if (rec != "000000-000000-0000000000000000"){
+                                Mesh.MatchingRecolors.Add(new InstancesRecolorsS4(){
+                                    Key = rec,
+                                    PackageName = thisPackage.PackageName
+                                });
+                            }     
+                        }
+                    }                
+                    if (MatchingRecolors.Any()){
+                        thisPackage.Orphan = false;
+                        foreach (var rec in MatchingRecolors){
+                            if (!Mesh.MatchingRecolors.Contains(rec)){
+                                Mesh.MatchingRecolors.Add(rec);  
+                            }                                             
+                        }                    
+                        foreach (var rec in MatchingRecolors){
+                            if (rec.MeshKey != null){
+                                InstancesRecolorsS4 ir4 = new();
+                                ir4 = rec;
+                                ir4.MatchingMesh = Mesh; 
+                                GlobalVariables.InstancesRecolorsS4Col.Enqueue(ir4);
+                            }                        
+                        }
+                    }                
+                    GlobalVariables.InstancesMeshesS4Col.Enqueue(Mesh);
+                }
+                
+            } else if (thisPackage.Recolor == true){
+                List<InstancesRecolorsS4> Recolors = new();
+                var MatchingRecolors = (from r in GlobalVariables.S4InstancesCacheRecolors
                             where thisPackage.CASPartKeys.Any(mr => r.Key == mr) && thisPackage.PackageName == r.PackageName
                             select r).ToList();
                 //see if the mesh is already listed somewhere
-                var inmdb = (from r in GlobalVariables.S4InstancesCacheMeshes
+                var MatchingMeshes = (from r in GlobalVariables.S4InstancesCacheMeshes
                             where thisPackage.CASPartKeys.Any(mr => r.Key == mr)
                             select r).ToList();
-
-                if (inmdb.Any()){
-                    thisPackage.Orphan = false;
-                    if (indb.Any()){
-                        Parallel.ForEach(thisPackage.CASPartKeys, key => {
-                            var meshquery = GlobalVariables.InstancesCacheConnection.Query<InstancesMeshesS4>(string.Format("SELECT * FROM Sims4Meshes where Key='{0}'", key));
-                            var caspquery = GlobalVariables.InstancesCacheConnection.Query<InstancesRecolorsS4>(string.Format("SELECT * FROM Sims4Recolors where Key='{0}'", key));                            
-                            if (meshquery.Any()){
-                                Parallel.ForEach(caspquery, rc => {
-                                    if (rc.MatchingMesh != key){
-                                        rc.MatchingMesh = meshquery[0].PackageName;
-                                        lock(GlobalVariables.InstancesRecolorsS4Col){
-                                           GlobalVariables.InstancesRecolorsS4Col.Add(rc); 
-                                        }                                                                                
-                                    }
-                                });
-                            }                            
-                            Parallel.ForEach(meshquery, mesh => {
-                                if (!mesh.MatchingRecolors.Contains(thisPackage.PackageName)){
-                                    mesh.MatchingRecolors.Add(thisPackage.PackageName);
-                                    lock(GlobalVariables.InstancesMeshesS4Col){
-                                        GlobalVariables.InstancesMeshesS4Col.Add(mesh);   
-                                    }                                      
-                                }
-                            });
-                        });
-                    } else {
-                        Parallel.ForEach(thisPackage.CASPartKeys, key => {
-                            var meshquery = GlobalVariables.InstancesCacheConnection.Query<InstancesMeshesS4>(string.Format("SELECT * FROM Sims4Meshes where Key='{0}'", key));
-                            if (meshquery.Any()){                                
-                                Parallel.ForEach(meshquery, mesh => {
-                                    if (!mesh.MatchingRecolors.Contains(thisPackage.PackageName)){
-                                        mesh.MatchingRecolors.Add(thisPackage.PackageName);
-                                        lock(GlobalVariables.InstancesMeshesS4Col){
-                                            GlobalVariables.InstancesMeshesS4Col.Add(mesh);   
-                                        }                                           
-                                    }
-                                });
-                            }
+                InstancesMeshesS4 Mesh = new();
+                if (MatchingMeshes.Any()){    
+                    thisPackage.Orphan = false;                                   
+                    Mesh = MatchingMeshes[0];
+                    foreach (var m in Mesh.MatchingRecolors){
+                        Recolors.Add(new InstancesRecolorsS4{
+                            MatchingMesh = Mesh,                            
+                            Key = m.Key,
+                            PackageName = m.PackageName
                         });
                     }
-                } else if (indb.Any()){
-                    log.MakeLog(string.Format("{0}'s key is already in the database.", thisPackage.PackageName), true);
-                } else {
-                    log.MakeLog(string.Format("{0}'s key is not in the database, so we're adding it.", thisPackage.PackageName), true);
-                    Parallel.ForEach(thisPackage.CASPartKeys, cpk => {
-                        InstancesRecolorsS4 icr = new(){
-                            PackageName = thisPackage.PackageName,
-                            Key = cpk
-                        };
-                        lock(GlobalVariables.InstancesRecolorsS4Col){
-                            GlobalVariables.InstancesRecolorsS4Col.Add(icr); 
-                        }                 
-                    });
-                }
-            }
-            if (thisPackage.Recolor == true && thisPackage.Mesh == true && thisPackage.Override == false){
-                thisPackage.Orphan = false;
-                //if the package has both a mesh and texture-- 
-                //check if the database has any of the keys for the texture
-                var indb = (from r in GlobalVariables.S4InstancesCacheRecolors
-                            where thisPackage.CASPartKeys.Any(mr => r.Key == mr) && thisPackage.PackageName == r.PackageName
-                            select r).ToList();
-                if (indb.Any()){
-                    log.MakeLog(string.Format("{0}'s key is already in the database.", thisPackage.PackageName), true);
-                } else {
-                    log.MakeLog(string.Format("{0}'s key is not in the database, so we're adding it.", thisPackage.PackageName), true);
-                    Parallel.ForEach(thisPackage.CASPartKeys, cpk => {
-                        InstancesRecolorsS4 icr = new(){
-                            PackageName = thisPackage.PackageName,
-                            Key = cpk,
-                            MatchingMesh = thisPackage.PackageName
-                        };
-                        lock(GlobalVariables.InstancesRecolorsS4Col){
-                            GlobalVariables.InstancesRecolorsS4Col.Add(icr); 
+                    foreach (var mesh in MatchingMeshes){
+                        InstancesMeshesS4 is4 = new();
+                        is4 = mesh;
+                        is4.MatchingRecolors.Clear();
+                        foreach (var r in Recolors){
+                            is4.MatchingRecolors.Add(r);
                         }
-                    });
-                }
-                //check if the database has the key for the mesh
-                var indbr = (from r in GlobalVariables.S4InstancesCacheMeshes
-                            where thisPackage.MeshKeys.Any(mr => r.Key == mr) && thisPackage.PackageName == r.PackageName
-                            select r).ToList();
-                if (indbr.Any()){
-                    log.MakeLog(string.Format("{0}'s key is already in the database.", thisPackage.PackageName), true);
-                    //add this recolor to the mesh listing
-                    Parallel.ForEach(thisPackage.MeshKeys, key => {
-                        var meshquery = GlobalVariables.InstancesCacheConnection.Query<InstancesMeshesS4>(string.Format("SELECT * FROM Sims4Meshes where Key='{0}'", key));
-                        InstancesRecolorsS4 icr = new(){
-                            PackageName = thisPackage.PackageName,
-                            Key = key
-                        };
-
-                        Parallel.ForEach(meshquery, mesh => {
-                            if (!mesh.MatchingRecolors.Contains(thisPackage.PackageName)){
-                                mesh.MatchingRecolors.Add(thisPackage.PackageName);
-                                lock(GlobalVariables.InstancesMeshesS4Col){
-                                    GlobalVariables.InstancesMeshesS4Col.Add(mesh);
-                                }
-                                icr.MatchingMesh = mesh.PackageName;
-                            }
-                            lock(GlobalVariables.InstancesRecolorsS4Col){
-                                GlobalVariables.InstancesRecolorsS4Col.Add(icr); 
-                            }
-                        });
-                    });
-                } else {
-                    log.MakeLog(string.Format("{0}'s key is not in the database, so we're adding it.", thisPackage.PackageName), true);
-                    Parallel.ForEach(thisPackage.MeshKeys, cpk => {
-                        InstancesMeshesS4 icr = new(){
-                            PackageName = thisPackage.PackageName,
-                            Key = cpk
-                        };
-                        icr.MatchingRecolors.Add(thisPackage.PackageName);
-                        lock(GlobalVariables.InstancesMeshesS4Col){
-                            GlobalVariables.InstancesMeshesS4Col.Add(icr);   
-                        }                          
-                    });  
-                }
-            }
-            if (thisPackage.Mesh == true && thisPackage.Override == false ){
-                //if the package has a mesh
-                List<InstancesCacheMeshes> inmdb = (from r in GlobalVariables.S4InstancesCacheMeshes
-                            where thisPackage.MeshKeys.Any(mr => r.Key == mr) && thisPackage.PackageName == r.PackageName
-                            select r).ToList();                            
-                List<InstancesCacheRecolors> indb = (from r in GlobalVariables.S4InstancesCacheRecolors
-                            where thisPackage.CASPartKeys.Any(mr => r.Key == mr) && thisPackage.PackageName == r.PackageName
-                            select r).ToList();
-                if (inmdb.Any()){
-                    log.MakeLog(string.Format("{0}'s key is already in the database.", thisPackage.PackageName), true);
-                    if (indb.Any()){
-                        thisPackage.Orphan = false;
-                        Parallel.ForEach(thisPackage.MeshKeys, key => {
-                            var meshquery = GlobalVariables.InstancesCacheConnection.
-                            Query<InstancesMeshesS4>(string.Format("SELECT * FROM Sims4Meshes where Key='{0}'", key));
-                            var caspquery = GlobalVariables.InstancesCacheConnection.Query<InstancesRecolorsS4>(string.Format("SELECT * FROM Sims4Recolors where Key='{0}'", key));
-                            InstancesMeshesS4 icr = new(){
-                                PackageName = thisPackage.PackageName,
-                                Key = key
+                        GlobalVariables.InstancesMeshesS4Col.Enqueue(is4);
+                    }     
+                }                
+                if (thisPackage.CASPartKeys.Any()){
+                    foreach (var rec in thisPackage.CASPartKeys){
+                        if (rec != "000000-000000-0000000000000000"){
+                            InstancesRecolorsS4 irs4 = new(){
+                                Key = rec,
+                                PackageName = thisPackage.PackageName
                             };
-
-                            if (caspquery.Any()){
-                                Parallel.ForEach(caspquery, rc => {
-                                    if (rc.MatchingMesh != key){
-                                        rc.MatchingMesh = thisPackage.PackageName;lock(GlobalVariables.InstancesRecolorsS4Col){
-                                           GlobalVariables.InstancesRecolorsS4Col.Add(rc); 
-                                        }
-                                        icr.MatchingRecolors.Add(rc.PackageName);
-                                    }
-                                });
+                            if (MatchingMeshes.Any()){
+                                irs4.MatchingMesh = Mesh;
                             }
-                            lock(GlobalVariables.InstancesMeshesS4Col){
-                                GlobalVariables.InstancesMeshesS4Col.Add(icr);   
-                            }                               
-                        });
+                            Recolors.Add(irs4);
+                        }     
                     }
-                } else {
-                    log.MakeLog(string.Format("{0}'s key is not in the database, so we're adding it.", thisPackage.PackageName), true);
-                    List<InstancesMeshesS4> meshlist = new();
-                    Parallel.ForEach(thisPackage.MeshKeys, cpk => {
-                        InstancesMeshesS4 icr = new(){
-                            PackageName = thisPackage.PackageName,
-                            Key = cpk
-                        };
-                        lock(GlobalVariables.InstancesMeshesS4Col){
-                            GlobalVariables.InstancesMeshesS4Col.Add(icr);   
-                        }                                        
-                    });
                 }
-            }        
+                foreach (var r in Recolors){
+                    GlobalVariables.InstancesRecolorsS4Col.Enqueue(r);   
+                }                             
+            }
             return thisPackage;
         }
     }

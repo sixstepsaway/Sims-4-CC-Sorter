@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="LiteDB" Version="5.0.16" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="ObservableConcurrentQueue" Version="2.0.1" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
     <PackageReference Include="SQLiteNetExtensions" Version="2.1.0" />

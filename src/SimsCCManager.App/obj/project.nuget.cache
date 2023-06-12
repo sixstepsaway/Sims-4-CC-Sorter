@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "VXAn3rDzWseZY7A35BWHTsGG2R5m4pGsrNPPeaayTfUG1lgDrBRfsAoxRC1AIFbp7PMv1nl5hmjY6Cw3n90irA==",
+  "dgSpecHash": "boRvrJQ6oZ26dCOhAKSUwCYx8KeRq1O7cftBzhpL3gMTIasYQ89v+xzF+Q1MbcZfvmAPU7ACnb7eL4TnLINZzg==",
   "success": true,
   "projectFilePath": "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.App\\SimsCCManager.App.csproj",
   "expectedPackageFiles": [
@@ -8,6 +8,7 @@
     "C:\\Users\\conta\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\5.0.0\\microsoft.bcl.asyncinterfaces.5.0.0.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\microsoft.extensions.objectpool\\5.0.10\\microsoft.extensions.objectpool.5.0.10.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\conta\\.nuget\\packages\\observableconcurrentqueue\\2.0.1\\observableconcurrentqueue.2.0.1.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\sharpziplib\\1.4.2\\sharpziplib.1.4.2.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\sqlite-net-pcl\\1.8.116\\sqlite-net-pcl.1.8.116.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\sqlitenetextensions\\2.1.0\\sqlitenetextensions.2.1.0.nupkg.sha512",

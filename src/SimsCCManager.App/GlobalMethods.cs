@@ -257,6 +257,7 @@ namespace SSAGlobals {
         JsonSerializer serializer = new JsonSerializer();
         public static bool consolevr = false;
         public static bool debugMode = true;
+        public static bool highdebug = false;
         public static bool loadedSaveData = false;
         public static string ModFolder;
         public static string logfile;
@@ -282,21 +283,22 @@ namespace SSAGlobals {
         public static SQLite.SQLiteConnection InstancesCacheConnection;
         public static List<OverridesList> S4OverridesList = new List<OverridesList>();
         public static List<SpecificOverrides> S4SpecificOverridesList = new List<SpecificOverrides>();
-        public static List<InstancesCacheRecolors> S2InstancesCacheRecolors = new();
-        public static List<InstancesCacheRecolors> S3InstancesCacheRecolors = new();
-        public static List<InstancesCacheRecolors> S4InstancesCacheRecolors = new();
-        public static List<InstancesCacheMeshes> S2InstancesCacheMeshes = new();
-        public static List<InstancesCacheMeshes> S3InstancesCacheMeshes = new();
-        public static List<InstancesCacheMeshes> S4InstancesCacheMeshes = new();
-        public static ObservableCollection<SimsPackage> AddPackages = new();
-        public static ObservableCollection<PackageFile> ProcessingReader = new();
-        public static ObservableCollection<InstancesRecolorsS4> InstancesRecolorsS4Col = new();
-        public static ObservableCollection<InstancesMeshesS4> InstancesMeshesS4Col = new();
-        public static ObservableCollection<InstancesRecolorsS2> InstancesRecolorsS2Col = new();
-        public static ObservableCollection<InstancesMeshesS2> InstancesMeshesS2Col = new();
-        public static ObservableCollection<InstancesRecolorsS3> InstancesRecolorsS3Col = new();
-        public static ObservableCollection<InstancesMeshesS3> InstancesMeshesS3Col = new();
-        public static ObservableCollection<AllFiles> AllFiles = new();
+        public static List<InstancesRecolorsS2> S2InstancesCacheRecolors = new();
+        public static List<InstancesRecolorsS3> S3InstancesCacheRecolors = new();
+        public static List<InstancesRecolorsS4> S4InstancesCacheRecolors = new();
+        public static List<InstancesMeshesS2> S2InstancesCacheMeshes = new();
+        public static List<InstancesMeshesS3> S3InstancesCacheMeshes = new();
+        public static List<InstancesMeshesS4> S4InstancesCacheMeshes = new();
+        public static ObservableConcurrentQueue<SimsPackage> AddPackages = new();
+        public static ObservableConcurrentQueue<PackageFile> RemovePackages = new();
+        public static ObservableConcurrentQueue<PackageFile> ProcessingReader = new();
+        public static ObservableConcurrentQueue<InstancesRecolorsS4> InstancesRecolorsS4Col = new();
+        public static ObservableConcurrentQueue<InstancesMeshesS4> InstancesMeshesS4Col = new();
+        public static ObservableConcurrentQueue<InstancesRecolorsS2> InstancesRecolorsS2Col = new();
+        public static ObservableConcurrentQueue<InstancesMeshesS2> InstancesMeshesS2Col = new();
+        public static ObservableConcurrentQueue<InstancesRecolorsS3> InstancesRecolorsS3Col = new();
+        public static ObservableConcurrentQueue<InstancesMeshesS3> InstancesMeshesS3Col = new();
+        public static ObservableConcurrentQueue<AllFiles> AllFiles = new();
         
         
         //vars that hold package files 
@@ -453,43 +455,43 @@ namespace SSAGlobals {
             {
                 var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims2Recolors");
                 var count = countcmd.ExecuteScalar<int>();
-                S2InstancesCacheRecolors = new List<InstancesCacheRecolors>(count);
-                S2InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesCacheRecolors>("SELECT * FROM Sims2Recolors");
+                S2InstancesCacheRecolors = new List<InstancesRecolorsS2>(count);
+                S2InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesRecolorsS2>("SELECT * FROM Sims2Recolors");
             }
 
             lock (S3InstancesCacheRecolors)
             {
                 var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims3Recolors");
                 var count = countcmd.ExecuteScalar<int>();
-                S3InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesCacheRecolors>("SELECT * FROM Sims3Recolors");
+                S3InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesRecolorsS3>("SELECT * FROM Sims3Recolors");
             }
 
             lock(S4InstancesCacheRecolors) 
             {
                 var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims4Recolors");
                 var count = countcmd.ExecuteScalar<int>();
-                S4InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesCacheRecolors>("SELECT * FROM Sims4Recolors");
+                S4InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesRecolorsS4>("SELECT * FROM Sims4Recolors");
             } 
 
             lock(S2InstancesCacheMeshes)
             {
                 var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims2Meshes");
                 var count = countcmd.ExecuteScalar<int>();
-                S2InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesCacheMeshes>("SELECT * FROM Sims2Meshes");
+                S2InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesMeshesS2>("SELECT * FROM Sims2Meshes");
             }
 
             lock(S3InstancesCacheMeshes)
             {
                 var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims3Meshes");
                 var count = countcmd.ExecuteScalar<int>();
-                S3InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesCacheMeshes>("SELECT * FROM Sims3Meshes");
+                S3InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesMeshesS3>("SELECT * FROM Sims3Meshes");
             }
             
             lock(S4InstancesCacheMeshes)
             {
                 var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims4Meshes");
                 var count = countcmd.ExecuteScalar<int>();
-                S4InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesCacheMeshes>("SELECT * FROM Sims4Meshes");
+                S4InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesMeshesS4>("SELECT * FROM Sims4Meshes");
             }
         }
     }

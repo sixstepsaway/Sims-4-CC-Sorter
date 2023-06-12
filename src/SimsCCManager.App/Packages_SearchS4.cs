@@ -58,7 +58,8 @@ namespace SimsCCManager.Packages.Sims4Search
 
     public class Readers {
         static LoggingGlobals log = new LoggingGlobals();
-        public static List<TagsList> GetTagInfo(CASTag16Bit tags, uint count){
+        public static List<TagsList> GetTagInfo(CASTag16Bit tags, uint count, StringBuilder LogFile){
+            string LogMessage = "";
             
             List<TagsList> taglist = new List<TagsList>();
             TagsList tagg = new TagsList();
@@ -73,9 +74,13 @@ namespace SimsCCManager.Packages.Sims4Search
                         tagg.TypeID = tl[0].TypeID;
                         tagg.Description = tl[0].Description;
                         taglist.Add(tagg);
-                        log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, tagg.TypeID, tagg.Description), true);
+                        LogMessage = string.Format("Tag {0} was matched to {1}.", i, tagg.TypeID, tagg.Description);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     } else {
-                        log.MakeLog(string.Format("Tag {0} matched nothing.", tags.tagKey[i]), true);
+                        LogMessage = string.Format("Tag {0} matched nothing.", tags.tagKey[i]);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     }  
                 }
                 if (tags.catKey[i] != 0){
@@ -85,9 +90,13 @@ namespace SimsCCManager.Packages.Sims4Search
                         tagg.TypeID = tl[0].TypeID;
                         tagg.Description = tl[0].Description;
                         taglist.Add(tagg);
-                        log.MakeLog(string.Format("Tag {0} was matched to {1}.", i, tagg.TypeID, tagg.Description), true);
+                        LogMessage = string.Format("Tag {0} was matched to {1}.", i, tagg.TypeID, tagg.Description);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     } else {
-                        log.MakeLog(string.Format("Tag {0} matched nothing.", tags.catKey[i]), true);
+                        LogMessage = string.Format("Tag {0} matched nothing.", tags.catKey[i]);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     }  
                 }                                            
             }
@@ -97,7 +106,8 @@ namespace SimsCCManager.Packages.Sims4Search
             return taglist;
         }
         
-        public static List<TagsList> GetTagInfo(Tag tags, uint count){
+        public static List<TagsList> GetTagInfo(Tag tags, uint count, StringBuilder LogFile){
+            string LogMessage = "";
             List<TagsList> taglist = new List<TagsList>();
             TagsList tagg = new TagsList();
             List<TagsList> tl = new List<TagsList>();
@@ -111,9 +121,13 @@ namespace SimsCCManager.Packages.Sims4Search
                     tagg.TypeID = tl[0].TypeID;
                     tagg.Description = tl[0].Info;
                     taglist.Add(tagg);
-                    log.MakeLog(string.Format("Tag {0} ({1}) was matched to {2}.", i, tags.tagKey[i], tagg.Info), true);
+                    LogMessage = string.Format("Tag {0} ({1}) was matched to {2}.", i, tags.tagKey[i], tagg.Info);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else {
-                    log.MakeLog(string.Format("Tag {0} matched nothing.", tags.tagKey[i]), true);
+                    LogMessage = string.Format("Tag {0} matched nothing.", tags.tagKey[i]);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 }
             }
             tagg = new TagsList();
@@ -122,7 +136,8 @@ namespace SimsCCManager.Packages.Sims4Search
             return taglist;
         }        
         
-        public static List<TagsList> GetTagInfo(List<uint> tags, uint count){
+        public static List<TagsList> GetTagInfo(List<uint> tags, uint count, StringBuilder LogFile){
+            string LogMessage = "";
             List<TagsList> taglist = new List<TagsList>();
             TagsList tagg = new TagsList();
             List<TagsList> tl = new List<TagsList>();
@@ -136,9 +151,13 @@ namespace SimsCCManager.Packages.Sims4Search
                     tagg.TypeID = tl[0].TypeID;
                     tagg.Description = tl[0].Info;
                     taglist.Add(tagg);
-                    log.MakeLog(string.Format("Tag {0} ({2}) was matched to {1}.", i, taglist[i].Info, tags[i]), true);
+                    LogMessage = string.Format("Tag {0} ({2}) was matched to {1}.", i, taglist[i].Info, tags[i]);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else {
-                    log.MakeLog(string.Format("Tag {0} matched nothing.", taglist[i]), true);
+                    LogMessage = string.Format("Tag {0} matched nothing.", taglist[i]);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 }
             }
             tagg = new TagsList();
@@ -158,13 +177,20 @@ namespace SimsCCManager.Packages.Sims4Search
         public uint type;
         public uint group;
         
-        public ResourceKeyITG(BinaryReader reader){
+        public ResourceKeyITG(BinaryReader reader, StringBuilder LogFile){
+            string LogMessage = "";
             this.instance = reader.ReadUInt64(); 
-            log.MakeLog(string.Format("GUID Instance: {0}", this.instance), true);
+            LogMessage = string.Format("GUID Instance: {0}", this.instance);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             this.type = reader.ReadUInt32(); 
-            log.MakeLog(string.Format("GUID Type: {0}", this.type), true);
+            LogMessage = string.Format("GUID Type: {0}", this.type);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             this.group = reader.ReadUInt32();     
-            log.MakeLog(string.Format("GUID Group: {0}", this.group), true);  
+            LogMessage = string.Format("GUID Group: {0}", this.group);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));  
         }
 
         public override string ToString() => $"{type.ToString("X8")}-{group.ToString("X8")}-{instance.ToString("X16")}";
@@ -179,17 +205,24 @@ namespace SimsCCManager.Packages.Sims4Search
         public uint type;
         public uint group;
         
-        public ResourceKeyITGFlip(BinaryReader reader){
+        public ResourceKeyITGFlip(BinaryReader reader, StringBuilder LogFile){
+            string LogMessage = "";
             uint left = reader.ReadUInt32();
             uint right = reader.ReadUInt32();
             ulong longleft = left;
             longleft = (longleft << 32);
             this.instance = longleft | right;
-            log.MakeLog(string.Format("GUID Instance: {0}", this.instance), true);
+            LogMessage = string.Format("GUID Instance: {0}", this.instance);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             this.type = reader.ReadUInt32(); 
-            log.MakeLog(string.Format("GUID Type: {0}", this.type), true);
+            LogMessage = string.Format("GUID Type: {0}", this.type);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             this.group = reader.ReadUInt32();     
-            log.MakeLog(string.Format("GUID Group: {0}", this.group), true);    
+            LogMessage = string.Format("GUID Group: {0}", this.group);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));    
         }
 
         public override string ToString() => $"{type.ToString("X8")}-{group.ToString("X8")}-{instance.ToString("X16")}";
@@ -292,34 +325,55 @@ namespace SimsCCManager.Packages.Sims4Search
         public uint typeid;
         public uint groupid;
 
-        public ReadCOBJ(BinaryReader readFile, int packageparsecount, int e, List<TagsList> itemtags){
+        public ReadCOBJ(BinaryReader readFile, int packageparsecount, int e, List<TagsList> itemtags, StringBuilder LogFile){
+            string LogMessage = "";
             uint version = readFile.ReadUInt32();
-            log.MakeLog(string.Format("P{0}/E{1} - Version: {2} \n-- As hex: {3}", packageparsecount, e, version, version.ToString("X8")), true);
+            LogMessage = string.Format("P{0}/E{1} - Version: {2} \n-- As hex: {3}", packageparsecount, e, version, version.ToString("X8"));
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             uint commonblockversion = readFile.ReadUInt32();
-            log.MakeLog(string.Format("P{0}/E{1} - Common Block Version: {2} \n-- As hex: {3}", packageparsecount, e, commonblockversion, commonblockversion.ToString("X8")), true);
+            LogMessage = string.Format("P{0}/E{1} - Common Block Version: {2} \n-- As hex: {3}", packageparsecount, e, commonblockversion, commonblockversion.ToString("X8"));
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             uint namehash = readFile.ReadUInt32();
-            log.MakeLog(string.Format("P{0}/E{1} - Name Hash: {2} \n-- As hex: {3}", packageparsecount, e, namehash, namehash.ToString("X8")), true);
+            LogMessage = string.Format("P{0}/E{1} - Name Hash: {2} \n-- As hex: {3}", packageparsecount, e, namehash, namehash.ToString("X8"));
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             uint descriptionhash = readFile.ReadUInt32();
-            log.MakeLog(string.Format("P{0}/E{1} - Description Hash: {2} \n-- As hex: {3}", packageparsecount, e, descriptionhash, descriptionhash.ToString("X8")), true);
+            LogMessage = string.Format("P{0}/E{1} - Description Hash: {2} \n-- As hex: {3}", packageparsecount, e, descriptionhash, descriptionhash.ToString("X8"));
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             uint price = readFile.ReadUInt32();
-            log.MakeLog(string.Format("P{0}/E{1} - Price: {2} \n-- As hex: {3}", packageparsecount, e, price, price.ToString("X8")), true);
+            LogMessage = string.Format("P{0}/E{1} - Price: {2} \n-- As hex: {3}", packageparsecount, e, price, price.ToString("X8"));
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
             ulong thumbhash = readFile.ReadUInt64();
-            log.MakeLog(string.Format("P{0}/E{1} - Thumb Hash: {2} \n-- As hex: {3}", packageparsecount, e, thumbhash, thumbhash.ToString("X8")), true);
+            LogMessage = string.Format("P{0}/E{1} - Thumb Hash: {2} \n-- As hex: {3}", packageparsecount, e, thumbhash, thumbhash.ToString("X8"));
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
             uint devcatflags = readFile.ReadUInt32();
-            log.MakeLog(string.Format("P{0}/E{1} - Dev Cat Flags: {2} \n-- As hex: {3}", packageparsecount, e, devcatflags, devcatflags.ToString("X8")), true);
+            LogMessage = string.Format("P{0}/E{1} - Dev Cat Flags: {2} \n-- As hex: {3}", packageparsecount, e, devcatflags, devcatflags.ToString("X8"));
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             
             int tgicount = readFile.ReadByte();
-            log.MakeLog(string.Format("P{0}/E{1}, - TGI Count: {2}", packageparsecount, e, tgicount), true);
+            LogMessage = string.Format("P{0}/E{1}, - TGI Count: {2}", packageparsecount, e, tgicount);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             instanceid = 0;
             typeid = 0;
             groupid = 0;
 
             if (tgicount != 0){
-                log.MakeLog(string.Format("P{0}/E{1}, - TGI Count is not zero. Reading Resources.", packageparsecount, e), true);
-                ResourceKeyITG resourcekey = new ResourceKeyITG(readFile);
-                log.MakeLog(string.Format("P{0}/E{1}, - GUID: {2}", packageparsecount, e, resourcekey.ToString()), true);
+                LogMessage = string.Format("P{0}/E{1}, - TGI Count is not zero. Reading Resources.", packageparsecount, e);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                ResourceKeyITG resourcekey = new ResourceKeyITG(readFile, LogFile);
+                LogMessage = string.Format("P{0}/E{1}, - GUID: {2}", packageparsecount, e, resourcekey.ToString());
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 instanceid = resourcekey.instance;
                 typeid = resourcekey.type;
                 groupid = resourcekey.group;
@@ -328,9 +382,13 @@ namespace SimsCCManager.Packages.Sims4Search
             if (commonblockversion >= 10)
             {
                 int packId = readFile.ReadInt16();
-                log.MakeLog(string.Format("P{0}/E{1}, - Pack ID: {2}", packageparsecount, e, packId), true);
+                LogMessage = string.Format("P{0}/E{1}, - Pack ID: {2}", packageparsecount, e, packId);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 int packFlags = readFile.ReadByte();
-                log.MakeLog(string.Format("P{0}/E{1}, - PackFlags: {2}", packageparsecount, e, packFlags), true);
+                LogMessage = string.Format("P{0}/E{1}, - PackFlags: {2}", packageparsecount, e, packFlags);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 readFile.ReadBytes(9);
             } else {
                 int unused2 = readFile.ReadByte();
@@ -342,10 +400,12 @@ namespace SimsCCManager.Packages.Sims4Search
 
             if (commonblockversion >= 11){
                 uint count = readFile.ReadUInt32();
-                log.MakeLog(string.Format("P{0}/E{1}, - Tags Count: {2}", packageparsecount, e, count), true);
+                LogMessage = string.Format("P{0}/E{1}, - Tags Count: {2}", packageparsecount, e, count);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 Tag tags = new Tag(readFile, count);
 
-                List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                List<TagsList> gottags = Readers.GetTagInfo(tags, count, LogFile);
                 foreach (TagsList tag in gottags){
                     if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
                         itemtags.Add(tag);  
@@ -355,12 +415,14 @@ namespace SimsCCManager.Packages.Sims4Search
             } else {
                 uint count = readFile.ReadUInt32();
                 List<uint> tagsread = new List<uint>(); 
-                log.MakeLog(string.Format("P{0}/E{1}, - Num Tags: {2}", packageparsecount, e, count), true);
+                LogMessage = string.Format("P{0}/E{1}, - Num Tags: {2}", packageparsecount, e, count);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 for (int t = 0; t < count; t++){                    
                     uint tagvalue = readFile.ReadUInt16();
                     tagsread.Add(tagvalue);
                 }
-                List<TagsList> gottags = Readers.GetTagInfo(tagsread, count);
+                List<TagsList> gottags = Readers.GetTagInfo(tagsread, count, LogFile);
                 foreach (TagsList tag in gottags){
                     if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
                         itemtags.Add(tag);  
@@ -369,13 +431,15 @@ namespace SimsCCManager.Packages.Sims4Search
             }
             long location = readFile.BaseStream.Position;
             uint count2 = readFile.ReadUInt32();
-            log.MakeLog(string.Format("P{0}/E{1}, - Selling Point Count: {2}", packageparsecount, e, count2), true);
+            LogMessage = string.Format("P{0}/E{1}, - Selling Point Count: {2}", packageparsecount, e, count2);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             if (count2 > 5){
                 log.MakeLog("Selling point count is too high, something went wrong.", true);
             } else {
                 Tag sellingtags = new Tag(readFile, count2);
 
-                List<TagsList> gottags = Readers.GetTagInfo(sellingtags, count2);
+                List<TagsList> gottags = Readers.GetTagInfo(sellingtags, count2, LogFile);
                 foreach (TagsList tag in gottags){
                     if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
                         itemtags.Add(tag);  
@@ -385,16 +449,24 @@ namespace SimsCCManager.Packages.Sims4Search
             }            
 
             uint unlockByHash = readFile.ReadUInt32();
-            log.MakeLog(string.Format("P{0}/E{1}, - UnlockBy Hash: {2}", packageparsecount, e, unlockByHash), true);
+            LogMessage = string.Format("P{0}/E{1}, - UnlockBy Hash: {2}", packageparsecount, e, unlockByHash);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             
             uint unlockedByHash = readFile.ReadUInt32();
-            log.MakeLog(string.Format("P{0}/E{1}, - UnlockedBy Hash: {2}", packageparsecount, e, unlockedByHash), true);
+            LogMessage = string.Format("P{0}/E{1}, - UnlockedBy Hash: {2}", packageparsecount, e, unlockedByHash);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
             int swatchColorSortPriority = readFile.ReadUInt16();
-            log.MakeLog(string.Format("P{0}/E{1}, - Swatch Sort Priority: {2}", packageparsecount, e, swatchColorSortPriority), true);
+            LogMessage = string.Format("P{0}/E{1}, - Swatch Sort Priority: {2}", packageparsecount, e, swatchColorSortPriority);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
             ulong varientThumbImageHash = readFile.ReadUInt64();
-            log.MakeLog(string.Format("P{0}/E{1}, - Varient Thumb Image Hash: {2}", packageparsecount, e, varientThumbImageHash), true);
+            LogMessage = string.Format("P{0}/E{1}, - Varient Thumb Image Hash: {2}", packageparsecount, e, varientThumbImageHash);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
         }            
     }
     
@@ -404,15 +476,20 @@ namespace SimsCCManager.Packages.Sims4Search
         /// </summary>
         LoggingGlobals log = new LoggingGlobals();
         public int version;
-        public uint refposition;
+        public long refposition;
         public int count;
         public uint[] entrytype;
         public uint[] position;
 
-        public ReadOBJDIndex(BinaryReader reader, int packageparsecount, int e){
+        public ReadOBJDIndex(BinaryReader reader, int packageparsecount, int e, StringBuilder LogFile){
+            long entrystart = reader.BaseStream.Position;
+            string LogMessage = "";
             this.version = reader.ReadUInt16();
             log.MakeLog("Version: " + this.version, true);
-            log.MakeLog(string.Format("P{0}/OBJD{1}, - Version: {2}", packageparsecount, e, this.version), true);
+            LogMessage = string.Format("P{0}/OBJD{1}, - Version: {2}", packageparsecount, e, this.version);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
             if (this.version > 150){
                 log.MakeLog("Version is not legitimate.", true);
                 this.refposition = 0; 
@@ -421,6 +498,7 @@ namespace SimsCCManager.Packages.Sims4Search
                 this.position = new uint[0];
             } else {
                 this.refposition = reader.ReadUInt32();
+                this.refposition = refposition + entrystart;
                 reader.BaseStream.Position = refposition;
                 this.count = reader.ReadUInt16();
                 this.entrytype = new uint[count];
@@ -461,7 +539,8 @@ namespace SimsCCManager.Packages.Sims4Search
         public uint type;
         public uint group;
         public ulong instance; 
-        public ReadOBJDEntry(BinaryReader reader, string[] entries, int[] positions, int packageparsecount, int e){
+        public ReadOBJDEntry(BinaryReader reader, string[] entries, int[] positions, int packageparsecount, int e, StringBuilder LogFile){
+            string LogMessage = "";
             uint preceeding;
             uint preceedingDiv;
 
@@ -496,28 +575,50 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "E7F07786": // name
                         reader.BaseStream.Position = entrypos;
                         this.namelength = reader.ReadByte();
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Name Length: {2}", packageparsecount, e, namelength), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Name Length: {2}", packageparsecount, e, namelength);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         reader.BaseStream.Position = reader.BaseStream.Position + 3;
-                        //log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
-                        //log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
-                        //log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
+                        //LogMessage = "Byte 1: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 2: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 3: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         this.namebit = reader.ReadBytes(namelength);
                         this.name = Encoding.UTF8.GetString(namebit);
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Name: {2}", packageparsecount, e, name), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Name: {2}", packageparsecount, e, name);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         break;
                     case "790FA4BC": //tuning
                         reader.BaseStream.Position = entrypos;
                         this.tuningnamelength = reader.ReadByte();
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Tuning Name Length: {2}", packageparsecount, e, tuningnamelength), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Tuning Name Length: {2}", packageparsecount, e, tuningnamelength);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         reader.BaseStream.Position = reader.BaseStream.Position + 3;
                         //log.MakeLog("Reading three empty bytes.", true);
-                        //log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
-                        //log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
-                        //log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
+                        //LogMessage = "Byte 1: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 2: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 3: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         this.tuningbit = reader.ReadBytes(tuningnamelength);
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Tuning Name Length: {2}", packageparsecount, e, tuningbit), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Tuning Name Length: {2}", packageparsecount, e, tuningbit);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         this.tuningname = Encoding.UTF8.GetString(tuningbit);
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Tuning Name: {2}", packageparsecount, e, tuningname), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Tuning Name: {2}", packageparsecount, e, tuningname);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         break;
                     case "B994039B": //TuningID
                         reader.BaseStream.Position = entrypos;
@@ -526,13 +627,19 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "CADED888": //Icon
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Reading Preceeding UInt32: {2}", packageparsecount, e, preceeding), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Reading Preceeding UInt32: {2}", packageparsecount, e, preceeding);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         preceedingDiv = preceeding / 4;            
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Number of Icon GUIDs: {2}", packageparsecount, e, preceedingDiv), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Number of Icon GUIDs: {2}", packageparsecount, e, preceedingDiv);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         this.icon = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip ricon = new ResourceKeyITGFlip(reader);
-                            log.MakeLog(string.Format("P{0}/OBJD{1}, - Icon GUID: {2}", packageparsecount, e, ricon.ToString()), true);
+                            ResourceKeyITGFlip ricon = new ResourceKeyITGFlip(reader, LogFile);
+                            LogMessage = string.Format("P{0}/OBJD{1}, - Icon GUID: {2}", packageparsecount, e, ricon.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             this.icon[p] = ricon.ToString();
                             this.type = ricon.type;
                             this.group = ricon.group;
@@ -542,13 +649,19 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "E206AE4F": //Rig
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding), true);                        
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));                        
                         preceedingDiv = preceeding / 4;
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Number of Rig GUIDs: {2}", packageparsecount, e, preceedingDiv), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Number of Rig GUIDs: {2}", packageparsecount, e, preceedingDiv);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         this.rig = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip rkrig = new ResourceKeyITGFlip(reader);
-                            log.MakeLog(string.Format("P{0}/OBJD{1}, - Rig GUID: {2}", packageparsecount, e, rkrig.ToString()), true);
+                            ResourceKeyITGFlip rkrig = new ResourceKeyITGFlip(reader, LogFile);
+                            LogMessage = string.Format("P{0}/OBJD{1}, - Rig GUID: {2}", packageparsecount, e, rkrig.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             this.rig[p] = rkrig.ToString();
                             this.type = rkrig.type;
                             this.group = rkrig.group;
@@ -558,13 +671,19 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "8A85AFF3": //Slot
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding), true);                        
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));                        
                         preceedingDiv = preceeding / 4;
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Number of Slot GUIDs: {2}", packageparsecount, e, preceedingDiv), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Number of Slot GUIDs: {2}", packageparsecount, e, preceedingDiv);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         this.slot = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip rkslot = new ResourceKeyITGFlip(reader);
-                            log.MakeLog(string.Format("P{0}/OBJD{1}, - Slot GUID: {2}", packageparsecount, e, rkslot.ToString()), true);
+                            ResourceKeyITGFlip rkslot = new ResourceKeyITGFlip(reader, LogFile);
+                            LogMessage = string.Format("P{0}/OBJD{1}, - Slot GUID: {2}", packageparsecount, e, rkslot.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             this.slot[p] = rkslot.ToString();                            
                             this.type = rkslot.type;
                             this.group = rkslot.group;
@@ -574,13 +693,19 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "8D20ACC6": //Model
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding), true);                        
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));                        
                         preceedingDiv = preceeding / 4;
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Number of Model GUIDs: {2}", packageparsecount, e, preceedingDiv), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Number of Model GUIDs: {2}", packageparsecount, e, preceedingDiv);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         this.model = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip rkmodel = new ResourceKeyITGFlip(reader);                            
-                            log.MakeLog(string.Format("P{0}/OBJD{1}, - Model GUID: {2}", packageparsecount, e, rkmodel.ToString()), true);
+                            ResourceKeyITGFlip rkmodel = new ResourceKeyITGFlip(reader, LogFile);                            
+                            LogMessage = string.Format("P{0}/OBJD{1}, - Model GUID: {2}", packageparsecount, e, rkmodel.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             this.model[p] = rkmodel.ToString();
                             this.type = rkmodel.type;
                             this.group = rkmodel.group;
@@ -590,13 +715,19 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "6C737AD8": //Footprint
                         reader.BaseStream.Position = entrypos;
                         preceeding = reader.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding), true);                        
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageparsecount, e, preceeding);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));                        
                         preceedingDiv = preceeding / 4;
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Number of Footprint GUIDs: {2}", packageparsecount, e, preceedingDiv), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Number of Footprint GUIDs: {2}", packageparsecount, e, preceedingDiv);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         this.footprint = new string[preceedingDiv];
                         for (int p = 0; p < preceedingDiv; p++){
-                            ResourceKeyITGFlip rkft = new ResourceKeyITGFlip(reader);
-                            log.MakeLog(string.Format("P{0}/OBJD{1}, - Footprint GUID: {2}", packageparsecount, e, rkft.ToString()), true);
+                            ResourceKeyITGFlip rkft = new ResourceKeyITGFlip(reader, LogFile);
+                            LogMessage = string.Format("P{0}/OBJD{1}, - Footprint GUID: {2}", packageparsecount, e, rkft.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             this.footprint[p] = rkft.ToString();
                             this.type = rkft.type;
                             this.group = rkft.group;
@@ -606,7 +737,9 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "E6E421FB": //Components
                         reader.BaseStream.Position = entrypos;
                         this.componentcount = reader.ReadUInt32();                        
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Component Count: {2}", packageparsecount, e, componentcount), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Component Count: {2}", packageparsecount, e, componentcount);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         this.components = new uint[this.componentcount];
                         for (int i = 0; i < this.componentcount; i++){
                             components[i] = reader.ReadUInt32();
@@ -615,15 +748,25 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "ECD5A95F": //MaterialVariant
                         reader.BaseStream.Position = entrypos;
                         this.materialvariantlength = reader.ReadByte();                        
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Material Variant Length: {2}", packageparsecount, e, materialvariantlength), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Material Variant Length: {2}", packageparsecount, e, materialvariantlength);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         reader.BaseStream.Position = reader.BaseStream.Position + 3;
                         //log.MakeLog("Reading three empty bytes.", true);
-                        //log.MakeLog("Byte 1: " + reader.ReadByte().ToString(), true);
-                        //log.MakeLog("Byte 2: " + reader.ReadByte().ToString(), true);
-                        //log.MakeLog("Byte 3: " + reader.ReadByte().ToString(), true);
+                        //LogMessage = "Byte 1: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 2: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 3: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         this.materialvariantbyte = reader.ReadBytes(materialvariantlength);
                         this.materialvariant = Encoding.UTF8.GetString(materialvariantbyte);
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Material Variant: {2}", packageparsecount, e, materialvariant), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Material Variant: {2}", packageparsecount, e, materialvariant);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         break;
                     case "AC8E1BC0": //Unknown1
                         reader.BaseStream.Position = entrypos;
@@ -632,7 +775,9 @@ namespace SimsCCManager.Packages.Sims4Search
                     case "E4F4FAA4": //SimoleonPrice
                         reader.BaseStream.Position = entrypos;
                         this.price = reader.ReadUInt32();                        
-                        log.MakeLog(string.Format("P{0}/OBJD{1}, - Price: {2}", packageparsecount, e, price), true);
+                        LogMessage = string.Format("P{0}/OBJD{1}, - Price: {2}", packageparsecount, e, price);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         break;
                     case "7236BEEA": //PositiveEnvironmentScore
                         reader.BaseStream.Position = entrypos;
@@ -753,10 +898,14 @@ namespace SimsCCManager.Packages.Sims4Search
         public string[] parameters = {"DefaultForBodyType","DefaultThumbnailPart","AllowForCASRandom","ShowInUI","ShowInSimInfoPanel","ShowInCasDemo","AllowForLiveRandom","DisableForOppositeGender","DisableForOppositeFrame","DefaultForBodyTypeMale","DefaultForBodyTypeFemale","Unk","Unk","Unk","Unk","Unk"};
         
 
-        public void SearchS4Packages(FileStream dbpfFile, FileInfo packageinfo, int packageparsecount) {
+        public void SearchS4Packages(FileStream dbpfFile, FileInfo packageinfo, int packageparsecount, StringBuilder LogFile) {
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            log.MakeLog(string.Format("File {0} arrived for processing as Sims 4 file.", packageinfo.Name), true);            
+            string LogMessage = "";
+            //StringBuilder LogFile = new();
+            LogMessage = string.Format("File {0} arrived for processing as Sims 4 file.", packageinfo.Name);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));            
             /*string txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
             List<PackageFile> queries = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
             PackageFile query = queries[0];
@@ -800,33 +949,45 @@ namespace SimsCCManager.Packages.Sims4Search
             BinaryReader readFile = new BinaryReader(dbpfFile);
             
             //log opening file
-            log.MakeLog(string.Format("Reading package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
+            LogMessage = string.Format("Reading package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             thisPackage.PackageName = packageinfo.Name;
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 4;
             thisPackage.GameString = "The Sims 4";
             thisPackage.FileSize = (int)packageinfo.Length;
-            log.MakeLog(string.Format("Package #{0} registered as {1} and meant for Sims 4", packageparsecount, packageinfo.FullName), true);
+            LogMessage = string.Format("Package #{0} registered as {1} and meant for Sims 4", packageparsecount, packageinfo.FullName);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
             readFile.BaseStream.Position = 0;
 
             readFile.BaseStream.Position = entrycountloc;
 
             uint entrycount = readFile.ReadUInt32();
-            log.MakeLog(string.Format("Entry Count: {0}", entrycount.ToString()), true);
+            LogMessage = string.Format("Entry Count: {0}", entrycount.ToString());
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             
             //record position low
             uint indexRecordPositionLow = readFile.ReadUInt32();
-            log.MakeLog(string.Format("IndexRecordPositionLow: {0}", indexRecordPositionLow.ToString()), true);
+            LogMessage = string.Format("IndexRecordPositionLow: {0}", indexRecordPositionLow.ToString());
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             
             //index record size
             uint indexRecordSize = readFile.ReadUInt32();
-            log.MakeLog(string.Format("IndexRecordSize: {0}", indexRecordSize.ToString()), true);
+            LogMessage = string.Format("IndexRecordSize: {0}", indexRecordSize.ToString());
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             
             readFile.BaseStream.Position = indexRecordPositionloc;
 
             ulong indexRecordPosition = readFile.ReadUInt64();
-            log.MakeLog(string.Format("Index Record Position: {0}", indexRecordPosition.ToString()), true);
+            LogMessage = string.Format("Index Record Position: {0}", indexRecordPosition.ToString());
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             
                         
             byte[] headersize = new byte[96];
@@ -931,10 +1092,14 @@ namespace SimsCCManager.Packages.Sims4Search
             long streamsize = readFile.BaseStream.Length;
             int indexbytes = ((int)entrycount * 32);
             long indexpos = 0;
-            log.MakeLog(string.Format("P{0} - Streamsize is {1}", packageparsecount, streamsize), true);
+            LogMessage = string.Format("P{0} - Streamsize is {1}", packageparsecount, streamsize);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             if ((int)movedto + indexbytes != streamsize){
                 int entriesfound = 0;
-                log.MakeLog(string.Format("P{0} - Streamsize does not match!", packageparsecount), true);
+                LogMessage = string.Format("P{0} - Streamsize does not match!", packageparsecount);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 readFile.BaseStream.Position = movedto - 400;
                 List<long> entrylocs = new List<long>();
                 uint item;
@@ -943,19 +1108,27 @@ namespace SimsCCManager.Packages.Sims4Search
                 while(readFile.BaseStream.Length > readFile.BaseStream.Position){                    
                     item = readFile.ReadUInt32();
                     GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S4Types WHERE TypeID='{0}'", item.ToString("X8")));
-                    //log.MakeLog(string.Format("Read byte at {0}: {1}", readFile.BaseStream.Position, item.ToString("X8")), true);
+                    //LogMessage = string.Format("Read byte at {0}: {1}", readFile.BaseStream.Position, item.ToString("X8"));
+                    //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     if (types.Any()){
                         indexEntry holderEntry = new indexEntry();
                         holderEntry.typeID = item.ToString("X8");
-                        log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, entriesfound, holderEntry.typeID), true);
-                        log.MakeLog(string.Format("Found entry{2} - {0} at location {1}!", item, readFile.BaseStream.Position, entriesfound), true);
+                        LogMessage = string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, entriesfound, holderEntry.typeID);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("Found entry{2} - {0} at location {1}!", item, readFile.BaseStream.Position, entriesfound);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         entrylocs.Add(readFile.BaseStream.Position);
                         if (entriesfound == 0){
                             indexpos = readFile.BaseStream.Position - 4;
                         }
                         entriesfound++;
                         if (entriesfound == entrycount){
-                            log.MakeLog(string.Format("Found {0} entries. Breaking.", entrycount), true);
+                            LogMessage = string.Format("Found {0} entries. Breaking.", entrycount);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             break;
                         }
                     }
@@ -970,13 +1143,17 @@ namespace SimsCCManager.Packages.Sims4Search
                     readFile.BaseStream.Position = loc - 4;
                     if (indextype == 2){
                         holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
-                        log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, entrycount, holderEntry.typeID), true);
+                        LogMessage = string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, entrycount, holderEntry.typeID);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         
                         List<typeList> type = GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S4Types where TypeID='{0}'", holderEntry.typeID));
                     
                         if(type.Any()){                        
                             fileHas.Add(new fileHasList {TypeID = type[0].desc, Location = (int)entrycount});
-                            log.MakeLog(string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, type[0].desc, (int)entrycount), true);
+                            LogMessage = string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, type[0].desc, (int)entrycount);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         } else {
                             fileHas.Add(new fileHasList() { TypeID = holderEntry.typeID, Location = (int)entrycount});
                         }
@@ -989,16 +1166,24 @@ namespace SimsCCManager.Packages.Sims4Search
                             allInstanceIDs.Add(holderEntry.instanceID);
                         }
                         
-                        log.MakeLog(string.Format("P{0}/E{1} - InstanceID: {2}", packageparsecount, entrycount, holderEntry.instanceID), true);
+                        LogMessage = string.Format("P{0}/E{1} - InstanceID: {2}", packageparsecount, entrycount, holderEntry.instanceID);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         
                         holderEntry.position = readFile.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/E{1} - Index Entry Position: {2}", packageparsecount, entrycount, holderEntry.position.ToString("X8")), true);                        
+                        LogMessage = string.Format("P{0}/E{1} - Index Entry Position: {2}", packageparsecount, entrycount, holderEntry.position.ToString("X8"));
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));                        
 
                         holderEntry.fileSize = readFile.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/E{1} - File Size: {2}", packageparsecount, entrycount, holderEntry.fileSize.ToString("X8")), true);
+                        LogMessage = string.Format("P{0}/E{1} - File Size: {2}", packageparsecount, entrycount, holderEntry.fileSize.ToString("X8"));
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         holderEntry.memSize = readFile.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/E{1} - Mem Size: {2}", packageparsecount, entrycount, holderEntry.memSize.ToString("X8")), true);
+                        LogMessage = string.Format("P{0}/E{1} - Mem Size: {2}", packageparsecount, entrycount, holderEntry.memSize.ToString("X8"));
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         indexData.Add(holderEntry);
 
@@ -1012,28 +1197,34 @@ namespace SimsCCManager.Packages.Sims4Search
                 long movedhere = readFile.BaseStream.Position;
                 uint testpos = readFile.ReadUInt32();
                 if (testpos != 0){
-                    log.MakeLog(string.Format("P{0} - Read first entry TypeID and it read as {1}, returning to read entries.", packageparsecount, testpos.ToString("X8")), true);
+                    LogMessage = string.Format("P{0} - Read first entry TypeID and it read as {1}, returning to read entries.", packageparsecount, testpos.ToString("X8"));
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     readFile.BaseStream.Position = movedto;
                 } else if (testpos == 80000000) {
                     long moveback = movedhere - 4;
                     readFile.BaseStream.Position = moveback;
                 } else {
-                    log.MakeLog(string.Format("P{0} - Read first entry TypeID and it read as {1}, moving forward.", packageparsecount, testpos.ToString("X8")), true);
+                    LogMessage = string.Format("P{0} - Read first entry TypeID and it read as {1}, moving forward.", packageparsecount, testpos.ToString("X8"));
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 }                
                 for (int i = 0; i < entrycount; i++){                    
                     indexEntry holderEntry = new indexEntry();                
                     holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog(string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, i, holderEntry.typeID), true);
+                    LogMessage = string.Format("P{0}/E{1} - Index Entry TypeID: {2}", packageparsecount, i, holderEntry.typeID);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                     if (holderEntry.typeID == "7FB6AD8A"){
                         thisPackage.Type = "Merged Package";
-                        lock (GlobalVariables.AddPackages){
-                            GlobalVariables.AddPackages.Add(thisPackage);
-                        }                       
+                        GlobalVariables.AddPackages.Enqueue(thisPackage); 
                         log.MakeLog(string.Format("Package {0} is a merged package, and cannot be processed in this manner right now. Package will either need unmerging or to be sorted manually.", thisPackage.Location), false);
 
                         /*GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage);
-                        log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
+                        LogMessage = string.Format("Added {0} to packages database successfully.", thisPackage.PackageName);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
                         List<PackageFile> mergedquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);                    
                         GlobalVariables.DatabaseConnection.Delete(mergedquery[0]);
@@ -1045,8 +1236,12 @@ namespace SimsCCManager.Packages.Sims4Search
                                             tss.Hours, tss.Minutes, tss.Seconds,
                                             tss.Milliseconds / 10);
                         GlobalVariables.packagesRead++;
-                        log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtimee), true);
-                        log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
+                        LogMessage = string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtimee);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         return;
                     }
 
@@ -1054,33 +1249,47 @@ namespace SimsCCManager.Packages.Sims4Search
                     
                     if(type.Any()){                        
                         fileHas.Add(new fileHasList {TypeID = type[0].desc, Location = i});
-                        log.MakeLog(string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, type[0].desc, i), true);
+                        LogMessage = string.Format("File {0} has {1} at location {2}.", thisPackage.PackageName, type[0].desc, i);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     } else {
                         fileHas.Add(new fileHasList() { TypeID = holderEntry.typeID, Location = i});
                     }
                     type = new List<typeList>();
 
                     holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
-                    log.MakeLog(string.Format("P{0}/E{1} - Index Entry GroupID: {2}", packageparsecount, i, holderEntry.groupID), true);
+                    LogMessage = string.Format("P{0}/E{1} - Index Entry GroupID: {2}", packageparsecount, i, holderEntry.groupID);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     
                     string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
                     string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
                     holderEntry.instanceID = string.Format("{0}{1}", instanceid1,instanceid2);
                     allInstanceIDs.Add(holderEntry.instanceID);
-                    log.MakeLog(string.Format("P{0}/E{1} - InstanceID: {2}", packageparsecount, i, holderEntry.instanceID), true);
+                    LogMessage = string.Format("P{0}/E{1} - InstanceID: {2}", packageparsecount, i, holderEntry.instanceID);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                     uint testin = readFile.ReadUInt32();
                     holderEntry.position = (long)testin;
-                    log.MakeLog(string.Format("P{0}/E{1} - Position: {2}", packageparsecount, i, holderEntry.position), true);
+                    LogMessage = string.Format("P{0}/E{1} - Position: {2}", packageparsecount, i, holderEntry.position);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                     holderEntry.fileSize = readFile.ReadUInt32();
-                    log.MakeLog(string.Format("P{0}/E{1} - File Size: {2}", packageparsecount, i, holderEntry.fileSize), true);
+                    LogMessage = string.Format("P{0}/E{1} - File Size: {2}", packageparsecount, i, holderEntry.fileSize);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                     holderEntry.memSize = readFile.ReadUInt32();
-                    log.MakeLog(string.Format("P{0}/E{1} - Mem Size: {2}", packageparsecount, i, holderEntry.memSize), true);
+                    LogMessage = string.Format("P{0}/E{1} - Mem Size: {2}", packageparsecount, i, holderEntry.memSize);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                     holderEntry.compressionType = readFile.ReadUInt16().ToString("X4");
-                    log.MakeLog(string.Format("P{0}/E{1} - Compression Type: {2}", packageparsecount, i, holderEntry.compressionType), true);
+                    LogMessage = string.Format("P{0}/E{1} - Compression Type: {2}", packageparsecount, i, holderEntry.compressionType);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                     readFile.BaseStream.Position = readFile.BaseStream.Position + 2;
 
@@ -1100,61 +1309,97 @@ namespace SimsCCManager.Packages.Sims4Search
 
                 int caspc = 0;
                 foreach (int e in entryspots){
-                    log.MakeLog(string.Format("P{0} - Opening CASP #{1}", packageparsecount, e), true);
+                    LogMessage = string.Format("P{0} - Opening CASP #{1}", packageparsecount, e);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     if (indexData[e].compressionType == "5A42"){
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Compression type is {2}.", packageparsecount, e, indexData[e].compressionType), true);
+                        LogMessage = string.Format("P{0}/CASP{1} - Compression type is {2}.", packageparsecount, e, indexData[e].compressionType);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         readFile.BaseStream.Position = indexData[e].position;
                         long entryEnd = indexData[e].position + indexData[e].memSize;
 
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Position: {2}", packageparsecount, e, indexData[e].position), true);
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Filesize: {2}", packageparsecount, e, indexData[e].fileSize), true);
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Memsize: {2}", packageparsecount, e, indexData[e].memSize), true);
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Ends at: {2}", packageparsecount, e, entryEnd), true);
+                        LogMessage = string.Format("P{0}/CASP{1} - Position: {2}", packageparsecount, e, indexData[e].position);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/CASP{1} - Filesize: {2}", packageparsecount, e, indexData[e].fileSize);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/CASP{1} - Memsize: {2}", packageparsecount, e, indexData[e].memSize);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/CASP{1} - Ends at: {2}", packageparsecount, e, entryEnd);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
                         
                         BinaryReader decompbr = new BinaryReader(decomps);
 
                         uint version = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Version: {2}", packageparsecount, e, version), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Version: {2}", packageparsecount, e, version);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         uint tgioffset = decompbr.ReadUInt32() +8;
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - TGI Offset: {2} \n -- As Hex: {3}", packageparsecount, e, tgioffset, tgioffset.ToString("X8")), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - TGI Offset: {2} \n -- As Hex: {3}", packageparsecount, e, tgioffset, tgioffset.ToString("X8"));
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         uint numpresets = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Number of Presets: {2} \n -- As Hex: {3}", packageparsecount, e, numpresets, numpresets.ToString("X8")), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Number of Presets: {2} \n -- As Hex: {3}", packageparsecount, e, numpresets, numpresets.ToString("X8"));
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         using (BinaryReader reader = new BinaryReader(decomps, Encoding.BigEndianUnicode, true))
                         {
                             thisPackage.Title = reader.ReadString();
                         }
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Title: {2}", packageparsecount, e, thisPackage.Title), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Title: {2}", packageparsecount, e, thisPackage.Title);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         float sortpriority = decompbr.ReadSingle();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Sort Priority: {2}", packageparsecount, e, sortpriority), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Sort Priority: {2}", packageparsecount, e, sortpriority);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         int secondarySortIndex = decompbr.ReadUInt16();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Secondary Sort Index: {2}", packageparsecount, e, secondarySortIndex), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Secondary Sort Index: {2}", packageparsecount, e, secondarySortIndex);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         uint propertyid = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Property ID: {2}", packageparsecount, e, propertyid), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Property ID: {2}", packageparsecount, e, propertyid);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         
                         uint auralMaterialHash = decompbr.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Aural Material Hash: {2}", packageparsecount, e, sortpriority), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Aural Material Hash: {2}", packageparsecount, e, sortpriority);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         if (version <= 42){
-                            log.MakeLog(string.Format("Version is <= 42: {0}", version), true);
+                            LogMessage = string.Format("Version is <= 42: {0}", version);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             int[] parameterFlag = new int[1];
                             parameterFlag[0] = (int)decompbr.ReadUInt16();
                             BitArray parameterFlags = new BitArray(parameterFlag);
-                            log.MakeLog(parameterFlags.Length.ToString(), true);
+                            LogMessage = parameterFlags.Length.ToString();
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             for(int p = 0; p < 16; p++)
                             {
                                 if (parameterFlags[p] == true) {
                                     allFlags.Add(parameters[p]);
                                 }
-                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString()), true);
+                                LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString());
+                                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             } 
                             
                         } else if (version >= 43){
-                            log.MakeLog(string.Format("Version is >= 43: {0}", version), true);
+                            LogMessage = string.Format("Version is >= 43: {0}", version);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             int[] parameterFlag = new int[1];
                             parameterFlag[0] = (int)decompbr.ReadUInt16();
                             BitArray parameterFlags = new BitArray(parameterFlag);
@@ -1163,29 +1408,41 @@ namespace SimsCCManager.Packages.Sims4Search
                                 if (parameterFlags[pfc] == true) {
                                     allFlags.Add(parameters[pfc]);
                                 }
-                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString()), true);
+                                LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString());
+                                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             }                            
                         }
                             ulong excludePartFlags = decompbr.ReadUInt64();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags: {2}", packageparsecount, e, excludePartFlags.ToString("X16")), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags: {2}", packageparsecount, e, excludePartFlags.ToString("X16"));
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                             ulong excludePartFlags2 = decompbr.ReadUInt64();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags 2: {2}", packageparsecount, e, excludePartFlags2.ToString("X16")), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags 2: {2}", packageparsecount, e, excludePartFlags2.ToString("X16"));
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                             ulong excludeModifierRegionFlags = decompbr.ReadUInt64();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Modifier Region Flags: {2}", packageparsecount, e, excludeModifierRegionFlags.ToString("X16")), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Exclude Modifier Region Flags: {2}", packageparsecount, e, excludeModifierRegionFlags.ToString("X16"));
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         if (version >= 37){
-                            log.MakeLog(string.Format(">= 37, Version: {0}", version), true);
+                            LogMessage = string.Format(">= 37, Version: {0}", version);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                             uint count = decompbr.ReadByte();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             decompbr.ReadByte();
 
                             CASTag16Bit tags = new CASTag16Bit(decompbr, count);      
 
 
-                            List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                            List<TagsList> gottags = Readers.GetTagInfo(tags, count, LogFile);
                             foreach (TagsList tag in gottags){
                                 if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
                                     itemtags.Add(tag);  
@@ -1195,11 +1452,13 @@ namespace SimsCCManager.Packages.Sims4Search
                         else 
                         {
                             uint count = decompbr.ReadByte();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             decompbr.ReadByte();
                             CASTag16Bit tags = new CASTag16Bit(decompbr, count);
                             
-                            List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                            List<TagsList> gottags = Readers.GetTagInfo(tags, count, LogFile);
                             foreach (TagsList tag in gottags){
                                 if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
                                     itemtags.Add(tag);  
@@ -1209,16 +1468,24 @@ namespace SimsCCManager.Packages.Sims4Search
                             }
 
                             uint simoleonprice = decompbr.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Simoleon Price: {2}", packageparsecount, e, simoleonprice.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Simoleon Price: {2}", packageparsecount, e, simoleonprice.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             uint partTitleKey = decompbr.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Title Key: {2}", packageparsecount, e, partTitleKey.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Part Title Key: {2}", packageparsecount, e, partTitleKey.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             uint partDescriptionKey = decompbr.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Description Key: {2}", packageparsecount, e, partDescriptionKey.ToString()), true);                            
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Part Description Key: {2}", packageparsecount, e, partDescriptionKey.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));                            
                             if (version >= 43) {
                                 uint createDescriptionKey = decompbr.ReadUInt32();
                             }
                             int uniqueTextureSpace = decompbr.ReadByte();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Unique Texture Space: {2}", packageparsecount, e, uniqueTextureSpace.ToString("X8")), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Unique Texture Space: {2}", packageparsecount, e, uniqueTextureSpace.ToString("X8"));
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             uint bodytype = decompbr.ReadUInt32();
                             bool foundmatch = false;
 
@@ -1235,12 +1502,18 @@ namespace SimsCCManager.Packages.Sims4Search
                             if (foundmatch == false){
                                 thisPackage.Function = string.Format("Unidentified function (contact SinfulSimming). Code: {0}", bodytype.ToString());
                             }                            
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Bodytype: {2}", packageparsecount, e, bodytype.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Bodytype: {2}", packageparsecount, e, bodytype.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             uint bodytypesubtype = decompbr.ReadUInt16();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Body Sub Type: {2}", packageparsecount, e, bodytypesubtype.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Body Sub Type: {2}", packageparsecount, e, bodytypesubtype.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             decompbr.ReadUInt32();                        
                             uint agflags = decompbr.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Ag Flags: {2}", packageparsecount, e, agflags.ToString("X8")), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Ag Flags: {2}", packageparsecount, e, agflags.ToString("X8"));
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                             string AGFlag = agflags.ToString("X8");
                             
@@ -1488,7 +1761,9 @@ namespace SimsCCManager.Packages.Sims4Search
                                 Male = false};
                             }
                             
-                            log.MakeLog(string.Format("P{0}/CASP{1} Ages:\n -- Adult: {0}, \n -- Baby: {1}, \n -- Child: {2}, \n -- Elder: {3}, \n -- Infant: {4}, \n -- Teen: {5}, \n -- Toddler: {6}, \n -- Young Adult: {7}\n\nGender: \n -- Male: {8}\n -- Female: {9}.", packageparsecount, e, agegenderset.Adult.ToString(), agegenderset.Baby.ToString(), agegenderset.Child.ToString(), agegenderset.Elder.ToString(), agegenderset.Infant.ToString(), agegenderset.Teen.ToString(), agegenderset.Toddler.ToString(), agegenderset.YoungAdult.ToString(), agegenderset.Female.ToString(), agegenderset.Male.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} Ages:\n -- Adult: {0}, \n -- Baby: {1}, \n -- Child: {2}, \n -- Elder: {3}, \n -- Infant: {4}, \n -- Teen: {5}, \n -- Toddler: {6}, \n -- Young Adult: {7}\n\nGender: \n -- Male: {8}\n -- Female: {9}.", packageparsecount, e, agegenderset.Adult.ToString(), agegenderset.Baby.ToString(), agegenderset.Child.ToString(), agegenderset.Elder.ToString(), agegenderset.Infant.ToString(), agegenderset.Teen.ToString(), agegenderset.Toddler.ToString(), agegenderset.YoungAdult.ToString(), agegenderset.Female.ToString(), agegenderset.Male.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                             thisPackage.AgeGenderFlags = agegenderset;
 
@@ -1506,7 +1781,9 @@ namespace SimsCCManager.Packages.Sims4Search
                                 for(int p = 0; p < packFlags; p++)
                                 {
                                     bool check = decompbr.ReadBoolean();
-                                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Packflag is: {2}", packageparsecount, e, check.ToString()), true);
+                                    LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Packflag is: {2}", packageparsecount, e, check.ToString());
+                                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                                 } 
                                 byte[] reserved2 = decompbr.ReadBytes(9);
                             }
@@ -1556,55 +1833,89 @@ namespace SimsCCManager.Packages.Sims4Search
                             decomps.Dispose();
 
                     } else if (indexData[e].compressionType == "0000"){
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Compression type is {2}.", packageparsecount, e, indexData[e].compressionType), true);
+                        LogMessage = string.Format("P{0}/CASP{1} - Compression type is {2}.", packageparsecount, e, indexData[e].compressionType);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         readFile.BaseStream.Position = indexData[e].position;
                         long entryEnd = indexData[e].position + indexData[e].memSize;
 
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Position: {2}", packageparsecount, e, indexData[e].position), true);
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Filesize: {2}", packageparsecount, e, indexData[e].fileSize), true);
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Memsize: {2}", packageparsecount, e, indexData[e].memSize), true);
-                        log.MakeLog(string.Format("P{0}/CASP{1} - Ends at: {2}", packageparsecount, e, entryEnd), true);
+                        LogMessage = string.Format("P{0}/CASP{1} - Position: {2}", packageparsecount, e, indexData[e].position);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/CASP{1} - Filesize: {2}", packageparsecount, e, indexData[e].fileSize);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/CASP{1} - Memsize: {2}", packageparsecount, e, indexData[e].memSize);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/CASP{1} - Ends at: {2}", packageparsecount, e, entryEnd);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         uint version = readFile.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Version: {2}", packageparsecount, e, version), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Version: {2}", packageparsecount, e, version);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         uint tgioffset = readFile.ReadUInt32() +8;
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - TGI Offset: {2} \n -- As Hex: {3}", packageparsecount, e, tgioffset, tgioffset.ToString("X8")), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - TGI Offset: {2} \n -- As Hex: {3}", packageparsecount, e, tgioffset, tgioffset.ToString("X8"));
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         uint numpresets = readFile.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Number of Presets: {2} \n -- As Hex: {3}", packageparsecount, e, numpresets, numpresets.ToString("X8")), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Number of Presets: {2} \n -- As Hex: {3}", packageparsecount, e, numpresets, numpresets.ToString("X8"));
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         using (BinaryReader reader = new BinaryReader(dbpfFile, Encoding.BigEndianUnicode, true))
                         {
                             thisPackage.Title = reader.ReadString();
                         }
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Title: {2}", packageparsecount, e, thisPackage.Title), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Title: {2}", packageparsecount, e, thisPackage.Title);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         float sortpriority = readFile.ReadSingle();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Sort Priority: {2}", packageparsecount, e, sortpriority), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Sort Priority: {2}", packageparsecount, e, sortpriority);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         int secondarySortIndex = readFile.ReadUInt16();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Secondary Sort Index: {2}", packageparsecount, e, secondarySortIndex), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Secondary Sort Index: {2}", packageparsecount, e, secondarySortIndex);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         uint propertyid = readFile.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Property ID: {2}", packageparsecount, e, propertyid), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Property ID: {2}", packageparsecount, e, propertyid);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         
                         uint auralMaterialHash = readFile.ReadUInt32();
-                        log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Aural Material Hash: {2}", packageparsecount, e, sortpriority), true);
+                        LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Aural Material Hash: {2}", packageparsecount, e, sortpriority);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         if (version <= 42){
-                            log.MakeLog(string.Format("Version is <= 42: {0}", version), true);
+                            LogMessage = string.Format("Version is <= 42: {0}", version);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             int[] parameterFlag = new int[1];
                             parameterFlag[0] = (int)readFile.ReadUInt16();
                             BitArray parameterFlags = new BitArray(parameterFlag);
-                            log.MakeLog(parameterFlags.Length.ToString(), true);
+                            LogMessage = parameterFlags.Length.ToString();
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             for(int p = 0; p < 16; p++)
                             {
                                 if (parameterFlags[p] == true) {
                                     allFlags.Add(parameters[p]);
                                 }
-                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString()), true);
+                                LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString());
+                                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             } 
                             
                         } else if (version >= 43){
-                            log.MakeLog(string.Format("Version is >= 43: {0}", version), true);
+                            LogMessage = string.Format("Version is >= 43: {0}", version);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             int[] parameterFlag = new int[1];
                             parameterFlag[0] = (int)readFile.ReadUInt16();
                             BitArray parameterFlags = new BitArray(parameterFlag);
@@ -1613,23 +1924,35 @@ namespace SimsCCManager.Packages.Sims4Search
                                 if (parameterFlags[pfc] == true) {
                                     allFlags.Add(parameters[pfc]);
                                 }
-                                log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString()), true);
+                                LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString());
+                                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             }                            
                         }
                             ulong excludePartFlags = readFile.ReadUInt64();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags: {2}", packageparsecount, e, excludePartFlags.ToString("X16")), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags: {2}", packageparsecount, e, excludePartFlags.ToString("X16"));
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             ulong excludePartFlags2 = readFile.ReadUInt64();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags 2: {2}", packageparsecount, e, excludePartFlags2.ToString("X16")), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Exclude Part Flags 2: {2}", packageparsecount, e, excludePartFlags2.ToString("X16"));
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             ulong excludeModifierRegionFlags = readFile.ReadUInt64();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Exclude Modifier Region Flags: {2}", packageparsecount, e, excludeModifierRegionFlags.ToString("X16")), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Exclude Modifier Region Flags: {2}", packageparsecount, e, excludeModifierRegionFlags.ToString("X16"));
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                         if (version >= 37){
-                            log.MakeLog(string.Format(">= 37, Version: {0}", version), true);
+                            LogMessage = string.Format(">= 37, Version: {0}", version);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             uint count = readFile.ReadByte();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             readFile.ReadByte();
                             CASTag16Bit tags = new CASTag16Bit(readFile, count);                            
-                            List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                            List<TagsList> gottags = Readers.GetTagInfo(tags, count, LogFile);
                             foreach (TagsList tag in gottags){
                                 if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
                                     itemtags.Add(tag);  
@@ -1640,11 +1963,13 @@ namespace SimsCCManager.Packages.Sims4Search
                         else 
                         {
                             uint count = readFile.ReadByte();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Tag Count: {2}", packageparsecount, e, count.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             readFile.ReadByte();
                             CASTag16Bit tags = new CASTag16Bit(readFile, count);
                             
-                            List<TagsList> gottags = Readers.GetTagInfo(tags, count);
+                            List<TagsList> gottags = Readers.GetTagInfo(tags, count, LogFile);
                             foreach (TagsList tag in gottags){
                                 if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
                                     itemtags.Add(tag);  
@@ -1654,16 +1979,24 @@ namespace SimsCCManager.Packages.Sims4Search
                             }
 
                             uint simoleonprice = readFile.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Simoleon Price: {2}", packageparsecount, e, simoleonprice.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Simoleon Price: {2}", packageparsecount, e, simoleonprice.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             uint partTitleKey = readFile.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Title Key: {2}", packageparsecount, e, partTitleKey.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Part Title Key: {2}", packageparsecount, e, partTitleKey.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             uint partDescriptionKey = readFile.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Part Description Key: {2}", packageparsecount, e, partDescriptionKey.ToString()), true);                            
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Part Description Key: {2}", packageparsecount, e, partDescriptionKey.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));                            
                             if (version >= 43) {
                                 uint createDescriptionKey = readFile.ReadUInt32();
                             }
                             int uniqueTextureSpace = readFile.ReadByte();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Unique Texture Space: {2}", packageparsecount, e, uniqueTextureSpace.ToString("X8")), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Unique Texture Space: {2}", packageparsecount, e, uniqueTextureSpace.ToString("X8"));
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             uint bodytype = readFile.ReadUInt32();
                             bool foundmatch = false;
 
@@ -1680,12 +2013,18 @@ namespace SimsCCManager.Packages.Sims4Search
                             if (foundmatch == false){
                                 thisPackage.Function = string.Format("Unidentified function (contact SinfulSimming). Code: {0}", bodytype.ToString());
                             }                            
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Bodytype: {2}", packageparsecount, e, bodytype.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Bodytype: {2}", packageparsecount, e, bodytype.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             uint bodytypesubtype = readFile.ReadUInt16();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Body Sub Type: {2}", packageparsecount, e, bodytypesubtype.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Body Sub Type: {2}", packageparsecount, e, bodytypesubtype.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             readFile.ReadUInt32();                        
                             uint agflags = readFile.ReadUInt32();
-                            log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Ag Flags: {2}", packageparsecount, e, agflags.ToString("X8")), true);
+                            LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Ag Flags: {2}", packageparsecount, e, agflags.ToString("X8"));
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                             string AGFlag = agflags.ToString("X8");
                             
@@ -1933,7 +2272,9 @@ namespace SimsCCManager.Packages.Sims4Search
                                 Male = false};
                             }
                             
-                            log.MakeLog(string.Format("P{0}/CASP{1} Ages:\n -- Adult: {0}, \n -- Baby: {1}, \n -- Child: {2}, \n -- Elder: {3}, \n -- Infant: {4}, \n -- Teen: {5}, \n -- Toddler: {6}, \n -- Young Adult: {7}\n\nGender: \n -- Male: {8}\n -- Female: {9}.", packageparsecount, e, agegenderset.Adult.ToString(), agegenderset.Baby.ToString(), agegenderset.Child.ToString(), agegenderset.Elder.ToString(), agegenderset.Infant.ToString(), agegenderset.Teen.ToString(), agegenderset.Toddler.ToString(), agegenderset.YoungAdult.ToString(), agegenderset.Female.ToString(), agegenderset.Male.ToString()), true);
+                            LogMessage = string.Format("P{0}/CASP{1} Ages:\n -- Adult: {0}, \n -- Baby: {1}, \n -- Child: {2}, \n -- Elder: {3}, \n -- Infant: {4}, \n -- Teen: {5}, \n -- Toddler: {6}, \n -- Young Adult: {7}\n\nGender: \n -- Male: {8}\n -- Female: {9}.", packageparsecount, e, agegenderset.Adult.ToString(), agegenderset.Baby.ToString(), agegenderset.Child.ToString(), agegenderset.Elder.ToString(), agegenderset.Infant.ToString(), agegenderset.Teen.ToString(), agegenderset.Toddler.ToString(), agegenderset.YoungAdult.ToString(), agegenderset.Female.ToString(), agegenderset.Male.ToString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                             thisPackage.AgeGenderFlags = agegenderset;
 
@@ -1951,7 +2292,9 @@ namespace SimsCCManager.Packages.Sims4Search
                                 for(int p = 0; p < packFlags; p++)
                                 {
                                     bool check = readFile.ReadBoolean();
-                                    log.MakeLog(string.Format("P{0}/CASP{1} [Decompressed] - Packflag is: {2}", packageparsecount, e, check.ToString()), true);
+                                    LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Packflag is: {2}", packageparsecount, e, check.ToString());
+                                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                                 } 
                                 byte[] reserved2 = readFile.ReadBytes(9);
                             }
@@ -1994,20 +2337,30 @@ namespace SimsCCManager.Packages.Sims4Search
                 int cobjc = 0;
                 foreach (int e in entryspots){
                     
-                    log.MakeLog(string.Format("P{0} - Opening COBJ #{1}", packageparsecount, cobjc), true);
+                    LogMessage = string.Format("P{0} - Opening COBJ #{1}", packageparsecount, cobjc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     if (indexData[e].compressionType == "5A42"){                                
                             readFile.BaseStream.Position = indexData[e].position;                  
                             int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
 
-                            log.MakeLog(string.Format("P{0}/COBJ{1} - Position: {2}", packageparsecount, cobjc, indexData[e].position), true);
-                            log.MakeLog(string.Format("P{0}/COBJ{1} - File Size: {2}", packageparsecount, cobjc, indexData[e].fileSize), true);
-                            log.MakeLog(string.Format("P{0}/COBJ{1} - Memory Size: {2}", packageparsecount, cobjc, indexData[e].memSize), true);
-                            log.MakeLog(string.Format("P{0}/COBJ{1} - Entry Ends At: {2}", packageparsecount, cobjc, entryEnd), true);
+                            LogMessage = string.Format("P{0}/COBJ{1} - Position: {2}", packageparsecount, cobjc, indexData[e].position);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            LogMessage = string.Format("P{0}/COBJ{1} - File Size: {2}", packageparsecount, cobjc, indexData[e].fileSize);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            LogMessage = string.Format("P{0}/COBJ{1} - Memory Size: {2}", packageparsecount, cobjc, indexData[e].memSize);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            LogMessage = string.Format("P{0}/COBJ{1} - Entry Ends At: {2}", packageparsecount, cobjc, entryEnd);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
                             
                             BinaryReader decompbr = new BinaryReader(decomps);                           
                             
-                            ReadCOBJ rc = new ReadCOBJ(decompbr, packageparsecount, e, itemtags);
+                            ReadCOBJ rc = new ReadCOBJ(decompbr, packageparsecount, e, itemtags, LogFile);
                             if (!allInstanceIDs.Contains(rc.instanceid.ToString("X8"))){
                                 allInstanceIDs.Add(rc.instanceid.ToString("X8"));  
                             }                                                      
@@ -2027,11 +2380,19 @@ namespace SimsCCManager.Packages.Sims4Search
                         readFile.BaseStream.Position = indexData[e].position;                           
                         int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
                         
-                        log.MakeLog(string.Format("P{0}/COBJ{1} - Position: {2}", packageparsecount, cobjc, indexData[e].position), true);
-                        log.MakeLog(string.Format("P{0}/COBJ{1} - File Size: {2}", packageparsecount, cobjc, indexData[e].fileSize), true);
-                        log.MakeLog(string.Format("P{0}/COBJ{1} - Memory Size: {2}", packageparsecount, cobjc, indexData[e].memSize), true);
-                        log.MakeLog(string.Format("P{0}/COBJ{1} - Entry Ends At: {2}", packageparsecount, cobjc, entryEnd), true);
-                        ReadCOBJ rc = new ReadCOBJ(readFile, packageparsecount, e, itemtags);                            
+                        LogMessage = string.Format("P{0}/COBJ{1} - Position: {2}", packageparsecount, cobjc, indexData[e].position);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/COBJ{1} - File Size: {2}", packageparsecount, cobjc, indexData[e].fileSize);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/COBJ{1} - Memory Size: {2}", packageparsecount, cobjc, indexData[e].memSize);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/COBJ{1} - Entry Ends At: {2}", packageparsecount, cobjc, entryEnd);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        ReadCOBJ rc = new ReadCOBJ(readFile, packageparsecount, e, itemtags, LogFile);                            
                         if (!allInstanceIDs.Contains(rc.instanceid.ToString("X8"))){
                             allInstanceIDs.Add(rc.instanceid.ToString("X8"));  
                         }                                                      
@@ -2056,29 +2417,43 @@ namespace SimsCCManager.Packages.Sims4Search
 
                 int objdc = 0;
                 foreach (int e in entryspots){
-                    log.MakeLog(string.Format("P{0} - Opening OBJD #{1}", packageparsecount, objdc), true);
+                    LogMessage = string.Format("P{0} - Opening OBJD #{1}", packageparsecount, objdc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     if (indexData[e].compressionType == "5A42"){
                             readFile.BaseStream.Position = indexData[e].position;                       
                             int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
-                            log.MakeLog(string.Format("P{0}/OBJD{1} - Position: {2}", packageparsecount, objdc, indexData[e].position), true);
-                            log.MakeLog(string.Format("P{0}/OBJD{1} - File Size: {2}", packageparsecount, objdc, indexData[e].fileSize), true);
-                            log.MakeLog(string.Format("P{0}/OBJD{1} - Memory Size: {2}", packageparsecount, objdc, indexData[e].memSize), true);
-                            log.MakeLog(string.Format("P{0}/OBJD{1} - Entry Ends At: {2}", packageparsecount, objdc, entryEnd), true);
+                            LogMessage = string.Format("P{0}/OBJD{1} - Position: {2}", packageparsecount, objdc, indexData[e].position);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            LogMessage = string.Format("P{0}/OBJD{1} - File Size: {2}", packageparsecount, objdc, indexData[e].fileSize);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            LogMessage = string.Format("P{0}/OBJD{1} - Memory Size: {2}", packageparsecount, objdc, indexData[e].memSize);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            LogMessage = string.Format("P{0}/OBJD{1} - Entry Ends At: {2}", packageparsecount, objdc, entryEnd);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
                             
                             BinaryReader decompbr = new BinaryReader(decomps);
 
-                            ReadOBJDIndex readOBJD = new ReadOBJDIndex(decompbr, packageparsecount, objdc);
-                            log.MakeLog(string.Format("P{0}/OBJD{1} - There are {2} entries to read.", packageparsecount, objdc, readOBJD.count), true);
+                            ReadOBJDIndex readOBJD = new ReadOBJDIndex(decompbr, packageparsecount, objdc, LogFile);
+                            LogMessage = string.Format("P{0}/OBJD{1} - There are {2} entries to read.", packageparsecount, objdc, readOBJD.count);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             objdentries = new string[readOBJD.count];
                             objdpositions = new int[readOBJD.count];
                             for (int f = 0; f < readOBJD.count; f++){
-                                log.MakeLog(string.Format("P{0}/OBJD{1} - Entry {2}: \n--- Type: {3}\n --- Position: {4}", packageparsecount, objdc, f, readOBJD.entrytype[f], readOBJD.position[f]), true);
+                                LogMessage = string.Format("P{0}/OBJD{1} - Entry {2}: \n--- Type: {3}\n --- Position: {4}", packageparsecount, objdc, f, readOBJD.entrytype[f], readOBJD.position[f]);
+                                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                                 objdentries[f] = readOBJD.entrytype[f].ToString();
                                 objdpositions[f] = (int)readOBJD.position[f];
                             }
                             decompbr.BaseStream.Position = readOBJD.position[0];
-                            ReadOBJDEntry readobjdentry = new ReadOBJDEntry(decompbr, objdentries, objdpositions, packageparsecount, objdc);
+                            ReadOBJDEntry readobjdentry = new ReadOBJDEntry(decompbr, objdentries, objdpositions, packageparsecount, objdc, LogFile);
                             thisPackage.Title = readobjdentry.name;
                             thisPackage.Tuning = readobjdentry.tuningname;
                             thisPackage.TuningID = (int)readobjdentry.tuningid;
@@ -2088,8 +2463,12 @@ namespace SimsCCManager.Packages.Sims4Search
                             
                             log.MakeLog("Adding components to package: ", true);
                             for (int c = 0; c < readobjdentry.componentcount; c++){
-                                log.MakeLog(readobjdentry.components[c].ToString(), true);
-                                log.MakeLog(readobjdentry.components[c].ToString("X8"), true);
+                                LogMessage = readobjdentry.components[c].ToString();
+                                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                                LogMessage = readobjdentry.components[c].ToString("X8");
+                                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                                 thisPackage.Components.Add(readobjdentry.components[c].ToString("X8"));
                             }
                             foreach (string m in readobjdentry.model) {
@@ -2117,21 +2496,33 @@ namespace SimsCCManager.Packages.Sims4Search
                     } else if (indexData[e].compressionType == "0000"){
                         readFile.BaseStream.Position = indexData[e].position;                       
                         int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
-                        log.MakeLog(string.Format("P{0}/OBJD{1} - Position: {2}", packageparsecount, objdc, indexData[e].position), true);
-                        log.MakeLog(string.Format("P{0}/OBJD{1} - File Size: {2}", packageparsecount, objdc, indexData[e].fileSize), true);
-                        log.MakeLog(string.Format("P{0}/OBJD{1} - Memory Size: {2}", packageparsecount, objdc, indexData[e].memSize), true);
-                        log.MakeLog(string.Format("P{0}/OBJD{1} - Entry Ends At: {2}", packageparsecount, objdc, entryEnd), true);
-                        ReadOBJDIndex readOBJD = new ReadOBJDIndex(readFile, packageparsecount, objdc);
-                        log.MakeLog(string.Format("P{0}/OBJD{1} - There are {2} entries to read.", packageparsecount, objdc, readOBJD.count), true);
+                        LogMessage = string.Format("P{0}/OBJD{1} - Position: {2}", packageparsecount, objdc, indexData[e].position);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/OBJD{1} - File Size: {2}", packageparsecount, objdc, indexData[e].fileSize);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/OBJD{1} - Memory Size: {2}", packageparsecount, objdc, indexData[e].memSize);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        LogMessage = string.Format("P{0}/OBJD{1} - Entry Ends At: {2}", packageparsecount, objdc, entryEnd);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        ReadOBJDIndex readOBJD = new ReadOBJDIndex(readFile, packageparsecount, objdc, LogFile);
+                        LogMessage = string.Format("P{0}/OBJD{1} - There are {2} entries to read.", packageparsecount, objdc, readOBJD.count);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         objdentries = new string[readOBJD.count];
                         objdpositions = new int[readOBJD.count];
                         for (int f = 0; f < readOBJD.count; f++){
-                            log.MakeLog(string.Format("P{0}/OBJD{1} - Entry {2}: \n--- Type: {3}\n --- Position: {4}", packageparsecount, objdc, f, readOBJD.entrytype[f], readOBJD.position[f]), true);
+                            LogMessage = string.Format("P{0}/OBJD{1} - Entry {2}: \n--- Type: {3}\n --- Position: {4}", packageparsecount, objdc, f, readOBJD.entrytype[f], readOBJD.position[f]);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             objdentries[f] = readOBJD.entrytype[f].ToString();
                             objdpositions[f] = (int)readOBJD.position[f];
                         }
-                        readFile.BaseStream.Position = readOBJD.position[0];
-                        ReadOBJDEntry readobjdentry = new ReadOBJDEntry(readFile, objdentries, objdpositions, packageparsecount, objdc);
+                        readFile.BaseStream.Position = objdpositions[0];
+                        ReadOBJDEntry readobjdentry = new ReadOBJDEntry(readFile, objdentries, objdpositions, packageparsecount, objdc, LogFile);
                         thisPackage.Title = readobjdentry.name;
                         thisPackage.Tuning = readobjdentry.tuningname;
                         thisPackage.TuningID = (int)readobjdentry.tuningid;
@@ -2139,10 +2530,15 @@ namespace SimsCCManager.Packages.Sims4Search
                             allInstanceIDs.Add(readobjdentry.instance.ToString("X8"));
                         }
                         
+                        
                         log.MakeLog("Adding components to package: ", true);
                         for (int c = 0; c < readobjdentry.componentcount; c++){
-                            log.MakeLog(readobjdentry.components[c].ToString(), true);
-                            log.MakeLog(readobjdentry.components[c].ToString("X8"), true);
+                            LogMessage = readobjdentry.components[c].ToString();
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            LogMessage = readobjdentry.components[c].ToString("X8");
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             thisPackage.Components.Add(readobjdentry.components[c].ToString("X8"));
                         }
                         foreach (string m in readobjdentry.model) {
@@ -2184,25 +2580,30 @@ namespace SimsCCManager.Packages.Sims4Search
                         if (!thisPackage.MeshKeys.Contains(key)){
                             thisPackage.MeshKeys.Add(key);
                         } 
-                    }
-                                       
+                    }                                       
                 }
             }
 
 
-            log.MakeLog(string.Format("P{0} - All methods complete, moving on to getting info.", packageparsecount), true);
+            LogMessage = string.Format("P{0} - All methods complete, moving on to getting info.", packageparsecount);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
             List<TypeCounter> typecount = new List<TypeCounter>();
             Dictionary<string,int> typeDict = new Dictionary<string, int>();
 
-            log.MakeLog(string.Format("P{0} - Making dictionary.", packageparsecount), true);
+            LogMessage = string.Format("P{0} - Making dictionary.", packageparsecount);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
             List<typeList> typse = GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S4Types"));
 
             foreach (fileHasList item in fileHas){
                 foreach (typeList type in typse){
                     if (type.desc == item.TypeID){
-                        //log.MakeLog(string.Format("Added {0} to dictionary.", type.desc), true);
+                        //LogMessage = string.Format("Added {0} to dictionary.", type.desc);
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         typeDict.Increment(type.desc);
                     }
                 }
@@ -2214,7 +2615,9 @@ namespace SimsCCManager.Packages.Sims4Search
                 TypeCounter tc = new TypeCounter();
                 tc.Type = type.Key;
                 tc.Count = type.Value;
-                log.MakeLog(string.Format("There are {0} of {1} in this package.", tc.Count, tc.Type), true);
+                LogMessage = string.Format("There are {0} of {1} in this package.", tc.Count, tc.Type);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 typecount.Add(tc);
             }
             typeDict = new Dictionary<string, int>();
@@ -2234,14 +2637,20 @@ namespace SimsCCManager.Packages.Sims4Search
             distinctGUIDS = allGUIDS.Distinct().ToList();
             thisPackage.GUIDs.AddRange(distinctGUIDS);
                      
-            log.MakeLog(string.Format("P{0}: Checking {1} against override IDs.", packageparsecount,thisPackage.PackageName), true);
+            LogMessage = string.Format("P{0}: Checking {1} against override IDs.", packageparsecount,thisPackage.PackageName);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             
-            log.MakeLog(string.Format("P{0}: Checking instances.", packageparsecount), true);
+            LogMessage = string.Format("P{0}: Checking instances.", packageparsecount);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
             var overrides = GlobalVariables.S4OverridesList.Where(p => thisPackage.InstanceIDs.Any(l => p.InstanceID == l)).ToList();
 
             if(overrides.Count > 0){
-                log.MakeLog(string.Format("P{0}: Found {1} overrides!", packageparsecount, overrides.Count), true);
+                LogMessage = string.Format("P{0}: Found {1} overrides!", packageparsecount, overrides.Count);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 thisPackage.Override = true;
                 thisPackage.Type = "OVERRIDE";
             }           
@@ -2281,7 +2690,9 @@ namespace SimsCCManager.Packages.Sims4Search
                 log.MakeLog("No overrides were found. Checking other options.", true);
                 if ((typeDict.TryGetValue("S4SM", out ssm) && ssm >= 1)){
                 thisPackage.Type = "Merged Package";
-                log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if (!String.IsNullOrWhiteSpace(thisPackage.Function)) {
                     thisPackage.Type = thisPackage.Function;
                 } else if (!String.IsNullOrWhiteSpace(thisPackage.Tuning)) {
@@ -2290,52 +2701,76 @@ namespace SimsCCManager.Packages.Sims4Search
                     }
                 } else if ((typeDict.TryGetValue("BGEO", out bgeo) && bgeo >= 1) && (typeDict.TryGetValue("HOTC", out hotc) && hotc >= 1) && (typeDict.TryGetValue("SMOD", out smod) && smod >= 1)){
                     thisPackage.Type = "Slider";
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("BOND", out bond) && bond >= 1) && (typeDict.TryGetValue("CPRE", out cpre) && cpre >= 1) && (typeDict.TryGetValue("DMAP", out dmap) && dmap >= 1) && (typeDict.TryGetValue("SMOD", out smod) && smod >= 1)){
                     thisPackage.Type = "Preset";
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0)){
                     thisPackage.Type = "CAS Recolor";
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("LRLE", out lrle) && lrle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0)){
                     thisPackage.Type = "Makeup";
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("CASP", out casp) && casp <= 0) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1) && (typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("RMAP", out rmap) && rmap >= 1) && (typeDict.TryGetValue("_IMG", out img) && img <= 0)){
                     thisPackage.Type = "Hair Mesh";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = false;
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom <= 0) && (typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("RMAP", out rmap) && rmap >= 1) && (typeDict.TryGetValue("_IMG", out img) && img >= 1)){
                     thisPackage.Type = "Hair Recolor";
                     thisPackage.Mesh = false;
                     thisPackage.Recolor = true;
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1) && (typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("RMAP", out rmap) && rmap >= 1) && (typeDict.TryGetValue("_IMG", out img) && img >= 1)){
                     thisPackage.Type = "Hair";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = true;
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("CLHD", out clhd) && clhd >= 1) && (typeDict.TryGetValue("STBL", out stbl) && stbl >= 1)){
                     thisPackage.Type = "Pose Pack";
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("COBJ", out cobj) && cobj >= 1) && (typeDict.TryGetValue("FTPT", out ftpt) && ftpt >= 1) && (typeDict.TryGetValue("MLOD", out mlod) && mlod >= 1) && (typeDict.TryGetValue("MODL", out modl) && modl >= 1) && (typeDict.TryGetValue("MTBL", out mtbl) && mtbl <= 0)  && (typeDict.TryGetValue("_IMG", out img) && img <= 0) && (typeDict.TryGetValue("OBJD", out objd) && objd >= 1)){
                     thisPackage.Type = "Object Mesh";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = false;
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("COBJ", out cobj) && cobj >= 1) && (typeDict.TryGetValue("FTPT", out ftpt) && ftpt >= 1) && (typeDict.TryGetValue("MLOD", out mlod) && mlod >= 1) && (typeDict.TryGetValue("MODL", out modl) && modl >= 1) && (typeDict.TryGetValue("MTBL", out mtbl) && mtbl >= 1) && (typeDict.TryGetValue("OBJD", out objd) && objd <= 0)){
                     thisPackage.Type = "Object Recolor";
                     thisPackage.Mesh = false;
                     thisPackage.Recolor = true;
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("_IMG", out img) && img >= 1) && (typeDict.TryGetValue("COBJ", out cobj) && cobj >= 1) && (typeDict.TryGetValue("FTPT", out ftpt) && ftpt >= 1) && (typeDict.TryGetValue("MLOD", out mlod) && mlod >= 1) && (typeDict.TryGetValue("MODL", out modl) && modl >= 1) && (typeDict.TryGetValue("MTBL", out mtbl) && mtbl >= 1) && (typeDict.TryGetValue("OBJD", out objd) && objd >= 1)){
                     thisPackage.Type = "Object";
                     thisPackage.Mesh = true;
                     thisPackage.Recolor = true;
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else if ((typeDict.TryGetValue("RLE2", out rle) && rle >= 1) && (typeDict.TryGetValue("CASP", out casp) && casp >= 1) && (typeDict.TryGetValue("GEOM", out geom) && geom >= 1)){
                     thisPackage.Type = "CAS Part";
-                    log.MakeLog(string.Format("This is a {0}!!", thisPackage.Type), true);
+                    LogMessage = string.Format("This is a {0}!!", thisPackage.Type);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 } else {
                     log.MakeLog("Unable to identify package.", true);
                     thisPackage.Type = "UNKNOWN";
@@ -2416,26 +2851,16 @@ namespace SimsCCManager.Packages.Sims4Search
                 thisPackage.Orphan = true;
             }
             
-            if (GlobalVariables.sortonthego == true){
-                thisPackage = filesort.SortPackage(thisPackage);
-            }
-
-            log.MakeLog(string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString()), true);
-            log.MakeLog(string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString()), false);
-            log.MakeLog(string.Format("Adding {0} to packages database.", thisPackage.PackageName), true);
-
-            thisPackage = findOrphans.FindMatchesS4(thisPackage);
-
-            lock (GlobalVariables.AddPackages){
-                GlobalVariables.AddPackages.Add(thisPackage);
-            }
-
             /*try {
                 GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage, true);
             } catch (SQLiteException ex){
-                log.MakeLog(string.Format("Caught exception adding Sims 4 package to database. \n Exception: {0}", ex), true);
+                LogMessage = string.Format("Caught exception adding Sims 4 package to database. \n Exception: {0}", ex);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             }
-            log.MakeLog(string.Format("Added {0} to packages database successfully.", thisPackage.PackageName), true);
+            LogMessage = string.Format("Added {0} to packages database successfully.", thisPackage.PackageName);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
             List<PackageFile> closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);            
             GlobalVariables.DatabaseConnection.Delete(closingquery[0]);
@@ -2447,12 +2872,34 @@ namespace SimsCCManager.Packages.Sims4Search
                                 ts.Milliseconds / 10);
             GlobalVariables.currentpackage = packageinfo.Name;
             GlobalVariables.packagesRead++;
-            log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime), true);
-            log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime), false);
-            
 
 
-            log.MakeLog(string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name), true);
+            thisPackage = findOrphans.FindMatchesS4(thisPackage);
+            if (GlobalVariables.sortonthego == true){
+                thisPackage = filesort.SortPackage(thisPackage);
+            }
+            GlobalVariables.AddPackages.Enqueue(thisPackage);
+            PackageFile packageFile = new PackageFile(){Name = thisPackage.PackageName, Location = thisPackage.Location, Game = thisPackage.Game};
+            GlobalVariables.RemovePackages.Enqueue(packageFile);
+            log.MakeLog(string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString()), false);
+            LogMessage = string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString());
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+            log.MakeLog(string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString()), false);
+            LogMessage = string.Format("Adding {0} to packages database.", thisPackage.PackageName);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
+            LogMessage = string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+            log.MakeLog(string.Format("Reading file {0} took {1}", thisPackage.PackageName, elapsedtime), false);           
+
+            thisPackage = new();
+            LogMessage = string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
+            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+            if(GlobalVariables.highdebug == false) log.MakeLog(string.Format("Log Dumped from StringBuilder: \n {0}", LogFile.ToString()), true);
             return;
         }
 

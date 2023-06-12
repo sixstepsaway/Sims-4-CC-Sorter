@@ -192,6 +192,15 @@ namespace SimsCCManager.SortingUIResults {
             log.MakeLog("Closing application.", false);
             cts.Cancel();
             Thread.Sleep(2000);
+            GlobalVariables.InstancesCacheConnection.Commit();
+            GlobalVariables.InstancesCacheConnection.Close();
+            GlobalVariables.S4FunctionTypesConnection.Commit();
+            GlobalVariables.S4FunctionTypesConnection.Close();
+            GlobalVariables.S4OverridesConnection.Commit();
+            GlobalVariables.S4OverridesConnection.Close();
+            GlobalVariables.S4SpecificOverridesConnection.Commit();
+            GlobalVariables.S4SpecificOverridesConnection.Close();
+            GlobalVariables.DatabaseConnection.Commit();
             GlobalVariables.DatabaseConnection.Close();
             System.Windows.Application.Current.Shutdown();
         }

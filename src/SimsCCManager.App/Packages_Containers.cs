@@ -42,9 +42,7 @@ namespace SimsCCManager.Packages.Containers
         /// <summary>
         /// Basic package file with no full information yet; game version, whether it's broken, and whether it's being processed or waiting to be processed.
         /// </summary>
-        [PrimaryKey, AutoIncrement]
-        public int ID {get; set;}
-        [Indexed]
+        [Indexed, PrimaryKey]
         [Column("Name")]
         public string Name {get; set;}
         [Column("Location")]
@@ -53,7 +51,6 @@ namespace SimsCCManager.Packages.Containers
         public int Game {get; set;}
         [Column("Broken")]
         public bool Broken {get; set;}
-        public string Status {get; set;} //Pending or Processing, then removed
     }
 
     [Table("SP_TagsList")]
@@ -873,43 +870,90 @@ namespace SimsCCManager.Packages.Containers
         public string Description {get; set;}
     }
 
-    public class InstancesCacheRecolors {
-        [PrimaryKey]
-        [Column("Key")]
-        public string Key {get; set;}
-        [Column("PackageName")]
-        public string PackageName {get; set;}
-        [Column("MatchingMesh")]
-        public string MatchingMesh {get; set;}        
-    }
-    public class InstancesCacheMeshes {
+    [Table("Sims2Meshes")]
+    public class InstancesMeshesS2 
+    {
         [PrimaryKey]
         [Column("Key")]
         public string Key {get; set;}
         [Column("PackageName")]
         public string PackageName {get; set;}
         [Column("MatchingRecolors")]
-        [TextBlob("MatchingRecolorsBlobbed")]
-        public List<string> MatchingRecolors {get; set;}        
-        public string MatchingRecolorsBlobbed {get; set;}    
-
-        public InstancesCacheMeshes(){
-            MatchingRecolors = new List<string>();
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<InstancesRecolorsS2> MatchingRecolors {get; set;}
+        public InstancesMeshesS2(){
+            MatchingRecolors = new List<InstancesRecolorsS2>();
         }
-    }
-
-    [Table("Sims2Meshes")]
-    public class InstancesMeshesS2 : InstancesCacheMeshes {};
+    };
     [Table("Sims3Meshes")]
-    public class InstancesMeshesS3 : InstancesCacheMeshes {};
+    public class InstancesMeshesS3 
+    {
+        [PrimaryKey]
+        [Column("Key")]
+        public string Key {get; set;}
+        [Column("PackageName")]
+        public string PackageName {get; set;}
+        [Column("MatchingRecolors")]
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<InstancesRecolorsS3> MatchingRecolors {get; set;}
+        public InstancesMeshesS3(){
+            MatchingRecolors = new List<InstancesRecolorsS3>();
+        }
+    };
     [Table("Sims4Meshes")]
-    public class InstancesMeshesS4 : InstancesCacheMeshes {};
+    public class InstancesMeshesS4 
+    {
+        [PrimaryKey]
+        [Column("Key")]
+        public string Key {get; set;}
+        [Column("PackageName")]
+        public string PackageName {get; set;}
+        [Column("MatchingRecolors")]
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<InstancesRecolorsS4> MatchingRecolors {get; set;}
+        public InstancesMeshesS4(){
+            MatchingRecolors = new List<InstancesRecolorsS4>();
+        }
+    };
     [Table("Sims2Recolors")]
-    public class InstancesRecolorsS2 : InstancesCacheRecolors {};
+    public class InstancesRecolorsS2 {
+        [PrimaryKey]
+        [Column("Key")]
+        public string Key {get; set;}
+        [Column("PackageName")]
+        public string PackageName {get; set;}
+        [Column("MatchingMesh")]
+        [ManyToOne(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public InstancesMeshesS2 MatchingMesh {get; set;}   
+        [ForeignKey(typeof(InstancesMeshesS2))]
+        public string MeshKey {get; set;}     
+    };
     [Table("Sims3Recolors")]
-    public class InstancesRecolorsS3 : InstancesCacheRecolors {};
+    public class InstancesRecolorsS3 
+    {
+        [PrimaryKey]
+        [Column("Key")]
+        public string Key {get; set;}
+        [Column("PackageName")]
+        public string PackageName {get; set;}
+        [Column("MatchingMesh")]
+        [ManyToOne(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public InstancesMeshesS3 MatchingMesh {get; set;} 
+        [ForeignKey(typeof(InstancesMeshesS3))]
+        public string MeshKey {get; set;}       
+    };
     [Table("Sims4Recolors")]
-    public class InstancesRecolorsS4 : InstancesCacheRecolors {};
-
-
+    public class InstancesRecolorsS4 
+    {
+        [PrimaryKey]
+        [Column("Key")]
+        public string Key {get; set;}
+        [Column("PackageName")]
+        public string PackageName {get; set;}
+        [Column("MatchingMesh")]
+        [ManyToOne(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public InstancesMeshesS4 MatchingMesh {get; set;}
+        [ForeignKey(typeof(InstancesMeshesS4))]
+        public string MeshKey {get; set;}
+    };
 }

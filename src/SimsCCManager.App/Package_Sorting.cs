@@ -46,6 +46,7 @@ namespace SimsCCManager.Packages.Sorting
         public static string S4DupesFolder = Path.Combine(SortedS4Folder, "_DUPLICATES");
         public static string DuplicatesFolderGeneral = Path.Combine(SortedFolder, "_DUPLICATES");
         string MergedSubFolder = "_MERGED";
+        string OrphanSubFolder = "_ORPHANS";
         //time periods
 
         public static string TPAll = "_00_All";
@@ -1099,6 +1100,31 @@ namespace SimsCCManager.Packages.Sorting
                 }
                 if(thisPackage.Game == 4){
                     moveloc = Path.Combine(SortedS4Folder, MergedSubFolder);
+                    if (!Directory.Exists(moveloc)){
+                        Methods.MakeFolder(moveloc);
+                    }
+                    newloc = Path.Combine(moveloc, thisPackage.PackageName);
+                }
+                thisPackage = MoveFile(thisPackage.Location, newloc, moveloc, thisPackage);
+                return thisPackage;
+            }
+            if (thisPackage.Orphan == true){
+                if(thisPackage.Game == 2){
+                    moveloc = Path.Combine(SortedS2Folder, OrphanSubFolder);
+                    if (!Directory.Exists(moveloc)){
+                        Methods.MakeFolder(moveloc);
+                    }
+                    newloc = Path.Combine(moveloc, thisPackage.PackageName);
+                }
+                if(thisPackage.Game == 3){
+                    moveloc = Path.Combine(SortedS3Folder, OrphanSubFolder);
+                    if (!Directory.Exists(moveloc)){
+                        Methods.MakeFolder(moveloc);
+                    }
+                    newloc = Path.Combine(moveloc, thisPackage.PackageName);
+                }
+                if(thisPackage.Game == 4){
+                    moveloc = Path.Combine(SortedS4Folder, OrphanSubFolder);
                     if (!Directory.Exists(moveloc)){
                         Methods.MakeFolder(moveloc);
                     }
