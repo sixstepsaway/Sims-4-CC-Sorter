@@ -844,10 +844,17 @@ namespace SimsCCManager.Packages.Containers
     }
 
     public class BatchPackages {
-        public List<PackageFile> Batches {get; set;}
+        public List<AllFiles> Batches {get; set;}
 
         public BatchPackages(){
-            Batches = new List<PackageFile>();
+            Batches = new List<AllFiles>();
+        }
+    }
+    public class BatchSimsPackages {
+        public List<SimsPackage> Batch {get; set;}
+
+        public BatchSimsPackages(){
+            Batch = new List<SimsPackage>();
         }
     }
 

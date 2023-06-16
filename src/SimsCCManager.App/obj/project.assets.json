@@ -29,6 +29,15 @@
           "lib/net5.0/Microsoft.Extensions.ObjectPool.dll": {}
         }
       },
+      "morelinq/3.4.2": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/MoreLinq.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/MoreLinq.dll": {}
+        }
+      },
       "Newtonsoft.Json/13.0.3": {
         "type": "package",
         "compile": {
@@ -475,6 +484,34 @@
         "lib/netstandard2.0/Microsoft.Extensions.ObjectPool.xml",
         "microsoft.extensions.objectpool.5.0.10.nupkg.sha512",
         "microsoft.extensions.objectpool.nuspec"
+      ]
+    },
+    "morelinq/3.4.2": {
+      "sha512": "nKdpt7Ai+xQO8PZ0YFTn13INGJcKO0Nx65kO/ut0zaDirRo6d7atedmW2l68YB3x7U4pOqTLdMfYsBys8KxA1Q==",
+      "type": "package",
+      "path": "morelinq/3.4.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "COPYING.txt",
+        "README.md",
+        "lib/net462/MoreLinq.dll",
+        "lib/net462/MoreLinq.pdb",
+        "lib/net462/MoreLinq.xml",
+        "lib/net6.0/MoreLinq.dll",
+        "lib/net6.0/MoreLinq.pdb",
+        "lib/net6.0/MoreLinq.xml",
+        "lib/netstandard1.0/MoreLinq.dll",
+        "lib/netstandard1.0/MoreLinq.pdb",
+        "lib/netstandard1.0/MoreLinq.xml",
+        "lib/netstandard2.0/MoreLinq.dll",
+        "lib/netstandard2.0/MoreLinq.pdb",
+        "lib/netstandard2.0/MoreLinq.xml",
+        "lib/netstandard2.1/MoreLinq.dll",
+        "lib/netstandard2.1/MoreLinq.pdb",
+        "lib/netstandard2.1/MoreLinq.xml",
+        "morelinq.3.4.2.nupkg.sha512",
+        "morelinq.nuspec"
       ]
     },
     "Newtonsoft.Json/13.0.3": {
@@ -1135,6 +1172,7 @@
       "System.Data.SQLite.Core >= 1.0.117",
       "System.ServiceModel.Primitives >= 4.10.2",
       "System.Threading.Tasks.Dataflow >= 7.0.0",
+      "morelinq >= 3.4.2",
       "sqlite-net-pcl >= 1.8.116"
     ]
   },
@@ -1213,6 +1251,10 @@
           "System.Threading.Tasks.Dataflow": {
             "target": "Package",
             "version": "[7.0.0, )"
+          },
+          "morelinq": {
+            "target": "Package",
+            "version": "[3.4.2, )"
           },
           "sqlite-net-pcl": {
             "target": "Package",

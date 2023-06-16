@@ -50,6 +50,7 @@ using SimsCCManager.Packages.Orphans;
 using SQLiteNetExtensions.Extensions;
 using System.IO.Packaging;
 using System.Windows.Media.Animation;
+using MoreLinq;
 
 namespace Sims_CC_Sorter
 {
@@ -108,6 +109,7 @@ namespace Sims_CC_Sorter
         private int iothreads = 0;
         private bool _runthreads = true;
         private int databaseBatchSize = 100;
+        private int packageReaderBatchSize = 100;
 
         private bool CurrentlyMovingAP = false;
         private bool CurrentlyMovingRP = false;
@@ -119,6 +121,8 @@ namespace Sims_CC_Sorter
         private bool CurrentlyMovingIMS2 = false;
         private bool CurrentlyMovingIMS3 = false;
         private bool CurrentlyMovingIMS4 = false;
+
+        private bool Processing = false;
 
         public static int maxi = 0;
         
@@ -153,7 +157,7 @@ namespace Sims_CC_Sorter
             }
             parallelSettings.MaxDegreeOfParallelism = threadstouse;
             
-            GlobalVariables.AddPackages.ContentChanged += AddPackages_CollectionChanged;
+            /*GlobalVariables.AddPackages.ContentChanged += AddPackages_CollectionChanged;
             GlobalVariables.ProcessingReader.ContentChanged += ProcessingReader_CollectionChanged;
             GlobalVariables.RemovePackages.ContentChanged += RemovePackages_CollectionChanged;
             GlobalVariables.AllFiles.ContentChanged += AllFiles_CollectionChanged;
@@ -162,7 +166,7 @@ namespace Sims_CC_Sorter
             GlobalVariables.InstancesRecolorsS3Col.ContentChanged += InstancesRecolorsS3Col_CollectionChanged;
             GlobalVariables.InstancesMeshesS3Col.ContentChanged += InstancesMeshesS3Col_CollectionChanged;
             GlobalVariables.InstancesRecolorsS4Col.ContentChanged += InstancesRecolorsS4Col_CollectionChanged;
-            GlobalVariables.InstancesMeshesS4Col.ContentChanged += InstancesMeshesS4Col_CollectionChanged;
+            GlobalVariables.InstancesMeshesS4Col.ContentChanged += InstancesMeshesS4Col_CollectionChanged;*/
 
 
 
@@ -582,8 +586,9 @@ namespace Sims_CC_Sorter
             
             
             var pragmas = new List<string>(){
-                "PRAGMA journal_mode=MEMORY",
-                "PRAGMA synchronous=EXTRA",
+                "PRAGMA journal_mode=WAL",
+                "PRAGMA synchronous=OFF",
+                "PRAGMA foreign_keys = ON",
                 "PRAGMA auto_vacuum=FULL",
                 "PRAGMA journal_size_limit=5000",
                 "PRAGMA default_cache_size=200"
@@ -592,7 +597,8 @@ namespace Sims_CC_Sorter
                 log.MakeLog(string.Format("Executing: {0}", pragma), true);
                 var result=GlobalVariables.DatabaseConnection.ExecuteScalar<string>(pragma);
             }   
-                new Thread(() => SortNewFolder(cts.Token)) {IsBackground = true}.Start();
+            
+            new Thread(() => SortNewFolder(cts.Token)) {IsBackground = true}.Start();
             
         }
 
@@ -653,16 +659,37 @@ namespace Sims_CC_Sorter
 
                 Task rp = Task.Run(() => {
                     //ReadPackages(token);
+                    //Processing = true;
+                    //new Thread(() => WatchAddPackages()) {IsBackground = true}.Start();
+                    //new Thread(() => WatchAllFiles()) {IsBackground = true}.Start();
+                    //new Thread(() => WatchProcessingReader()) {IsBackground = true}.Start();
+                    //new Thread(() => WatchRemovePackages()) {IsBackground = true}.Start();
+                    //new Thread(() => WatchInstancesRecolorsS2Col()) {IsBackground = true}.Start();
+                    //new Thread(() => WatchInstancesRecolorsS3Col()) {IsBackground = true}.Start();
+                    //new Thread(() => WatchInstancesRecolorsS4Col()) {IsBackground = true}.Start();
+                    //new Thread(() => WatchInstancesMeshesS2Col()) {IsBackground = true}.Start();
+                    //new Thread(() => WatchInstancesMeshesS3Col()) {IsBackground = true}.Start();
+                    //new Thread(() => WatchInstancesMeshesS4Col()) {IsBackground = true}.Start();
                     ReadPackagesPFE(allp);
                 }, token);
                 rp.Wait(token);
                 rp.Dispose();
+                Processing = false;
+
+                string elapsedtime = "";
                 
                 sw.Stop();
                 TimeSpan ts = sw.Elapsed;
-                string elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                if (ts.Days != 0){
+                    elapsedtime = String.Format("{4} days, {0:00}:{1:00}:{2:00}.{3:00}",
+                                    ts.Hours, ts.Minutes, ts.Seconds,
+                                    ts.Milliseconds / 10, ts.Days);
+                } else {
+                    elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
                                     ts.Hours, ts.Minutes, ts.Seconds,
                                     ts.Milliseconds / 10);
+                }
+                
                 
                 complete = true;  
 
@@ -703,18 +730,166 @@ namespace Sims_CC_Sorter
 
         #region Methods of Processing
 
-        private void ReadPackagesPFE(List<AllFiles> allp){
-            ParallelOptions ps = new();
-            ps.MaxDegreeOfParallelism = 250;
-            Task reader = Task.Run(() => {
-                /*foreach (AllFiles p in allp){
-                    initialprocess.CheckThrough(p.Location);
-                }*/
-                Parallel.ForEach(allp, p => {
-                    initialprocess.CheckThrough(p.Location);
-                });
+        private async void ReadPackagesPFE(List<AllFiles> allp){
+            Task doMath1 = Task.Run(async () => {
+                if (allp.Count > 100000){
+                    databaseBatchSize = (allp.Count / 1000) / 2;
+                } else if (allp.Count > 10000){
+                    databaseBatchSize = (allp.Count / 100) / 2;
+                } else if (allp.Count > 1000){
+                    databaseBatchSize = (allp.Count / 10) / 2;
+                } else {
+                    databaseBatchSize = 25;
+                }
+
+                if (allp.Count > 100000){
+                    packageReaderBatchSize = (allp.Count / 1000) / 2;
+                } else if (allp.Count > 10000){
+                    packageReaderBatchSize = (allp.Count / 100) / 2;
+                } else if (allp.Count > 1000){
+                    packageReaderBatchSize = (allp.Count / 10) / 2;
+                } else {
+                    packageReaderBatchSize = 25;
+                }
             });
-            reader.Wait();
+            doMath1.Wait();
+
+            int packageBatchesLow = 0;
+            int packageBatchesHigh = 0;
+            int filesReadNoOverflow = 0;
+            int packageOverflow = 0;
+            
+            Task doMath2 = Task.Run(async () => {
+                double packageBatchesMath = (double)allp.Count / packageReaderBatchSize;
+            
+                packageBatchesLow = (int)packageBatchesMath;
+                packageBatchesHigh = (int)Math.Ceiling(packageBatchesMath);
+                filesReadNoOverflow = packageBatchesLow * packageReaderBatchSize;
+                packageOverflow = allp.Count - filesReadNoOverflow;
+                log.MakeLog(string.Format("There will be {0} batches of packages.", packageBatchesHigh), true);
+                log.MakeLog(string.Format("The final batch will contain {0} files.", packageOverflow), true);
+                log.MakeLog(string.Format("Making batches list."), true);
+            });
+            doMath2.Wait();
+            
+            
+
+            var PackageBatches = new List<List<AllFiles>>();
+                    
+            for (int i = 0; i < packageBatchesHigh; i++)
+            {
+                PackageBatches.Add(allp.Skip(i * packageReaderBatchSize).Take(packageReaderBatchSize).ToList());
+            }
+
+            log.MakeLog("Listing batches.", true);            
+            log.MakeLog(string.Format("There are {0} batches to run.", PackageBatches.Count), true);
+
+            List<SimsPackage> list1 = new();
+            List<PackageFile> list2 = new();
+            List<PackageFile> list3 = new();
+            List<AllFiles> list4 = new();
+            List<InstancesRecolorsS2> list5 = new();
+            List<InstancesRecolorsS3> list6 = new();
+            List<InstancesRecolorsS4> list7 = new();
+            List<InstancesMeshesS2> list8 = new();
+            List<InstancesMeshesS3> list9 = new();
+            List<InstancesMeshesS4> list10 = new();
+            int batchnum = -1;
+            int totalitems = -1;
+            foreach (var batch in PackageBatches){
+                batchnum++;
+                Task reader = Task.Run(() => {
+                    int itemnum = -1;
+                    Parallel.ForEach(batch, parallelSettings, p => {
+                        itemnum++;
+                        totalitems++;
+                        log.MakeLog(string.Format("Processing item {0} of batch {1}. Total items processed: {2}/{3}.", itemnum, batchnum, totalitems, allp.Count), true);
+                        initialprocess.CheckThrough(p.Location);                        
+                    });
+                });
+                reader.Wait();
+
+                Task UpdateDatabase = Task.Run(() => {
+                    log.MakeLog(string.Format("Getting items produced by batch {0}.", batchnum), true);
+                    list1 = GlobalVariables.AddPackages.ToList();                    
+                    GlobalVariables.AddPackages.Clear();
+                    log.MakeLog(string.Format("Batch {0}: AddPackages cleared.", batchnum), true);
+                    list2 = GlobalVariables.RemovePackages.ToList();
+                    GlobalVariables.RemovePackages.Clear();
+                    log.MakeLog(string.Format("Batch {0}: RemovePackages cleared.", batchnum), true);
+                    list3 = GlobalVariables.ProcessingReader.ToList();
+                    GlobalVariables.ProcessingReader.Clear();                   
+                    log.MakeLog(string.Format("Batch {0}: ProcessingReader cleared.", batchnum), true);
+                    list4 = GlobalVariables.AllFiles.ToList();
+                    GlobalVariables.AllFiles.Clear();
+                    log.MakeLog(string.Format("Batch {0}: AllFiles cleared.", batchnum), true);
+                    list5 = GlobalVariables.InstancesRecolorsS2Col.ToList();
+                    GlobalVariables.InstancesRecolorsS2Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesRecolorsS2 cleared.", batchnum), true);
+                    list6 = GlobalVariables.InstancesRecolorsS3Col.ToList();
+                    GlobalVariables.InstancesRecolorsS3Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesRecolorsS3 cleared.", batchnum), true);
+                    list7 = GlobalVariables.InstancesRecolorsS4Col.ToList();
+                    GlobalVariables.InstancesRecolorsS4Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesRecolorsS4 cleared.", batchnum), true);
+                    list8 = GlobalVariables.InstancesMeshesS2Col.ToList();
+                    GlobalVariables.InstancesMeshesS2Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesMeshesS2 cleared.", batchnum), true);
+                    list9 = GlobalVariables.InstancesMeshesS3Col.ToList();
+                    GlobalVariables.InstancesMeshesS3Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesMeshesS3 cleared.", batchnum), true);
+                    list10 = GlobalVariables.InstancesMeshesS4Col.ToList();
+                    GlobalVariables.InstancesMeshesS4Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesMeshesS4 cleared.", batchnum), true);
+                    log.MakeLog(string.Format("Batch {0}: Finished getting items.", batchnum), true);
+                });                
+                UpdateDatabase.Wait();
+                log.MakeLog(string.Format("Sending items off for processing.", batchnum), true);
+                UpdateDatabases(list1, list2, list3, list4, list5, list6, list7, list8, list9, list10, batchnum);
+                list1 = new();
+                list2 = new();
+                list3 = new();
+                list4 = new();
+                list5 = new();
+                list6 = new();
+                list7 = new();
+                list8 = new();
+                list9 = new();
+                list10 = new();                
+            }         
+        }
+
+        private async Task UpdateDatabases(List<SimsPackage> list1, List<PackageFile> list2, List<PackageFile> list3, List<AllFiles> list4, List<InstancesRecolorsS2> list5, List<InstancesRecolorsS3> list6, List<InstancesRecolorsS4> list7, List<InstancesMeshesS2> list8, List<InstancesMeshesS3> list9, List<InstancesMeshesS4> list10, int batchnum){
+            GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(list1, true);
+            log.MakeLog(string.Format("Batch {0}: {1} Items in AddPackages added to Database.", batchnum, list1.Count), true);
+            
+            GlobalVariables.DatabaseConnection.DeleteAll(list2, true);
+            log.MakeLog(string.Format("Batch {0}: {1} Items in RemovePackages added to Database.", batchnum, list2.Count), true);
+
+            GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(list3, true);
+            log.MakeLog(string.Format("Batch {0}: {1} Items in processingReader added to Database.", batchnum, list3.Count), true);
+
+            GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(list4, true);
+            log.MakeLog(string.Format("Batch {0}: {1} Items in AllFiles added to Database.", batchnum, list4.Count), true);
+
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list5, true);
+            log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesRecolorsS2 added to Database.", batchnum, list5.Count), true);
+
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list6, true);
+            log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesRecolorsS3 added to Database.", batchnum, list6.Count), true);
+            
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list7, true);
+            log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesRecolorsS4 added to Database.", batchnum, list7.Count), true);
+            
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list5, true);
+            log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesMeshesS2 added to Database.", batchnum, list8.Count), true);
+            
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list6, true);
+            log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesMeshesS3 added to Database.", batchnum, list9.Count), true);
+            
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list7, true);
+            log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesMeshesS4 added to Database.", batchnum, list10.Count), true);
+            
         }
 
         private async void CheckObservableCollections(){
@@ -885,15 +1060,15 @@ namespace Sims_CC_Sorter
                             } else {
                                 files.Add(new FileInfo(file));
                                 UpdateProgressBar(file, "Acquiring");
-                                log.MakeLog(string.Format("File {1}: Adding {0} to list.", file, c), true); 
-                                log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true);
+                                //log.MakeLog(string.Format("File {1}: Adding {0} to list.", file, c), true); 
+                                //log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true);
                             }
                         });
                     } else {
                         files.Add(new FileInfo(file));
                         UpdateProgressBar(file, "Acquiring");
-                        log.MakeLog(string.Format("File {1}: Adding {0} to list.", file, c), true); 
-                        log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true);
+                        //log.MakeLog(string.Format("File {1}: Adding {0} to list.", file, c), true); 
+                        //log.MakeLog(string.Format("'files' contains {0} items.", files.Count), true);
                     }
                     c++;
                 }
@@ -1145,8 +1320,6 @@ namespace Sims_CC_Sorter
                 try {
                     log.MakeLog(string.Format("Inserting 'allfiles' with {0} items.", allfiles.Count), true);
                     GlobalVariables.DatabaseConnection.InsertAll(allfiles);
-                    log.MakeLog(string.Format("Inserting 'packagefiles' with {0} items.", packagefiles.Count), true);
-                    GlobalVariables.DatabaseConnection.InsertAll(packagefiles);
                 } catch (SQLite.SQLiteException e) {
                     Console.WriteLine(string.Format("Inserting sorted files to database failed. Exception: {0}", e.Message));
                 }                    
@@ -1228,458 +1401,383 @@ namespace Sims_CC_Sorter
             complete = initialprocess.CheckThrough(location);
         }
 
-        void AddToDatabase(string source){
-                       
-            if (source == "AddPackages"){
-                CurrentlyMovingAP = true; 
-                Task get = Task.Run(() => {
-                    List<SimsPackage> sp = new();
-                    for (int i = 0; i < GlobalVariables.AddPackages.Count; i++){
-                        GlobalVariables.AddPackages.TryDequeue(out var item);
-                        sp.Add(item);                        
+        private void WatchAddPackages(){
+            log.MakeLog("Reading AddPackages.", true);
+            bool logged = false;
+            int interval = 20*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            while (Processing == true){   
+                if (logged == false){
+                    log.MakeLog("Processing is true, so we're reading!", true);
+                    logged = true;
+                }
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.AddPackages.Count > databaseBatchSize){
+                        string term = "AP";
+                        log.MakeLog(string.Format("Found {0} files in {1}!", GlobalVariables.AddPackages.Count, term),true);
+                        if (CurrentlyMovingAP == true) {
+                            log.MakeLog(string.Format("It seems {0} is already processing, so we don't need to do anything.", term),true);
+                        } else {
+                            CurrentlyMovingAP = true;
+                            new Thread(() => {
+                                List<SimsPackage> sp = new();
+                                for (int i = 0; i < GlobalVariables.AddPackages.Count; i++){                        
+                                    GlobalVariables.AddPackages.TryDequeue(out var item);
+                                    log.MakeLog(string.Format("Adding {0} to {1} list.", item.PackageName, term),true);
+                                    sp.Add(item);
+                                }
+                                GlobalVariables.DatabaseConnection.InsertAllWithChildren(sp, true);
+                                log.MakeLog(string.Format("Added {0} items to {1} database.", sp.Count, term), true);
+                                 
+                            }){IsBackground = true}.Start();
+                            CurrentlyMovingAP = false;
+                        }                    
                     }
-                    GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(sp, true);
-                });
-                get.Wait();   
-                CurrentlyMovingAP = false;            
-            }
-            if (source == "RemovePackages"){
-                CurrentlyMovingRP = true;
-                Task get = Task.Run(() => {
-                    List<PackageFile> pf = new();
-                    for (int i = 0; i < GlobalVariables.RemovePackages.Count; i++){
-                        GlobalVariables.RemovePackages.TryDequeue(out var item); 
-                        pf.Add(item);                         
-                    }
-                    GlobalVariables.DatabaseConnection.DeleteAll(pf, true);
-                });
-                get.Wait();
-                CurrentlyMovingRP = false;                
-            }
-
-            
-            if (source == "ProcessingReader"){
-                CurrentlyMovingPR = true;
-                Task get = Task.Run(() => {
-                    List<PackageFile> pf = new();
-                    for (int i = 0; i < GlobalVariables.ProcessingReader.Count; i++){
-                        GlobalVariables.ProcessingReader.TryDequeue(out var item);
-                        pf.Add(item);
-                    }
-                    GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(pf, true);
-                });
-                get.Wait();      
-                CurrentlyMovingPR = false;          
-            }
-
-            if (source == "AllFiles"){
-                CurrentlyMovingAF = true;
-                Task get = Task.Run(() => {
-                    List<AllFiles> af = new();
-                    for (int i = 0; i < GlobalVariables.AllFiles.Count; i++){
-                        GlobalVariables.AllFiles.TryDequeue(out var item);
-                        af.Add(item);
-                    }
-                    GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(af, true);
-                });
-                get.Wait();
-                CurrentlyMovingAF = false;
-            }
-
-            if (source == "IRS2"){
-                CurrentlyMovingIRS2 = true;
-                Task get = Task.Run(() => {
-                    List<InstancesRecolorsS2> irs2 = new();
-                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS2Col.Count; i++){
-                        GlobalVariables.InstancesRecolorsS2Col.TryDequeue(out var item);
-                        irs2.Add(item);
-                    }
-                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(irs2, true);
-                });
-                get.Wait();  
-                CurrentlyMovingIRS2 = false;
-            }
-            if (source == "IRS3"){
-                CurrentlyMovingIRS3 = true;
-                Task get = Task.Run(() => {
-                    List<InstancesRecolorsS3> irs3 = new();
-                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS3Col.Count; i++){
-                        GlobalVariables.InstancesRecolorsS3Col.TryDequeue(out var item);
-                        irs3.Add(item);
-                    }
-                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(irs3, true);
-                });
-                get.Wait();  
-                CurrentlyMovingIRS3 = false;
-            }
-            if (source == "IRS4"){
-                CurrentlyMovingIRS4 = true;
-                Task get = Task.Run(() => {
-                    List<InstancesRecolorsS4> irs4 = new();
-                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS4Col.Count; i++){
-                        GlobalVariables.InstancesRecolorsS4Col.TryDequeue(out var item);
-                        irs4.Add(item);
-                    }
-                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(irs4, true);
-                });
-                get.Wait();
-                CurrentlyMovingIRS4 = false;
-            }
-            
-            if (source == "IMS2"){
-                CurrentlyMovingIMS2 = true;
-                Task get = Task.Run(() => {
-                    List<InstancesMeshesS2> ims2 = new();
-                    for (int i = 0; i < GlobalVariables.InstancesMeshesS2Col.Count; i++){
-                        GlobalVariables.InstancesMeshesS2Col.TryDequeue(out var item);
-                        ims2.Add(item);                        
-                    }
-                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(ims2, true);
-                });
-                get.Wait();
-                CurrentlyMovingIMS2 = false;
-            }
-            if (source == "IMS3"){
-                CurrentlyMovingIMS3 = true;
-                Task get = Task.Run(() => {
-                    List<InstancesMeshesS3> ims3 = new();
-                    for (int i = 0; i < GlobalVariables.InstancesMeshesS3Col.Count; i++){
-                        GlobalVariables.InstancesMeshesS3Col.TryDequeue(out var item);
-                        ims3.Add(item);
-                    }
-                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(ims3, true);
-                });
-                get.Wait();   
-                CurrentlyMovingIMS3 = false;
-            }
-            if (source == "IMS4"){
-                CurrentlyMovingIMS4 = true;
-                Task get = Task.Run(() => {
-                    List<InstancesMeshesS4> ims4 = new();
-                    for (int i = 0; i < GlobalVariables.InstancesMeshesS4Col.Count; i++){
-                        GlobalVariables.InstancesMeshesS4Col.TryDequeue(out var item);
-                        ims4.Add(item);
-                    }
-                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(ims4, true);
-                });
-                get.Wait();
-                CurrentlyMovingIMS4 = false;
+                }
+                else {
+                    Thread.Sleep(1);
+                } 
             }
         }
 
-
-
-        void AddPackages_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<SimsPackage> args)
-        {
-            switch (args.Action)
-            {
-                case NotifyConcurrentQueueChangedAction.Enqueue:
-                    {
-                        if (CurrentlyMovingAP == true) break;
-                        int vcount = GlobalVariables.AddPackages.Count;                        
-                        if (vcount >= databaseBatchSize){
-                            new Thread(() => AddToDatabase("AddPackages")){IsBackground = true}.Start();
-                        }                        
-                        break;
-                    }
-                case NotifyConcurrentQueueChangedAction.Dequeue:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Peek:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Empty:
-                    {
-                        break;
-                    }
-            }
-        }
-        void RemovePackages_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<PackageFile> args)
-        {
-            switch (args.Action)
-            {
-                case NotifyConcurrentQueueChangedAction.Enqueue:
-                    {
-                        if (CurrentlyMovingRP == true) break;
-                        int vcount = GlobalVariables.RemovePackages.Count;
-                        if (vcount >= databaseBatchSize){
-                            new Thread(() => AddToDatabase("RemovePackages")){IsBackground = true}.Start();                         
+        private void WatchRemovePackages(){
+            log.MakeLog("Reading RemovePackages.", true);
+            bool logged = false;
+            int interval = 25*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            while (Processing == true){   
+                if (logged == false){
+                    log.MakeLog("Processing is true, so we're reading!", true);
+                    logged = true;
+                }
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.RemovePackages.Count > databaseBatchSize){
+                        string term = "RP";
+                        log.MakeLog(string.Format("Found {0} files in {1}!", GlobalVariables.RemovePackages.Count, term),true);
+                        if (CurrentlyMovingRP == true)  {
+                            log.MakeLog(string.Format("It seems {0} is already processing, so we don't need to do anything.", term),true);
+                        } else {
+                            CurrentlyMovingRP = true; 
+                            new Thread(() => {
+                                List<PackageFile> pf = new();
+                                for (int i = 0; i < GlobalVariables.RemovePackages.Count; i++){
+                                    GlobalVariables.RemovePackages.TryDequeue(out var item); 
+                                    log.MakeLog(string.Format("Adding {0} to {1} list.", item.Name, term),true);
+                                    pf.Add(item);                         
+                                }
+                                GlobalVariables.DatabaseConnection.DeleteAll(pf, true);
+                                log.MakeLog(string.Format("Added {0} items to {1} database.", pf.Count, term), true);
+                            }){IsBackground = true}.Start();
+                            CurrentlyMovingRP = false; 
                         }
-                        break;
                     }
-                case NotifyConcurrentQueueChangedAction.Dequeue:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Peek:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Empty:
-                    {
-                        break;
-                    }
+                } else {
+                    Thread.Sleep(1);
+                }      
             }
         }
 
-        void ProcessingReader_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<PackageFile> args)
-        {
-            switch (args.Action)
-            {
-                case NotifyConcurrentQueueChangedAction.Enqueue:
-                    {                        
-                        if (CurrentlyMovingPR == true) break;
-                        int vcount = GlobalVariables.ProcessingReader.Count;
-                        if (vcount >= databaseBatchSize){
-                            new Thread(() => AddToDatabase("ProcessingReader")){IsBackground = true}.Start();
+        private void WatchProcessingReader(){
+            log.MakeLog("Reading ProcessingReader.", true);
+            bool logged = false;
+            int interval = 30*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            while (Processing == true){   
+                if (logged == false){
+                    log.MakeLog("Processing is true, so we're reading!", true);
+                    logged = true;
+                }
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.ProcessingReader.Count > databaseBatchSize){
+                        string term = "PR";
+                        log.MakeLog(string.Format("Found {0} files in {1}!", GlobalVariables.ProcessingReader.Count, term),true);
+                        if (CurrentlyMovingPR == true)  {
+                            log.MakeLog(string.Format("It seems {0} is already processing, so we don't need to do anything.", term),true);
+                        } else {
+                            CurrentlyMovingPR = true;
+                            new Thread(() => {
+                                List<PackageFile> pf = new();
+                                for (int i = 0; i < GlobalVariables.ProcessingReader.Count; i++){
+                                    GlobalVariables.ProcessingReader.TryDequeue(out var item);
+                                    log.MakeLog(string.Format("Adding {0} to {1} list.", item.Name, term),true);
+                                    pf.Add(item);
+                                }
+                                GlobalVariables.DatabaseConnection.InsertAllWithChildren(pf, true);
+                                log.MakeLog(string.Format("Added {0} items to {1} database.", pf.Count, term), true);       
+                            }){IsBackground = true}.Start();
+                            CurrentlyMovingPR = false;
                         }
-                        break;
                     }
-
-                case NotifyConcurrentQueueChangedAction.Dequeue:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Peek:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Empty:
-                    {
-                        break;
-                    }
+                } else {
+                    Thread.Sleep(1);
+                } 
             }
         }
-        void AllFiles_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<AllFiles> args)
-        {
-            switch (args.Action)
-            {
-                case NotifyConcurrentQueueChangedAction.Enqueue:
-                    {
-                        if (CurrentlyMovingAF == true) break;
-                        int vcount = GlobalVariables.AllFiles.Count;
-                        if (vcount >= databaseBatchSize){
-                            new Thread(() => AddToDatabase("AllFiles")){IsBackground = true}.Start();
+
+        private void WatchAllFiles(){
+            log.MakeLog("Reading AF.", true);
+            bool logged = false;
+            int interval = 35*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            while (Processing == true){                   
+                if (logged == false){
+                    log.MakeLog("Processing is true, so we're reading!", true);
+                    logged = true;
+                }
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.AllFiles.Count > databaseBatchSize){
+                        string term = "AF";
+                        log.MakeLog(string.Format("Found {0} files in {1}!", GlobalVariables.AllFiles.Count, term),true);
+                        if (CurrentlyMovingAF == true) {
+                            log.MakeLog(string.Format("It seems {0} is already processing, so we don't need to do anything.", term),true);
+                        } else {
+                            CurrentlyMovingAF = true;
+                            new Thread(() => {
+                                List<AllFiles> af = new();
+                                for (int i = 0; i < GlobalVariables.AllFiles.Count; i++){
+                                    GlobalVariables.AllFiles.TryDequeue(out var item);
+                                    log.MakeLog(string.Format("Adding {0} to {1} list.", item.Name, term),true);
+                                    af.Add(item);
+                                }
+                                GlobalVariables.DatabaseConnection.InsertAllWithChildren(af, true);
+                                log.MakeLog(string.Format("Added {0} items to {1} database.", af.Count, term), true);
+                            }){IsBackground = true}.Start();
+                            CurrentlyMovingAF = false;
                         }
-                        break;
                     }
+                } else {
+                    Thread.Sleep(1);
+                }
+            }            
+        }
 
-                case NotifyConcurrentQueueChangedAction.Dequeue:
-                    {
-                        break;
+        private void WatchInstancesRecolorsS2Col(){
+            log.MakeLog("Reading IRS2.", true);
+            bool logged = false;
+            int interval = 40*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            while (Processing == true){   
+                if (logged == false){
+                    log.MakeLog("Processing is true, so we're reading!", true);
+                    logged = true;
+                }
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.InstancesRecolorsS2Col.Count > databaseBatchSize){
+                        string term = "IRS2";
+                        log.MakeLog(string.Format("Found {0} files in {1}!", GlobalVariables.InstancesRecolorsS2Col.Count, term),true);
+                        if (CurrentlyMovingIRS2 == true) {
+                            log.MakeLog(string.Format("It seems {0} is already processing, so we don't need to do anything.", term),true);
+                        } else {
+                            CurrentlyMovingIRS2 = true;
+                            new Thread(() => {
+                                List<InstancesRecolorsS2> irs2 = new();
+                                for (int i = 0; i < GlobalVariables.InstancesRecolorsS2Col.Count; i++){
+                                    GlobalVariables.InstancesRecolorsS2Col.TryDequeue(out var item);
+                                    log.MakeLog(string.Format("Adding {0} to {1} list.", item.PackageName, term),true);
+                                    irs2.Add(item);
+                                }
+                                GlobalVariables.InstancesCacheConnection.InsertAllWithChildren(irs2, true);
+                                log.MakeLog(string.Format("Added {0} items to {1} database.", irs2.Count, term), true);
+                                
+                            }){IsBackground = true}.Start();
+                            CurrentlyMovingIRS2 = false;
+                        }
                     }
+                } else {
+                    Thread.Sleep(1);
+                }
+            }            
+        }
 
-                case NotifyConcurrentQueueChangedAction.Peek:
-                    {
-                        break;
+        private void WatchInstancesRecolorsS3Col(){
+            log.MakeLog("Reading IRS3.", true);
+            bool logged = false;
+            int interval = 45*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            while (Processing == true){   
+                if (logged == false){
+                    log.MakeLog("Processing is true, so we're reading!", true);
+                    logged = true;
+                }
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.InstancesRecolorsS3Col.Count > databaseBatchSize){
+                        string term = "IRS3";
+                        log.MakeLog(string.Format("Found {0} files in {1}!", GlobalVariables.InstancesRecolorsS3Col.Count, term),true);
+                        if (CurrentlyMovingIRS3 == true) {
+                            log.MakeLog(string.Format("It seems {0} is already processing, so we don't need to do anything.", term),true);
+                        } else {
+                            CurrentlyMovingIRS3 = true;
+                            new Thread(() => {
+                                List<InstancesRecolorsS3> irs3 = new();
+                                for (int i = 0; i < GlobalVariables.InstancesRecolorsS3Col.Count; i++){
+                                    GlobalVariables.InstancesRecolorsS3Col.TryDequeue(out var item);
+                                    log.MakeLog(string.Format("Adding {0} to {1} list.", item.PackageName, term),true);
+                                    irs3.Add(item);
+                                }
+                                GlobalVariables.InstancesCacheConnection.InsertAllWithChildren(irs3, true);
+                                log.MakeLog(string.Format("Added {0} items to {1} database.", irs3.Count, term), true);
+                                
+                            }){IsBackground = true}.Start();
+                            CurrentlyMovingIRS3 = false;
+                        }                    
                     }
+                } else {
+                    Thread.Sleep(1);
+                }
+            }            
+        }
 
-                case NotifyConcurrentQueueChangedAction.Empty:
-                    {
-                        break;
+        private void WatchInstancesRecolorsS4Col(){
+            log.MakeLog("Reading IRS4.", true);
+            bool logged = false;
+            int interval = 50*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            while (Processing == true){   
+                if (logged == false){
+                    log.MakeLog("Processing is true, so we're reading!", true);
+                    logged = true;
+                }
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.InstancesRecolorsS4Col.Count > databaseBatchSize){
+                        string term = "IRS4";
+                        log.MakeLog(string.Format("Found {0} files in {1}!", GlobalVariables.InstancesRecolorsS4Col.Count, term),true);
+                        if (CurrentlyMovingIRS4 == true)  {
+                            log.MakeLog(string.Format("It seems {0} is already processing, so we don't need to do anything.", term),true);
+                        } else {
+                            CurrentlyMovingIRS4 = true;
+                            new Thread(() => {
+                                List<InstancesRecolorsS4> irs4 = new();
+                                for (int i = 0; i < GlobalVariables.InstancesRecolorsS4Col.Count; i++){
+                                    GlobalVariables.InstancesRecolorsS4Col.TryDequeue(out var item);
+                                    log.MakeLog(string.Format("Adding {0} to {1} list.", item.PackageName, term),true);
+                                    irs4.Add(item);
+                                }
+                                GlobalVariables.InstancesCacheConnection.InsertAllWithChildren(irs4, true);
+                                log.MakeLog(string.Format("Added {0} items to {1} database.", irs4.Count, term), true);
+                            }){IsBackground = true}.Start();
+                            CurrentlyMovingIRS4 = false;
+                        }
+                        
                     }
+                } else {
+                    Thread.Sleep(1);
+                }
+            }            
+        }
+
+        private void WatchInstancesMeshesS2Col(){
+            log.MakeLog("Reading IMS2.", true);
+            bool logged = false;
+            int interval = 55*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            while (Processing == true){   
+                if (logged == false){
+                    log.MakeLog("Processing is true, so we're reading!", true);
+                    logged = true;
+                }
             }
-        }        
-        void InstancesRecolorsS2Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesRecolorsS2> args)
-        {
-            switch (args.Action)
-            {
-                case NotifyConcurrentQueueChangedAction.Enqueue:
-                    {
-                        if (CurrentlyMovingIRS2 == true) break;
-                        int vcount = GlobalVariables.InstancesRecolorsS2Col.Count;
-                        if (vcount >= databaseBatchSize){
-                            new Thread(() => AddToDatabase("IRS2")){IsBackground = true}.Start();
-                        }
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Dequeue:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Peek:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Empty:
-                    {
-                        break;
-                    }
+            if(DateTime.Now >= dueTime){
+                if (GlobalVariables.InstancesMeshesS2Col.Count > databaseBatchSize){
+                    string term = "IMS2"; 
+                    log.MakeLog(string.Format("Found {0} files in {1}!", GlobalVariables.InstancesMeshesS2Col.Count, term),true);
+                    if (CurrentlyMovingIMS2 == true) {
+                        log.MakeLog(string.Format("It seems {0} is already processing, so we don't need to do anything.", term),true);
+                    } else {
+                        CurrentlyMovingIMS2 = true;
+                        new Thread(() => {                            
+                            List<InstancesMeshesS2> ims2 = new();
+                            for (int i = 0; i < GlobalVariables.InstancesMeshesS2Col.Count; i++){
+                                GlobalVariables.InstancesMeshesS2Col.TryDequeue(out var item);
+                                log.MakeLog(string.Format("Adding {0} to {1} list.", item.PackageName, term),true);
+                                ims2.Add(item);                        
+                            }
+                            GlobalVariables.InstancesCacheConnection.InsertAllWithChildren(ims2, true);
+                            log.MakeLog(string.Format("Added {0} items to {1} database.", ims2.Count, term), true);
+                            
+                        }){IsBackground = true}.Start();
+                        CurrentlyMovingIMS2 = false;
+                    }                    
+                } 
+            } else {
+                Thread.Sleep(1);
             }
         }
+
+        private void WatchInstancesMeshesS3Col(){
+            log.MakeLog("Reading IMS3.", true);
+            bool logged = false;
+            int interval = 60*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            while (Processing == true){   
+                if (logged == false){
+                    log.MakeLog("Processing is true, so we're reading!", true);
+                    logged = true;
+                }
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.InstancesMeshesS3Col.Count > databaseBatchSize){ 
+                        string term = "IMS3"; 
+                        log.MakeLog(string.Format("Found {0} files in {1}!", GlobalVariables.InstancesMeshesS3Col.Count, term),true);
+                        if (CurrentlyMovingIMS3 == true)  {
+                            log.MakeLog(string.Format("It seems {0} is already processing, so we don't need to do anything.", term),true);
+                        } else {
+                            CurrentlyMovingIMS3 = true;
+                            new Thread(() => {                                
+                                List<InstancesMeshesS3> ims3 = new();
+                                for (int i = 0; i < GlobalVariables.InstancesMeshesS3Col.Count; i++){
+                                    GlobalVariables.InstancesMeshesS3Col.TryDequeue(out var item);
+                                    log.MakeLog(string.Format("Adding {0} to {1} list.", item.PackageName, term),true);
+                                    ims3.Add(item);
+                                }
+                                GlobalVariables.InstancesCacheConnection.InsertAllWithChildren(ims3, true);
+                                log.MakeLog(string.Format("Added {0} items to {1} database.", ims3.Count, term), true);
+                            }){IsBackground = true}.Start();
+                            CurrentlyMovingIMS3 = false;
+                        }                    
+                    }
+                } else {
+                    Thread.Sleep(1);
+                }
+            }            
+        }
+
+        private void WatchInstancesMeshesS4Col(){
+            log.MakeLog("Reading IMS4.", true);
+            bool logged = false;
+            int interval = 65*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            while (Processing == true){   
+                if (logged == false){
+                    log.MakeLog("Processing is true, so we're reading!", true);
+                    logged = true;
+                }
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.InstancesMeshesS4Col.Count > databaseBatchSize){ 
+                        string term = "IMS4"; 
+                        log.MakeLog(string.Format("Found {0} files in {1}!", GlobalVariables.InstancesMeshesS4Col.Count, term),true);
+                        if (CurrentlyMovingIMS4 == true) {
+                            log.MakeLog(string.Format("It seems {0} is already processing, so we don't need to do anything.", term),true);
+                        } else {
+                            CurrentlyMovingIMS4 = true;
+                            new Thread(() => {
+                                List<InstancesMeshesS4> ims4 = new();
+                                for (int i = 0; i < GlobalVariables.InstancesMeshesS4Col.Count; i++){
+                                    GlobalVariables.InstancesMeshesS4Col.TryDequeue(out var item);
+                                    log.MakeLog(string.Format("Adding {0} to {1} list.", item.PackageName, term),true);
+                                    ims4.Add(item);
+                                }
+                                GlobalVariables.InstancesCacheConnection.InsertAllWithChildren(ims4, true);
+                                log.MakeLog(string.Format("Added {0} items to {1} database.", ims4.Count, term), true);
+                            }){IsBackground = true}.Start();
+                            CurrentlyMovingIMS4 = false;
+                        }                   
+                    }
+                } else {
+                    Thread.Sleep(1);
+                }
+            }
+        }
+
         
-        void InstancesRecolorsS3Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesRecolorsS3> args)
-        {
-            switch (args.Action)
-            {
-                case NotifyConcurrentQueueChangedAction.Enqueue:
-                    {
-                        if (CurrentlyMovingIRS3 == true) break;
-                        int vcount = GlobalVariables.InstancesRecolorsS3Col.Count;
-                        if (vcount >= databaseBatchSize){    
-                            new Thread(() => AddToDatabase("IRS3")){IsBackground = true}.Start();
-                        }
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Dequeue:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Peek:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Empty:
-                    {
-                        break;
-                    }
-            }
-        }
-        
-        void InstancesRecolorsS4Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesRecolorsS4> args)
-        {
-            switch (args.Action)
-            {
-                case NotifyConcurrentQueueChangedAction.Enqueue:
-                    {
-                        if (CurrentlyMovingIRS4 == true) break;
-                        int vcount = GlobalVariables.InstancesRecolorsS4Col.Count;
-                        if (vcount >= databaseBatchSize){
-                            new Thread(() => AddToDatabase("IRS4")){IsBackground = true}.Start();
-                        }
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Dequeue:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Peek:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Empty:
-                    {
-                        break;
-                    }
-            }
-        }
-        void InstancesMeshesS2Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesMeshesS2> args)
-        {
-            switch (args.Action)
-            {
-                case NotifyConcurrentQueueChangedAction.Enqueue:
-                    {
-                        if (CurrentlyMovingIMS2 == true) break;
-                        int vcount = GlobalVariables.InstancesMeshesS2Col.Count;
-                        if (vcount >= databaseBatchSize){   
-                            new Thread(() => AddToDatabase("IMS2")){IsBackground = true}.Start(); 
-                        }
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Dequeue:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Peek:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Empty:
-                    {
-                        break;
-                    }
-            }
-        }
-        
-        void InstancesMeshesS3Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesMeshesS3> args)
-        {
-            switch (args.Action)
-            {
-                case NotifyConcurrentQueueChangedAction.Enqueue:
-                    {
-                        if (CurrentlyMovingIMS3 == true) break;
-                        int vcount = GlobalVariables.InstancesMeshesS3Col.Count;
-                        if (vcount >= databaseBatchSize){       
-                            new Thread(() => AddToDatabase("IMS3")){IsBackground = true}.Start();
-                        }
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Dequeue:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Peek:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Empty:
-                    {
-                        break;
-                    }
-            }
-        }
-        
-        void InstancesMeshesS4Col_CollectionChanged(object sender, NotifyConcurrentQueueChangedEventArgs<InstancesMeshesS4> args)
-        {
-            switch (args.Action)
-            {
-                case NotifyConcurrentQueueChangedAction.Enqueue:
-                    {
-                        if (CurrentlyMovingIMS4 == true) break;
-                        int vcount = GlobalVariables.InstancesMeshesS4Col.Count;
-                        if (vcount >= databaseBatchSize){  
-                            new Thread(() => AddToDatabase("IMS4")){IsBackground = true}.Start(); 
-                        }
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Dequeue:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Peek:
-                    {
-                        break;
-                    }
-
-                case NotifyConcurrentQueueChangedAction.Empty:
-                    {
-                        break;
-                    }
-            }
-        }
-
-
-
-
-
-
-
-
         private void FindConflicts(){
             //GlobalVariables.DatabaseConnection.Query("select Packages.InstanceID from Packages INNER JOIN Ingredient_Recipe ON recipe_ID = Ingredient_Recipe.recipe_ID
             //Where Ingredient_ID = "oregano")            
@@ -1749,62 +1847,64 @@ namespace Sims_CC_Sorter
             Dispatcher.Invoke(new Action(() => mainProgressBar.Value++));
         }
 
-        private async void RunUpdateProgressBar(CancellationToken token){  
-            Task rp = Task.Run(() => {
-               while (runprogress == true)
-                {   
+        private void RunUpdateProgressBar(CancellationToken token){  
+            int interval = 5*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("Preparing to read {0} packages.", maxi)));
+            while (runprogress == true)
+            {
+                if(DateTime.Now >= dueTime){
                     if (GlobalVariables.packagesRead >= 0 && (!String.IsNullOrWhiteSpace(GlobalVariables.currentpackage))){
                         new Thread(() => AutoUpdateProgressBar()) {IsBackground = true}.Start();
                     }
-                    else 
-                    {
-                        Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("Preparing to read {0} packages.", maxi)));
-                    }                
-                } 
-            }, token);
-            rp.Wait(token);
-            rp.Dispose();
-            return;            
+                    dueTime = DateTime.Now.AddMilliseconds(interval);
+                } else {
+                    Thread.Sleep(1);
+                }
+            }
         }
 
         public void AutoUpdateProgressBar(){
-            //for the reading of the packages
-            //log.MakeLog("Updating progress bar.", true);
-            Dispatcher.Invoke(new Action(() => textCurrentPk.Text = string.Format("{0}/{1} - {2}", GlobalVariables.packagesRead, maxi, GlobalVariables.currentpackage)));
-            Dispatcher.Invoke(new Action(() => mainProgressBar.Value = GlobalVariables.packagesRead));
+            Dispatcher.Invoke(new Action(() => {
+                textCurrentPk.Text = string.Format("{0}/{1} - {2}", GlobalVariables.packagesRead, maxi, GlobalVariables.currentpackage);
+                mainProgressBar.Value = GlobalVariables.packagesRead;
+            }));
         }
 
         public void UpdateElasped(Stopwatch sw){
-            //log.MakeLog("Updating elapsed.", true);
-            List<string> times = new List<string>();
-            TimeSpan Elapsed = sw.Elapsed;
-            TimeSpan remaining = ((Elapsed / GlobalVariables.packagesRead) * maxi) - Elapsed;
-            string sofar = String.Format("{0:00}:{1:00}:{2:00}",
-                            Elapsed.Hours, Elapsed.Minutes, Elapsed.Seconds);
+            new Thread(() => {
+                List<string> times = new List<string>();
+                TimeSpan Elapsed = sw.Elapsed;
+                TimeSpan remaining = ((Elapsed / GlobalVariables.packagesRead) * maxi) - Elapsed;
+                string sofar = String.Format("{0:00}:{1:00}:{2:00}",
+                                Elapsed.Hours, Elapsed.Minutes, Elapsed.Seconds);
 
-            string togo = String.Format("{0:00}:{1:00}:{2:00}",
-                            remaining.Hours, remaining.Minutes, remaining.Seconds);
-            times.Add(sofar);
-            times.Add(togo);
-            Dispatcher.Invoke(new Action(() => timeRemaining.Text = string.Format("Elapsed: {0} | Remaining: {1}", times[0], times[1])));
+                string togo = String.Format("{0:00}:{1:00}:{2:00}",
+                                remaining.Hours, remaining.Minutes, remaining.Seconds);
+                times.Add(sofar);
+                times.Add(togo);
+                Dispatcher.Invoke(new Action(() => timeRemaining.Text = string.Format("Elapsed: {0} | Remaining: {1}", times[0], times[1])));
+            }){IsBackground = true}.Start();            
         }
 
-        private async void RunUpdateElapsed(Stopwatch sw, CancellationToken token){
-            Task rue = Task.Run(() => {
-                //log.MakeLog("Running run update elapsed.", true);
-                Dispatcher.Invoke(new Action(() => timeRemaining.Visibility = Visibility.Visible));
-                while (runprogress == true)
-                {
-                    if (GlobalVariables.packagesRead != 0){
+        private void RunUpdateElapsed(Stopwatch sw, CancellationToken token){
+            //log.MakeLog("Running run update elapsed.", true);
+            int interval = 1*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            Dispatcher.Invoke(new Action(() => timeRemaining.Visibility = Visibility.Visible));
+            while (runprogress == true)
+            {
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.packagesRead >= 0 && (!String.IsNullOrWhiteSpace(GlobalVariables.currentpackage))){
                         new Thread(() => UpdateElasped(sw)) {IsBackground = true}.Start();
                     }
+                dueTime = DateTime.Now.AddMilliseconds(interval);
                 }
-            }, token);
-            rue.Wait();
-            rue.Dispose();
-            return;            
+                else {
+                    Thread.Sleep(1);
+                }
+            }       
         }
-
 
         #endregion
               

@@ -48,11 +48,16 @@ namespace SimsCCManager.SortingUIResults {
         public static System.Windows.Controls.ListView resultsView = new System.Windows.Controls.ListView();
         ContextMenu contextmenu = new ContextMenu();
         public static System.Windows.Controls.TextBox searchbox = new System.Windows.Controls.TextBox();
+        public static System.Windows.Controls.TextBox gotobox = new System.Windows.Controls.TextBox();
         public static System.Windows.Controls.ComboBox comboBox = new System.Windows.Controls.ComboBox();
         public static System.Windows.Controls.ListView tagslist = new System.Windows.Controls.ListView();
         public static Grid tagsgrid = new Grid();
         public static Dictionary<string, string> comboboxoptions = new Dictionary<string, string>();
         public static int game = 0;
+        public static int pageNum = 0;
+        public static int actualpages = 0;
+        public static System.Windows.Controls.Label pageNumberLabel = new();
+        public static System.Windows.Controls.Label pageTotalLabel = new();
         
         public ResultsWindow(CancellationTokenSource cts) 
         {
@@ -67,7 +72,13 @@ namespace SimsCCManager.SortingUIResults {
             contextmenu = ResultsView.ContextMenu;
             DataContext = new PackagesViewModel(); 
             searchbox = SearchBox;
+            gotobox = GoToPageBox;
             comboBox = this.ComboBoxSearch;
+            pageNumberLabel = PageNumber;
+            pageTotalLabel = PageTotal;
+            
+
+
             List<string> comboboxsearch = new List<string>();
             comboboxoptions.Add("Package Name", "PackageName");
             comboboxoptions.Add("Title", "Title");
@@ -91,11 +102,26 @@ namespace SimsCCManager.SortingUIResults {
                 comboboxsearch.Add(kvp.Key);
             }
             this.ComboBoxSearch.ItemsSource = comboboxsearch;
+
+            
         }     
 
         private void ResultsWindow_Loaded(object sender, RoutedEventArgs e)
         {
             
+        }
+
+        private void NumericOnly(System.Object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            e.Handled = IsTextNumeric(e.Text);
+
+        }
+
+        private static bool IsTextNumeric(string str)
+        {
+            System.Text.RegularExpressions.Regex reg = new System.Text.RegularExpressions.Regex("[^0-9]");
+            return reg.IsMatch(str);
+
         }
 
         private void GameCheck(object sender, RoutedEventArgs e) {
@@ -182,6 +208,22 @@ namespace SimsCCManager.SortingUIResults {
                           
         }
 
+        private void PageFirst_Click(object sender, EventArgs e){
+            
+        }
+        private void PageForward_Click(object sender, EventArgs e){
+            
+        }
+        private void PageBack_Click(object sender, EventArgs e){
+            
+        }
+        private void PageLast_Click(object sender, EventArgs e){
+            
+        }
+
+
+
+
         
         private void showallfiles_Click(object sender, EventArgs e){
                         
@@ -254,7 +296,7 @@ namespace SimsCCManager.SortingUIResults {
             }
         }
 
-        private void ListViewHeader_Click (object sender, RoutedEventArgs e){
+        /*private void ListViewHeader_Click (object sender, RoutedEventArgs e){
             var headerClicked = e.OriginalSource as GridViewColumnHeader;
             ListSortDirection direction;
 
@@ -314,14 +356,18 @@ namespace SimsCCManager.SortingUIResults {
             SortDescription sd = new SortDescription(sortBy, direction);
             dataView.SortDescriptions.Add(sd);
             dataView.Refresh();
-        }
+        }*/
     }    
 
     public class PackagesViewModel : INotifyPropertyChanged{
         private ICollectionView _packagesView;
         private ICollectionView _tagsView;
         public event PropertyChangedEventHandler PropertyChanged;
-        private PackagesViewModel _selectedFile;  
+        private PackagesViewModel _selectedFile;
+        private List<SimsPackage> allPackages = new();
+        private int pages = 1;
+        private int itemsperpage = 100;
+        private List<List<SimsPackage>> pagesOfPackages = new();
 
         public ICollectionView Packages
         {
@@ -341,14 +387,33 @@ namespace SimsCCManager.SortingUIResults {
         }
 
         public object Resources { get; private set; }
-        ObservableCollection<SimsPackage> packages = new ObservableCollection<SimsPackage>();
+        List<SimsPackage> packages = new List<SimsPackage>();
         public static ObservableCollection<TagsList> tags = new ObservableCollection<TagsList>();
 
         public PackagesViewModel(){
-            packages = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
+            allPackages = GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>();
+            pages = (int)Math.Ceiling((double)allPackages.Count / (double)itemsperpage);
+            for (int i = 0; i < pages; i++)
+            {
+                pagesOfPackages.Add(allPackages.Skip(i * itemsperpage).Take(itemsperpage).ToList());
+            }
+            int c = 0;
+            foreach (List<SimsPackage> packagesList in pagesOfPackages){
+                c++;
+            }
+            ResultsWindow.actualpages = c;
+            
+            ResultsWindow.actualpages = pagesOfPackages.Count;
+            Console.WriteLine(string.Format("There are {0} pages and {1} were planned for.", pagesOfPackages.Count, pages));
+            ResultsWindow.pageNumberLabel.Content = ResultsWindow.pageNum.ToString();
+            ResultsWindow.pageTotalLabel.Content = pages.ToString();
+
+            packages = pagesOfPackages[ResultsWindow.pageNum];
             _tagsView = CollectionViewSource.GetDefaultView(tags);
+
             _packagesView = CollectionViewSource.GetDefaultView(packages);
-            _packagesView.Filter = SearchFilter;            
+            _packagesView.Filter = SearchFilter;      
+            ChangePage(pagesOfPackages[0]);
         }
 
         public PackagesViewModel SelectedFileInfo  
@@ -369,6 +434,316 @@ namespace SimsCCManager.SortingUIResults {
             ResultsWindow.resultsView.ItemsSource = _packagesView;
             _packagesView = CollectionViewSource.GetDefaultView(packages);
         }
+
+
+        
+        #region HEADERCLICKS
+
+        public bool Ascending = false;
+
+        public ICommand HeaderPackageName  
+        {  
+            get { return new DelegateCommand(this.Sort_HeaderPackageName); }  
+        }  
+        private void Sort_HeaderPackageName()  
+        { 
+            SortList("PackageName");
+        }
+        public ICommand HeaderTitle  
+        {  
+            get { return new DelegateCommand(this.Sort_HeaderTitle); }  
+        }  
+        private void Sort_HeaderTitle()  
+        { 
+            SortList("Title");
+        }
+        public ICommand HeaderType  
+        {  
+            get { return new DelegateCommand(this.Sort_HeaderType); }  
+        }  
+        private void Sort_HeaderType()  
+        { 
+            SortList("Type");
+        }
+        public ICommand HeaderDescription  
+        {  
+            get { return new DelegateCommand(this.Sort_HeaderDescription); }  
+        }  
+        private void Sort_HeaderDescription()  
+        { 
+            SortList("Description");
+        }
+        public ICommand HeaderFileSize  
+        {  
+            get { return new DelegateCommand(this.Sort_HeaderFileSize); }  
+        }  
+        private void Sort_HeaderFileSize()  
+        { 
+            SortList("FileSize");
+        }
+        public ICommand HeaderGameString  
+        {  
+            get { return new DelegateCommand(this.Sort_HeaderGameString); }  
+        }  
+        private void Sort_HeaderGameString()  
+        { 
+            SortList("GameString");
+        }
+        public ICommand HeaderFunction  
+        {  
+            get { return new DelegateCommand(this.Sort_HeaderFunction); }  
+        }  
+        private void Sort_HeaderFunction()  
+        { 
+            SortList("Function");
+        }
+        public ICommand HeaderFunctionSub  
+        {  
+            get { return new DelegateCommand(this.Sort_HeaderFunctionSub); }  
+        }  
+        private void Sort_HeaderFunctionSub()  
+        { 
+            SortList("FunctionSub");
+        }
+        public ICommand HeaderLocation  
+        {  
+            get { return new DelegateCommand(this.Sort_HeaderLocation); }  
+        }  
+        private void Sort_HeaderLocation()  
+        { 
+            SortList("Location");
+        }        
+        string sortby = "";
+        private void SortList(string column){
+            if (column == "PackageName"){
+                if (sortby == column){
+                    if (Ascending == false){
+                        Ascending = true;
+                        allPackages = allPackages.OrderBy(o => o.PackageName).ToList();
+                    } else {
+                        Ascending = false;
+                        allPackages = allPackages.OrderByDescending(o => o.PackageName).ToList();
+                    }
+                } else {
+                    Ascending = true;
+                    allPackages = allPackages.OrderBy(o => o.PackageName).ToList();
+                }                
+            } else if (column == "Title"){                
+                if (sortby == column){
+                    if (Ascending == false){
+                        Ascending = true;
+                        allPackages = allPackages.OrderBy(o => o.Title).ToList();
+                    } else {
+                        Ascending = false;
+                        allPackages = allPackages.OrderByDescending(o => o.Title).ToList();
+                    }
+                } else {
+                    Ascending = true;
+                    allPackages = allPackages.OrderBy(o => o.Title).ToList();
+                }   
+            } else if (column == "Type"){
+                if (sortby == column){
+                    if (Ascending == false){
+                        Ascending = true;
+                        allPackages = allPackages.OrderBy(o => o.Type).ToList();
+                    } else {
+                        Ascending = false;
+                        allPackages = allPackages.OrderByDescending(o => o.Type).ToList();
+                    }
+                } else {
+                    Ascending = true;
+                    allPackages = allPackages.OrderBy(o => o.Type).ToList();
+                }   
+            } else if (column == "Description"){
+                if (sortby == column){
+                    if (Ascending == false){
+                        Ascending = true;
+                        allPackages = allPackages.OrderBy(o => o.Description).ToList();
+                    } else {
+                        Ascending = false;
+                        allPackages = allPackages.OrderByDescending(o => o.Description).ToList();
+                    }
+                } else {
+                    Ascending = true;
+                    allPackages = allPackages.OrderBy(o => o.Description).ToList();
+                }   
+            } else if (column == "FileSize"){
+                if (sortby == column){
+                    if (Ascending == false){
+                        Ascending = true;
+                        allPackages = allPackages.OrderBy(o => o.FileSize).ToList();
+                    } else {
+                        Ascending = false;
+                        allPackages = allPackages.OrderByDescending(o => o.FileSize).ToList();
+                    }
+                } else {
+                    Ascending = true;
+                    allPackages = allPackages.OrderBy(o => o.FileSize).ToList();
+                }   
+            } else if (column == "GameString"){
+                if (sortby == column){
+                    if (Ascending == false){
+                        Ascending = true;
+                        allPackages = allPackages.OrderBy(o => o.GameString).ToList();
+                    } else {
+                        Ascending = false;
+                        allPackages = allPackages.OrderByDescending(o => o.GameString).ToList();
+                    }
+                } else {
+                    Ascending = true;
+                    allPackages = allPackages.OrderBy(o => o.GameString).ToList();
+                }   
+            } else if (column == "Function"){
+                if (sortby == column){
+                    if (Ascending == false){
+                        Ascending = true;
+                        allPackages = allPackages.OrderBy(o => o.Function).ToList();
+                    } else {
+                        Ascending = false;
+                        allPackages = allPackages.OrderByDescending(o => o.Function).ToList();
+                    }
+                } else {
+                    Ascending = true;
+                    allPackages = allPackages.OrderBy(o => o.Function).ToList();
+                }   
+            } else if (column == "FunctionSub"){
+                if (sortby == column){
+                    if (Ascending == false){
+                        Ascending = true;
+                        allPackages = allPackages.OrderBy(o => o.FunctionSubcategory).ToList();
+                    } else {
+                        Ascending = false;
+                        allPackages = allPackages.OrderByDescending(o => o.FunctionSubcategory).ToList();
+                    }
+                } else {
+                    Ascending = true;
+                    allPackages = allPackages.OrderBy(o => o.FunctionSubcategory).ToList();
+                }   
+            } else if (column == "Location"){
+                if (sortby == column){
+                    if (Ascending == false){
+                        Ascending = true;
+                        allPackages = allPackages.OrderBy(o => o.Location).ToList();
+                    } else {
+                        Ascending = false;
+                        allPackages = allPackages.OrderByDescending(o => o.Location).ToList();
+                    }
+                } else {
+                    Ascending = true;
+                    allPackages = allPackages.OrderBy(o => o.Location).ToList();
+                }   
+            }             
+            pagesOfPackages.Clear();
+            for (int i = 0; i < pages; i++)
+            {
+                pagesOfPackages.Add(allPackages.Skip(i * itemsperpage).Take(itemsperpage).ToList());
+            }
+            if (ResultsWindow.pageNum == ResultsWindow.actualpages){
+                ChangePage(pagesOfPackages[ResultsWindow.actualpages]);
+            } else if (ResultsWindow.pageNum == 0){
+                ChangePage(pagesOfPackages[0]);
+            } else {
+                ChangePage(pagesOfPackages[ResultsWindow.pageNum]);
+            }
+        }
+
+
+
+
+
+        #endregion
+
+        #region PAGES
+
+        public ICommand GoTo  
+        {  
+            get { return new DelegateCommand(this.GoToPage); }  
+        }  
+        private void GoToPage()  
+        { 
+            int gotonum = int.Parse(ResultsWindow.gotobox.Text);
+            if (gotonum <= ResultsWindow.actualpages && gotonum != 0){
+                ResultsWindow.pageNum = (int.Parse(ResultsWindow.gotobox.Text) - 1);
+                ChangePage(pagesOfPackages[ResultsWindow.pageNum]);
+            } else if (gotonum == ResultsWindow.actualpages + 1) {                
+                ChangePage(pagesOfPackages[ResultsWindow.actualpages]);
+            } else if (gotonum == 1) {                
+                ChangePage(pagesOfPackages[0]);
+            } else {
+                System.Windows.Forms.MessageBox.Show(string.Format("Enter a number between 1 and {0}.", ResultsWindow.actualpages));
+            }
+            
+        }
+
+        public ICommand PageFirst  
+        {  
+            get { return new DelegateCommand(this.SwaptoFirstPage); }  
+        }  
+        private void SwaptoFirstPage()  
+        { 
+            ResultsWindow.pageNum = 0;
+            Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
+            ChangePage(pagesOfPackages[0]);
+        }
+        
+        public ICommand PageLast  
+        {  
+            get { return new DelegateCommand(this.SwaptoLastPage); }  
+        }  
+        private void SwaptoLastPage()  
+        { 
+            ResultsWindow.pageNum = ResultsWindow.actualpages;
+            Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
+            ChangePage(pagesOfPackages[ResultsWindow.pageNum]);
+        }
+        
+        public ICommand PageForward  
+        {  
+            get { return new DelegateCommand(this.PageUp); }  
+        }  
+        private void PageUp()  
+        { 
+            if (ResultsWindow.pageNum == ResultsWindow.actualpages){
+                ResultsWindow.pageNum = 0;
+                Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
+                ChangePage(pagesOfPackages[0]);
+            } else {
+                ResultsWindow.pageNum++;
+                Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
+                ChangePage(pagesOfPackages[ResultsWindow.pageNum]);
+            }
+            
+        }
+        public ICommand PageBack  
+        {  
+            get { return new DelegateCommand(this.PageBackward); }  
+        }  
+        private void PageBackward()  
+        { 
+            if (ResultsWindow.pageNum == 0){
+                ResultsWindow.pageNum = ResultsWindow.actualpages;
+                Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
+                ChangePage(pagesOfPackages[ResultsWindow.actualpages]);
+            } else {
+                ResultsWindow.pageNum--;
+                Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
+                ChangePage(pagesOfPackages[ResultsWindow.pageNum]);
+            }            
+            
+        }
+
+        private void ChangePage(List<SimsPackage> page){
+            int maxpage = ResultsWindow.actualpages + 1;
+            int currentpage = ResultsWindow.pageNum + 1;
+            ResultsWindow.pageNumberLabel.Content = currentpage.ToString();
+            ResultsWindow.pageTotalLabel.Content = maxpage.ToString();
+            Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
+            packages = page;
+            ResultsWindow.resultsView.ItemsSource = _packagesView;
+            _packagesView = CollectionViewSource.GetDefaultView(packages);
+        }
+
+        #endregion
 
         private void RefreshTagViewer(){
             _tagsView = CollectionViewSource.GetDefaultView(tags);

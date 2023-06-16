@@ -53,6 +53,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="10"/>
                     <RowDefinition/>
+                    <RowDefinition Height="50"/>
                     <RowDefinition Height="120"/>
                     <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
@@ -78,7 +79,7 @@
                     </Button>
                     <Rectangle Height="2" Fill="#AAA1CC"/>
                 </StackPanel>                   
-                <ListView x:Name="ResultsView" Validation.ErrorTemplate="{x:Null}" IsSynchronizedWithCurrentItem="True" Style="{StaticResource ResultsDataGridStyle}" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Packages}" SelectedItem="{Binding SelectedFileInfo}" GridViewColumnHeader.Click="ListViewHeader_Click" SelectionMode="Extended">
+                <ListView x:Name="ResultsView" Validation.ErrorTemplate="{x:Null}" IsSynchronizedWithCurrentItem="True" Style="{StaticResource ResultsDataGridStyle}" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Packages}" SelectedItem="{Binding SelectedFileInfo}" SelectionMode="Extended">
                     <ListView.Resources>
                         <Style TargetType="{x:Type ListViewItem}">                        
                             <Style.Triggers>
@@ -116,64 +117,112 @@
                         <GridView AllowsColumnReorder="True"  >
                             <GridViewColumn CellTemplate="{StaticResource FirstCell}" Width="30">
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="IsSelected" Click="ListViewHeader_Click"></GridViewColumnHeader>
+                                    <GridViewColumnHeader Tag="IsSelected"></GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding PackageName}" Width="Auto">
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="PackageName" Click="ListViewHeader_Click">PackageName</GridViewColumnHeader>
+                                    <GridViewColumnHeader Tag="PackageName" Command="{Binding HeaderPackageName}">PackageName</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding Title}" Width="Auto">
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="Title" Click="ListViewHeader_Click">Title</GridViewColumnHeader>
+                                    <GridViewColumnHeader Tag="Title" Command="{Binding HeaderTitle}">Title</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding Type}" Width="Auto">
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="Type" Click="ListViewHeader_Click">Type</GridViewColumnHeader>
+                                    <GridViewColumnHeader Tag="Type" Command="{Binding HeaderType}">Type</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding Description}" Width="Auto">
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="Description" Click="ListViewHeader_Click">Description</GridViewColumnHeader>
+                                    <GridViewColumnHeader Tag="Description" Command="{Binding HeaderDescription}">Description</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding FileSize}" Width="Auto">
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="Size" Click="ListViewHeader_Click">Size</GridViewColumnHeader>
+                                    <GridViewColumnHeader Tag="Size" Command="{Binding HeaderSize}">Size</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding GameString}" Width="Auto">
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="Game" Click="ListViewHeader_Click">Game</GridViewColumnHeader>
+                                    <GridViewColumnHeader Tag="Game" Command="{Binding HeaderGame}">Game</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding Function}" Width="Auto">
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="Function" Click="ListViewHeader_Click">Function</GridViewColumnHeader>
+                                    <GridViewColumnHeader Tag="Function" Command="{Binding HeaderFunction}">Function</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding FunctionSubcategory}" Width="Auto">
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="FunctionSubcategory" Click="ListViewHeader_Click">Function Subcategory</GridViewColumnHeader>
+                                    <GridViewColumnHeader Tag="FunctionSubcategory" Command="{Binding HeaderFunctionSub}">Function Subcategory</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding Location}" Width="Auto">
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="Location" Click="ListViewHeader_Click">Location</GridViewColumnHeader>
+                                    <GridViewColumnHeader Tag="Location" Command="{Binding HeaderLocation}">Location</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>
-                <StackPanel Grid.Row="3" Orientation="Horizontal" Grid.Column="1" Margin="10, 0, 0, 0" VerticalAlignment="Center" HorizontalAlignment="Right">
+
+                <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel.Resources>
+                        <Style TargetType="Button">                        
+                            <Setter Property="Width" Value="35"/>  
+                            <Setter Property="Height" Value="30"/>
+                            <Setter Property="Margin" Value="10"/> 
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="#FF5F646E"/>
+                        </Style>
+                        <Style TargetType="Label">
+                            <Setter Property="Foreground" Value="Black"/>
+                        </Style>
+                    </StackPanel.Resources>                    
+                    <Button Name="FirstButton" Command="{Binding PageFirst}">
+                        <Image Source="img\icons\fi-sr-arrow-alt-to-left.png"/>
+                    </Button>
+                    <Button Name="BackButton" Command="{Binding PageBack}">
+                        <Image Source="img\icons\fi-sr-arrow-alt-left.png"/>
+                    </Button>
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Label Content="Page " HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Label Name="PageNumber" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Label Content=" of  " HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Label Name="PageTotal" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Label Content="Go To " HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBox x:Name="GoToPageBox" Width="40" Height="20" PreviewTextInput="NumericOnly">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Return" 
+                                                Command="{Binding GoTo}"
+                                                CommandParameter="{Binding ElementName=GoToPageBox, Path=Text}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </StackPanel>
+                    </StackPanel>
+                                        
+                    <Button Name="ForwardButton" Command="{Binding PageForward}">
+                        <Image Source="img\icons\fi-sr-arrow-alt-right.png"/>
+                    </Button>
+                    <Button Name="LastButton" Command="{Binding PageLast}">
+                        <Image Source="img\icons\fi-sr-arrow-alt-to-right.png"/>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Row="4" Orientation="Horizontal" Grid.Column="1" Margin="10, 0, 0, 0" VerticalAlignment="Center" HorizontalAlignment="Right">
                     <Button Name="TwitterButton"   Height="20" Margin="0, 0, 10, 0" Padding="0" Click="Twitter_Click" Background="Transparent" BorderThickness="0">
                         <Image Source="img\twittericon_w.png"/>
                     </Button> 
                     <Button Name="KofiButton" Grid.Column="0" Grid.Row="3" Height="20" Margin="0, 0, 10, 0" Padding="0" Click="Kofi_Click" Background="Transparent" BorderThickness="0">
                         <Image Source="img\kofiicon_w.png"/>
                     </Button> 
+                    
                     <Button Name="GitButton" Grid.Column="1" Grid.Row="3" Height="20" Margin="0, 0, 10, 0" Padding="0" Click="Git_Click" Background="Transparent" BorderThickness="0">
                         <Image Source="img\githubicon_w.png"/>
                     </Button> 
@@ -182,7 +231,7 @@
                     </Button>
                 </StackPanel>
                   
-                <Grid Grid.Column="1" VerticalAlignment="Center" Margin="15, 15, 0, 10" Grid.Row="2">
+                <Grid Grid.Column="1" VerticalAlignment="Center" Margin="15, 15, 0, 10" Grid.Row="3">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="100"/>
                         <ColumnDefinition Width="100"/>

@@ -17,6 +17,7 @@ using SQLite;
 using SQLiteNetExtensions.Attributes;
 using System.Text.RegularExpressions;
 using System.Collections.ObjectModel;
+using LiteDB;
 
 namespace SSAGlobals {
 
@@ -43,7 +44,7 @@ namespace SSAGlobals {
         /// <summary>
         /// A list of types and function tags and so on for each game. May later be transferred to a database.
         /// </summary>
-        JsonSerializer serializer = new JsonSerializer();
+        //JsonSerializer serializer = new JsonSerializer();
 
         public static List<typeList> AllTypesS2;
         public static List<typeList> AllTypesS3;
@@ -254,7 +255,7 @@ namespace SSAGlobals {
         /// <summary>
         /// Global variables, anything used all over the program that requires easy access, like locations for databases, and global settings like debug mode.
         /// </summary>
-        JsonSerializer serializer = new JsonSerializer();
+        //JsonSerializer serializer = new JsonSerializer();
         public static bool consolevr = false;
         public static bool debugMode = true;
         public static bool highdebug = false;
@@ -289,16 +290,16 @@ namespace SSAGlobals {
         public static List<InstancesMeshesS2> S2InstancesCacheMeshes = new();
         public static List<InstancesMeshesS3> S3InstancesCacheMeshes = new();
         public static List<InstancesMeshesS4> S4InstancesCacheMeshes = new();
-        public static ObservableConcurrentQueue<SimsPackage> AddPackages = new();
-        public static ObservableConcurrentQueue<PackageFile> RemovePackages = new();
-        public static ObservableConcurrentQueue<PackageFile> ProcessingReader = new();
-        public static ObservableConcurrentQueue<InstancesRecolorsS4> InstancesRecolorsS4Col = new();
-        public static ObservableConcurrentQueue<InstancesMeshesS4> InstancesMeshesS4Col = new();
-        public static ObservableConcurrentQueue<InstancesRecolorsS2> InstancesRecolorsS2Col = new();
-        public static ObservableConcurrentQueue<InstancesMeshesS2> InstancesMeshesS2Col = new();
-        public static ObservableConcurrentQueue<InstancesRecolorsS3> InstancesRecolorsS3Col = new();
-        public static ObservableConcurrentQueue<InstancesMeshesS3> InstancesMeshesS3Col = new();
-        public static ObservableConcurrentQueue<AllFiles> AllFiles = new();
+        public static ConcurrentQueue<SimsPackage> AddPackages = new();
+        public static ConcurrentQueue<PackageFile> RemovePackages = new();
+        public static ConcurrentQueue<PackageFile> ProcessingReader = new();
+        public static ConcurrentQueue<InstancesRecolorsS4> InstancesRecolorsS4Col = new();
+        public static ConcurrentQueue<InstancesMeshesS4> InstancesMeshesS4Col = new();
+        public static ConcurrentQueue<InstancesRecolorsS2> InstancesRecolorsS2Col = new();
+        public static ConcurrentQueue<InstancesMeshesS2> InstancesMeshesS2Col = new();
+        public static ConcurrentQueue<InstancesRecolorsS3> InstancesRecolorsS3Col = new();
+        public static ConcurrentQueue<InstancesMeshesS3> InstancesMeshesS3Col = new();
+        public static ConcurrentQueue<AllFiles> AllFiles = new();
         
         
         //vars that hold package files 
@@ -341,13 +342,6 @@ namespace SSAGlobals {
             log.MakeLog("Created sims 2 build function sort.", true);         
             log.MakeLog("Finished initializing.", true);
         }   
-
-        public void UpdateBBTags(){
-           using (StreamWriter file = File.CreateText("data\\s4bbtags.json"))
-            {
-                serializer.Serialize(file, TypeListings.S4BBFunctionTags);
-            } 
-        }
 
         public void ConnectDatabase(bool restart){
             string cs = GlobalVariables.PackagesRead;
@@ -403,33 +397,38 @@ namespace SSAGlobals {
             if (!File.Exists(InstancesCache)){
                 log.MakeLog("Instances Cache doesn't exist, creating.", true); 
                 try {
-                    System.Data.SQLite.SQLiteConnection.CreateFile(InstancesCache);
+                    System.Data.SQLite.SQLiteConnection.CreateFile(InstancesCache);                    
                 } catch (System.Data.SQLite.SQLiteException e) {
                     Console.WriteLine(e.Message);
                 }
                 log.MakeLog("Connecting to created cache.", true); 
-                try {
+                
+                try {  
                     InstancesCacheConnection = new SQLite.SQLiteConnection(InstancesCache);
                 } catch (Exception e){
                     Console.WriteLine("Caught exception connecting to Function Sort Lists: " + e.Message);
                 }
                 log.MakeLog("Making tables.", true);
+                //
                 InstancesCacheConnection.CreateTable<InstancesMeshesS2>();
                 InstancesCacheConnection.CreateTable<InstancesMeshesS3>();
                 InstancesCacheConnection.CreateTable<InstancesMeshesS4>();
                 InstancesCacheConnection.CreateTable<InstancesRecolorsS2>();
                 InstancesCacheConnection.CreateTable<InstancesRecolorsS3>();
                 InstancesCacheConnection.CreateTable<InstancesRecolorsS4>();
-                var tables = new List<string>(){"PRAGMA journal_mode=MEMORY",
+                var tableA = new List<string>(){
+                    "PRAGMA journal_mode=WAL",
+                    "PRAGMA journal_size_limit=5000",
+                    "PRAGMA foreign_keys = ON",
                     "PRAGMA synchronous=EXTRA",
                     "PRAGMA auto_vacuum=FULL",
-                    "PRAGMA journal_size_limit=5000",
                     "PRAGMA default_cache_size=200"
                 };
-                foreach (string table in tables){
+                foreach (string table in tableA){
                     log.MakeLog(string.Format("Making table: {0}.", table), true);
-                    InstancesCacheConnection.ExecuteScalar<string>(table);
-                }                
+                    var result = InstancesCacheConnection.ExecuteScalar<int>(table);
+                    //Console.WriteLine(result);                    
+                }
             } else {
                 try {
                     InstancesCacheConnection = new SQLite.SQLiteConnection(InstancesCache);

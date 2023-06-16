@@ -16,6 +16,7 @@
           "System.Data.SQLite.Core": "1.0.117",
           "System.ServiceModel.Primitives": "4.10.2",
           "System.Threading.Tasks.Dataflow": "7.0.0",
+          "morelinq": "3.4.2",
           "sqlite-net-pcl": "1.8.116"
         },
         "runtime": {
@@ -43,6 +44,14 @@
           "lib/net5.0/Microsoft.Extensions.ObjectPool.dll": {
             "assemblyVersion": "5.0.0.0",
             "fileVersion": "5.0.1021.41022"
+          }
+        }
+      },
+      "morelinq/3.4.2": {
+        "runtime": {
+          "lib/net6.0/MoreLinq.dll": {
+            "assemblyVersion": "3.4.2.0",
+            "fileVersion": "3.4.2.0"
           }
         }
       },
@@ -381,6 +390,13 @@
       "sha512": "sha512-pp9tbGqIhdEXL6Q1yJl+zevAJSq4BsxqhS1GXzBvEsEz9DDNu9GLNzgUy2xyFc4YjB4m4Ff2YEWTnvQvVYdkvQ==",
       "path": "microsoft.extensions.objectpool/5.0.10",
       "hashPath": "microsoft.extensions.objectpool.5.0.10.nupkg.sha512"
+    },
+    "morelinq/3.4.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-nKdpt7Ai+xQO8PZ0YFTn13INGJcKO0Nx65kO/ut0zaDirRo6d7atedmW2l68YB3x7U4pOqTLdMfYsBys8KxA1Q==",
+      "path": "morelinq/3.4.2",
+      "hashPath": "morelinq.3.4.2.nupkg.sha512"
     },
     "Newtonsoft.Json/13.0.3": {
       "type": "package",

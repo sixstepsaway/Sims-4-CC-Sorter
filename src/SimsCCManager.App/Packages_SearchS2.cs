@@ -128,7 +128,8 @@ namespace SimsCCManager.Packages.Sims2Search
             BinaryReader readFile = new BinaryReader(dbpfFile);
     
             thisPackage.FileSize = (int)packageinfo.Length;   
-            thisPackage.PackageName = packageinfo.Name;
+            string packageNameUpdated = Methods.FixApostrophesforSQL(packageinfo.Name);            
+            thisPackage.PackageName = packageNameUpdated;
             thisPackage.GameString = "The Sims 2";
             
             LogMessage = string.Format("Reading package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);

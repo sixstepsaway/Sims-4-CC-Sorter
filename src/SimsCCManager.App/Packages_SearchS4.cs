@@ -952,7 +952,9 @@ namespace SimsCCManager.Packages.Sims4Search
             LogMessage = string.Format("Reading package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-            thisPackage.PackageName = packageinfo.Name;
+            
+            string packageNameUpdated = Methods.FixApostrophesforSQL(packageinfo.Name);            
+            thisPackage.PackageName = packageNameUpdated;
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 4;
             thisPackage.GameString = "The Sims 4";
@@ -1193,7 +1195,9 @@ namespace SimsCCManager.Packages.Sims4Search
                     }
                 }
             } else {
-                log.MakeLog("Streamsize matches.", true);
+                LogMessage = "Streamsize matches.";
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                 long movedhere = readFile.BaseStream.Position;
                 uint testpos = readFile.ReadUInt32();
                 if (testpos != 0){
