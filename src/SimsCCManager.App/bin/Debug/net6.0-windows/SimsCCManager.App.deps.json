@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v6.0": {
       "SimsCCManager.App/1.0.0": {
         "dependencies": {
+          "FontAwesome.WPF": "4.7.0.9",
           "LiteDB": "5.0.16",
           "Newtonsoft.Json": "13.0.3",
           "ObservableConcurrentQueue": "2.0.1",
@@ -21,6 +22,14 @@
         },
         "runtime": {
           "SimsCCManager.App.dll": {}
+        }
+      },
+      "FontAwesome.WPF/4.7.0.9": {
+        "runtime": {
+          "lib/net40/FontAwesome.WPF.dll": {
+            "assemblyVersion": "4.7.0.37774",
+            "fileVersion": "4.7.0.9"
+          }
         }
       },
       "LiteDB/5.0.16": {
@@ -369,6 +378,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "FontAwesome.WPF/4.7.0.9": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-SXE080rnyWMm9Dt0BZzMxh89/o9teuSaqL1N+0O/XM/F/HU8JuZA4XaEKxjBigwZPHHU3/udTa0QMYCHkmH43Q==",
+      "path": "fontawesome.wpf/4.7.0.9",
+      "hashPath": "fontawesome.wpf.4.7.0.9.nupkg.sha512"
     },
     "LiteDB/5.0.16": {
       "type": "package",

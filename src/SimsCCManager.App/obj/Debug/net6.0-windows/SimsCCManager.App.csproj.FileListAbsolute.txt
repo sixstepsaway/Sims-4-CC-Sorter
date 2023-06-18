@@ -86,3 +86,4 @@ I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\obj\Debug\net6.0-windows\SimsCCM
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\obj\Debug\net6.0-windows\ref\SimsCCManager.App.dll
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\ObservableConcurrentQueue.dll
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\MoreLinq.dll
+I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager.App\bin\Debug\net6.0-windows\FontAwesome.WPF.dll

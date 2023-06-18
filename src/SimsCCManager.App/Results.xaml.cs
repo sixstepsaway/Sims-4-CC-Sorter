@@ -54,7 +54,10 @@ namespace SimsCCManager.SortingUIResults {
         public static Grid tagsgrid = new Grid();
         public static Dictionary<string, string> comboboxoptions = new Dictionary<string, string>();
         public static int game = 0;
+        public static int numPackages = 0;
         public static int pageNum = 0;
+        public static int pages = 0;
+        public static int itemsPerPage = 100;
         public static int actualpages = 0;
         public static System.Windows.Controls.Label pageNumberLabel = new();
         public static System.Windows.Controls.Label pageTotalLabel = new();
@@ -76,7 +79,15 @@ namespace SimsCCManager.SortingUIResults {
             comboBox = this.ComboBoxSearch;
             pageNumberLabel = PageNumber;
             pageTotalLabel = PageTotal;
+            int currentpage = pageNum + 1;
             
+            numPackages = GlobalVariables.DatabaseConnection.ExecuteScalar<int>("select count(PackageName) from Packages");
+            pages = (int)Math.Ceiling((double)numPackages / (double)itemsPerPage);
+            ///Console.WriteLine(string.Format("There are {0} items, and will be {1} pages.", numPackages, pages));
+
+
+            //pageNumberLabel.Content = currentpage.ToString();
+            //pageTotalLabel.Content = actualpages.ToString();
 
 
             List<string> comboboxsearch = new List<string>();
@@ -366,7 +377,7 @@ namespace SimsCCManager.SortingUIResults {
         private PackagesViewModel _selectedFile;
         private List<SimsPackage> allPackages = new();
         private int pages = 1;
-        private int itemsperpage = 100;
+        private int itemsperpage = 250;
         private List<List<SimsPackage>> pagesOfPackages = new();
 
         public ICollectionView Packages
@@ -391,29 +402,26 @@ namespace SimsCCManager.SortingUIResults {
         public static ObservableCollection<TagsList> tags = new ObservableCollection<TagsList>();
 
         public PackagesViewModel(){
-            allPackages = GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>();
-            pages = (int)Math.Ceiling((double)allPackages.Count / (double)itemsperpage);
+            
+            packages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().OrderBy(o=> o.PackageName).Skip(itemsperpage * ResultsWindow.pageNum).Take(itemsperpage).ToList();
+            
+            /*allPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Take(itemsperpage).ToList();
             for (int i = 0; i < pages; i++)
             {
                 pagesOfPackages.Add(allPackages.Skip(i * itemsperpage).Take(itemsperpage).ToList());
             }
-            int c = 0;
-            foreach (List<SimsPackage> packagesList in pagesOfPackages){
-                c++;
-            }
-            ResultsWindow.actualpages = c;
             
-            ResultsWindow.actualpages = pagesOfPackages.Count;
+            ResultsWindow.actualpages = pagesOfPackages.Count - 1;
             Console.WriteLine(string.Format("There are {0} pages and {1} were planned for.", pagesOfPackages.Count, pages));
             ResultsWindow.pageNumberLabel.Content = ResultsWindow.pageNum.ToString();
             ResultsWindow.pageTotalLabel.Content = pages.ToString();
 
-            packages = pagesOfPackages[ResultsWindow.pageNum];
+            packages = pagesOfPackages[ResultsWindow.pageNum];*/
             _tagsView = CollectionViewSource.GetDefaultView(tags);
 
             _packagesView = CollectionViewSource.GetDefaultView(packages);
-            _packagesView.Filter = SearchFilter;      
-            ChangePage(pagesOfPackages[0]);
+            _packagesView.Filter = SearchFilter;
+            //ChangePage(pagesOfPackages[0]);
         }
 
         public PackagesViewModel SelectedFileInfo  
@@ -634,16 +642,16 @@ namespace SimsCCManager.SortingUIResults {
                 }   
             }             
             pagesOfPackages.Clear();
-            for (int i = 0; i < pages; i++)
+            for (int i = 0; i <= pages; i++)
             {
                 pagesOfPackages.Add(allPackages.Skip(i * itemsperpage).Take(itemsperpage).ToList());
             }
             if (ResultsWindow.pageNum == ResultsWindow.actualpages){
-                ChangePage(pagesOfPackages[ResultsWindow.actualpages]);
+                ChangePage();
             } else if (ResultsWindow.pageNum == 0){
-                ChangePage(pagesOfPackages[0]);
+                ChangePage();
             } else {
-                ChangePage(pagesOfPackages[ResultsWindow.pageNum]);
+                ChangePage();
             }
         }
 
@@ -655,6 +663,17 @@ namespace SimsCCManager.SortingUIResults {
 
         #region PAGES
 
+
+        
+
+
+
+
+
+
+
+
+
         public ICommand GoTo  
         {  
             get { return new DelegateCommand(this.GoToPage); }  
@@ -664,11 +683,11 @@ namespace SimsCCManager.SortingUIResults {
             int gotonum = int.Parse(ResultsWindow.gotobox.Text);
             if (gotonum <= ResultsWindow.actualpages && gotonum != 0){
                 ResultsWindow.pageNum = (int.Parse(ResultsWindow.gotobox.Text) - 1);
-                ChangePage(pagesOfPackages[ResultsWindow.pageNum]);
+                ChangePage();
             } else if (gotonum == ResultsWindow.actualpages + 1) {                
-                ChangePage(pagesOfPackages[ResultsWindow.actualpages]);
+                ChangePage();
             } else if (gotonum == 1) {                
-                ChangePage(pagesOfPackages[0]);
+                ChangePage();
             } else {
                 System.Windows.Forms.MessageBox.Show(string.Format("Enter a number between 1 and {0}.", ResultsWindow.actualpages));
             }
@@ -683,7 +702,7 @@ namespace SimsCCManager.SortingUIResults {
         { 
             ResultsWindow.pageNum = 0;
             Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
-            ChangePage(pagesOfPackages[0]);
+            ChangePage();
         }
         
         public ICommand PageLast  
@@ -694,7 +713,7 @@ namespace SimsCCManager.SortingUIResults {
         { 
             ResultsWindow.pageNum = ResultsWindow.actualpages;
             Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
-            ChangePage(pagesOfPackages[ResultsWindow.pageNum]);
+            ChangePage();
         }
         
         public ICommand PageForward  
@@ -703,15 +722,11 @@ namespace SimsCCManager.SortingUIResults {
         }  
         private void PageUp()  
         { 
-            if (ResultsWindow.pageNum == ResultsWindow.actualpages){
-                ResultsWindow.pageNum = 0;
-                Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
-                ChangePage(pagesOfPackages[0]);
-            } else {
+            if(ResultsWindow.pageNum != ResultsWindow.pages){
                 ResultsWindow.pageNum++;
-                Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
-                ChangePage(pagesOfPackages[ResultsWindow.pageNum]);
+                packages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().OrderBy(o=> o.PackageName).Skip(itemsperpage * ResultsWindow.pageNum).Take(itemsperpage).ToList();
             }
+            ChangePage();
             
         }
         public ICommand PageBack  
@@ -720,25 +735,21 @@ namespace SimsCCManager.SortingUIResults {
         }  
         private void PageBackward()  
         { 
-            if (ResultsWindow.pageNum == 0){
-                ResultsWindow.pageNum = ResultsWindow.actualpages;
-                Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
-                ChangePage(pagesOfPackages[ResultsWindow.actualpages]);
-            } else {
+            if(ResultsWindow.pageNum != 0){
                 ResultsWindow.pageNum--;
-                Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
-                ChangePage(pagesOfPackages[ResultsWindow.pageNum]);
-            }            
+                packages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().OrderBy(o=> o.PackageName).Skip(itemsperpage * ResultsWindow.pageNum).Take(itemsperpage).ToList();
+            }
+            ChangePage();           
             
         }
 
-        private void ChangePage(List<SimsPackage> page){
+        private void ChangePage(){
             int maxpage = ResultsWindow.actualpages + 1;
             int currentpage = ResultsWindow.pageNum + 1;
             ResultsWindow.pageNumberLabel.Content = currentpage.ToString();
             ResultsWindow.pageTotalLabel.Content = maxpage.ToString();
             Console.WriteLine(string.Format("Swapping to page {0} (listed as {1})..", ResultsWindow.pageNum, ResultsWindow.pageNum + 1));
-            packages = page;
+            //packages = page;
             ResultsWindow.resultsView.ItemsSource = _packagesView;
             _packagesView = CollectionViewSource.GetDefaultView(packages);
         }
@@ -1122,4 +1133,14 @@ namespace SimsCCManager.SortingUIResults {
             }  
         }  
     } 
+
+    static class PagingUtils {
+         
+        public static IEnumerable<T> Page<T>(this IEnumerable<T> en, int pageSize, int page) {
+            return en.Skip(page * pageSize).Take(pageSize);
+        }
+        public static IQueryable<T> Page<T>(this IQueryable<T> en, int pageSize, int page) {
+            return en.Skip(page * pageSize).Take(pageSize);
+        }
+    }
 }

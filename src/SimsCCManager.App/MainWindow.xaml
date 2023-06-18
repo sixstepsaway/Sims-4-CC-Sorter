@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Sims_CC_Sorter"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         mc:Ignorable="d"
         Title="Sims CC Manager"
         WindowState="Normal"
@@ -147,8 +148,7 @@
         <Grid x:Name="ProgressGrid" ZIndex="2" VerticalAlignment="Center" HorizontalAlignment="Center" Background="#212a3e" Width="450" Height="150" Visibility="Hidden">
             <Border x:Name="ProgressBorder" Background="#212a3e" BorderBrush="#FF49BD66" BorderThickness="2,2,2,2" 
         Padding="0" CornerRadius="10 10 10 10" ClipToBounds="True" Margin="-0,0,0,0">
-
-        </Border>
+            </Border>
         <StackPanel x:Name="Progressing" Visibility="Hidden">
             <TextBlock x:Name="completionAlert" Text="Waiting for Input" Foreground="AliceBlue" TextAlignment="Center" Visibility="Visible" Margin="0, 35, 0, 0"/>
             <Grid>
@@ -164,6 +164,23 @@
         </StackPanel>
             <Grid x:Name="Cancelling" Visibility="Hidden">
                 <Label x:Name="CancelLabel" Content="Cancelling, please wait." HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>  
+
+        <Grid x:Name="LoadingResultsGrid" Background="#212a3e" Visibility="Hidden" Width="500" Height="650" ZIndex="2">
+            <Grid>
+                <fa:ImageAwesome Icon="Spinner" Spin="True" SpinDuration="10">
+                    <fa:ImageAwesome.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <ColorAnimation Storyboard.TargetProperty="Foreground.Color" RepeatBehavior="Forever"
+                                                    From="Black" To="Yellow" Duration="0:0:5.0" AutoReverse="True"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </fa:ImageAwesome.Triggers>
+                </fa:ImageAwesome>
             </Grid>
         </Grid>      
     </Grid>

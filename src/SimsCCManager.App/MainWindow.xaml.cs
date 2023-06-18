@@ -51,6 +51,7 @@ using SQLiteNetExtensions.Extensions;
 using System.IO.Packaging;
 using System.Windows.Media.Animation;
 using MoreLinq;
+using FontAwesome.WPF;
 
 namespace Sims_CC_Sorter
 {
@@ -1785,6 +1786,12 @@ namespace Sims_CC_Sorter
 
         private void GetResults(){
             runprogress = false;
+            HideProgressGrid();
+            ShowLoadingResultsGrid();            
+            OpenResultsWindow();            
+        }
+
+        private void OpenResultsWindow(){
             Dispatcher.Invoke(new Action(() => {
                 try {
                     ResultsWindow resultsWindow = new ResultsWindow(cts);
@@ -1795,6 +1802,10 @@ namespace Sims_CC_Sorter
                 }                
                 this.Close();
             }));
+        }
+
+        private void ShowLoadingResultsGrid(){
+            Dispatcher.Invoke(new Action(() => LoadingResultsGrid.Visibility = Visibility.Visible));
         }
 
         #endregion

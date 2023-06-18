@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "CxZiOx4tgcAZgATwq6iZXBzGQAuy7M3JzTudXfPrPp/Gge9aPgt2ql5IauRLyS+dj7gA6zq4Twaxsb0Q749+0Q==",
+  "dgSpecHash": "U3ux+OSpeeuidk4aQpvw8a6Nff97EBWqpws0cnc/4cxdF3P2a4ZGaKPUtn6JNEXNFaBDnkvx6wUZZ9cHgLuHcA==",
   "success": true,
   "projectFilePath": "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.App\\SimsCCManager.App.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\conta\\.nuget\\packages\\fontawesome.wpf\\4.7.0.9\\fontawesome.wpf.4.7.0.9.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\litedb\\5.0.16\\litedb.5.0.16.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\5.0.0\\microsoft.bcl.asyncinterfaces.5.0.0.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\microsoft.extensions.objectpool\\5.0.10\\microsoft.extensions.objectpool.5.0.10.nupkg.sha512",
@@ -31,5 +32,16 @@
     "C:\\Users\\conta\\.nuget\\packages\\system.servicemodel.primitives\\4.10.2\\system.servicemodel.primitives.4.10.2.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\system.threading.tasks.dataflow\\7.0.0\\system.threading.tasks.dataflow.7.0.0.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'FontAwesome.WPF 4.7.0.9' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8' instead of the project target framework 'net6.0-windows7.0'. This package may not be fully compatible with your project.",
+      "libraryId": "FontAwesome.WPF",
+      "targetGraphs": [
+        "net6.0-windows7.0"
+      ]
+    }
+  ]
 }
