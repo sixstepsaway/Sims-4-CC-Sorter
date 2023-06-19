@@ -80,6 +80,7 @@ namespace SimsCCManager.Packages.Sorting
         public static string TP1990s = "_20_1990s";
         public static string TP2000s = "_21_2000s";
         public static string TP2010s = "_22_2010s";
+        public static string TPModern = "_Modern";
 
 
         public void SortFolders(){

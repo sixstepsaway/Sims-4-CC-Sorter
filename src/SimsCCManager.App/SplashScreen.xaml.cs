@@ -41,7 +41,7 @@ namespace SimsCCManager.SplashScreen
             System.Threading.Thread.Sleep(1000);            
             List<Action> tasklist = new List<Action>();
             List<PackageFile> allfiles = new List<PackageFile>();
-            List<SimsPackage> priorPackages = new List<SimsPackage>();
+            int priorPackages = new();
             bool nodata = false;
             tasklist.Add(new Action (() => {
                 if (!File.Exists(GlobalVariables.PackagesRead)){
@@ -96,7 +96,7 @@ namespace SimsCCManager.SplashScreen
             tasklist.Add(new Action (() => {
                 if (nodata == false) {
                     log.MakeLog("Checking for prior data.", true);
-                    priorPackages = GlobalVariables.DatabaseConnection.Query<SimsPackage>("SELECT * FROM Packages");
+                    priorPackages = GlobalVariables.DatabaseConnection.ExecuteScalar<int>("select count(PackageName) from Packages");
                     this.Dispatcher.Invoke(new Action(() => LoadingText.Content = "Checking for Data"));
                 } else {
                     log.MakeLog("No data to check.", true);
@@ -105,7 +105,7 @@ namespace SimsCCManager.SplashScreen
             }));
             tasklist.Add(new Action (() => {
                 if (nodata == false) {
-                    if (priorPackages.Count >= 1) 
+                    if (priorPackages >= 1) 
                     {
                         log.MakeLog("Data found!", true);
                         MainWindow.dataExists = true;

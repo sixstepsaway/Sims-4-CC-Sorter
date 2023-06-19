@@ -237,8 +237,8 @@
                         <ColumnDefinition Width="100"/>
                         <ColumnDefinition Width="125"/>
                         <ColumnDefinition Width="200"/>
-                        <ColumnDefinition Width="150"/>
-                        <ColumnDefinition/>
+                        <ColumnDefinition Width="75"/>
+                        <ColumnDefinition Width="100"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Vertical" Grid.Column="0" VerticalAlignment="Bottom">
@@ -246,14 +246,14 @@
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
                             <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <RadioButton x:Name="radioButton_Sims2" GroupName="GameSelect" UseLayoutRounding="True"  Checked="GameCheck"/>
+                                <RadioButton x:Name="radioButton_Sims2" GroupName="GameSelect" UseLayoutRounding="True" Command="{Binding GameSims2}"/>
                             </Viewbox>                        
                             <TextBlock Text="Sims 2" Foreground="#FF183046"/>
                         </StackPanel>
                         <Rectangle Height="15"/>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
                             <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <RadioButton x:Name="radioButton_Sims3" GroupName="GameSelect" UseLayoutRounding="True"  Checked="GameCheck"/>
+                                <RadioButton x:Name="radioButton_Sims3" GroupName="GameSelect" UseLayoutRounding="True" Command="{Binding GameSims3}"/>
                             </Viewbox>                        
                             <TextBlock Text="Sims 3" Foreground="#FF183046"/>
                         </StackPanel>
@@ -262,32 +262,35 @@
                     <StackPanel Orientation="Vertical" Grid.Column="1" VerticalAlignment="Bottom">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <RadioButton x:Name="radioButton_Sims4" GroupName="GameSelect" UseLayoutRounding="True" Checked="GameCheck"/>
+                                <RadioButton x:Name="radioButton_Sims4" GroupName="GameSelect" UseLayoutRounding="True" Command="{Binding GameSims4}"/>
                             </Viewbox>                        
                             <TextBlock Text="Sims 4" Foreground="#FF183046"/>
                         </StackPanel>
                         <Rectangle Height="15"/>
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <RadioButton x:Name="radioButton_None" UseLayoutRounding="True" GroupName="GameSelect" IsChecked="True" Checked="GameCheck"/>
+                                <RadioButton x:Name="radioButton_None" UseLayoutRounding="True" GroupName="GameSelect" IsChecked="True" Command="{Binding GameNoGame}"/>
                             </Viewbox>                        
                             <TextBlock Text="None" Foreground="#FF183046"/>
                         </StackPanel>
                         <Rectangle Height="15"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Grid.Column="2" VerticalAlignment="Center">
-                        <Button Name="ShowAllBt" Content="Show All Files" Click="showallfiles_Click" FontSize="14" Padding="4" Margin="0, 0, 0, 10"/>
+                        <Button Name="ShowAllBt" Content="Show All Files" Command="{Binding ShowAllFiles}" FontSize="14" Padding="4" Margin="0, 0, 0, 10"/>
                         <Button Content="Fix Load Errors" Click="loadErrorFix_Click" FontSize="14" Padding="4"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Grid.Column="3" VerticalAlignment="Center">
-                        <TextBlock Text="Search" Margin="25, 0, 0, 5"/>
-                        <TextBox Name="SearchBox" TextChanged="SearchBox_TextChanged" Foreground="#FF372C42" Background="#FFCCD3DA" Margin="20, 0, 0, 0" Height="25"/>
+                        <Rectangle Height="26"/>
+                        <TextBox Name="SearchBox" Foreground="#FF372C42" Background="#FFCCD3DA" Margin="20, 0, 0, 0" Height="25"/>
                         <ComboBox x:Name="ComboBoxSearch"
                         IsEditable="false"
-                        IsReadOnly="true" Margin="20, 5, 0, 25" Width="180" Height="25" Foreground="#FF372C42" Background="#FFCCD3DA" Text="All"/>
+                        IsReadOnly="true" Margin="20, 5, 0, 25" Width="120" Height="25" Foreground="#FF372C42" Background="#FFCCD3DA" Text="All"/>
                     </StackPanel>
-                    <Label Grid.Column="4" Content="Key" Margin="10, 0, 0, 0" FontWeight="ExtraBold" Foreground="#5C65AF"/>
-                    <StackPanel Orientation="Vertical" Grid.Column="4" VerticalAlignment="Center" Margin="10, 0, 0, 0">
+                    <StackPanel Grid.Column="4" Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Button Content="Search" Height="55" Command="{Binding SubmitSearch}"/>
+                    </StackPanel>
+                    <Label Grid.Column="5" Content="Key" Margin="10, 0, 0, 0" FontWeight="ExtraBold" Foreground="#5C65AF"/>
+                    <StackPanel Orientation="Vertical" Grid.Column="5" VerticalAlignment="Center" Margin="10, 0, 0, 0">
                         <StackPanel Orientation="Horizontal" Margin="0, 0, 0, 2">
                             <Grid Width="25" Height="15" Background="#D3C4D0">
                                 <Border BorderBrush="#FF41434E" BorderThickness="1"/>
