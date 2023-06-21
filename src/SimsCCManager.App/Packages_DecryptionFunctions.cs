@@ -147,7 +147,7 @@ namespace SimsCCManager.Packages.Decryption
 		public string xmlAge = "";
 		public string xmlGender = "";
 		public string xmlCatalog = "";
-		private List<string> objectGUID = new List<string>();
+		private List<PackageGUID> objectGUID = new();
 		public string xmlCreator = "";
         public string xmlFunction = "";
         public string xmlFunctionSubsort = "";
@@ -279,7 +279,7 @@ namespace SimsCCManager.Packages.Decryption
 			xmlAge = "";
 			xmlGender = "";
 			xmlCatalog = "";
-			objectGUID = new List<string>();
+			objectGUID = new();
 			xmlCreator = "";
 			xmlFunction = "";
 			xmlFunctionSubsort = "";
@@ -353,7 +353,7 @@ namespace SimsCCManager.Packages.Decryption
 						this.xmlModelName = fieldValueString;
 						break;
 					case "objectGUID":
-						this.objectGUID.Add(fieldValueInt.ToString("X8"));
+						this.objectGUID.Add(new PackageGUID() { GuidID = fieldValueInt.ToString("X8")});
 						break;
 					case "creator":
 						this.xmlCreator = fieldValueString;
@@ -418,7 +418,7 @@ namespace SimsCCManager.Packages.Decryption
 			xmlAge = "";
 			xmlGender = "";
 			xmlCatalog = "";
-			objectGUID = new List<string>();
+			objectGUID = new();;
 			xmlCreator = "";
 			xmlFunction = "";
 			xmlFunctionSubsort = "";
@@ -494,7 +494,7 @@ namespace SimsCCManager.Packages.Decryption
 						this.xmlModelName = fieldValueString;
 						break;
 					case "objectGUID":
-						this.objectGUID.Add(fieldValueInt.ToString("X8"));
+						this.objectGUID.Add(new PackageGUID() { GuidID = fieldValueInt.ToString("X8")});
 						break;
 					case "creator":
 						this.xmlCreator = fieldValueString;
@@ -562,7 +562,7 @@ namespace SimsCCManager.Packages.Decryption
 			xmlAge = "";
 			xmlGender = "";
 			xmlCatalog = "";
-			objectGUID = new List<string>();
+			objectGUID = new();;
 			xmlCreator = "";
 			xmlFunction = "";
 			xmlFunctionSubsort = "";
@@ -644,7 +644,7 @@ namespace SimsCCManager.Packages.Decryption
 			xmlAge = "";
 			xmlGender = "";
 			xmlCatalog = "";
-			objectGUID = new List<string>();
+			objectGUID = new();;
 			xmlCreator = "";
 			xmlFunction = "";
 			xmlFunctionSubsort = "";
@@ -715,7 +715,7 @@ namespace SimsCCManager.Packages.Decryption
 			xmlAge = "";
 			xmlGender = "";
 			xmlCatalog = "";
-			objectGUID = new List<string>();
+			objectGUID = new();;
 			xmlCreator = "";
 			xmlFunction = "";
 			xmlFunctionSubsort = "";
@@ -823,7 +823,7 @@ namespace SimsCCManager.Packages.Decryption
 			xmlAge = "";
 			xmlGender = "";
 			xmlCatalog = "";
-			objectGUID = new List<string>();
+			objectGUID = new();;
 			xmlCreator = "";
 			xmlFunction = "";
 			xmlFunctionSubsort = "";
@@ -935,7 +935,7 @@ namespace SimsCCManager.Packages.Decryption
 			xmlAge = "";
 			xmlGender = "";
 			xmlCatalog = "";
-			objectGUID = new List<string>();
+			objectGUID = new();;
 			xmlCreator = "";
 			xmlFunction = "";
 			xmlFunctionSubsort = "";
@@ -986,7 +986,7 @@ namespace SimsCCManager.Packages.Decryption
 			xmlAge = "";
 			xmlGender = "";
 			xmlCatalog = "";
-			objectGUID = new List<string>();
+			objectGUID = new();;
 			xmlCreator = "";
 			xmlFunction = "";
 			xmlFunctionSubsort = "";
@@ -1040,7 +1040,7 @@ namespace SimsCCManager.Packages.Decryption
 			xmlAge = "";
 			xmlGender = "";
 			xmlCatalog = "";
-			objectGUID = new List<string>();
+			objectGUID = new();;
 			xmlCreator = "";
 			xmlFunction = "";
 			xmlFunctionSubsort = "";
@@ -1069,7 +1069,7 @@ namespace SimsCCManager.Packages.Decryption
 				readFile.ReadUInt16(); // Use Default Placement Flags
 				readFile.ReadUInt16(); // Look at Score
 				uint objectGUID = readFile.ReadUInt32();
-				this.objectGUID.Add(objectGUID.ToString("X8"));
+				this.objectGUID.Add(new PackageGUID() { GuidID = objectGUID.ToString("X8")});
 				//this.objectGUID = objectGUID.ToString("X8");
 				this.guidData.Add(this.objectGUID);
 				// Skip stuff we don't need
@@ -1174,7 +1174,7 @@ namespace SimsCCManager.Packages.Decryption
 			xmlAge = "";
 			xmlGender = "";
 			xmlCatalog = "";
-			objectGUID = new List<string>();
+			objectGUID = new List<PackageGUID>();
 			xmlCreator = "";
 			xmlFunction = "";
 			xmlFunctionSubsort = "";
@@ -1203,7 +1203,7 @@ namespace SimsCCManager.Packages.Decryption
 				test = readFile.ReadUInt16(); // Use Default Placement Flags
 				test = readFile.ReadUInt16(); // Look at Score
 				uint objectGUID = readFile.ReadUInt32();
-                this.objectGUID.Add(objectGUID.ToString("X8"));
+                this.objectGUID.Add(new PackageGUID() { GuidID = objectGUID.ToString("X8")});
 				//this.objectGUID = objectGUID.ToString("X8");
 				this.guidData.Add(this.objectGUID);
 				// Skip stuff we don't need
@@ -1618,6 +1618,18 @@ namespace SimsCCManager.Packages.Decryption
 
 	public class S4Decryption {
 		public static Stream Decompress(byte[] data)
+		{
+			var outputStream = new MemoryStream();
+			using (var compressedStream = new MemoryStream(data))
+			using (var inputStream = new InflaterInputStream(compressedStream))
+			{
+				inputStream.CopyTo(outputStream);
+				outputStream.Position = 0;
+				return outputStream;
+			}
+		}
+
+		public static MemoryStream DecompressPicture(byte[] data)
 		{
 			var outputStream = new MemoryStream();
 			using (var compressedStream = new MemoryStream(data))

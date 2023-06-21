@@ -29,6 +29,7 @@ using System.Data.SQLite;
 using System.Data;
 using System.Threading;
 using SQLiteNetExtensions.Extensions;
+using SimsCCManager.App;
 
 namespace SimsCCManager.SortingUIResults {
     /// <summary>
@@ -37,6 +38,7 @@ namespace SimsCCManager.SortingUIResults {
 
     public partial class ResultsWindow : Window {
         LoggingGlobals log = new LoggingGlobals();
+        MainWindow mainWindow = new MainWindow();
         public static int gameNum = 0;
         private bool showallfiles = false;
         private DataTable packagesDataTable = new DataTable();
@@ -102,8 +104,7 @@ namespace SimsCCManager.SortingUIResults {
                 "Function",
                 "Function Subcategory",
                 "Required EPs",
-                "Overridden Instances",
-                "Overridden Items",
+                "Overrides",
                 "Conflicts",
                 "Matching Recolors",
                 "Matching Meshes"
@@ -117,6 +118,12 @@ namespace SimsCCManager.SortingUIResults {
         private void ResultsWindow_Loaded(object sender, RoutedEventArgs e)
         {
             
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {            
+            mainWindow.Show();
+            this.Close();
         }
 
         private void NumericOnly(System.Object sender, System.Windows.Input.TextCompositionEventArgs e)
@@ -263,8 +270,6 @@ namespace SimsCCManager.SortingUIResults {
         private ICollectionView _tagsView;
         public event PropertyChangedEventHandler PropertyChanged;
         private PackagesViewModel _selectedFile;
-        private List<SimsPackage> allPackages = new();
-        private List<List<SimsPackage>> pagesOfPackages = new();
 
         public ICollectionView Packages
         {
@@ -284,17 +289,13 @@ namespace SimsCCManager.SortingUIResults {
         }
 
         public object Resources { get; private set; }
-        List<SimsPackage> thisPage = new List<SimsPackage>();
+        List<SimsPackage> thisPage = new();
         public static ObservableCollection<TagsList> tags = new ObservableCollection<TagsList>();
-        List<SimsPackage> previousPage = new();
-        List<SimsPackage> nextPage = new();
-        List<SimsPackage> firstPage = new();
-        List<SimsPackage> lastPage = new();
 
         public PackagesViewModel(){
             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();            
             _tagsView = CollectionViewSource.GetDefaultView(tags);
-            _packagesView = CollectionViewSource.GetDefaultView(thisPage);
+            _packagesView = CollectionViewSource.GetDefaultView(thisPage.ApostropheUnFix());
         }
 
         public PackagesViewModel SelectedFileInfo  
@@ -312,8 +313,8 @@ namespace SimsCCManager.SortingUIResults {
 
         private void RefreshResults(){
             thisPage = new (GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>());
-            ResultsWindow.resultsView.ItemsSource = _packagesView;
-            _packagesView = CollectionViewSource.GetDefaultView(thisPage);
+            _packagesView = CollectionViewSource.GetDefaultView(thisPage.ApostropheUnFix());
+            ResultsWindow.resultsView.ItemsSource = _packagesView;            
         }
 
 
@@ -747,7 +748,7 @@ namespace SimsCCManager.SortingUIResults {
             int currentpage = ResultsWindow.pageNum + 1;
             ResultsWindow.pageNumberLabel.Content = currentpage.ToString();
             ResultsWindow.pageTotalLabel.Content = maxpage.ToString();
-            _packagesView = CollectionViewSource.GetDefaultView(thisPage); 
+            _packagesView = CollectionViewSource.GetDefaultView(thisPage.ApostropheUnFix()); 
             ResultsWindow.resultsView.ItemsSource = _packagesView;
         }
 
@@ -875,7 +876,7 @@ namespace SimsCCManager.SortingUIResults {
             int currentpage = ResultsWindow.pageNum + 1;
             ResultsWindow.pageNumberLabel.Content = currentpage.ToString();
             ResultsWindow.pageTotalLabel.Content = maxpage.ToString();
-            _packagesView = CollectionViewSource.GetDefaultView(thisPage); 
+            _packagesView = CollectionViewSource.GetDefaultView(thisPage.ApostropheUnFix()); 
             ResultsWindow.resultsView.ItemsSource = _packagesView;
         }
 
@@ -888,7 +889,7 @@ namespace SimsCCManager.SortingUIResults {
             } else if (SearchCriteria == "Description"){
                 ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).Count();
             } else if (SearchCriteria == "InstanceIDs"){
-                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).Count();
+                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).Count();
             } else if (SearchCriteria == "Tags"){
                 ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).Count();
             } else if (SearchCriteria == "Type"){
@@ -904,53 +905,17 @@ namespace SimsCCManager.SortingUIResults {
             } else if (SearchCriteria == "Function Subcategory"){
                 ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).Count();
             } else if (SearchCriteria == "Required EPs"){
-                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).Count();
+                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm))).Count();
             } else if (SearchCriteria == "Overridden Instances"){
-                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).Count();
-            } else if (SearchCriteria == "Overridden Items"){
-                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).Count();
+                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm))).Count();
             } else if (SearchCriteria == "Conflicts"){
-                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).Count();
+                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).Count();
             } else if (SearchCriteria == "Matching Recolors"){
-                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).Count();
+                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).Count();
             } else if (SearchCriteria == "Matching Meshes"){
                 ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).Count();
             } else {
-                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(
-                    o => o.PackageName.Contains(SearchTerm) 
-                    || 
-                    (o.Title != null && o.Title.Contains(SearchTerm))
-                    || 
-                    (o.Description != null && o.Description.Contains(SearchTerm))
-                    || 
-                    (o.InstancesBlobbed != null && o.InstancesBlobbed.Contains(SearchTerm))
-                    || 
-                    (o.CatalogTags.Any() && o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)))
-                    || 
-                    (o.Type != null && o.Type.Contains(SearchTerm))
-                    || 
-                    (o.Category != null && o.Category.Contains(SearchTerm))
-                    || 
-                    (o.Age != null && o.Age.Contains(SearchTerm))
-                    || 
-                    (o.Gender != null && o.Gender.Contains(SearchTerm))
-                    || 
-                    (o.Function != null && o.Function.Contains(SearchTerm))
-                    || 
-                    (o.FunctionSubcategory != null && o.FunctionSubcategory.Contains(SearchTerm))
-                    || 
-                    (o.RequiredEPs.Any() && o.RequiredEPs.Contains(SearchTerm))
-                    || 
-                    (o.OverriddenInstances.Any() && o.OverriddenInstances.Contains(SearchTerm))
-                    || 
-                    (o.OverriddenItems.Any() && o.OverriddenItems.Contains(SearchTerm))
-                    || 
-                    (o.MatchingConflicts.Any() && o.MatchingConflicts.Contains(SearchTerm))
-                    || 
-                    (o.MatchingRecolors.Any() && o.MatchingRecolors.Contains(SearchTerm))
-                    || 
-                    (o.MatchingMesh != null && o.MatchingMesh.Contains(SearchTerm)) 
-                ).Count();
+                ResultsWindow.numPackages = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).Count();
             }
             
             ResultsWindow.pages = (int)Math.Ceiling((double)ResultsWindow.numPackages / (double)ResultsWindow.itemsPerPage);
@@ -966,7 +931,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -982,19 +947,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1004,7 +967,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1020,19 +983,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     }                
                 } else if(ResultsWindow.Sorting == "Title"){
@@ -1044,7 +1005,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1060,19 +1021,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1082,7 +1041,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1098,21 +1057,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "Type"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -1122,7 +1079,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1138,19 +1095,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1160,7 +1115,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1176,21 +1131,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "Description"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -1200,7 +1153,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1216,19 +1169,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1238,7 +1189,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1254,21 +1205,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                                    
                 } else if(ResultsWindow.Sorting == "FileSize"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -1278,7 +1227,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1294,19 +1243,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1316,7 +1263,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1332,21 +1279,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "GameString"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -1356,7 +1301,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1372,19 +1317,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1394,7 +1337,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1410,21 +1353,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "Function"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -1434,7 +1375,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1450,19 +1391,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1472,7 +1411,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1488,21 +1427,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "FunctionSub"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -1512,7 +1449,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1528,19 +1465,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1550,7 +1485,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1566,21 +1501,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "Location"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -1590,7 +1523,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1606,19 +1539,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1628,7 +1559,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1644,19 +1575,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     }
                 }
@@ -1670,7 +1599,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1686,19 +1615,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1708,7 +1635,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1724,19 +1651,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     }                
                 } else if(ResultsWindow.Sorting == "Title"){
@@ -1748,7 +1673,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1764,19 +1689,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1786,7 +1709,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1802,21 +1725,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Title).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "Type"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -1826,7 +1747,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1842,19 +1763,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1864,7 +1783,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1880,21 +1799,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Type).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "Description"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -1904,7 +1821,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1920,19 +1837,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -1942,7 +1857,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1958,21 +1873,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Description).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                                    
                 } else if(ResultsWindow.Sorting == "FileSize"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -1982,7 +1895,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -1998,19 +1911,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -2020,7 +1931,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -2036,21 +1947,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FileSize).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "GameString"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -2060,7 +1969,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -2076,19 +1985,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -2098,7 +2005,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -2114,21 +2021,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.GameString).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "Function"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -2138,7 +2043,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -2154,19 +2059,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -2176,7 +2079,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -2192,21 +2095,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Function).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "FunctionSub"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -2216,7 +2117,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -2232,19 +2133,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -2254,7 +2153,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -2270,21 +2169,19 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.FunctionSubcategory).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
-                    }
+                    }                
                 } else if(ResultsWindow.Sorting == "Location"){
                     if (Ascending == true){
                         if (SearchCriteria == "Package Name"){
@@ -2294,7 +2191,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -2310,19 +2207,17 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderBy(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     } else {
                         if (SearchCriteria == "Package Name"){
@@ -2332,7 +2227,7 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Description"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Description.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "InstanceIDs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstancesBlobbed.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Tags"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Type"){
@@ -2348,29 +2243,28 @@ namespace SimsCCManager.SortingUIResults {
                         } else if (SearchCriteria == "Function Subcategory"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.FunctionSubcategory.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Required EPs"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.RequiredEPs.Any(r => r.RequiredPack.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Overridden Instances"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenInstances.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
-                        } else if (SearchCriteria == "Overridden Items"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverriddenItems.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.OverridesList.Any(l => l.InstanceID.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Conflicts"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingConflicts.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Recolors"){
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm))).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else if (SearchCriteria == "Matching Meshes"){
                             thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         } else {
-                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstancesBlobbed.Contains(SearchTerm) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Contains(SearchTerm) || o.OverriddenInstances.Contains(SearchTerm) || o.OverriddenItems.Contains(SearchTerm) || o.MatchingConflicts.Contains(SearchTerm) || o.MatchingRecolors.Contains(SearchTerm) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
+                            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().Where(p=> p.Game == ResultsWindow.Filter).Where(o => o.PackageName.Contains(SearchTerm) || o.Title.Contains(SearchTerm) || o.Description.Contains(SearchTerm) || o.InstanceIDs.Any(i => i.InstanceID.Contains(SearchTerm)) || o.CatalogTags.Any(t => t.TypeID.Contains(SearchTerm)) || o.Type.Contains(SearchTerm) || o.Category.Contains(SearchTerm) || o.Age.Contains(SearchTerm) || o.Gender.Contains(SearchTerm) || o.Function.Contains(SearchTerm) || o.FunctionSubcategory.Contains(SearchTerm) || o.RequiredEPs.Any(e => e.RequiredPack.Contains(SearchTerm)) || o.OverridesList.Any(i => i.InstanceID.Contains(SearchTerm)) || o.Conflicts.Any(c => c.Conflict.Contains(SearchTerm)) || o.MatchingRecolors.Any(r => r.MatchingRecolor.Contains(SearchTerm)) || o.MatchingMesh.Contains(SearchTerm)).OrderByDescending(o=> o.Location).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();
                         }
                     }
-                }                
+                }
             }
             
             int maxpage = ResultsWindow.actualpages + 1;
             int currentpage = ResultsWindow.pageNum + 1;
             ResultsWindow.pageNumberLabel.Content = currentpage.ToString();
             ResultsWindow.pageTotalLabel.Content = maxpage.ToString();
-            _packagesView = CollectionViewSource.GetDefaultView(thisPage); 
+
+            _packagesView = CollectionViewSource.GetDefaultView(thisPage.ApostropheUnFix());
             ResultsWindow.resultsView.ItemsSource = _packagesView;
         }
 
@@ -2467,13 +2361,15 @@ namespace SimsCCManager.SortingUIResults {
             if (selection == 1){                
                 using(var MoveFolder = new FolderBrowserDialog())
                 {
-                    string newname = ((SimsPackage)_packagesView.CurrentItem).Title;
+                    string newname = string.Format("{0}.package", ((SimsPackage)_packagesView.CurrentItem).Title);
                     destination = System.IO.Path.Combine(sf.DirectoryName, newname);
                     if (File.Exists(sourcefile)){
                         SimsPackage item = (SimsPackage)_packagesView.CurrentItem;
+                        item = GlobalVariables.DatabaseConnection.GetWithChildren<SimsPackage>(item.PackageName);
+                        GlobalVariables.DatabaseConnection.Delete(item);
                         item.Location = destination;
                         File.Move(sourcefile, destination);                        
-                        GlobalVariables.DatabaseConnection.UpdateWithChildren(item);
+                        GlobalVariables.DatabaseConnection.InsertWithChildren(item);
                         RefreshResults();
                     } else {
                         System.Windows.Forms.MessageBox.Show(string.Format("File {0} not found at source. Did it get deleted?", sourcefile));    
@@ -2495,15 +2391,17 @@ namespace SimsCCManager.SortingUIResults {
                     foreach (var thing in ResultsWindow.resultsView.SelectedItems){
                         sf = new FileInfo(((SimsPackage)_packagesView.CurrentItem).Location);
                         SimsPackage item = ((SimsPackage)thing);
-                        string newname = ((SimsPackage)_packagesView.CurrentItem).Title;
+                        string newname = string.Format("{0}.package", ((SimsPackage)_packagesView.CurrentItem).Title);
                         destination = System.IO.Path.Combine(sf.DirectoryName, newname);
                         filename = item.PackageName;
                         destination = System.IO.Path.Combine(destination, newname);
                         sourcefile = item.Location;
-                        if (File.Exists(sourcefile)){                            
+                        if (File.Exists(sourcefile)){
+                            item = GlobalVariables.DatabaseConnection.GetWithChildren<SimsPackage>(item.PackageName);
+                            GlobalVariables.DatabaseConnection.Delete(item);   
                             item.Location = destination;
-                            File.Move(sourcefile, destination);                        
-                            GlobalVariables.DatabaseConnection.UpdateWithChildren(item);
+                            File.Move(sourcefile, destination);                            
+                            GlobalVariables.DatabaseConnection.InsertWithChildren(item);
                             RefreshResults();
                         } else {
                             System.Windows.Forms.MessageBox.Show(string.Format("File not found: {0}", item.PackageName));    

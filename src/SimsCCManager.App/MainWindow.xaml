@@ -1,17 +1,19 @@
-﻿<Window x:Class="Sims_CC_Sorter.MainWindow"
+﻿<Window x:Class="SimsCCManager.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Sims_CC_Sorter"
+        xmlns:local="clr-namespace:SimsCCManager.App"
         xmlns:fa="http://schemas.fontawesome.io/icons/"
         mc:Ignorable="d"
         Title="Sims CC Manager"
-        WindowState="Normal"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Loaded="App_Loaded"
-        Background="#212a3e"
-        SizeToContent="WidthAndHeight"
+        WindowState="Normal"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Closing="Window_Closing"
         Icon="img\simsccmanagericon.ico">
         <Window.Resources>
             <Style TargetType="TextBlock">
@@ -30,14 +32,45 @@
                 <Setter Property="Background" Value="#f1f6f9"/>
                 <Setter Property="Foreground" Value="#FF5F646E"/>
             </Style>
+            <ControlTemplate x:Key="NoMouseOverButtonTemplate" 
+                 TargetType="Button">                
+                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                <!-- Add only required visual state triggers -->
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsEnabled"
+                            Value="False">
+                    <Setter Property="Background"
+                            Value="{x:Static SystemColors.ControlLightBrush}" />
+                    <Setter Property="Foreground"
+                            Value="{x:Static SystemColors.GrayTextBrush}" />
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
         </Window.Resources>
-    <Grid Visibility="Visible"> 
+    <Grid Visibility="Visible">        
         <Grid x:Name="MainMenuGrid" Background="#212a3e" Visibility="Visible" Width="500" Height="650">
-            <StackPanel Orientation="Vertical" Visibility="Visible">
+            <Grid>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="25"/>
+                  <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid MouseDown="TitleBar_MouseDown" Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Right" Background="#3B4861" Width="500" Height="30">
+                    <Label Margin="0, 0, 0, 5" Foreground="AliceBlue" Content="Sims CC Manager" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="0"/>  
+                    <Button Width="30" Height="30" Template="{StaticResource NoMouseOverButtonTemplate}" Click="CloseWindow_Click" HorizontalAlignment="Right">
+                      <Image Source="img/icons/fi-sr-cross-small_w.png"/>
+                    </Button>
+                </Grid>               
+            <Grid Grid.Row="1" VerticalAlignment="Top" HorizontalAlignment="Right" Height="45" Width="45">
+                <Button Click="OptionsMenu_Click" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
+                    <Image Width="35" Source="img/icons/fi-sr-menu-burger.png"/>
+                </Button>
+            </Grid>
+            <StackPanel Grid.Row="1" Orientation="Vertical" Visibility="Visible">
                 <Rectangle Height="50" Width="5"/>
                 <TextBlock FontFamily="fonts/#Piximisa" Text="Sims CC Manager" Height="75" Width="800" FontSize="50" Foreground="#FF7CC96D" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
                 <TextBlock Text="Welcome to the Sims CC Manager." Height="20" Width="800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
-                <TextBlock Text="Pick the folder you want to manage below, or load prior data." Height="20" Width="800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
+                <TextBlock Text="Pick the folder you want to scan below, or manage packages you already scanned." Height="20" Width="800" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="5"/>
                 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <StackPanel.Resources>
@@ -55,7 +88,7 @@
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Width="400">
                     <TextBlock Foreground="AliceBlue" TextAlignment="Left" TextWrapping="Wrap">
                         <TextBlock.Inlines>
-                            <Run Text="Depending on how many CPU cores you have, reading through a large number of packages can take a long time. If you have to stop the scan midway through, it can be restarted later. You can also run the scan in batches if you so wish, adding one folder at a time to your database."/>
+                            <Run Text="If your computer is on the slower side, reading through a large amount of packages can take a while. On an SSD, the app averages about 6k packages an hour. If you will need to shut your computer down but want to manage your full collection, consider scanning in a folder at a time."/>
                         </TextBlock.Inlines>
                     </TextBlock>
                     <Rectangle Height="10"/>
@@ -66,16 +99,15 @@
                     </TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <Button x:Name="NewFolder" Content="Find New Items" Click="FindNewItems_Click" Style="{StaticResource MainButtons}"/> 
-                    <Button x:Name="LoadButton" Click="loadData_Click" Content="Manage CC" Visibility="Collapsed" Style="{StaticResource MainButtons}"/>
+                    <Button x:Name="NewFolder" Content="Add to Database" Click="FindNewItems_Click" Style="{StaticResource MainButtons}"/> 
+                    <Button x:Name="LoadButton" Click="loadData_Click" Content="Manage Your CC" Visibility="Visible" Style="{StaticResource MainButtons}"/>
                 </StackPanel>                
                 <Rectangle Height="0"/>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">                                
-                    <Button x:Name="StartOverButton" Click="StartOver_Click" Content="Start Over" Visibility="Collapsed" Width="200" Style="{StaticResource MainButtons}"/>
-                    <Button x:Name="OrphanButton" Click="Orphan_Click" Content="Identify Orphans" Visibility="Collapsed" Width="200" Style="{StaticResource MainButtons}"/>
+                    <Button x:Name="StartOverButton" Click="StartOver_Click" Content="Total Reset" Visibility="Visible" Width="200" Style="{StaticResource MainButtons}"/>
                 </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Vertical" Visibility="Visible" Margin="0, 475, 0, 0">
+            <StackPanel Grid.Row="1" Orientation="Vertical" Visibility="Visible" Margin="0, 475, 0, 0">
                 <StackPanel.Resources>
                     <Style TargetType="Button">                        
                         <Setter Property="Width" Value="150"/>  
@@ -84,23 +116,11 @@
                         <Setter Property="Background" Value="#f1f6f9"/>
                         <Setter Property="Foreground" Value="#FF5F646E"/>
                     </Style>
-                </StackPanel.Resources>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0, 0, 0, 10">
-                    <Label Content="Restrict CPU Usage?     " VerticalAlignment="Center" FontSize="13" Foreground="AliceBlue" HorizontalContentAlignment="Center"/>
-                    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <CheckBox Checked="noeatcpu_Check" Unchecked="eatcpu_Uncheck" Width="15" Height="15"/>
-                    </Grid>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0, 0, 0, 10">
-                    <Label Content="Sort as we go?     " VerticalAlignment="Center" FontSize="13" Foreground="AliceBlue" HorizontalContentAlignment="Center"/>
-                    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <CheckBox Checked="sortonthego_Check" Unchecked="sortonthego_Uncheck" Width="15" Height="15"/>
-                    </Grid>
-                </StackPanel>
+                </StackPanel.Resources>                              
                 <Button x:Name="exitButton" Click="exitButton_Click" Content="Exit" Height="40" Width="350" Margin="5"/>
                 <Button x:Name="testButton" Click="testbutton_Click" Content="Dev Test Button" Height="35" Width="127" Margin="5" Visibility="Hidden"/>
             </StackPanel>        
-            <Grid>
+            <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="100"/>
                     <ColumnDefinition/>
@@ -115,7 +135,7 @@
                 </StackPanel>
                 
             </Grid>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Column="0">
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Column="0">
                 <Button Name="TwitterButton" Height="30" Margin="10" Padding="0" Click="Twitter_Click" Background="Transparent" BorderThickness="0">
                     <Image Source="img\twittericon_w.png"/>
                 </Button> 
@@ -129,6 +149,56 @@
                     <Image Source="img\discordicon_w.png"/>
                 </Button>                
             </StackPanel>
+        </Grid>
+    </Grid>
+
+        <Grid x:Name="OptionsMenuGrid" Visibility="Hidden" Width="450" Height="250" VerticalAlignment="Center">
+            <Border Background="#212a3e" BorderBrush="#D3C4D0" BorderThickness="2,2,2,2" Padding="0" CornerRadius="5 5 5 5" ClipToBounds="True" Margin="0,0,0,0">
+            </Border>
+            <Grid>
+                <Grid.RowDefinitions>                
+                    <RowDefinition Height="30"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Right" Background="#3B4861" Width="450" Height="30">
+                    <Button Width="30" Height="30" Template="{StaticResource NoMouseOverButtonTemplate}" Click="CloseOptionsMenu_Click" HorizontalAlignment="Right">
+                        <Image Source="img/icons/fi-sr-cross-small_w.png"/>
+                    </Button>
+                </Grid>                                
+                <Grid Grid.Row="1" VerticalAlignment="Center">                     
+                    <StackPanel Orientation="Vertical" Margin="10, 0, 10, 10">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0, 0, 0, 5">    
+                            <Label Foreground="AliceBlue" Content="Sims 2 Documents Folder" Margin="0, 0, 5, 0"/>
+                            <TextBox x:Name="Sims2Folder" Height="20" Width="150" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                            <Button x:Name="BrowseForS2Location" Click="browseS2Location_Click" Content="Browse" Width="60" Height="25" Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5, 0, 0, 0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0, 0, 0, 5">    
+                            <Label Foreground="AliceBlue" Content="Sims 3 Documents Folder" Margin="0, 0, 5, 0"/>
+                            <TextBox x:Name="Sims3Folder" Height="20" Width="150" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                            <Button x:Name="BrowseForS3Location" Click="browseS3Location_Click" Content="Browse" Width="60" Height="25" Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5, 0, 0, 0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0, 0, 0, 5">    
+                            <Label Foreground="AliceBlue" Content="Sims 4 Documents Folder" Margin="0, 0, 5, 0"/>
+                            <TextBox x:Name="Sims4Folder" Height="20" Width="150" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                            <Button x:Name="BrowseForS4Location" Click="browseS4Location_Click" Content="Browse" Width="60" Height="25" Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5, 0, 0, 0"/>
+                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 0, 5">
+                                    <Label Foreground="AliceBlue" Content="Restrict CPU Usage" Margin="0, 0, 5, 0"/>
+                                    <CheckBox Checked="RestrictCPU_Check" Unchecked="RestrictCPU_Uncheck"/>
+                                </StackPanel>
+                            </StackPanel>                            
+                        </Grid>
+
+                        <Button Click="CustomizeSortingOptions_Click" Padding="0" Width="250" Height="25" Content="Customize Sorting Options" Margin="0, 10, 0, 0"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
         </Grid>
 
         <Grid x:Name="ReportABugGrid" Visibility="Hidden" Width="350" Height="175" ZIndex="2">
@@ -165,24 +235,7 @@
             <Grid x:Name="Cancelling" Visibility="Hidden">
                 <Label x:Name="CancelLabel" Content="Cancelling, please wait." HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
-        </Grid>  
-
-        <Grid x:Name="LoadingResultsGrid" Background="#212a3e" Visibility="Hidden" Width="500" Height="650" ZIndex="2">
-            <Grid>
-                <fa:ImageAwesome Icon="Spinner" Spin="True" SpinDuration="10">
-                    <fa:ImageAwesome.Triggers>
-                        <EventTrigger RoutedEvent="Loaded">
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <ColorAnimation Storyboard.TargetProperty="Foreground.Color" RepeatBehavior="Forever"
-                                                    From="Black" To="Yellow" Duration="0:0:5.0" AutoReverse="True"/>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </fa:ImageAwesome.Triggers>
-                </fa:ImageAwesome>
-            </Grid>
-        </Grid>      
+        </Grid>
     </Grid>
 
 </Window>

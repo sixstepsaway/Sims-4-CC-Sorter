@@ -52,8 +52,9 @@ using System.IO.Packaging;
 using System.Windows.Media.Animation;
 using MoreLinq;
 using FontAwesome.WPF;
+using SimsCCManager.App.CustomSortingOptions;
 
-namespace Sims_CC_Sorter
+namespace SimsCCManager.App
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -67,7 +68,8 @@ namespace Sims_CC_Sorter
         InitialProcessing initialprocess = new InitialProcessing();
         ParallelOptions parallelSettings = new ParallelOptions();
         FilesSort filesSort = new FilesSort();
-        FindOrphans orphanhunt = new FindOrphans();
+        FindOrphans orphanhunt = new FindOrphans();        
+
         public Stopwatch sw = new Stopwatch();
         string SelectedFolder = "";
         string statement = "";
@@ -137,18 +139,11 @@ namespace Sims_CC_Sorter
         }
 
         private void StartIt(){
-            /*[Update: Just out of interest: .NET Thread Pool default numbers of threads:
-
-                1023 in Framework 4.0 (32-bit environment)
-                32767 in Framework 4.0 (64-bit environment)
-                250 per core in Framework 3.5
-                25 per core in Framework 2.0
-
-            (These numbers may vary depending upon the hardware and OS)]*/
-
+            
             ThreadPool.GetMaxThreads(out int workerThreadsCount, out int ioThreadsCount);
             workerthreads = workerThreadsCount;
             iothreads = ioThreadsCount;
+            eatenturecpu = GlobalVariables.eatentirecpu;
 
 
             if (eatenturecpu == true){
@@ -157,25 +152,7 @@ namespace Sims_CC_Sorter
                 threadstouse = (iothreads - 2) / 2;
             }
             parallelSettings.MaxDegreeOfParallelism = threadstouse;
-            
-            /*GlobalVariables.AddPackages.ContentChanged += AddPackages_CollectionChanged;
-            GlobalVariables.ProcessingReader.ContentChanged += ProcessingReader_CollectionChanged;
-            GlobalVariables.RemovePackages.ContentChanged += RemovePackages_CollectionChanged;
-            GlobalVariables.AllFiles.ContentChanged += AllFiles_CollectionChanged;
-            GlobalVariables.InstancesRecolorsS2Col.ContentChanged += InstancesRecolorsS2Col_CollectionChanged;
-            GlobalVariables.InstancesMeshesS2Col.ContentChanged += InstancesMeshesS2Col_CollectionChanged;
-            GlobalVariables.InstancesRecolorsS3Col.ContentChanged += InstancesRecolorsS3Col_CollectionChanged;
-            GlobalVariables.InstancesMeshesS3Col.ContentChanged += InstancesMeshesS3Col_CollectionChanged;
-            GlobalVariables.InstancesRecolorsS4Col.ContentChanged += InstancesRecolorsS4Col_CollectionChanged;
-            GlobalVariables.InstancesMeshesS4Col.ContentChanged += InstancesMeshesS4Col_CollectionChanged;*/
-
-
-
-
-            //packagereader.DoWork += packagereader_DoWork;
-            //packagereader.RunWorkerCompleted += packagereader_RunWorkerCompleted;
-            //packagereader.WorkerSupportsCancellation = true;
-
+                        
             if (GlobalVariables.debugMode) {
                 Dispatcher.Invoke(new Action(() => testButton.Visibility = Visibility.Visible));
             } else {
@@ -184,19 +161,122 @@ namespace Sims_CC_Sorter
             if (dataExists == true) 
             {
                 Dispatcher.Invoke(new Action(() => StartOverButton.Visibility = Visibility.Visible));
-                Dispatcher.Invoke(new Action(() => OrphanButton.Visibility = Visibility.Visible));
                 Dispatcher.Invoke(new Action(() => LoadButton.Visibility = Visibility.Visible));
                 Dispatcher.Invoke(new Action(() => NewFolder.Content = "Find New Items"));
             } else {
                 Dispatcher.Invoke(new Action(() => StartOverButton.Visibility = Visibility.Collapsed));
-                Dispatcher.Invoke(new Action(() => OrphanButton.Visibility = Visibility.Collapsed));
                 Dispatcher.Invoke(new Action(() => LoadButton.Visibility = Visibility.Collapsed));
                 Dispatcher.Invoke(new Action(() => NewFolder.Content = "Find Content"));
             }
-        }      
+        }   
+
+        private void OptionsMenu_Click(object sender, RoutedEventArgs e){
+            Sims2Folder.Text = GlobalVariables.Sims2DocumentsFolder;
+            Sims3Folder.Text = GlobalVariables.Sims3DocumentsFolder;
+            Sims4Folder.Text = GlobalVariables.Sims4DocumentsFolder;
+            OptionsMenuGrid.Visibility = Visibility.Visible;
+        }  
+         
+        private void CloseOptionsMenu_Click(object sender, RoutedEventArgs e){
+            OptionsMenuGrid.Visibility = Visibility.Hidden;
+        }
+
+        public void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+                this.DragMove();
+        }
+
+        public void CloseWindow_Click(object sender, EventArgs e){
+            this.Close();
+        }
+
+        private void CustomizeSortingOptions_Click(object sender, RoutedEventArgs e){
+            SortingOptionsWindow sow = new();
+            filesSort.InitializeSortingRules();
+            Dispatcher.Invoke(new Action(() => sow.Show()));
+        }
+
+        private void browseS2Location_Click(object sender, EventArgs e) {
+            using(var GetFolder = new FolderBrowserDialog())
+            {
+                DialogResult result = GetFolder.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK) {
+                    SelectedFolder = GetFolder.SelectedPath;
+                    GlobalVariables.Sims2DocumentsFolder = SelectedFolder;
+                    Sims2Folder.Text = GlobalVariables.Sims2DocumentsFolder;
+                    var s2 = GlobalVariables.Settings.Where(x => x.SettingName == "Sims2Folder").ToList();
+                    if (s2.Any()){
+                        GlobalVariables.Settings.Remove(s2[0]);
+                    }
+                    GlobalVariables.Settings.Add(new Setting(){SettingName = "Sims2Folder", SettingValue = GlobalVariables.Sims2DocumentsFolder});                    
+                    globalVars.SaveSettings();
+                }
+            }
+        }
+        private void browseS3Location_Click(object sender, EventArgs e) {
+            using(var GetFolder = new FolderBrowserDialog())
+            {
+                DialogResult result = GetFolder.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK) {
+                    SelectedFolder = GetFolder.SelectedPath;
+                    GlobalVariables.Sims3DocumentsFolder = SelectedFolder;
+                    Sims3Folder.Text = GlobalVariables.Sims3DocumentsFolder;
+                    var s3 = GlobalVariables.Settings.Where(x => x.SettingName == "Sims3Folder").ToList();
+                    if (s3.Any()){
+                        GlobalVariables.Settings.Remove(s3[0]);
+                    }
+                    GlobalVariables.Settings.Add(new Setting(){SettingName = "Sims3Folder", SettingValue = GlobalVariables.Sims3DocumentsFolder});                    
+                    globalVars.SaveSettings();
+                }
+            }
+        }
+        private void browseS4Location_Click(object sender, EventArgs e) {
+            using(var GetFolder = new FolderBrowserDialog())
+            {
+                DialogResult result = GetFolder.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK) {
+                    SelectedFolder = GetFolder.SelectedPath;
+                    GlobalVariables.Sims4DocumentsFolder = SelectedFolder;
+                    Sims4Folder.Text = GlobalVariables.Sims4DocumentsFolder;
+                    var s4 = GlobalVariables.Settings.Where(x => x.SettingName == "Sims4Folder").ToList();
+                    if (s4.Any()){
+                        GlobalVariables.Settings.Remove(s4[0]);
+                    }
+                    GlobalVariables.Settings.Add(new Setting(){SettingName = "Sims4Folder", SettingValue = GlobalVariables.Sims4DocumentsFolder});                    
+                    globalVars.SaveSettings();
+                }
+            }
+        }
+
+        
+        private void RestrictCPU_Check(object sender, EventArgs e) {
+            eatenturecpu = false;
+            GlobalVariables.Settings.Add(new Setting(){SettingName = "RestrictCPU", SettingValue = "True"});
+            globalVars.SaveSettings();
+        }
+        
+        private void RestrictCPU_Uncheck(object sender, EventArgs e) {
+            eatenturecpu = true;
+            GlobalVariables.Settings.Add(new Setting(){SettingName = "RestrictCPU", SettingValue = "False"});
+            globalVars.SaveSettings();
+        }
+
+        
+
+
+
+
+
+
+
         
         private void App_Loaded(object sender, RoutedEventArgs e){
              
+        }
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            e.Cancel = true;
         }
 
         #region Load 
@@ -352,19 +432,6 @@ namespace Sims_CC_Sorter
             ct.Dispose();
             // Cancellation should have happened, so call Dispose.
             HideProgressGrid();            
-        }
-
-        private void Orphan_Click(object sender, EventArgs e){
-            new Thread(() => OrphanSearch()){IsBackground = true}.Start();
-        }
-
-        private void OrphanSearch(){
-            new Thread(() => ShowProgressGrid()){IsBackground = true}.Start();
-            Task findorphans = Task.Run(() => {
-                FindOrphans(cts.Token);
-            }); 
-            findorphans.Wait();
-            new Thread(() => GetResults()){IsBackground = true}.Start();
         }
 
         private async void CancellingTick(){
@@ -584,8 +651,104 @@ namespace Sims_CC_Sorter
             } catch (Exception e){
                 log.MakeLog(string.Format("Ran into an error making Overridden List table: {0}", e), true);
             } 
+
+            string making = "Package Instance";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageInstance>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+
+            making = "Package GUID";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageGUID>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+
+            making = "Required EPs";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageRequiredEPs>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+
+            making = "Mesh Keys";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageMeshKeys>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+
+            making = "CAS Part Keys";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageCASPartKeys>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+
+            making = "Matching Recolors";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageMatchingRecolors>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+
+            making = "Conflicts";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageConflicts>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+
+            making = "Duplicates";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageDuplicates>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+
+            making = "Room Sort";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageRoomSort>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+
+            making = "Package Components";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageComponent>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+            making = "Flags";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageFlag>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+            making = "Thumbnails";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageThumbnail>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
+            making = "Thumbnails";
+
             
-            
+             
             var pragmas = new List<string>(){
                 "PRAGMA journal_mode=WAL",
                 "PRAGMA synchronous=OFF",
@@ -645,7 +808,7 @@ namespace Sims_CC_Sorter
                     allp = GlobalVariables.DatabaseConnection.Query<AllFiles>("SELECT * FROM AllFiles where Type='package'");
                     log.MakeLog(string.Format("Packages to read count is {0}.", allp.Count), true);
                     maxi = allp.Count;
-                    GlobalVariables.PackageCount = allp.Count();
+                    GlobalVariables.PackageCount = allp.Count;
                     log.MakeLog(string.Format("Packages to read count is {0}.", allp.Count), true);
                     SetProgressBar();
                     completionAlertValue("Reading packages.");
@@ -659,22 +822,33 @@ namespace Sims_CC_Sorter
                 new Thread(() => RunUpdateProgressBar(token)) {IsBackground = true}.Start();
 
                 Task rp = Task.Run(() => {
-                    //ReadPackages(token);
-                    //Processing = true;
-                    //new Thread(() => WatchAddPackages()) {IsBackground = true}.Start();
-                    //new Thread(() => WatchAllFiles()) {IsBackground = true}.Start();
-                    //new Thread(() => WatchProcessingReader()) {IsBackground = true}.Start();
-                    //new Thread(() => WatchRemovePackages()) {IsBackground = true}.Start();
-                    //new Thread(() => WatchInstancesRecolorsS2Col()) {IsBackground = true}.Start();
-                    //new Thread(() => WatchInstancesRecolorsS3Col()) {IsBackground = true}.Start();
-                    //new Thread(() => WatchInstancesRecolorsS4Col()) {IsBackground = true}.Start();
-                    //new Thread(() => WatchInstancesMeshesS2Col()) {IsBackground = true}.Start();
-                    //new Thread(() => WatchInstancesMeshesS3Col()) {IsBackground = true}.Start();
-                    //new Thread(() => WatchInstancesMeshesS4Col()) {IsBackground = true}.Start();
                     ReadPackagesPFE(allp);
                 }, token);
                 rp.Wait(token);
                 rp.Dispose();
+
+                runprogress = false;
+                List<SimsPackage> allPackages4 = new();
+                
+                Task matchPrep = Task.Run(() => { 
+                    allPackages4 = GlobalVariables.DatabaseConnection.Query<SimsPackage>("SELECT * FROM Packages where Game=4");
+                    maxi = allPackages4.Count;
+                    GlobalVariables.PackageCount = allPackages4.Count;
+                    SetProgressBar();
+                    completionAlertValue("Identifying orphans.");
+                    countprogress = 0;
+                }, token);
+                matchPrep.Wait(token);
+                matchPrep.Dispose();
+
+                new Thread(() => RunUpdateElapsed(sw, token)) {IsBackground = true}.Start();
+                new Thread(() => RunUpdateProgressBar(token)) {IsBackground = true}.Start();
+
+                Task findMatches = Task.Run(() => { 
+                    IdentifyOrphans(allPackages4);
+                }, token);
+                findMatches.Wait(token);
+                findMatches.Dispose();
                 Processing = false;
 
                 string elapsedtime = "";
@@ -731,6 +905,139 @@ namespace Sims_CC_Sorter
 
         #region Methods of Processing
 
+        private async void IdentifyOrphans(List<SimsPackage> packages){
+            Task doMath1 = Task.Run(async () => {
+                if (packages.Count > 100000){
+                    databaseBatchSize = (packages.Count / 1000) / 2;
+                } else if (packages.Count > 10000){
+                    databaseBatchSize = (packages.Count / 100) / 2;
+                } else if (packages.Count > 1000){
+                    databaseBatchSize = (packages.Count / 10) / 2;
+                } else {
+                    databaseBatchSize = 25;
+                }
+
+                if (packages.Count > 100000){
+                    packageReaderBatchSize = (packages.Count / 1000) / 2;
+                } else if (packages.Count > 10000){
+                    packageReaderBatchSize = (packages.Count / 100) / 2;
+                } else if (packages.Count > 1000){
+                    packageReaderBatchSize = (packages.Count / 10) / 2;
+                } else {
+                    packageReaderBatchSize = 25;
+                }
+            });
+            doMath1.Wait();
+
+            int packageBatchesLow = 0;
+            int packageBatchesHigh = 0;
+            int filesReadNoOverflow = 0;
+            int packageOverflow = 0;
+            
+            Task doMath2 = Task.Run(async () => {
+                double packageBatchesMath = (double)packages.Count / packageReaderBatchSize;
+            
+                packageBatchesLow = (int)packageBatchesMath;
+                packageBatchesHigh = (int)Math.Ceiling(packageBatchesMath);
+                filesReadNoOverflow = packageBatchesLow * packageReaderBatchSize;
+                packageOverflow = packages.Count - filesReadNoOverflow;
+                log.MakeLog(string.Format("There will be {0} batches of packages.", packageBatchesHigh), true);
+                log.MakeLog(string.Format("The final batch will contain {0} files.", packageOverflow), true);
+                log.MakeLog(string.Format("Making batches list."), true);
+            });
+            doMath2.Wait();
+            
+            
+
+            var PackageBatches = new List<List<SimsPackage>>();
+                    
+            for (int i = 0; i < packageBatchesHigh; i++)
+            {
+                PackageBatches.Add(packages.Skip(i * packageReaderBatchSize).Take(packageReaderBatchSize).ToList());
+            }
+
+            log.MakeLog("Listing batches.", true);            
+            log.MakeLog(string.Format("There are {0} batches to run.", PackageBatches.Count), true);
+
+            List<SimsPackage> list1 = new();
+            List<PackageFile> list2 = new();
+            List<PackageFile> list3 = new();
+            List<AllFiles> list4 = new();
+            List<InstancesRecolorsS2> list5 = new();
+            List<InstancesRecolorsS3> list6 = new();
+            List<InstancesRecolorsS4> list7 = new();
+            List<InstancesMeshesS2> list8 = new();
+            List<InstancesMeshesS3> list9 = new();
+            List<InstancesMeshesS4> list10 = new();
+            List<PackageThumbnail> list11 = new();
+            int batchnum = -1;
+            int totalitems = -1;
+            foreach (var batch in PackageBatches){
+                batchnum++;
+                Task reader = Task.Run(() => {
+                    int itemnum = -1;
+                    Parallel.ForEach(batch, parallelSettings, p => {
+                        itemnum++;
+                        totalitems++;
+                        log.MakeLog(string.Format("Processing item {0} of batch {1}. Total items processed: {2}/{3}.", itemnum, batchnum, totalitems, packages.Count), true);
+                        if (p.Game == 4){
+                            orphanhunt.FindMatchesS4(p);
+                        }                      
+                    });
+                });
+                reader.Wait();
+
+                Task UpdateDatabase = Task.Run(() => {
+                    log.MakeLog(string.Format("Getting items produced by batch {0}.", batchnum), true);
+                    list1 = GlobalVariables.AddPackages.ToList();                    
+                    GlobalVariables.AddPackages.Clear();
+                    log.MakeLog(string.Format("Batch {0}: AddPackages cleared.", batchnum), true);
+                    list2 = GlobalVariables.RemovePackages.ToList();
+                    GlobalVariables.RemovePackages.Clear();
+                    log.MakeLog(string.Format("Batch {0}: RemovePackages cleared.", batchnum), true);
+                    list3 = GlobalVariables.ProcessingReader.ToList();
+                    GlobalVariables.ProcessingReader.Clear();                   
+                    log.MakeLog(string.Format("Batch {0}: ProcessingReader cleared.", batchnum), true);
+                    list4 = GlobalVariables.AllFiles.ToList();
+                    GlobalVariables.AllFiles.Clear();
+                    log.MakeLog(string.Format("Batch {0}: AllFiles cleared.", batchnum), true);
+                    list5 = GlobalVariables.InstancesRecolorsS2Col.ToList();
+                    GlobalVariables.InstancesRecolorsS2Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesRecolorsS2 cleared.", batchnum), true);
+                    list6 = GlobalVariables.InstancesRecolorsS3Col.ToList();
+                    GlobalVariables.InstancesRecolorsS3Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesRecolorsS3 cleared.", batchnum), true);
+                    list7 = GlobalVariables.InstancesRecolorsS4Col.ToList();
+                    GlobalVariables.InstancesRecolorsS4Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesRecolorsS4 cleared.", batchnum), true);
+                    list8 = GlobalVariables.InstancesMeshesS2Col.ToList();
+                    GlobalVariables.InstancesMeshesS2Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesMeshesS2 cleared.", batchnum), true);
+                    list9 = GlobalVariables.InstancesMeshesS3Col.ToList();
+                    GlobalVariables.InstancesMeshesS3Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesMeshesS3 cleared.", batchnum), true);
+                    list10 = GlobalVariables.InstancesMeshesS4Col.ToList();
+                    GlobalVariables.InstancesMeshesS4Col.Clear();
+                    log.MakeLog(string.Format("Batch {0}: InstancesMeshesS4 cleared.", batchnum), true);
+                    log.MakeLog(string.Format("Batch {0}: Finished getting items.", batchnum), true);
+                });                
+                UpdateDatabase.Wait();
+                log.MakeLog(string.Format("Sending items off for processing.", batchnum), true);
+                UpdateDatabases(list1, list2, list3, list4, list5, list6, list7, list8, list9, list10, batchnum);
+                list1 = new();
+                list2 = new();
+                list3 = new();
+                list4 = new();
+                list5 = new();
+                list6 = new();
+                list7 = new();
+                list8 = new();
+                list9 = new();
+                list10 = new();                
+            }         
+        }
+        
+        
         private async void ReadPackagesPFE(List<AllFiles> allp){
             Task doMath1 = Task.Run(async () => {
                 if (allp.Count > 100000){
@@ -795,6 +1102,7 @@ namespace Sims_CC_Sorter
             List<InstancesMeshesS2> list8 = new();
             List<InstancesMeshesS3> list9 = new();
             List<InstancesMeshesS4> list10 = new();
+
             int batchnum = -1;
             int totalitems = -1;
             foreach (var batch in PackageBatches){
@@ -843,7 +1151,7 @@ namespace Sims_CC_Sorter
                     GlobalVariables.InstancesMeshesS4Col.Clear();
                     log.MakeLog(string.Format("Batch {0}: InstancesMeshesS4 cleared.", batchnum), true);
                     log.MakeLog(string.Format("Batch {0}: Finished getting items.", batchnum), true);
-                });                
+                });
                 UpdateDatabase.Wait();
                 log.MakeLog(string.Format("Sending items off for processing.", batchnum), true);
                 UpdateDatabases(list1, list2, list3, list4, list5, list6, list7, list8, list9, list10, batchnum);
@@ -861,99 +1169,70 @@ namespace Sims_CC_Sorter
         }
 
         private async Task UpdateDatabases(List<SimsPackage> list1, List<PackageFile> list2, List<PackageFile> list3, List<AllFiles> list4, List<InstancesRecolorsS2> list5, List<InstancesRecolorsS3> list6, List<InstancesRecolorsS4> list7, List<InstancesMeshesS2> list8, List<InstancesMeshesS3> list9, List<InstancesMeshesS4> list10, int batchnum){
-            GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(list1, true);
+            GlobalVariables.DatabaseConnection.InsertAllWithChildren(list1.ApostropheFix(), true);
             log.MakeLog(string.Format("Batch {0}: {1} Items in AddPackages added to Database.", batchnum, list1.Count), true);
             
-            GlobalVariables.DatabaseConnection.DeleteAll(list2, true);
+            GlobalVariables.DatabaseConnection.DeleteAll(list2.ApostropheFix(), true);
             log.MakeLog(string.Format("Batch {0}: {1} Items in RemovePackages added to Database.", batchnum, list2.Count), true);
 
-            GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(list3, true);
+            GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(list3.ApostropheFix(), true);
             log.MakeLog(string.Format("Batch {0}: {1} Items in processingReader added to Database.", batchnum, list3.Count), true);
 
-            GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(list4, true);
+            GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(list4.ApostropheFix(), true);
             log.MakeLog(string.Format("Batch {0}: {1} Items in AllFiles added to Database.", batchnum, list4.Count), true);
 
-            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list5, true);
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list5.ApostropheFix(), true);
             log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesRecolorsS2 added to Database.", batchnum, list5.Count), true);
 
-            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list6, true);
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list6.ApostropheFix(), true);
             log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesRecolorsS3 added to Database.", batchnum, list6.Count), true);
             
-            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list7, true);
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list7.ApostropheFix(), true);
             log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesRecolorsS4 added to Database.", batchnum, list7.Count), true);
             
-            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list5, true);
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list8.ApostropheFix(), true);
             log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesMeshesS2 added to Database.", batchnum, list8.Count), true);
             
-            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list6, true);
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list9.ApostropheFix(), true);
             log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesMeshesS3 added to Database.", batchnum, list9.Count), true);
             
-            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list7, true);
+            GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(list10.ApostropheFix(), true);
             log.MakeLog(string.Format("Batch {0}: {1} Items in InstancesMeshesS4 added to Database.", batchnum, list10.Count), true);
+            
             
         }
 
         private async void CheckObservableCollections(){
             Task checker = Task.Run(() => {
                 if (!GlobalVariables.AddPackages.IsEmpty){
-                    for (int i = 0; i < GlobalVariables.AddPackages.Count; i++){
-                        GlobalVariables.AddPackages.TryDequeue(out SimsPackage package);
-                        GlobalVariables.DatabaseConnection.InsertOrReplaceWithChildren(package);
-                    }
+                    GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(GlobalVariables.AddPackages.ToList().ApostropheFix());
                 }                
                 if (!GlobalVariables.RemovePackages.IsEmpty){
-                    for (int i = 0; i < GlobalVariables.RemovePackages.Count; i++){
-                        GlobalVariables.RemovePackages.TryDequeue(out PackageFile item);
-                        GlobalVariables.DatabaseConnection.Delete(item);
-                    }
+                    GlobalVariables.DatabaseConnection.Delete(GlobalVariables.RemovePackages.ToList().ApostropheFix());
                 }
                 if (!GlobalVariables.ProcessingReader.IsEmpty){
-                    for (int i = 0; i < GlobalVariables.ProcessingReader.Count; i++){
-                        GlobalVariables.ProcessingReader.TryDequeue(out PackageFile item);
-                        GlobalVariables.DatabaseConnection.InsertOrReplaceWithChildren(item);
-                    }
+                    GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(GlobalVariables.ProcessingReader.ToList().ApostropheFix());
                 }
                 if (!GlobalVariables.AllFiles.IsEmpty){
-                    for (int i = 0; i < GlobalVariables.AllFiles.Count; i++){
-                        GlobalVariables.AllFiles.TryDequeue(out AllFiles item);
-                        GlobalVariables.DatabaseConnection.InsertOrReplaceWithChildren(item);
-                    }
+                    GlobalVariables.DatabaseConnection.InsertOrReplaceAllWithChildren(GlobalVariables.AllFiles.ToList().ApostropheFix());
                 }
                 if (!GlobalVariables.InstancesRecolorsS2Col.IsEmpty){
-                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS2Col.Count; i++){
-                        GlobalVariables.InstancesRecolorsS2Col.TryDequeue(out var item);
-                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
-                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesRecolorsS2Col.ToList().ApostropheFix());
                 }
                 if (!GlobalVariables.InstancesRecolorsS3Col.IsEmpty){
-                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS3Col.Count; i++){
-                        GlobalVariables.InstancesRecolorsS3Col.TryDequeue(out var item);
-                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
-                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesRecolorsS3Col.ToList().ApostropheFix());
                 }
                 if (!GlobalVariables.InstancesRecolorsS4Col.IsEmpty){
-                    for (int i = 0; i < GlobalVariables.InstancesRecolorsS4Col.Count; i++){
-                        GlobalVariables.InstancesRecolorsS4Col.TryDequeue(out var item);
-                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
-                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesRecolorsS4Col.ToList().ApostropheFix());
                 }
                 if (!GlobalVariables.InstancesMeshesS2Col.IsEmpty){
-                    for (int i = 0; i < GlobalVariables.InstancesMeshesS2Col.Count; i++){
-                        GlobalVariables.InstancesMeshesS2Col.TryDequeue(out var item);
-                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
-                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesMeshesS2Col.ToList().ApostropheFix());
                 }
                 if (!GlobalVariables.InstancesMeshesS3Col.IsEmpty){
-                    for (int i = 0; i < GlobalVariables.InstancesMeshesS3Col.Count; i++){
-                        GlobalVariables.InstancesMeshesS3Col.TryDequeue(out var item);
-                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
-                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesMeshesS3Col.ToList().ApostropheFix());
                 }
                 if (!GlobalVariables.InstancesMeshesS4Col.IsEmpty){
-                    for (int i = 0; i < GlobalVariables.InstancesMeshesS4Col.Count; i++){
-                        GlobalVariables.InstancesMeshesS4Col.TryDequeue(out var item);
-                        GlobalVariables.InstancesCacheConnection.InsertOrReplaceWithChildren(item);
-                    }
+                    GlobalVariables.InstancesCacheConnection.InsertOrReplaceAllWithChildren(GlobalVariables.InstancesMeshesS4Col.ToList().ApostropheFix());
                 }
             });
             checker.Wait();
@@ -1805,7 +2084,7 @@ namespace Sims_CC_Sorter
         }
 
         private void ShowLoadingResultsGrid(){
-            Dispatcher.Invoke(new Action(() => LoadingResultsGrid.Visibility = Visibility.Visible));
+            //Dispatcher.Invoke(new Action(() => LoadingResultsGrid.Visibility = Visibility.Visible));
         }
 
         #endregion
@@ -1921,8 +2200,7 @@ namespace Sims_CC_Sorter
               
 
         private void testbutton_Click(object sender, EventArgs e) {
-            ThreadPool.GetMaxThreads(out int workerThreadsCount, out int ioThreadsCount);
-            Console.WriteLine("Worker Threads Count: " + workerThreadsCount + " and iothreadscount: " + ioThreadsCount);
+            //filesSort.InitializeSortingRules();            
         }        
     }
 

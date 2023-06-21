@@ -59,11 +59,10 @@ namespace SimsCCManager.Packages.Initial {
                 LogMessage = string.Format("Adding broken file {0} to list.", pack.Name);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                string qcmd = string.Format("SELECT * FROM AllFiles where Name = '{0}'", pack.Name);
+                string packageNameUpdated = Methods.FixApostrophesforSQL(pack.Name);
+                string qcmd = string.Format("SELECT * FROM AllFiles where Name = '{0}'", packageNameUpdated);
                 var fileq = GlobalVariables.DatabaseConnection.Query<AllFiles>(qcmd);
                 AllFiles query = fileq[0];
-                string packageNameUpdated = Methods.FixApostrophesforSQL(query.Name);            
-                query.Name = packageNameUpdated;
                 /*string qtype = query.Type;
                 GlobalVariables.DatabaseConnection.Delete(query);*/ 
                 packagereader.Close();
@@ -139,9 +138,9 @@ namespace SimsCCManager.Packages.Initial {
                     LogMessage = string.Format("{0} is a Sims 5 file.", pack.FullName);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                    AllFiles af = new AllFiles();                    
-                    string packageNameUpdated = Methods.FixApostrophesforSQL(pack.Name);            
-                    af.Name  = packageNameUpdated;af.Location = pack.FullName;
+                    AllFiles af = new AllFiles();         
+                    af.Name  = pack.Name;
+                    af.Location = pack.FullName;
                     af.Type = "package";
                     af.Status = "SimCity 5 Package";
                     GlobalVariables.AllFiles.Enqueue(af);
@@ -151,9 +150,9 @@ namespace SimsCCManager.Packages.Initial {
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     AllFiles af = new AllFiles();
+                    af.Location = pack.FullName;           
+                    af.Name  = pack.Name;
                     af.Location = pack.FullName;
-                    string packageNameUpdated = Methods.FixApostrophesforSQL(pack.Name);            
-                    af.Name  = packageNameUpdated;af.Location = pack.FullName;
                     af.Type = "package";
                     af.Status = "Unidentifiable version";
                     GlobalVariables.AllFiles.Enqueue(af);
@@ -178,8 +177,8 @@ namespace SimsCCManager.Packages.Initial {
         }
         private void PtoDb(FileInfo f, int game){
             log.MakeLog(string.Format("Adding {0} to database as for Sims {1}", f.Name, game), true);
-            string packageNameUpdated = Methods.FixApostrophesforSQL(f.Name);
-            GlobalVariables.ProcessingReader.Enqueue(new PackageFile{Name = packageNameUpdated, Location = f.FullName, Game = game, Broken = false});
+            //string packageNameUpdated = Methods.FixApostrophesforSQL(f.Name);
+            GlobalVariables.ProcessingReader.Enqueue(new PackageFile{Name = f.Name, Location = f.FullName, Game = game, Broken = false});
 
             //Containers.Containers.identifiedPackages.Add(new PackageFile{Name = f.Name, Location = f.FullName, Game = game, Broken = false, Status = "Pending"});
             

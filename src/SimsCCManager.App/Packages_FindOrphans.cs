@@ -22,8 +22,8 @@ namespace SimsCCManager.Packages.Orphans
             if (thisPackage.Recolor == true && thisPackage.Mesh == false){
                 if (thisPackage.CASPartKeys.Any()){
                     foreach (var rec in thisPackage.CASPartKeys){
-                        if (rec != "000000-000000-0000000000000000"){
-                            string[] split = rec.Split('-');
+                        if (rec.CASPartKey != "000000-000000-0000000000000000"){
+                            string[] split = rec.CASPartKey.Split('-');
                             var foundoverrides = (from overrides in GlobalVariables.S4OverridesList
                                                     where overrides.InstanceID == split[2]
                                                     select overrides).ToList();
@@ -40,23 +40,23 @@ namespace SimsCCManager.Packages.Orphans
                 foreach (var meshkey in thisPackage.MeshKeys){
                     InstancesMeshesS4 Mesh = new();
                     var MatchingRecolors = (from r in GlobalVariables.S4InstancesCacheRecolors
-                                where thisPackage.CASPartKeys.Any(mr => r.Key == mr) && thisPackage.PackageName == r.PackageName
+                                where thisPackage.CASPartKeys.Any(mr => r.Key == mr.CASPartKey) && thisPackage.PackageName == r.PackageName
                                 select r).ToList();
                     //see if the mesh is already listed somewhere
                     var MatchingMeshes = (from r in GlobalVariables.S4InstancesCacheMeshes
-                                where thisPackage.CASPartKeys.Any(mr => r.Key == mr)
+                                where thisPackage.CASPartKeys.Any(mr => r.Key == mr.CASPartKey)
                                 select r).ToList();
                     if (MatchingMeshes.Any()){
                         Mesh = MatchingMeshes[0];
                     } else {
-                        Mesh.Key = meshkey;
+                        Mesh.Key = meshkey.MeshKey;
                         Mesh.PackageName = thisPackage.PackageName;
                     }
                     if (thisPackage.CASPartKeys.Any()){
                         foreach (var rec in thisPackage.CASPartKeys){
-                            if (rec != "000000-000000-0000000000000000"){
+                            if (rec.CASPartKey != "000000-000000-0000000000000000"){
                                 Mesh.MatchingRecolors.Add(new InstancesRecolorsS4(){
-                                    Key = rec,
+                                    Key = rec.CASPartKey,
                                     PackageName = thisPackage.PackageName
                                 });
                             }     
@@ -84,11 +84,11 @@ namespace SimsCCManager.Packages.Orphans
             } else if (thisPackage.Recolor == true){
                 List<InstancesRecolorsS4> Recolors = new();
                 var MatchingRecolors = (from r in GlobalVariables.S4InstancesCacheRecolors
-                            where thisPackage.CASPartKeys.Any(mr => r.Key == mr) && thisPackage.PackageName == r.PackageName
+                            where thisPackage.CASPartKeys.Any(mr => r.Key == mr.CASPartKey) && thisPackage.PackageName == r.PackageName
                             select r).ToList();
                 //see if the mesh is already listed somewhere
                 var MatchingMeshes = (from r in GlobalVariables.S4InstancesCacheMeshes
-                            where thisPackage.CASPartKeys.Any(mr => r.Key == mr)
+                            where thisPackage.CASPartKeys.Any(mr => r.Key == mr.CASPartKey)
                             select r).ToList();
                 InstancesMeshesS4 Mesh = new();
                 if (MatchingMeshes.Any()){    
@@ -113,9 +113,9 @@ namespace SimsCCManager.Packages.Orphans
                 }                
                 if (thisPackage.CASPartKeys.Any()){
                     foreach (var rec in thisPackage.CASPartKeys){
-                        if (rec != "000000-000000-0000000000000000"){
+                        if (rec.CASPartKey != "000000-000000-0000000000000000"){
                             InstancesRecolorsS4 irs4 = new(){
-                                Key = rec,
+                                Key = rec.CASPartKey,
                                 PackageName = thisPackage.PackageName
                             };
                             if (MatchingMeshes.Any()){

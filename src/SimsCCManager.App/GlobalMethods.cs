@@ -250,6 +250,10 @@ namespace SSAGlobals {
    
     }
     
+    public class Setting {
+        public string SettingName {get; set;}
+        public string SettingValue {get; set;}
+    }
 
     public class GlobalVariables {
         /// <summary>
@@ -258,11 +262,12 @@ namespace SSAGlobals {
         //JsonSerializer serializer = new JsonSerializer();
         public static bool consolevr = false;
         public static bool debugMode = true;
-        public static bool highdebug = false;
+        public static bool highdebug = true;
         public static bool loadedSaveData = false;
         public static string ModFolder;
         public static string logfile;
         public static bool sortonthego = false;
+        public static bool eatentirecpu = true;
         
         public static string currentpackage;
         public static int PackageCount = 0;       
@@ -275,6 +280,17 @@ namespace SSAGlobals {
         public static string PackagesRead = Path.Combine(LoggingGlobals.mydocs, PackagesCacheLoc); 
         public static string InstancesCache = Path.Combine(LoggingGlobals.mydocs, InstancesCacheLoc);
         public static string PackagesReadDS = string.Format("Data Source={0}", PackagesRead);
+
+        public static string SortingOptionsDefault = @"data\defaultsortingoptions.json";
+        public static string CustomSortingOptionsLoc = @"Sims CC Manager\data\CustomSortingOptions.json";
+        
+        public static string CustomSortingOptions = Path.Combine(LoggingGlobals.mydocs, CustomSortingOptionsLoc);
+        public static string SettingsFile = Path.Combine(LoggingGlobals.mydocs, @"Sims CC Manager\Settings.ini");
+        public static List<Setting> Settings = new();
+
+        public static string Sims2DocumentsFolder = Path.Combine(LoggingGlobals.mydocs, @"EA Games\The Sims 2 Ultimate Collection");
+        public static string Sims3DocumentsFolder = Path.Combine(LoggingGlobals.mydocs, @"Electronic Arts\The Sims 3");
+        public static string Sims4DocumentsFolder = Path.Combine(LoggingGlobals.mydocs, @"Electronic Arts\The Sims 4");
 
 
         public static SQLite.SQLiteConnection DatabaseConnection;
@@ -300,6 +316,7 @@ namespace SSAGlobals {
         public static ConcurrentQueue<InstancesRecolorsS3> InstancesRecolorsS3Col = new();
         public static ConcurrentQueue<InstancesMeshesS3> InstancesMeshesS3Col = new();
         public static ConcurrentQueue<AllFiles> AllFiles = new();
+        public static ConcurrentQueue<PackageThumbnail> Thumbnails = new();
         
         
         //vars that hold package files 
@@ -342,6 +359,39 @@ namespace SSAGlobals {
             log.MakeLog("Created sims 2 build function sort.", true);         
             log.MakeLog("Finished initializing.", true);
         }   
+
+        public void SaveSettings(){
+            using (StreamWriter streamWriter = new(SettingsFile)){
+                foreach (Setting setting in Settings){
+                    streamWriter.WriteLine(string.Format("{0} = {1}", setting.SettingName, setting.SettingValue));
+                }
+                streamWriter.Flush();
+                streamWriter.Close();
+            }  
+            return;          
+        }
+
+        public void LoadSettings(){
+            using (StreamReader streamReader = new StreamReader(SettingsFile)){
+                bool eos = false;                
+                while (eos == false){
+                    if(!streamReader.EndOfStream){
+                        string settings = streamReader.ReadLine();
+                        var line = settings.Split(" = ");
+                        Setting setting = new()
+                        {
+                            SettingName = line[0],
+                            SettingValue = line[1]
+                        };
+                        Settings.Add(setting);
+                    } else {
+                        eos = true;
+                    }
+                }
+                streamReader.Close();
+            }
+            return;
+        }
 
         public void ConnectDatabase(bool restart){
             string cs = GlobalVariables.PackagesRead;
@@ -601,6 +651,15 @@ namespace SSAGlobals {
             string output = "";
             string pattern = @"'";
             string replace = @"''";
+
+            output = Regex.Replace(input, pattern, replace);            
+
+            return output;
+        }
+        public static string RestoreApostrophesFromSQL(string input){
+            string output = "";
+            string pattern = @"''";
+            string replace = @"'";
 
             output = Regex.Replace(input, pattern, replace);            
 

@@ -30,6 +30,9 @@ using System.Collections.Concurrent;
 using SimsCCManager.Packages.Sorting;
 using System.Windows.Input;
 using SimsCCManager.Packages.Orphans;
+using System.Windows.Data;
+using System.IO.Packaging;
+using System.Drawing;
 
 namespace SimsCCManager.Packages.Sims4Search
 {
@@ -927,12 +930,12 @@ namespace SimsCCManager.Packages.Sims4Search
             
             List<TagsList> itemtags = new List<TagsList>();
             List<TagsList> distinctItemTags = new List<TagsList>();
-            List<string> allFlags = new List<string>();      
-            List<string> distinctFlags = new List<string>(); 
-            List<string> allGUIDS = new List<string>();      
-            List<string> distinctGUIDS = new List<string>();  
-            List<string> allInstanceIDs = new List<string>();      
-            List<string> distinctInstanceIDs = new List<string>();           
+            List<PackageFlag> allFlags = new();      
+            List<PackageFlag> distinctFlags = new(); 
+            List<PackageGUID> allGUIDS = new();      
+            List<PackageGUID> distinctGUIDS = new();  
+            List<PackageInstance> allInstanceIDs = new();      
+            List<PackageInstance> distinctInstanceIDs = new();           
             string[] objdentries;
             int[] objdpositions;   
             List<EntryHolder> entries = new List<EntryHolder>();
@@ -953,8 +956,8 @@ namespace SimsCCManager.Packages.Sims4Search
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             
-            string packageNameUpdated = Methods.FixApostrophesforSQL(packageinfo.Name);            
-            thisPackage.PackageName = packageNameUpdated;
+            //string packageNameUpdated = Methods.FixApostrophesforSQL(packageinfo.Name);            
+            thisPackage.PackageName = packageinfo.FullName;
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 4;
             thisPackage.GameString = "The Sims 4";
@@ -1165,7 +1168,7 @@ namespace SimsCCManager.Packages.Sims4Search
                         string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
                         holderEntry.instanceID = string.Format("{0}{1}", instanceid1,instanceid2);
                         if (holderEntry.instanceID != "0000000000000000"){
-                            allInstanceIDs.Add(holderEntry.instanceID);
+                            allInstanceIDs.Add(new PackageInstance(){InstanceID = holderEntry.instanceID});
                         }
                         
                         LogMessage = string.Format("P{0}/E{1} - InstanceID: {2}", packageparsecount, entrycount, holderEntry.instanceID);
@@ -1269,7 +1272,7 @@ namespace SimsCCManager.Packages.Sims4Search
                     string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
                     string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
                     holderEntry.instanceID = string.Format("{0}{1}", instanceid1,instanceid2);
-                    allInstanceIDs.Add(holderEntry.instanceID);
+                    allInstanceIDs.Add(new PackageInstance(){InstanceID = holderEntry.instanceID});
                     LogMessage = string.Format("P{0}/E{1} - InstanceID: {2}", packageparsecount, i, holderEntry.instanceID);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
@@ -1393,7 +1396,10 @@ namespace SimsCCManager.Packages.Sims4Search
                             for(int p = 0; p < 16; p++)
                             {
                                 if (parameterFlags[p] == true) {
-                                    allFlags.Add(parameters[p]);
+                                    var af = allFlags.Where(x => x.Flag == parameters[p]);
+                                    if (af.Any()){
+                                      allFlags.Add(new PackageFlag(){Flag = parameters[p]});  
+                                    }
                                 }
                                 LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString());
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
@@ -1410,7 +1416,10 @@ namespace SimsCCManager.Packages.Sims4Search
 
                             for(int pfc = 0; pfc < 16; pfc++){
                                 if (parameterFlags[pfc] == true) {
-                                    allFlags.Add(parameters[pfc]);
+                                    var af = allFlags.Where(x => x.Flag == parameters[pfc]);
+                                    if (af.Any()){
+                                      allFlags.Add(new PackageFlag(){Flag = parameters[pfc]});  
+                                    }
                                 }
                                 LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString());
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
@@ -1828,10 +1837,12 @@ namespace SimsCCManager.Packages.Sims4Search
                                 uint tid = decompbr.ReadUInt32();
                                 string key = string.Format("{0}-{1}-{2}", tid.ToString("X8"), gid.ToString("X8"), iid.ToString("X16"));
                                 if (key != "00000000-00000000-0000000000000000"){
-                                    if (!thisPackage.CASPartKeys.Contains(key)){
-                                        thisPackage.CASPartKeys.Add(key);
+                                    var match = thisPackage.CASPartKeys.Where(c => c.CASPartKey == key);
+                                    if (!match.Any()){
+                                        PackageCASPartKeys pcpk = new() {CASPartKey = key};
+                                        thisPackage.CASPartKeys.Add(pcpk);
                                     } 
-                                }  
+                                }   
                             }
                             decompbr.Dispose();
                             decomps.Dispose();
@@ -1909,7 +1920,10 @@ namespace SimsCCManager.Packages.Sims4Search
                             for(int p = 0; p < 16; p++)
                             {
                                 if (parameterFlags[p] == true) {
-                                    allFlags.Add(parameters[p]);
+                                    var af = allFlags.Where(x => x.Flag == parameters[p]);
+                                    if (af.Any()){
+                                      allFlags.Add(new PackageFlag(){Flag = parameters[p]});  
+                                    }
                                 }
                                 LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, p, parameters[p], parameterFlags[p].ToString());
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
@@ -1926,7 +1940,10 @@ namespace SimsCCManager.Packages.Sims4Search
 
                             for(int pfc = 0; pfc < 16; pfc++){
                                 if (parameterFlags[pfc] == true) {
-                                    allFlags.Add(parameters[pfc]);
+                                    var af = allFlags.Where(x => x.Flag == parameters[pfc]);
+                                    if (af.Any()){
+                                      allFlags.Add(new PackageFlag(){Flag = parameters[pfc]});  
+                                    }
                                 }
                                 LogMessage = string.Format("P{0}/CASP{1} [Decompressed] - Function Sort Flag [{2}]: {3}, {4}", packageparsecount, e, pfc, parameters[pfc], parameterFlags[pfc].ToString());
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
@@ -2318,8 +2335,10 @@ namespace SimsCCManager.Packages.Sims4Search
                                 uint tid = readFile.ReadUInt32();
                                 string key = string.Format("{0}-{1}-{2}", tid.ToString("X8"), gid.ToString("X8"), iid.ToString("X16"));
                                 if (key != "00000000-00000000-0000000000000000"){
-                                    if (!thisPackage.CASPartKeys.Contains(key)){
-                                        thisPackage.CASPartKeys.Add(key);
+                                    var match = thisPackage.CASPartKeys.Where(c => c.CASPartKey == key);
+                                    if (!match.Any()){
+                                        PackageCASPartKeys pcpk = new() {CASPartKey = key};
+                                        thisPackage.CASPartKeys.Add(pcpk);
                                     } 
                                 }                                
                             }
@@ -2365,13 +2384,16 @@ namespace SimsCCManager.Packages.Sims4Search
                             BinaryReader decompbr = new BinaryReader(decomps);                           
                             
                             ReadCOBJ rc = new ReadCOBJ(decompbr, packageparsecount, e, itemtags, LogFile);
-                            if (!allInstanceIDs.Contains(rc.instanceid.ToString("X8"))){
-                                allInstanceIDs.Add(rc.instanceid.ToString("X8"));  
-                            }                                                      
-                            if((!allGUIDS.Contains(rc.GUID)) && rc.GUID != "null"){
-                                allGUIDS.Add(rc.GUID);
+                            var imatch = allInstanceIDs.Where(i => i.InstanceID == rc.instanceid.ToString("X8"));
+
+                            if (!imatch.Any()){
+                                allInstanceIDs.Add(new PackageInstance() {PackageID = rc.instanceid.ToString("X8")});  
                             }
 
+                            var gmatch = allGUIDS.Where(i => i.GuidID == rc.GUID);
+                            if (!gmatch.Any()){
+                                allGUIDS.Add(new PackageGUID() {GuidID = rc.GUID});
+                            }
                             foreach (TagsList tag in rc.itemtags) {
                                 if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
                                     itemtags.Add(tag);  
@@ -2396,14 +2418,18 @@ namespace SimsCCManager.Packages.Sims4Search
                         LogMessage = string.Format("P{0}/COBJ{1} - Entry Ends At: {2}", packageparsecount, cobjc, entryEnd);
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                        ReadCOBJ rc = new ReadCOBJ(readFile, packageparsecount, e, itemtags, LogFile);                            
-                        if (!allInstanceIDs.Contains(rc.instanceid.ToString("X8"))){
-                            allInstanceIDs.Add(rc.instanceid.ToString("X8"));  
-                        }                                                      
-                        if((!allGUIDS.Contains(rc.GUID)) && rc.GUID != "null"){
-                            allGUIDS.Add(rc.GUID);
+                        ReadCOBJ rc = new ReadCOBJ(readFile, packageparsecount, e, itemtags, LogFile);  
+
+                        var imatch = allInstanceIDs.Where(i => i.InstanceID == rc.instanceid.ToString("X8"));
+
+                        if (!imatch.Any()){
+                            allInstanceIDs.Add(new PackageInstance() {PackageID = rc.instanceid.ToString("X8")});  
                         }
 
+                        var gmatch = allGUIDS.Where(i => i.GuidID == rc.GUID);
+                        if (!gmatch.Any()){
+                            allGUIDS.Add(new PackageGUID() {GuidID = rc.GUID});
+                        }
                         foreach (TagsList tag in rc.itemtags) {
                             if (!itemtags.Exists(x => x.TypeID == tag.TypeID) && !itemtags.Exists(x => x.Description == tag.Description)){
                                 itemtags.Add(tag);  
@@ -2461,8 +2487,10 @@ namespace SimsCCManager.Packages.Sims4Search
                             thisPackage.Title = readobjdentry.name;
                             thisPackage.Tuning = readobjdentry.tuningname;
                             thisPackage.TuningID = (int)readobjdentry.tuningid;
-                            if(!allInstanceIDs.Contains(readobjdentry.instance.ToString("X8"))){
-                                allInstanceIDs.Add(readobjdentry.instance.ToString("X8"));
+                            var imatch = allInstanceIDs.Where(i => i.InstanceID == readobjdentry.instance.ToString("X8"));
+
+                            if (!imatch.Any()){
+                                allInstanceIDs.Add(new PackageInstance() {PackageID = readobjdentry.instance.ToString("X8")});  
                             }
                             
                             log.MakeLog("Adding components to package: ", true);
@@ -2473,26 +2501,30 @@ namespace SimsCCManager.Packages.Sims4Search
                                 LogMessage = readobjdentry.components[c].ToString("X8");
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                                thisPackage.Components.Add(readobjdentry.components[c].ToString("X8"));
+                                thisPackage.Components.Add(new PackageComponent() {Component = readobjdentry.components[c].ToString("X8")});
                             }
                             foreach (string m in readobjdentry.model) {
-                                if(!allGUIDS.Contains(m)){
-                                    allGUIDS.Add(m);
-                                }  
+                                var g = allGUIDS.Where(g => g.GuidID == m);
+                                if (!g.Any()){
+                                    allGUIDS.Add(new PackageGUID(){GuidID = m});
+                                }
                             }
                             foreach (string r in readobjdentry.rig) {
-                                if(!allGUIDS.Contains(r)){
-                                    allGUIDS.Add(r);
-                                }  
+                                var g = allGUIDS.Where(g => g.GuidID == r);
+                                if (!g.Any()){
+                                    allGUIDS.Add(new PackageGUID(){GuidID = r});
+                                } 
                             }
                             foreach (string s in readobjdentry.slot) {
-                                if(!allGUIDS.Contains(s)){
-                                    allGUIDS.Add(s);
-                                }  
+                                var g = allGUIDS.Where(g => g.GuidID == s);
+                                if (!g.Any()){
+                                    allGUIDS.Add(new PackageGUID(){GuidID = s});
+                                } 
                             }
                             foreach (string f in readobjdentry.footprint) {
-                                if(!allGUIDS.Contains(f)){
-                                    allGUIDS.Add(f);
+                                var g = allGUIDS.Where(g => g.GuidID == f);
+                                if (!g.Any()){
+                                    allGUIDS.Add(new PackageGUID(){GuidID = f});
                                 }
                             }                                                            
                             decompbr.Dispose();   
@@ -2530,8 +2562,10 @@ namespace SimsCCManager.Packages.Sims4Search
                         thisPackage.Title = readobjdentry.name;
                         thisPackage.Tuning = readobjdentry.tuningname;
                         thisPackage.TuningID = (int)readobjdentry.tuningid;
-                        if(!allInstanceIDs.Contains(readobjdentry.instance.ToString("X8"))){
-                            allInstanceIDs.Add(readobjdentry.instance.ToString("X8"));
+                        var imatch = allInstanceIDs.Where(i => i.InstanceID == readobjdentry.instance.ToString("X8"));
+
+                        if (!imatch.Any()){
+                            allInstanceIDs.Add(new PackageInstance() {PackageID = readobjdentry.instance.ToString("X8")});  
                         }
                         
                         
@@ -2543,28 +2577,32 @@ namespace SimsCCManager.Packages.Sims4Search
                             LogMessage = readobjdentry.components[c].ToString("X8");
                             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                            thisPackage.Components.Add(readobjdentry.components[c].ToString("X8"));
+                            thisPackage.Components.Add(new PackageComponent() {Component = readobjdentry.components[c].ToString("X8")});
                         }
                         foreach (string m in readobjdentry.model) {
-                            if(!allGUIDS.Contains(m)){
-                                allGUIDS.Add(m);
-                            }  
-                        }
-                        foreach (string r in readobjdentry.rig) {
-                            if(!allGUIDS.Contains(r)){
-                                allGUIDS.Add(r);
-                            }  
-                        }
-                        foreach (string s in readobjdentry.slot) {
-                            if(!allGUIDS.Contains(s)){
-                                allGUIDS.Add(s);
-                            }  
-                        }
-                        foreach (string f in readobjdentry.footprint) {
-                            if(!allGUIDS.Contains(f)){
-                                allGUIDS.Add(f);
+                                var g = allGUIDS.Where(g => g.GuidID == m);
+                                if (!g.Any()){
+                                    allGUIDS.Add(new PackageGUID(){GuidID = m});
+                                }
                             }
-                        }
+                            foreach (string r in readobjdentry.rig) {
+                                var g = allGUIDS.Where(g => g.GuidID == r);
+                                if (!g.Any()){
+                                    allGUIDS.Add(new PackageGUID(){GuidID = r});
+                                } 
+                            }
+                            foreach (string s in readobjdentry.slot) {
+                                var g = allGUIDS.Where(g => g.GuidID == s);
+                                if (!g.Any()){
+                                    allGUIDS.Add(new PackageGUID(){GuidID = s});
+                                } 
+                            }
+                            foreach (string f in readobjdentry.footprint) {
+                                var g = allGUIDS.Where(g => g.GuidID == f);
+                                if (!g.Any()){
+                                    allGUIDS.Add(new PackageGUID(){GuidID = f});
+                                }
+                            } 
                     }                
                     objdc++;
                 }
@@ -2581,13 +2619,50 @@ namespace SimsCCManager.Packages.Sims4Search
                 foreach (int e in entryspots){
                     string key = string.Format("{0}-{1}-{2}", indexData[e].typeID, indexData[e].groupID, indexData[e].instanceID);
                     if (key != "00000000-00000000-0000000000000000"){
-                        if (!thisPackage.MeshKeys.Contains(key)){
-                            thisPackage.MeshKeys.Add(key);
+                        var match = thisPackage.MeshKeys.Where(c => c.MeshKey == key);
+                        if (!match.Any()){
+                            PackageMeshKeys pcpk = new() {MeshKey = key};
+                            thisPackage.MeshKeys.Add(pcpk);
                         } 
                     }                                       
                 }
             }
 
+            if (fileHas.Exists(x => x.TypeID == "THUM")){
+                var entryspots = (from has in fileHas
+                        where has.TypeID == "THUM"
+                        select has.Location).ToList();                
+                int c = 0;
+                foreach (int e in entryspots){
+                    c++;
+                    LogMessage = string.Format("P{0}/THUM{1} - Reading THUM {1}, identified as: {2}.", packageparsecount, e, indexData[e].typeID);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
+                    readFile.BaseStream.Position = indexData[e].position; 
+                    Console.WriteLine(indexData[e].compressionType);
+                    if (indexData[e].compressionType == "5A42"){  
+                        int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
+
+                            LogMessage = string.Format("P{0}/THUM{1} - Position: {2}", packageparsecount, c, indexData[e].position);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            LogMessage = string.Format("P{0}/THUM{1} - File Size: {2}", packageparsecount, c, indexData[e].fileSize);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            LogMessage = string.Format("P{0}/THUM{1} - Memory Size: {2}", packageparsecount, c, indexData[e].memSize);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            LogMessage = string.Format("P{0}/THUM{1} - Entry Ends At: {2}", packageparsecount, c, entryEnd);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            MemoryStream decomps = S4Decryption.DecompressPicture(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
+                            byte[] imagebyte = decomps.ToArray();
+                            thisPackage.ThumbnailImage.Add(new PackageThumbnail() {ThumbnailBytes = Convert.ToBase64String(imagebyte)});
+                    
+                    }
+                }
+            }
 
             LogMessage = string.Format("P{0} - All methods complete, moving on to getting info.", packageparsecount);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
@@ -2649,8 +2724,10 @@ namespace SimsCCManager.Packages.Sims4Search
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
-            var overrides = GlobalVariables.S4OverridesList.Where(p => thisPackage.InstanceIDs.Any(l => p.InstanceID == l)).ToList();
-
+            var overrides = (from r in GlobalVariables.S4OverridesList
+                                where thisPackage.InstanceIDs.Any(mr => r.InstanceID == mr.InstanceID)
+                                select r).ToList();
+            
             if(overrides.Count > 0){
                 LogMessage = string.Format("P{0}: Found {1} overrides!", packageparsecount, overrides.Count);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
@@ -2662,31 +2739,22 @@ namespace SimsCCManager.Packages.Sims4Search
             var specoverrides = GlobalVariables.S4SpecificOverridesList.Where(p => overrides.Any(l => p.Instance == l.InstanceID)).ToList();
 
             List<SpecificOverrides> speco = new List<SpecificOverrides>(specoverrides.Count);
-
-            List<string> InstanceOverrides = new List<string>(overrides.Count);
-            List<string> ItemOverrides = new List<string>(overrides.Count);
+            List<OverriddenList> OverridesList = new();
             foreach (OverridesList ov in overrides) {
-                SpecificOverrides sspo = new SpecificOverrides();
                 if (ov.InstanceID != "0000000000000000"){
                     var specco = GlobalVariables.S4SpecificOverridesList.Where(p => p.Instance == ov.InstanceID).ToList();                    
-                    InstanceOverrides.Add(ov.InstanceID);
-                    ItemOverrides.Add(ov.Name);
-                    sspo.Instance = ov.InstanceID;
+                    string description = "";
                     if (specco.Any()){
-                        sspo.Description = specco[0].Description;
-                        thisPackage.Type = string.Format("OVERRIDE: {0}", sspo.Description);
+                        description = specco[0].Description;
+                        thisPackage.Type = string.Format("OVERRIDE: {0}", description);
                     }
+                    OverridesList.Add(new OverriddenList(){InstanceID = ov.InstanceID, Name = ov.Name, Pack = ov.Pack, Type = ov.Type});
                 }
             }
 
-            if (InstanceOverrides.Any()){
-                thisPackage.OverriddenInstances.AddRange(InstanceOverrides);
+            if (OverridesList.Any()){
+                thisPackage.OverridesList.AddRange(OverridesList);
             }
-            if (ItemOverrides.Any()){
-                thisPackage.OverriddenInstances.AddRange(ItemOverrides);
-            }
-            InstanceOverrides = new List<string>(0);
-            ItemOverrides = new List<string>(0);
             
             int casp;int geom;int rle;int rmap;int thum;int img;int xml;int clhd;int clip;int stbl;int cobj;int ftpt;int lite;int thm;int mlod;int modl;int mtbl;int objd;int rslt;int tmlt;int ssm;int lrle;int bond;int cpre;int dmap;int smod;int bgeo;int hotc;
 
@@ -2879,10 +2947,75 @@ namespace SimsCCManager.Packages.Sims4Search
 
 
             thisPackage = findOrphans.FindMatchesS4(thisPackage);
-            if (GlobalVariables.sortonthego == true){
-                thisPackage = filesort.SortPackage(thisPackage);
+
+
+            thisPackage.Title ??= "";
+            thisPackage.Description ??= "";
+            thisPackage.Subtype ??= "";
+            thisPackage.Category ??= "";
+            thisPackage.ModelName ??= "";
+            thisPackage.PackageName ??= "";
+            thisPackage.Type ??= "";
+            thisPackage.GameString ??= "";
+            if (!thisPackage.GUIDs.Any()){
+                thisPackage.GUIDs.Add(new PackageGUID());
+            }            
+            thisPackage.Tuning ??= "";
+            thisPackage.Creator ??= "";
+            thisPackage.Age ??= "";
+            thisPackage.Gender ??= "";
+            if (!thisPackage.RequiredEPs.Any()){
+                thisPackage.RequiredEPs.Add(new PackageRequiredEPs());
             }
-            GlobalVariables.AddPackages.Enqueue(thisPackage);
+            thisPackage.Function ??= "";
+            thisPackage.FunctionSubcategory ??= "";
+            if (!thisPackage.AgeGenderFlags.Any()){
+                thisPackage.AgeGenderFlags = new();
+            }
+            if (!thisPackage.FileHas.Any()){
+                thisPackage.FileHas.Add(new fileHasList());
+            }
+            if (!thisPackage.RoomSort.Any()){
+                thisPackage.RoomSort.Add(new PackageRoomSort());
+            }
+            if (!thisPackage.Components.Any()){
+                thisPackage.Components.Add(new PackageComponent());
+            }
+            if (!thisPackage.Entries.Any()){
+                thisPackage.Entries.Add(new TypeCounter());
+            }
+            if (!thisPackage.Flags.Any()){
+                thisPackage.Flags.Add(new PackageFlag());
+            }
+            if (!thisPackage.CatalogTags.Any()){
+                thisPackage.CatalogTags.Add(new TagsList());
+            }
+            if (!thisPackage.Components.Any()){
+                thisPackage.Components.Add(new PackageComponent ());
+            }
+            if (!thisPackage.OverridesList.Any()){
+                thisPackage.OverridesList.Add(new OverriddenList ());
+            }
+            if (!thisPackage.MeshKeys.Any()){
+                thisPackage.MeshKeys.Add(new PackageMeshKeys ());
+            }
+            if (!thisPackage.CASPartKeys.Any()){
+                thisPackage.CASPartKeys.Add(new PackageCASPartKeys ());
+            }
+            if (!thisPackage.OBJDPartKeys.Any()){
+                thisPackage.OBJDPartKeys.Add(new PackageOBJDKeys());
+            }
+            if (!thisPackage.MatchingRecolors.Any()){
+                thisPackage.MatchingRecolors.Add(new PackageMatchingRecolors ());
+            }
+            if (!string.IsNullOrEmpty(thisPackage.MatchingMesh)){
+                thisPackage.MatchingMesh = "";
+            }
+            if (!thisPackage.Conflicts.Any()){
+                thisPackage.Conflicts.Add(new PackageConflicts());
+            }
+
+            GlobalVariables.AddPackages.Enqueue(thisPackage);            
             PackageFile packageFile = new PackageFile(){Name = thisPackage.PackageName, Location = thisPackage.Location, Game = thisPackage.Game};
             GlobalVariables.RemovePackages.Enqueue(packageFile);
             log.MakeLog(string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString()), false);

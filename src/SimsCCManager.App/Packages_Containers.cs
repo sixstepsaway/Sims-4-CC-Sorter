@@ -11,6 +11,8 @@ using SQLite;
 using SQLiteNetExtensions.Attributes;
 using Newtonsoft.Json;
 using System.ComponentModel;
+using System.IO.Packaging;
+using SSAGlobals;
 
 namespace SimsCCManager.Packages.Containers
 {    
@@ -105,9 +107,8 @@ namespace SimsCCManager.Packages.Containers
         [Column ("GameString")]
         public string GameString {get; set;}
         [Column ("InstanceIDs")]
-        [TextBlob("InstancesBlobbed")]
-        public List<string> InstanceIDs {get; set;}
-        public string InstancesBlobbed {get; set;}
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageInstance> InstanceIDs {get; set;}
         [Column ("Subtype")]
         public string Subtype {get; set;}
         [Column ("Category")]
@@ -115,9 +116,8 @@ namespace SimsCCManager.Packages.Containers
         [Column ("ModelName")]
         public string ModelName {get; set;}
         [Column ("GUIDs")]
-        [TextBlob("GuidsBlobbed")]
-        public List<string> GUIDs {get; set;}
-        public string GuidsBlobbed {get; set;}
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageGUID> GUIDs {get; set;}
         [Column("TuningID")]
         public int TuningID {get; set;}
         [Column("Tuning")]
@@ -129,9 +129,8 @@ namespace SimsCCManager.Packages.Containers
         [Column ("Gender")]
         public string Gender {get; set;}
         [Column ("RequiredEPs")]
-        [TextBlob("RequiredEPsBlob")]
-        public List<string> RequiredEPs {get; set;}
-        public string RequiredEPsBlob {get; set;}
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageRequiredEPs> RequiredEPs {get; set;}
         [Column ("Function")]
         public string Function {get; set;}
         [Column ("FunctionSubcategory")]
@@ -143,20 +142,18 @@ namespace SimsCCManager.Packages.Containers
         [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
         public List<fileHasList> FileHas {get; set;}
         [Column ("RoomSort")]        
-        [TextBlob("RoomsBlobbed")]
-        public List<string> RoomSort {get; set;}
-        public string RoomsBlobbed {get; set;}
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageRoomSort> RoomSort {get; set;}
         [Column ("Components")]
-        [TextBlob("ComponentsBlobbed")]
-        public List<string> Components {get; set;}
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageComponent> Components {get; set;}
         public string ComponentsBlobbed {get; set;}
         [Column ("Entries")]
         [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
         public List<TypeCounter> Entries {get; set;}        
-        [Column ("Flags")]        
-        [TextBlob("FlagsBlobbed")]
-        public List<string> Flags {get; set;}
-        public string FlagsBlobbed {get; set;}
+        [Column ("Flags")]
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageFlag> Flags {get; set;}
         [Column ("CatalogTags")]
         [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
         public List<TagsList> CatalogTags {get; set;}
@@ -175,57 +172,49 @@ namespace SimsCCManager.Packages.Containers
         [Column("OverridesList")]
         [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
         public List<OverriddenList> OverridesList {get; set;}
-        [Column ("OverriddenInstances")]
-        [TextBlob("OverriddenInstancesBlobbed")]
-        public List<string> OverriddenInstances {get; set;}
-        public string OverriddenInstancesBlobbed {get; set;}
-        [Column ("OverriddenItems")]        
-        [TextBlob("OverriddenItemsBlobbed")]   
-        public List<string> OverriddenItems {get; set;}
-        public string OverriddenItemsBlobbed {get; set;}
-        [Column("Key")]
-        public string Key {get; set;}
         [Column("MeshKeys")]
-        [TextBlob("MeshKeysBlobbed")]
-        public List<string> MeshKeys {get; set;}
-        public string MeshKeysBlobbed {get; set;}
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageMeshKeys> MeshKeys {get; set;}
         [Column("CASPartKeys")]
-        [TextBlob("CASPartKeysBlobbed")]
-        public List<string> CASPartKeys {get; set;}
-        public string CASPartKeysBlobbed {get; set;}
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageCASPartKeys> CASPartKeys {get; set;}
+        [Column("OBJDKeys")]
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageOBJDKeys> OBJDPartKeys {get; set;}
         [Column("MatchingMesh")]
         public string MatchingMesh {get; set;}
         [Column ("MatchingRecolors")]
-        [TextBlob("MatchingRecolorsBlobbed")]
-        public List<string> MatchingRecolors {get; set;}
-        public string MatchingRecolorsBlobbed {get; set;}
-        [Column ("MatchingConflicts")]
-        [TextBlob("MatchingConflictsBlobbed")]
-        public List<string> MatchingConflicts {get; set;}
-        public string MatchingConflictsBlobbed {get; set;}
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageMatchingRecolors> MatchingRecolors {get; set;}
+        [Column ("Conflicts")]
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageConflicts> Conflicts {get; set;}
         [Column ("DuplicatePackages")]
-        [TextBlob("DuplicatePackagesBlobbed")]
-        public List<string> DuplicatePackages {get; set;}
-        public string DuplicatePackagesBlobbed {get; set;}
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageDuplicates> DuplicatePackages {get; set;}
+        [Column("Thumbnail")]
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        public List<PackageThumbnail> ThumbnailImage {get; set;}
 
         public SimsPackage() {
-            this.InstanceIDs = new List<string>();
-            this.GUIDs = new List<string>();
-            this.RequiredEPs = new List<string>();
-            this.RoomSort = new List<string>();
-            this.MatchingRecolors = new List<string>();
-            this.Components = new List<string>();
-            this.MatchingConflicts = new List<string>();
+            this.InstanceIDs = new List<PackageInstance>();
+            this.GUIDs = new List<PackageGUID>();
+            this.RequiredEPs = new List<PackageRequiredEPs>();
+            this.RoomSort = new List<PackageRoomSort>();
+            this.MatchingRecolors = new List<PackageMatchingRecolors>();
+            this.Components = new List<PackageComponent>();
+            this.Conflicts = new List<PackageConflicts>();
             this.Entries = new List<TypeCounter>();
             this.FileHas = new List<fileHasList>();
-            this.Flags = new List<string>();
+            this.Flags = new List<PackageFlag>();
             this.CatalogTags = new List<TagsList>();
-            this.OverriddenInstances = new List<string>();
-            this.OverriddenItems = new List<string>();
             this.AgeGenderFlags = new AgeGenderFlags();
             this.OverridesList = new List<OverriddenList>();
-            this.MeshKeys = new List<string>();
-            this.CASPartKeys = new List<string>();
+            this.MeshKeys = new List<PackageMeshKeys>();
+            this.CASPartKeys = new List<PackageCASPartKeys>();
+            this.OBJDPartKeys = new List<PackageOBJDKeys>();
+            this.DuplicatePackages = new List<PackageDuplicates>();
+            this.ThumbnailImage = new();
         }
 
         public string GetPropertyString(string propName){
@@ -241,13 +230,25 @@ namespace SimsCCManager.Packages.Containers
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public static string GetFormatListString(List<string> words){
+        public static string GetFormatListString(List<PackageGUID> words){
             string retVal = string.Empty;
-            foreach (string word in words){
+            foreach (PackageGUID word in words){
                 if (string.IsNullOrEmpty(retVal)){
                     retVal += word.ToString();
                 } else {
-                    retVal += string.Format(", {0}", word);
+                    retVal += string.Format(", {0}", word.PackageID);
+                }
+                
+            }
+            return retVal;
+        }
+        public static string GetFormatListString(List<PackageInstance> words){
+            string retVal = string.Empty;
+            foreach (PackageInstance word in words){
+                if (string.IsNullOrEmpty(retVal)){
+                    retVal += word.ToString();
+                } else {
+                    retVal += string.Format(", {0}", word.InstanceID);
                 }
                 
             }
@@ -413,22 +414,22 @@ namespace SimsCCManager.Packages.Containers
                 if (!string.IsNullOrEmpty(complete)){
                     complete += string.Format("\n Rooms: ");
                     string eps = "";
-                    foreach (string ep in this.RoomSort){
+                    foreach (PackageRoomSort ep in this.RoomSort){
                         if (string.IsNullOrEmpty(eps)){
-                            eps = string.Format("{0}", ep);
+                            eps = string.Format("{0}", ep.RoomSort);
                         } else {
-                            eps += string.Format(", {0}", ep);
+                            eps += string.Format(", {0}", ep.RoomSort);
                         }
                     }
                     complete += eps;
                 } else {
                     complete = string.Format("Rooms: ");
                     string eps = "";
-                    foreach (string ep in this.RoomSort){
+                    foreach (PackageRoomSort ep in this.RoomSort){
                         if (string.IsNullOrEmpty(eps)){
-                            eps = string.Format("{0}", ep);
+                            eps = string.Format("{0}", ep.RoomSort);
                         } else {
-                            eps += string.Format(", {0}", ep);
+                            eps += string.Format(", {0}", ep.RoomSort);
                         }
                     }
                     complete += eps;
@@ -438,22 +439,22 @@ namespace SimsCCManager.Packages.Containers
                 if (!string.IsNullOrEmpty(complete)){
                     complete += string.Format("\n Required EPs: ");
                     string eps = "";
-                    foreach (string ep in this.RequiredEPs){
+                    foreach (PackageRequiredEPs ep in this.RequiredEPs){
                         if (string.IsNullOrEmpty(eps)){
-                            eps = string.Format("{0}", ep);
+                            eps = string.Format("{0}", ep.RequiredPack);
                         } else {
-                            eps += string.Format(", {0}", ep);
+                            eps += string.Format(", {0}", ep.RequiredPack);
                         }
                     }
                     complete += eps;
                 } else {
                     complete = string.Format("Required EPs:");
                     string eps = "";
-                    foreach (string ep in this.RequiredEPs){
+                    foreach (PackageRequiredEPs ep in this.RequiredEPs){
                         if (string.IsNullOrEmpty(eps)){
-                            eps = string.Format("{0}", ep);
+                            eps = string.Format("{0}", ep.RequiredPack);
                         } else {
-                            eps += string.Format(", {0}", ep);
+                            eps += string.Format(", {0}", ep.RequiredPack);
                         }
                     }
                     complete += eps;
@@ -488,22 +489,22 @@ namespace SimsCCManager.Packages.Containers
                 if (!string.IsNullOrEmpty(complete)){
                     complete += string.Format("\n Flags: ");
                     string eps = "";
-                    foreach (string ep in this.Flags){
+                    foreach (PackageFlag ep in this.Flags){
                         if (string.IsNullOrEmpty(eps)){
-                            eps = string.Format("{0}", ep);
+                            eps = string.Format("{0}", ep.Flag);
                         } else {
-                            eps += string.Format(", {0}", ep);
+                            eps += string.Format(", {0}", ep.Flag);
                         }
                     }
                     complete += eps;
                 } else {
                     complete = string.Format("Flags:");
                     string eps = "";
-                    foreach (string ep in this.Flags){
+                    foreach (PackageFlag ep in this.Flags){
                         if (string.IsNullOrEmpty(eps)){
-                            eps = string.Format("{0}", ep);
+                            eps = string.Format("{0}", ep.Flag);
                         } else {
-                            eps += string.Format(", {0}", ep);
+                            eps += string.Format(", {0}", ep.Flag);
                         }
                     }
                     complete += eps;
@@ -537,24 +538,12 @@ namespace SimsCCManager.Packages.Containers
             if (this.Override == true){
                 if (!string.IsNullOrEmpty(complete)){
                     complete += string.Format("\n This package is an override.");
-                    if (this.OverriddenInstances.Any()){
-                        complete += string.Format("\n Overridden Instances: ");
+                    if (this.OverridesList.Any()){
+                        complete += string.Format("\n Overridden Instances and Items: ");
                         string ov = "";
-                        foreach (string instance in this.OverriddenInstances){
+                        foreach (OverriddenList instance in this.OverridesList){
                             if (string.IsNullOrEmpty(ov)){
-                                ov = string.Format("{0}", instance);
-                            } else {
-                                ov += string.Format("\n {0}", instance);
-                            }
-                        }
-                        complete += ov;
-                    }
-                    if (this.OverriddenItems.Any()){
-                        complete += string.Format("\n Overridden Items: ");
-                        string ov = "";
-                        foreach (string instance in this.OverriddenItems){
-                            if (string.IsNullOrEmpty(ov)){
-                                ov = string.Format("{0}", instance);
+                                ov = string.Format("InstanceID: {0}, Item: {1}", instance.InstanceID, instance.Name);
                             } else {
                                 ov += string.Format("\n {0}", instance);
                             }
@@ -598,22 +587,22 @@ namespace SimsCCManager.Packages.Containers
                 if (!string.IsNullOrEmpty(complete)){
                     complete += string.Format("\n Mesh Keys: ");
                     string eps = "";
-                    foreach (string ep in this.MeshKeys){
+                    foreach (PackageMeshKeys ep in this.MeshKeys){
                         if (string.IsNullOrEmpty(eps)){
-                            eps = string.Format("{0}", ep);
+                            eps = string.Format("{0}", ep.MeshKey);
                         } else {
-                            eps += string.Format(", {0}", ep);
+                            eps += string.Format(", {0}", ep.MeshKey);
                         }
                     }
                     complete += eps;
                 } else {
                     complete = string.Format("Mesh Keys: ");
                     string eps = "";
-                    foreach (string ep in this.MeshKeys){
+                    foreach (PackageMeshKeys ep in this.MeshKeys){
                         if (string.IsNullOrEmpty(eps)){
-                            eps = string.Format("{0}", ep);
+                            eps = string.Format("{0}", ep.MeshKey);
                         } else {
-                            eps += string.Format(", {0}", ep);
+                            eps += string.Format(", {0}", ep.MeshKey);
                         }
                     }
                     complete += eps;
@@ -623,22 +612,22 @@ namespace SimsCCManager.Packages.Containers
                 if (!string.IsNullOrEmpty(complete)){
                     complete += string.Format("\n CAS Part Keys: ");
                     string eps = "";
-                    foreach (string ep in this.CASPartKeys){
+                    foreach (PackageCASPartKeys ep in this.CASPartKeys){
                         if (string.IsNullOrEmpty(eps)){
-                            eps = string.Format("{0}", ep);
+                            eps = string.Format("{0}", ep.CASPartKey);
                         } else {
-                            eps += string.Format(", {0}", ep);
+                            eps += string.Format(", {0}", ep.CASPartKey);
                         }
                     }
                     complete += eps;
                 } else {
                     complete = string.Format("CAS Part Keys: ");
                     string eps = "";
-                    foreach (string ep in this.CASPartKeys){
+                    foreach (PackageCASPartKeys ep in this.CASPartKeys){
                         if (string.IsNullOrEmpty(eps)){
-                            eps = string.Format("{0}", ep);
+                            eps = string.Format("{0}", ep.CASPartKey);
                         } else {
-                            eps += string.Format(", {0}", ep);
+                            eps += string.Format(", {0}", ep.CASPartKey);
                         }
                     }
                     complete += eps;
@@ -655,47 +644,72 @@ namespace SimsCCManager.Packages.Containers
                 if (!string.IsNullOrEmpty(complete)){
                     complete += string.Format("\n Matching recolors for this package can be found in: ");
                     string ov = "";
-                    foreach (string instance in this.MatchingRecolors){
+                    foreach (PackageMatchingRecolors instance in this.MatchingRecolors){
                         if (!string.IsNullOrEmpty(ov)){
-                            ov += string.Format("{0}", instance);
+                            ov += string.Format("{0}", instance.MatchingRecolor);
                         } else {
-                            ov = string.Format("\n {0}", instance);
+                            ov = string.Format("\n {0}", instance.MatchingRecolor);
                         }
                     }
                     complete += ov;
                 } else {
                     complete += string.Format("Matching recolors for this package can be found in: ");
                     string ov = "";
-                    foreach (string instance in this.MatchingRecolors){
+                    foreach (PackageMatchingRecolors instance in this.MatchingRecolors){
                         if (!string.IsNullOrEmpty(ov)){
-                            ov += string.Format("{0}", instance);
+                            ov += string.Format("{0}", instance.MatchingRecolor);
                         } else {
-                            ov = string.Format("\n {0}", instance);
+                            ov = string.Format("\n {0}", instance.MatchingRecolor);
                         }
                     }
                     complete += ov;
                 }
             }
-            if (this.MatchingConflicts.Any()){
+            if (this.Conflicts.Any()){
                 if (!string.IsNullOrEmpty(complete)){
                     complete += string.Format("\n This file conflicts with: ");
                     string ov = "";
-                    foreach (string instance in this.MatchingConflicts){
+                    foreach (PackageConflicts instance in this.Conflicts){
                         if (!string.IsNullOrEmpty(ov)){
-                            ov += string.Format("{0}", instance);
+                            ov += string.Format("{0}", instance.Conflict);
                         } else {
-                            ov = string.Format("\n {0}", instance);
+                            ov = string.Format("\n {0}", instance.Conflict);
                         }
                     }
                     complete += ov;
                 } else {
                     complete += string.Format("This file conflicts with: ");
                     string ov = "";
-                    foreach (string instance in this.MatchingConflicts){
+                    foreach (PackageConflicts instance in this.Conflicts){
                         if (!string.IsNullOrEmpty(ov)){
-                            ov += string.Format("{0}", instance);
+                            ov += string.Format("{0}", instance.Conflict);
                         } else {
-                            ov = string.Format("\n {0}", instance);
+                            ov = string.Format("\n {0}", instance.Conflict);
+                        }
+                    }
+                    complete += ov;
+                }
+            }
+            if (this.DuplicatePackages.Any()){
+                if (!string.IsNullOrEmpty(complete)){
+                    complete += string.Format("\n This file is a duplicate of: ");
+                    string ov = "";
+                    foreach (PackageDuplicates instance in this.DuplicatePackages){
+                        if (!string.IsNullOrEmpty(ov)){
+                            ov += string.Format("{0}", instance.Duplicate);
+                        } else {
+                            ov = string.Format("\n {0}", instance.Duplicate);
+                        }
+                    }
+                    complete += ov;
+                } else {
+                    complete += string.Format("This file conflicts with: ");
+                    string ov = "";
+                    foreach (PackageDuplicates instance in this.DuplicatePackages){
+                        if (!string.IsNullOrEmpty(ov)){
+                            ov += string.Format("{0}", instance.Duplicate);
+                        } else {
+                            ov = string.Format("\n {0}", instance.Duplicate);
                         }
                     }
                     complete += ov;
@@ -703,6 +717,408 @@ namespace SimsCCManager.Packages.Containers
             }            
             return complete;
         }   
+    }
+
+    public static class ListExtensions {
+        public static List<SimsPackage> ApostropheFix(this List<SimsPackage> source)
+        {            
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains('\'')).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.FixApostrophesforSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+
+        public static List<SimsPackage> ApostropheUnFix(this List<SimsPackage> source)
+        {                       
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains("''")).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.RestoreApostrophesFromSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+
+
+        public static List<AllFiles> ApostropheFix(this List<AllFiles> source)
+        {            
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.Name.Contains('\'')).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].Name;
+                namefix = Methods.FixApostrophesforSQL(name);
+                source[apostrophe].Name = namefix;
+            }
+            return source;
+        }
+
+        public static List<AllFiles> ApostropheUnFix(this List<AllFiles> source)
+        {                       
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.Name.Contains("''")).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].Name;
+                namefix = Methods.RestoreApostrophesFromSQL(name);
+                source[apostrophe].Name = namefix;
+            }
+            return source;
+        }
+        public static List<PackageFile> ApostropheFix(this List<PackageFile> source)
+        {            
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.Name.Contains('\'')).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].Name;
+                namefix = Methods.FixApostrophesforSQL(name);
+                source[apostrophe].Name = namefix;
+            }
+            return source;
+        }
+
+        public static List<PackageFile> ApostropheUnFix(this List<PackageFile> source)
+        {                       
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.Name.Contains("''")).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].Name;
+                namefix = Methods.RestoreApostrophesFromSQL(name);
+                source[apostrophe].Name = namefix;
+            }
+            return source;
+        }
+
+        public static List<InstancesRecolorsS2> ApostropheFix(this List<InstancesRecolorsS2> source)
+        {            
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains('\'')).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.FixApostrophesforSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+
+        public static List<InstancesRecolorsS2> ApostropheUnFix(this List<InstancesRecolorsS2> source)
+        {                       
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains("''")).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.RestoreApostrophesFromSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+        
+        public static List<InstancesRecolorsS3> ApostropheFix(this List<InstancesRecolorsS3> source)
+        {            
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains('\'')).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.FixApostrophesforSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+
+        public static List<InstancesRecolorsS3> ApostropheUnFix(this List<InstancesRecolorsS3> source)
+        {                       
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains("''")).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.RestoreApostrophesFromSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+        
+        public static List<InstancesRecolorsS4> ApostropheFix(this List<InstancesRecolorsS4> source)
+        {            
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains('\'')).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.FixApostrophesforSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+
+        public static List<InstancesRecolorsS4> ApostropheUnFix(this List<InstancesRecolorsS4> source)
+        {                       
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains("''")).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.RestoreApostrophesFromSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+        
+        public static List<InstancesMeshesS2> ApostropheFix(this List<InstancesMeshesS2> source)
+        {            
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains('\'')).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.FixApostrophesforSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+
+        public static List<InstancesMeshesS2> ApostropheUnFix(this List<InstancesMeshesS2> source)
+        {                       
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains("''")).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.RestoreApostrophesFromSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+        
+        public static List<InstancesMeshesS3> ApostropheFix(this List<InstancesMeshesS3> source)
+        {            
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains('\'')).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.FixApostrophesforSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+
+        public static List<InstancesMeshesS3> ApostropheUnFix(this List<InstancesMeshesS3> source)
+        {                       
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains("''")).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.RestoreApostrophesFromSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+        
+        public static List<InstancesMeshesS4> ApostropheFix(this List<InstancesMeshesS4> source)
+        {            
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains('\'')).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.FixApostrophesforSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+
+        public static List<InstancesMeshesS4> ApostropheUnFix(this List<InstancesMeshesS4> source)
+        {                       
+            string name = "";
+            string namefix = "";
+            var apostrophes = source.Where(o => o.PackageName.Contains("''")).ToList();
+            for (int i = 0; i < apostrophes.Count; i++){
+                var apostrophe = source.IndexOf(apostrophes[i]);
+                name = source[apostrophe].PackageName;
+                namefix = Methods.RestoreApostrophesFromSQL(name);
+                source[apostrophe].PackageName = namefix;
+            }
+            return source;
+        }
+
+
+
+
+
+
+
+
+
+    }
+
+    [Table ("SP_Thumbnails")]
+    public class PackageThumbnail {
+        [Column ("ThumbnailBytes")]
+        public string ThumbnailBytes {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+
+
+    [Table ("SP_Instances")]
+    public class PackageInstance {
+        [Column ("InstanceID")]
+        public string InstanceID {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+    
+    [Table ("SP_Guids")]
+    public class PackageGUID {
+        [Column ("GUID ID")]
+        public string GuidID {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+    
+    [Table ("SP_RequiredEPs")]
+    public class PackageRequiredEPs {
+        [Column ("Required Pack")]
+        public string RequiredPack {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+
+    [Table ("SP_MeshKeys")]
+    public class PackageMeshKeys {
+        [Column ("Mesh Key")]
+        public string MeshKey {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+
+    [Table ("SP_CASPartKeys")]
+    public class PackageCASPartKeys {
+        [Column ("CAS Part Key")]
+        public string CASPartKey {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+    [Table ("SP_OBJDKeys")]
+    public class PackageOBJDKeys {
+        [Column ("Object Key")]
+        public string OBJDKey {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+
+    [Table ("SP_MatchingRecolors")]
+    public class PackageMatchingRecolors {
+        [Column ("Matching Recolor")]
+        public string MatchingRecolor {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+
+    [Table ("SP_Conflicts")]
+    public class PackageConflicts {
+        [Column ("Conflicts")]
+        public string Conflict {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+    [Table ("SP_Duplicates")]
+    public class PackageDuplicates {
+        [Column ("Duplicate")]
+        public string Duplicate {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+    [Table ("SP_RoomSort")]
+    public class PackageRoomSort {
+        [Column ("Room Sort")]
+        public string RoomSort {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+    [Table ("SP_Components")]
+    public class PackageComponent {
+        [Column ("Component")]
+        public string Component {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
+    }
+    [Table ("SP_Flags")]
+    public class PackageFlag {
+        [Column ("Flag")]
+        public string Flag {get; set;}
+        [ForeignKey(typeof(SimsPackage))]
+        public string PackageID {get; set;}
+        [Column("SimsPackage")]
+        [ManyToOne]
+        public SimsPackage SimsPackage {get; set;}
     }
 
     [Table("SP_Overrides")]

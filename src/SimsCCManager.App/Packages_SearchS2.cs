@@ -18,6 +18,7 @@ using SQLiteNetExtensions.Attributes;
 using SQLiteNetExtensions.Extensions;
 using SQLite;
 using SimsCCManager.Packages.Sorting;
+using System.IO.Packaging;
 
 namespace SimsCCManager.Packages.Sims2Search
 {    
@@ -116,10 +117,10 @@ namespace SimsCCManager.Packages.Sims2Search
             ArrayList linkData = new ArrayList();
             List<indexEntry> indexData = new List<indexEntry>();
             //List<string> iids = new List<string>();
-            List<string> allGUIDS = new List<string>();      
-            List<string> distinctGUIDS = new List<string>();  
-            List<string> allInstanceIDs = new List<string>();      
-            List<string> distinctInstanceIDs = new List<string>();  
+            List<PackageGUID> allGUIDS = new();      
+            List<PackageGUID> distinctGUIDS = new();  
+            List<PackageInstance> allInstanceIDs = new();      
+            List<PackageInstance> distinctInstanceIDs = new();  
             if (minor == 2) indexmajorloc = 24;
             if (minor == 1) indexmajorloc = 32;
             //create readers              
@@ -128,8 +129,8 @@ namespace SimsCCManager.Packages.Sims2Search
             BinaryReader readFile = new BinaryReader(dbpfFile);
     
             thisPackage.FileSize = (int)packageinfo.Length;   
-            string packageNameUpdated = Methods.FixApostrophesforSQL(packageinfo.Name);            
-            thisPackage.PackageName = packageNameUpdated;
+            //string packageNameUpdated = Methods.FixApostrophesforSQL(packageinfo.Name);            
+            thisPackage.PackageName = packageinfo.Name;
             thisPackage.GameString = "The Sims 2";
             
             LogMessage = string.Format("Reading package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
@@ -196,7 +197,7 @@ namespace SimsCCManager.Packages.Sims2Search
 
                 holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
                 holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");                
-                allInstanceIDs.Add(holderEntry.instanceID.ToString());
+                allInstanceIDs.Add(new PackageInstance(){InstanceID = holderEntry.instanceID.ToString()});
 
                 if ((indexMajorVersion == 7) && (indexMinorVersion == 1)) {
                     holderEntry.instanceID2 = readFile.ReadUInt32().ToString("X8");
@@ -292,7 +293,7 @@ namespace SimsCCManager.Packages.Sims2Search
                     groupID = readFile.ReadUInt32().ToString("X8");
                     instanceID = readFile.ReadUInt32().ToString("X8");
                     holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
-                    allInstanceIDs.Add(holderEntry.instanceID.ToString());
+                    allInstanceIDs.Add(new PackageInstance(){InstanceID = holderEntry.instanceID.ToString()});
                     if (indexMajorVersion == 7 && indexMinorVersion == 1) instanceID2 = readFile.ReadUInt32().ToString("X8");
                     myFilesize = readFile.ReadUInt32();
 
@@ -341,7 +342,7 @@ namespace SimsCCManager.Packages.Sims2Search
                     groupID = readFile.ReadUInt32().ToString("X8");
                     instanceID = readFile.ReadUInt32().ToString("X8");
                     holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
-                    allInstanceIDs.Add(holderEntry.instanceID.ToString());
+                    allInstanceIDs.Add(new PackageInstance(){InstanceID = holderEntry.instanceID.ToString()});
                     instanceID2 = "";
                     if (indexMajorVersion == 7 && indexMinorVersion == 1) {
                         instanceID2 = readFile.ReadUInt32().ToString("X8");
@@ -865,7 +866,9 @@ namespace SimsCCManager.Packages.Sims2Search
                     thisPackage.ModelName = dirvar.ModelName;
                 }
                 if (dirvar.GUIDs?.Any() != true){
-                    allGUIDS.AddRange(objdvar.GUIDs);
+                    foreach (PackageGUID guid in dirvar.GUIDs){
+                      allGUIDS.Add(new PackageGUID(){GuidID = guid.GuidID});  
+                    }
                 }
                 if (!String.IsNullOrWhiteSpace(dirvar.Creator)){
                     thisPackage.Creator = dirvar.Creator;
@@ -916,42 +919,71 @@ namespace SimsCCManager.Packages.Sims2Search
             dbpfFile.Close();
             dbpfFile.Dispose();
             readFile.Close();
-            readFile.Dispose();            
-            if (GlobalVariables.sortonthego == true){
-                thisPackage = filesort.SortPackage(thisPackage);
-            }
+            readFile.Dispose();
             
             log.MakeLog(string.Format("Package Summary: {0}", thisPackage.SimsPackagetoString()), false);
             LogMessage = string.Format("P{0} - Package Summary: {1}", packageparsecount, thisPackage.SimsPackagetoString());
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             log.MakeLog(string.Format("P{0} - Package Summary: {1}", packageparsecount, thisPackage.SimsPackagetoString()), false);
-            //Containers.Containers.allSimsPackages.Add(thisPackage);
+
             LogMessage = string.Format("Adding {0} to packages database.", thisPackage.PackageName);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-            /*try {
-                GlobalVariables.DatabaseConnection.InsertWithChildren(thisPackage, true);
-            } catch (Exception e) {
-                LogMessage = string.Format("Caught exception adding Sims 2 package to database. \n Exception: {0}", e);
-                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-            }
-            
-            LogMessage = string.Format("Added {0} to packages database successfully.", thisPackage.PackageName);
-            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-            txt = string.Format("SELECT * FROM Processing_Reader where Name='{0}'", Methods.FixApostrophesforSQL(packageinfo.Name));
-            List<PackageFile> closingquery = GlobalVariables.DatabaseConnection.Query<PackageFile>(txt);
-            GlobalVariables.DatabaseConnection.Delete(closingquery[0]);
-
-            closingquery = new List<PackageFile>();*/
-            
+                      
                 
              
             LogMessage = string.Format("Closing package # {0}/{1}: {2}", packageparsecount, GlobalVariables.PackageCount, packageinfo.Name);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+            
+            if (!thisPackage.AgeGenderFlags.Any()){
+                thisPackage.AgeGenderFlags = new();
+            }
+            if (!thisPackage.FileHas.Any()){
+                thisPackage.FileHas.Add(new fileHasList());
+            }
+            if (!thisPackage.RoomSort.Any()){
+                thisPackage.RoomSort.Add(new PackageRoomSort());
+            }
+            if (!thisPackage.Components.Any()){
+                thisPackage.Components.Add(new PackageComponent());
+            }
+            if (!thisPackage.Entries.Any()){
+                thisPackage.Entries.Add(new TypeCounter());
+            }
+            if (!thisPackage.Flags.Any()){
+                thisPackage.Flags.Add(new PackageFlag());
+            }
+            if (!thisPackage.CatalogTags.Any()){
+                thisPackage.CatalogTags.Add(new TagsList());
+            }
+            if (!thisPackage.Components.Any()){
+                thisPackage.Components.Add(new PackageComponent ());
+            }
+            if (!thisPackage.OverridesList.Any()){
+                thisPackage.OverridesList.Add(new OverriddenList ());
+            }
+            if (!thisPackage.MeshKeys.Any()){
+                thisPackage.MeshKeys.Add(new PackageMeshKeys ());
+            }
+            if (!thisPackage.CASPartKeys.Any()){
+                thisPackage.CASPartKeys.Add(new PackageCASPartKeys ());
+            }
+            if (!thisPackage.OBJDPartKeys.Any()){
+                thisPackage.OBJDPartKeys.Add(new PackageOBJDKeys());
+            }
+            if (!thisPackage.MatchingRecolors.Any()){
+                thisPackage.MatchingRecolors.Add(new PackageMatchingRecolors ());
+            }
+            if (!string.IsNullOrEmpty(thisPackage.MatchingMesh)){
+                thisPackage.MatchingMesh = "";
+            }
+            if (!thisPackage.Conflicts.Any()){
+                thisPackage.Conflicts.Add(new PackageConflicts());
+            }
+            
+            
             sw.Stop();
             TimeSpan ts = sw.Elapsed;
             string elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
@@ -981,10 +1013,10 @@ namespace SimsCCManager.Packages.Sims2Search
             linkData = new ArrayList();
             indexData = new List<indexEntry>();
             //packageinfo = new FileInfo(file); 
-            allGUIDS = new List<string>();      
-            distinctGUIDS = new List<string>();  
-            allInstanceIDs = new List<string>();      
-            distinctInstanceIDs = new List<string>();
+            allGUIDS = new();      
+            distinctGUIDS = new();  
+            allInstanceIDs = new();      
+            distinctInstanceIDs = new();
             return;            
         }
     }

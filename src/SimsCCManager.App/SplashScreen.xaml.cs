@@ -12,7 +12,7 @@ using System.Windows.Media.Media3D;
 using System.Diagnostics;
 using System.IO;
 using SSAGlobals;
-using Sims_CC_Sorter;
+using SimsCCManager.App;
 using SimsCCManager.Packages.Containers;
 using System.Collections.Concurrent;
 
@@ -100,9 +100,39 @@ namespace SimsCCManager.SplashScreen
                     this.Dispatcher.Invoke(new Action(() => LoadingText.Content = "Checking for Data"));
                 } else {
                     log.MakeLog("No data to check.", true);
-                }
-                
+                }                
             }));
+
+            tasklist.Add(new Action (() => {
+                if (File.Exists(GlobalVariables.SettingsFile)) {
+                    log.MakeLog("Finding Settings.", true);
+                    this.Dispatcher.Invoke(new Action(() => LoadingText.Content = "Setting Settings"));
+                    globals.LoadSettings();
+                    var s2 = GlobalVariables.Settings.Where(x => x.SettingName == "Sims2Folder").ToList();
+                    if (s2.Any()){
+                        GlobalVariables.Sims2DocumentsFolder = s2[0].SettingValue;
+                    }
+                    var s3 = GlobalVariables.Settings.Where(x => x.SettingName == "Sims3Folder").ToList();
+                    if (s3.Any()){
+                        GlobalVariables.Sims3DocumentsFolder = s3[0].SettingValue;
+                    }
+                    var s4 = GlobalVariables.Settings.Where(x => x.SettingName == "Sims4Folder").ToList();
+                    if (s4.Any()){
+                        GlobalVariables.Sims4DocumentsFolder = s4[0].SettingValue;
+                    }
+                    var cpu = GlobalVariables.Settings.Where(x => x.SettingName == "RestrictCPU").ToList();
+                    if (cpu.Any()){
+                        if (cpu[0].SettingValue == "True"){
+                            GlobalVariables.eatentirecpu = false;
+                        } else {
+                            GlobalVariables.eatentirecpu = true;
+                        }
+                    }
+                } else {
+                    log.MakeLog("No settings found.", true);
+                }                
+            }));
+
             tasklist.Add(new Action (() => {
                 if (nodata == false) {
                     if (priorPackages >= 1) 
