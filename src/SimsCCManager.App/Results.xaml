@@ -5,9 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimsCCManager.SortingUIResults"
         mc:Ignorable="d"
-        Title="Results" Height="Auto" Width="Auto" SizeToContent="Manual"
+        Title="Results" 
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
-        Closing="Window_Closing"
+        WindowState="Normal"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
         Icon="img\simsccmanagericon.ico">
         <Window.Resources>
             <Style x:Key="ResultsDataGridStyle" TargetType="ListView">
@@ -37,22 +41,52 @@
                     RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/>
                 </StackPanel>
             </DataTemplate> 
+            <DataTemplate x:Key="ImageCell">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="{Binding Thumbnail}" Width="104" Height="148" Stretch="Fill"/>
+                </StackPanel>
+            </DataTemplate>
             <ControlTemplate x:Key="Override" 
               TargetType='{x:Type ListViewItem}'>
                 <GridViewRowPresenter Content="{TemplateBinding Content}"
                     Columns="{TemplateBinding GridView.ColumnCollection}"/>
             </ControlTemplate>
+            <ControlTemplate x:Key="NoMouseOverButtonTemplate" 
+                 TargetType="Button">                
+                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                <!-- Add only required visual state triggers -->
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsEnabled"
+                            Value="False">
+                    <Setter Property="Background"
+                            Value="{x:Static SystemColors.ControlLightBrush}" />
+                    <Setter Property="Foreground"
+                            Value="{x:Static SystemColors.GrayTextBrush}" />
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
     
         </Window.Resources>  
-        <Grid Visibility="Visible">
-            <Grid Background="#FF231636" Visibility="Visible">
+        <Grid Visibility="Visible" HorizontalAlignment="Center" Width="850" Height="650">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid MouseDown="TitleBar_MouseDown" Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Right" Background="#3B4861" Width="850" Height="30">
+                <Label Margin="0, 0, 0, 5" Foreground="AliceBlue" Content="Manage CC" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="0"/>  
+                <Button Width="30" Height="30" Template="{StaticResource NoMouseOverButtonTemplate}" Click="CloseWindow_Click" HorizontalAlignment="Right">
+                  <Image Source="img/icons/fi-sr-cross-small_w.png"/>
+                </Button>
+            </Grid>
+            <Grid Grid.Row="1" Background="#FF231636" Visibility="Visible">
                 <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="60" /> 
                 <ColumnDefinition/>   
                 <ColumnDefinition Width="10"/> 
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="0"/>
                     <RowDefinition/>
                     <RowDefinition Height="50"/>
                     <RowDefinition Height="120"/>
@@ -119,6 +153,11 @@
                             <GridViewColumn CellTemplate="{StaticResource FirstCell}" Width="30">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="IsSelected"></GridViewColumnHeader>
+                                </GridViewColumn.Header>
+                            </GridViewColumn>
+                            <GridViewColumn CellTemplate="{StaticResource ImageCell}" Width="104">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="Thumbnail"></GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding PackageName}" Width="Auto">

@@ -957,7 +957,7 @@ namespace SimsCCManager.Packages.Sims4Search
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             
             //string packageNameUpdated = Methods.FixApostrophesforSQL(packageinfo.Name);            
-            thisPackage.PackageName = packageinfo.FullName;
+            thisPackage.PackageName = packageinfo.Name;
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 4;
             thisPackage.GameString = "The Sims 4";
@@ -2640,7 +2640,6 @@ namespace SimsCCManager.Packages.Sims4Search
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
                     readFile.BaseStream.Position = indexData[e].position; 
-                    Console.WriteLine(indexData[e].compressionType);
                     if (indexData[e].compressionType == "5A42"){  
                         int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].memSize;
 
@@ -2658,8 +2657,9 @@ namespace SimsCCManager.Packages.Sims4Search
                             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             MemoryStream decomps = S4Decryption.DecompressPicture(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
                             byte[] imagebyte = decomps.ToArray();
-                            thisPackage.ThumbnailImage.Add(new PackageThumbnail() {ThumbnailBytes = Convert.ToBase64String(imagebyte)});
-                    
+                            string byteasstring = Convert.ToBase64String(imagebyte);                            
+                            PackageThumbnail thumb = new PackageThumbnail() {Thumbnail = byteasstring};
+                            thisPackage.ThumbnailImage.Add(thumb);
                     }
                 }
             }

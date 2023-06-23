@@ -115,17 +115,22 @@ namespace SimsCCManager.SortingUIResults {
             
         }     
 
+        public void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+                this.DragMove();
+        }
+
+        public void CloseWindow_Click(object sender, EventArgs e){
+            this.Close();
+        }
+
         private void ResultsWindow_Loaded(object sender, RoutedEventArgs e)
         {
             
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {            
-            mainWindow.Show();
-            this.Close();
-        }
-
+        
         private void NumericOnly(System.Object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
             e.Handled = IsTextNumeric(e.Text);
@@ -201,20 +206,7 @@ namespace SimsCCManager.SortingUIResults {
 
         private void menu_Click(object sender, EventArgs e)
         {
-            log.MakeLog("Closing application.", false);
-            cts.Cancel();
-            Thread.Sleep(2000);
-            GlobalVariables.InstancesCacheConnection.Commit();
-            GlobalVariables.InstancesCacheConnection.Close();
-            GlobalVariables.S4FunctionTypesConnection.Commit();
-            GlobalVariables.S4FunctionTypesConnection.Close();
-            GlobalVariables.S4OverridesConnection.Commit();
-            GlobalVariables.S4OverridesConnection.Close();
-            GlobalVariables.S4SpecificOverridesConnection.Commit();
-            GlobalVariables.S4SpecificOverridesConnection.Close();
-            GlobalVariables.DatabaseConnection.Commit();
-            GlobalVariables.DatabaseConnection.Close();
-            System.Windows.Application.Current.Shutdown();
+            this.Close();
         }
 
         private void loadErrorFix_Click(object sender, EventArgs e){
@@ -293,7 +285,29 @@ namespace SimsCCManager.SortingUIResults {
         public static ObservableCollection<TagsList> tags = new ObservableCollection<TagsList>();
 
         public PackagesViewModel(){
-            thisPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).ToList();            
+            
+            var aPage = GlobalVariables.DatabaseConnection.Table<SimsPackage>().OrderBy(o=> o.PackageName).Skip(ResultsWindow.itemsPerPage * ResultsWindow.pageNum).Take(ResultsWindow.itemsPerPage).Select(o => o.PackageName).ToList();   
+            foreach (var item in aPage) {
+                thisPage.Add(GlobalVariables.DatabaseConnection.GetWithChildren<SimsPackage>(item, true));
+            }
+            // Create the image element.
+            Image simpleImage = new Image();    
+            simpleImage.Width = 104;
+            // Create source.
+            BitmapImage bi = new BitmapImage();            
+                 
+            for (int i = 0; i < thisPage.Count; i++){                
+                for (int o = 0; o < thisPage[i].ThumbnailImage.Count; o++){
+                    if (thisPage[i].ThumbnailImage[o] != null) {
+                        bi.BeginInit();
+                        bi.StreamSource = new MemoryStream(Convert.FromBase64String(thisPage[i].ThumbnailImage[o].Thumbnail));
+                        bi.EndInit();
+                        simpleImage.Source = bi;
+                        thisPage[i].Thumbnail = bi;
+                        break; 
+                    }                                       
+                }
+            }
             _tagsView = CollectionViewSource.GetDefaultView(tags);
             _packagesView = CollectionViewSource.GetDefaultView(thisPage.ApostropheUnFix());
         }
@@ -316,8 +330,14 @@ namespace SimsCCManager.SortingUIResults {
             _packagesView = CollectionViewSource.GetDefaultView(thisPage.ApostropheUnFix());
             ResultsWindow.resultsView.ItemsSource = _packagesView;            
         }
+        private static readonly System.Drawing.ImageConverter _imageConverter = new();
 
-
+        public BitmapSource ByteToImage(byte[] byteArray)
+        {
+            BitmapSource bm = (BitmapSource)_imageConverter.ConvertFrom(byteArray);
+            
+            return bm;
+        }
         
         #region Sorting and Pages
 

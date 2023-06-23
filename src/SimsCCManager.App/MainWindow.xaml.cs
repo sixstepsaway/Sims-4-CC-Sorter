@@ -38,6 +38,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SQLite;
 using SQLiteNetExtensions;
+using SQLiteNetExtensions.Extensions;
 using SQLiteNetExtensions.Attributes;
 using SQLitePCL;
 using SQLiteNetExtensions.Extensions.TextBlob;
@@ -53,6 +54,7 @@ using System.Windows.Media.Animation;
 using MoreLinq;
 using FontAwesome.WPF;
 using SimsCCManager.App.CustomSortingOptions;
+using System.Data.Common;
 
 namespace SimsCCManager.App
 {
@@ -738,6 +740,13 @@ namespace SimsCCManager.App
             } catch (Exception e){
                 log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
             }
+            making = "OBJD Keys";
+            log.MakeLog(string.Format("Making {0} table", making), true);
+            try {
+                GlobalVariables.DatabaseConnection.CreateTable <PackageOBJDKeys>();
+            } catch (Exception e){
+                log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
+            }
             making = "Thumbnails";
             log.MakeLog(string.Format("Making {0} table", making), true);
             try {
@@ -745,7 +754,6 @@ namespace SimsCCManager.App
             } catch (Exception e){
                 log.MakeLog(string.Format("Ran into an error making {0} table: {1}", making, e), true);
             }
-            making = "Thumbnails";
 
             
              
@@ -1169,7 +1177,11 @@ namespace SimsCCManager.App
         }
 
         private async Task UpdateDatabases(List<SimsPackage> list1, List<PackageFile> list2, List<PackageFile> list3, List<AllFiles> list4, List<InstancesRecolorsS2> list5, List<InstancesRecolorsS3> list6, List<InstancesRecolorsS4> list7, List<InstancesMeshesS2> list8, List<InstancesMeshesS3> list9, List<InstancesMeshesS4> list10, int batchnum){
-            GlobalVariables.DatabaseConnection.InsertAllWithChildren(list1.ApostropheFix(), true);
+                        
+            GlobalVariables.DatabaseConnection.InsertAllWithChildren(list1.ApostropheFix(), recursive: true);
+            foreach (SimsPackage package in list1.ApostropheFix()) {
+                GlobalVariables.DatabaseConnection.UpdateWithChildren(package);
+            }
             log.MakeLog(string.Format("Batch {0}: {1} Items in AddPackages added to Database.", batchnum, list1.Count), true);
             
             GlobalVariables.DatabaseConnection.DeleteAll(list2.ApostropheFix(), true);

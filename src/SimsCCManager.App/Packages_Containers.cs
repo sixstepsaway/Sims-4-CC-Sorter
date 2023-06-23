@@ -13,6 +13,11 @@ using Newtonsoft.Json;
 using System.ComponentModel;
 using System.IO.Packaging;
 using SSAGlobals;
+using System.Windows.Controls;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace SimsCCManager.Packages.Containers
 {    
@@ -105,19 +110,13 @@ namespace SimsCCManager.Packages.Containers
         [Column ("Game")]
         public int Game {get; set;}
         [Column ("GameString")]
-        public string GameString {get; set;}
-        [Column ("InstanceIDs")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<PackageInstance> InstanceIDs {get; set;}
+        public string GameString {get; set;}        
         [Column ("Subtype")]
         public string Subtype {get; set;}
         [Column ("Category")]
         public string Category {get; set;}
         [Column ("ModelName")]
         public string ModelName {get; set;}
-        [Column ("GUIDs")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<PackageGUID> GUIDs {get; set;}
         [Column("TuningID")]
         public int TuningID {get; set;}
         [Column("Tuning")]
@@ -127,36 +126,11 @@ namespace SimsCCManager.Packages.Containers
         [Column ("Age")]
         public string Age {get; set;}
         [Column ("Gender")]
-        public string Gender {get; set;}
-        [Column ("RequiredEPs")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<PackageRequiredEPs> RequiredEPs {get; set;}
+        public string Gender {get; set;}             
         [Column ("Function")]
-        public string Function {get; set;}
+        public string Function {get; set;}        
         [Column ("FunctionSubcategory")]
-        public string FunctionSubcategory {get; set;}
-        [Column ("AgeGenderFlags")]
-        [OneToOne(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public AgeGenderFlags AgeGenderFlags {get; set;}
-        [Column ("Entry Locations")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<fileHasList> FileHas {get; set;}
-        [Column ("RoomSort")]        
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<PackageRoomSort> RoomSort {get; set;}
-        [Column ("Components")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<PackageComponent> Components {get; set;}
-        public string ComponentsBlobbed {get; set;}
-        [Column ("Entries")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<TypeCounter> Entries {get; set;}        
-        [Column ("Flags")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<PackageFlag> Flags {get; set;}
-        [Column ("CatalogTags")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<TagsList> CatalogTags {get; set;}
+        public string FunctionSubcategory {get; set;}        
         [Column ("Broken")]
         public bool Broken {get; set;}
         [Column ("Mesh")]
@@ -169,32 +143,65 @@ namespace SimsCCManager.Packages.Containers
         public bool Duplicate {get; set;}
         [Column ("Override")]        
         public bool Override {get; set;}
-        [Column("OverridesList")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<OverriddenList> OverridesList {get; set;}
-        [Column("MeshKeys")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<PackageMeshKeys> MeshKeys {get; set;}
-        [Column("CASPartKeys")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<PackageCASPartKeys> CASPartKeys {get; set;}
-        [Column("OBJDKeys")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<PackageOBJDKeys> OBJDPartKeys {get; set;}
+        [Ignore]
+        public ImageSource Thumbnail {get; set;}
         [Column("MatchingMesh")]
         public string MatchingMesh {get; set;}
+        [Column ("InstanceIDs")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<PackageInstance> InstanceIDs {get; set;}
+        [Column("Thumbnail")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<PackageThumbnail> ThumbnailImage {get; set;}
+        [Column ("GUIDs")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<PackageGUID> GUIDs {get; set;}
+        [Column ("RequiredEPs")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<PackageRequiredEPs> RequiredEPs {get; set;}
+        [Column ("AgeGenderFlags")]
+        [OneToOne(CascadeOperations = CascadeOperation.All)]
+        public AgeGenderFlags AgeGenderFlags {get; set;}
+        [Column ("Entry Locations")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<fileHasList> FileHas {get; set;}
+        [Column ("RoomSort")]        
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<PackageRoomSort> RoomSort {get; set;}
+        [Column ("Components")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<PackageComponent> Components {get; set;}
+        [Column ("Entries")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<TypeCounter> Entries {get; set;}        
+        [Column ("Flags")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<PackageFlag> Flags {get; set;}
+        [Column ("CatalogTags")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<TagsList> CatalogTags {get; set;}
+        [Column("OverridesList")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<OverriddenList> OverridesList {get; set;}
+        [Column("MeshKeys")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<PackageMeshKeys> MeshKeys {get; set;}
+        [Column("CASPartKeys")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<PackageCASPartKeys> CASPartKeys {get; set;}
+        [Column("OBJDKeys")]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<PackageOBJDKeys> OBJDPartKeys {get; set;}        
         [Column ("MatchingRecolors")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<PackageMatchingRecolors> MatchingRecolors {get; set;}
         [Column ("Conflicts")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<PackageConflicts> Conflicts {get; set;}
         [Column ("DuplicatePackages")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<PackageDuplicates> DuplicatePackages {get; set;}
-        [Column("Thumbnail")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
-        public List<PackageThumbnail> ThumbnailImage {get; set;}
+        
 
         public SimsPackage() {
             this.InstanceIDs = new List<PackageInstance>();
@@ -214,7 +221,7 @@ namespace SimsCCManager.Packages.Containers
             this.CASPartKeys = new List<PackageCASPartKeys>();
             this.OBJDPartKeys = new List<PackageOBJDKeys>();
             this.DuplicatePackages = new List<PackageDuplicates>();
-            this.ThumbnailImage = new();
+            this.ThumbnailImage = new List<PackageThumbnail>();
         }
 
         public string GetPropertyString(string propName){
@@ -984,8 +991,11 @@ namespace SimsCCManager.Packages.Containers
 
     [Table ("SP_Thumbnails")]
     public class PackageThumbnail {
-        [Column ("ThumbnailBytes")]
-        public string ThumbnailBytes {get; set;}
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
+        [Column ("Thumbnail")]
+        public string Thumbnail {get; set;}
         [ForeignKey(typeof(SimsPackage))]
         public string PackageID {get; set;}
         [Column("SimsPackage")]
@@ -996,6 +1006,9 @@ namespace SimsCCManager.Packages.Containers
 
     [Table ("SP_Instances")]
     public class PackageInstance {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("InstanceID")]
         public string InstanceID {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1007,6 +1020,9 @@ namespace SimsCCManager.Packages.Containers
     
     [Table ("SP_Guids")]
     public class PackageGUID {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("GUID ID")]
         public string GuidID {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1018,6 +1034,9 @@ namespace SimsCCManager.Packages.Containers
     
     [Table ("SP_RequiredEPs")]
     public class PackageRequiredEPs {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("Required Pack")]
         public string RequiredPack {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1029,6 +1048,9 @@ namespace SimsCCManager.Packages.Containers
 
     [Table ("SP_MeshKeys")]
     public class PackageMeshKeys {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("Mesh Key")]
         public string MeshKey {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1040,6 +1062,9 @@ namespace SimsCCManager.Packages.Containers
 
     [Table ("SP_CASPartKeys")]
     public class PackageCASPartKeys {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("CAS Part Key")]
         public string CASPartKey {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1050,6 +1075,9 @@ namespace SimsCCManager.Packages.Containers
     }
     [Table ("SP_OBJDKeys")]
     public class PackageOBJDKeys {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("Object Key")]
         public string OBJDKey {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1061,6 +1089,9 @@ namespace SimsCCManager.Packages.Containers
 
     [Table ("SP_MatchingRecolors")]
     public class PackageMatchingRecolors {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("Matching Recolor")]
         public string MatchingRecolor {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1072,6 +1103,9 @@ namespace SimsCCManager.Packages.Containers
 
     [Table ("SP_Conflicts")]
     public class PackageConflicts {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("Conflicts")]
         public string Conflict {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1082,6 +1116,9 @@ namespace SimsCCManager.Packages.Containers
     }
     [Table ("SP_Duplicates")]
     public class PackageDuplicates {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("Duplicate")]
         public string Duplicate {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1092,6 +1129,9 @@ namespace SimsCCManager.Packages.Containers
     }
     [Table ("SP_RoomSort")]
     public class PackageRoomSort {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("Room Sort")]
         public string RoomSort {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1102,6 +1142,9 @@ namespace SimsCCManager.Packages.Containers
     }
     [Table ("SP_Components")]
     public class PackageComponent {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("Component")]
         public string Component {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1112,6 +1155,9 @@ namespace SimsCCManager.Packages.Containers
     }
     [Table ("SP_Flags")]
     public class PackageFlag {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column ("Flag")]
         public string Flag {get; set;}
         [ForeignKey(typeof(SimsPackage))]
@@ -1276,6 +1322,9 @@ namespace SimsCCManager.Packages.Containers
 
     [Table("Instances")]
     public class OverridesList {
+        [AutoIncrement, PrimaryKey]
+        [Column("ID")]
+        public int Id {get; set;}
         [Column("InstanceID")]
         public string InstanceID {get; set;}
         [Column("Name")]
@@ -1302,7 +1351,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("PackageName")]
         public string PackageName {get; set;}
         [Column("MatchingRecolors")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<InstancesRecolorsS2> MatchingRecolors {get; set;}
         public InstancesMeshesS2(){
             MatchingRecolors = new List<InstancesRecolorsS2>();
@@ -1317,7 +1366,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("PackageName")]
         public string PackageName {get; set;}
         [Column("MatchingRecolors")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<InstancesRecolorsS3> MatchingRecolors {get; set;}
         public InstancesMeshesS3(){
             MatchingRecolors = new List<InstancesRecolorsS3>();
@@ -1332,7 +1381,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("PackageName")]
         public string PackageName {get; set;}
         [Column("MatchingRecolors")]
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<InstancesRecolorsS4> MatchingRecolors {get; set;}
         public InstancesMeshesS4(){
             MatchingRecolors = new List<InstancesRecolorsS4>();
@@ -1346,7 +1395,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("PackageName")]
         public string PackageName {get; set;}
         [Column("MatchingMesh")]
-        [ManyToOne(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        [ManyToOne(CascadeOperations = CascadeOperation.All)]
         public InstancesMeshesS2 MatchingMesh {get; set;}   
         [ForeignKey(typeof(InstancesMeshesS2))]
         public string MeshKey {get; set;}     
@@ -1360,7 +1409,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("PackageName")]
         public string PackageName {get; set;}
         [Column("MatchingMesh")]
-        [ManyToOne(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        [ManyToOne(CascadeOperations = CascadeOperation.All)]
         public InstancesMeshesS3 MatchingMesh {get; set;} 
         [ForeignKey(typeof(InstancesMeshesS3))]
         public string MeshKey {get; set;}       
@@ -1374,7 +1423,7 @@ namespace SimsCCManager.Packages.Containers
         [Column("PackageName")]
         public string PackageName {get; set;}
         [Column("MatchingMesh")]
-        [ManyToOne(CascadeOperations = CascadeOperation.CascadeRead | CascadeOperation.CascadeInsert | CascadeOperation.CascadeDelete)]
+        [ManyToOne(CascadeOperations = CascadeOperation.All)]
         public InstancesMeshesS4 MatchingMesh {get; set;}
         [ForeignKey(typeof(InstancesMeshesS4))]
         public string MeshKey {get; set;}

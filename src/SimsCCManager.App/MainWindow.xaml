@@ -60,7 +60,7 @@
                     <Button Width="30" Height="30" Template="{StaticResource NoMouseOverButtonTemplate}" Click="CloseWindow_Click" HorizontalAlignment="Right">
                       <Image Source="img/icons/fi-sr-cross-small_w.png"/>
                     </Button>
-                </Grid>               
+                </Grid>
             <Grid Grid.Row="1" VerticalAlignment="Top" HorizontalAlignment="Right" Height="45" Width="45">
                 <Button Click="OptionsMenu_Click" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
                     <Image Width="35" Source="img/icons/fi-sr-menu-burger.png"/>
@@ -215,7 +215,7 @@
         </Grid>
         
         
-        <Grid x:Name="ProgressGrid" ZIndex="2" VerticalAlignment="Center" HorizontalAlignment="Center" Background="#212a3e" Width="450" Height="150" Visibility="Hidden">
+        <Grid x:Name="ProgressGrid" ZIndex="2" VerticalAlignment="Center" HorizontalAlignment="Center" Width="450" Height="150" Visibility="Hidden">
             <Border x:Name="ProgressBorder" Background="#212a3e" BorderBrush="#FF49BD66" BorderThickness="2,2,2,2" 
         Padding="0" CornerRadius="10 10 10 10" ClipToBounds="True" Margin="-0,0,0,0">
             </Border>
