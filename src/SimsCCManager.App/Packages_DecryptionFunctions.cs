@@ -959,16 +959,16 @@ namespace SimsCCManager.Packages.Decryption
 
 				if (langCode == 1) 
 				{
-					if (foundLang == true) { this.description = blah.Replace("\n", " "); break; }
-					if (foundLang == false) { this.title = blah.Replace("\n", " "); foundLang = true; }
+					if (foundLang == true) { description = blah.Replace("\n", " "); break; }
+					if (foundLang == false) { title = blah.Replace("\n", " "); foundLang = true; }
 				}
 
 			}
-            if ((this.description != "") && (this.description != " ")){
-                infovar.Description = this.description;
+            if (!string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(description)){
+                infovar.Description = description;
             }
-            if ((this.title != "") && (this.title != " ")){
-                infovar.Title = this.title;
+            if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(title)){
+                infovar.Title = title;
             }
             return infovar;
 		}
@@ -1011,16 +1011,16 @@ namespace SimsCCManager.Packages.Decryption
 
 				if (langCode[0] == 1) 
 				{
-					if (foundLang == true) { this.description = blah.Replace("\n", " "); break; }
-					if (foundLang == false) { this.title = blah.Replace("\n", " "); foundLang = true; }
+					if (foundLang == true) { description = blah.Replace("\n", " "); break; }
+					if (foundLang == false) { title = blah.Replace("\n", " "); foundLang = true; }
 				}
 
 			}
-            if ((this.description != "") && (this.description != " ")){
-                infovar.Description = this.description;
+            if (!string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(description)){
+                infovar.Description = description;
             }
-            if ((this.title != "") && (this.title != " ")){
-                infovar.Title = this.title;
+            if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(title)){
+                infovar.Title = title;
             }
             
             
@@ -1629,7 +1629,7 @@ namespace SimsCCManager.Packages.Decryption
 			}
 		}
 
-		public static MemoryStream DecompressPicture(byte[] data)
+		public static MemoryStream DecompressMS(byte[] data)
 		{
 			var outputStream = new MemoryStream();
 			using (var compressedStream = new MemoryStream(data))

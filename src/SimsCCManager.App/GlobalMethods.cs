@@ -268,18 +268,23 @@ namespace SSAGlobals {
         public static string logfile;
         public static bool sortonthego = false;
         public static bool eatentirecpu = true;
-        
+        public static bool resultsloaded = false;
+        public static bool alreadyloaded = false;
+
         public static string currentpackage;
         public static int PackageCount = 0;       
         public static int packagesRead = 0;
+        public static int pairingNum = 0;
+        public static int pairingCount = 0;
+        public static string pairingPack = "";
         public static int packagesReadReading = 0;
         public static string S4_Overrides_All = @"data\S4_Instances.sqlite";
         public static string S4_Overrides_List = @"data\S4_SpecificOverrides.sqlite";
         private static string PackagesCacheLoc = @"Sims CC Manager\data\PackagesCache.sqlite";
-        private static string InstancesCacheLoc = @"Sims CC Manager\cache\InstancesCache.sqlite";
         public static string PackagesRead = Path.Combine(LoggingGlobals.mydocs, PackagesCacheLoc); 
-        public static string InstancesCache = Path.Combine(LoggingGlobals.mydocs, InstancesCacheLoc);
         public static string PackagesReadDS = string.Format("Data Source={0}", PackagesRead);
+
+        public static List<CacheLocations> caches = new List<CacheLocations>();
 
         public static string SortingOptionsDefault = @"data\defaultsortingoptions.json";
         public static string CustomSortingOptionsLoc = @"Sims CC Manager\data\CustomSortingOptions.json";
@@ -291,32 +296,22 @@ namespace SSAGlobals {
         public static string Sims2DocumentsFolder = Path.Combine(LoggingGlobals.mydocs, @"EA Games\The Sims 2 Ultimate Collection");
         public static string Sims3DocumentsFolder = Path.Combine(LoggingGlobals.mydocs, @"Electronic Arts\The Sims 3");
         public static string Sims4DocumentsFolder = Path.Combine(LoggingGlobals.mydocs, @"Electronic Arts\The Sims 4");
-
+        public static string LastFolderUsed = "";
 
         public static SQLite.SQLiteConnection DatabaseConnection;
         public static SQLite.SQLiteConnection S4OverridesConnection;
         public static SQLite.SQLiteConnection S4SpecificOverridesConnection;
         public static SQLite.SQLiteConnection S4FunctionTypesConnection;
-        public static SQLite.SQLiteConnection InstancesCacheConnection;
         public static List<OverridesList> S4OverridesList = new List<OverridesList>();
         public static List<SpecificOverrides> S4SpecificOverridesList = new List<SpecificOverrides>();
-        public static List<InstancesRecolorsS2> S2InstancesCacheRecolors = new();
-        public static List<InstancesRecolorsS3> S3InstancesCacheRecolors = new();
-        public static List<InstancesRecolorsS4> S4InstancesCacheRecolors = new();
-        public static List<InstancesMeshesS2> S2InstancesCacheMeshes = new();
-        public static List<InstancesMeshesS3> S3InstancesCacheMeshes = new();
-        public static List<InstancesMeshesS4> S4InstancesCacheMeshes = new();
         public static ConcurrentQueue<SimsPackage> AddPackages = new();
         public static ConcurrentQueue<PackageFile> RemovePackages = new();
         public static ConcurrentQueue<PackageFile> ProcessingReader = new();
-        public static ConcurrentQueue<InstancesRecolorsS4> InstancesRecolorsS4Col = new();
-        public static ConcurrentQueue<InstancesMeshesS4> InstancesMeshesS4Col = new();
-        public static ConcurrentQueue<InstancesRecolorsS2> InstancesRecolorsS2Col = new();
-        public static ConcurrentQueue<InstancesMeshesS2> InstancesMeshesS2Col = new();
-        public static ConcurrentQueue<InstancesRecolorsS3> InstancesRecolorsS3Col = new();
-        public static ConcurrentQueue<InstancesMeshesS3> InstancesMeshesS3Col = new();
-        public static ConcurrentQueue<AllFiles> AllFiles = new();
+        public static ConcurrentQueue<PackageFile> AllFiles = new();
         public static ConcurrentQueue<PackageThumbnail> Thumbnails = new();
+        public static List<typeList> S2Types = new();
+        public static List<typeList> S3Types = new();
+        public static List<typeList> S4Types = new();
         
         
         //vars that hold package files 
@@ -442,50 +437,7 @@ namespace SSAGlobals {
                 S4FunctionTypesConnection = new SQLite.SQLiteConnection(TypeListings.functionSortsListLoc);
             } catch (Exception e){
                 Console.WriteLine("Caught exception connecting to Function Sort Lists: " + e.Message);
-            }             
-            log.MakeLog("Connecting to Instances Cache.", true);    
-            if (!File.Exists(InstancesCache)){
-                log.MakeLog("Instances Cache doesn't exist, creating.", true); 
-                try {
-                    System.Data.SQLite.SQLiteConnection.CreateFile(InstancesCache);                    
-                } catch (System.Data.SQLite.SQLiteException e) {
-                    Console.WriteLine(e.Message);
-                }
-                log.MakeLog("Connecting to created cache.", true); 
-                
-                try {  
-                    InstancesCacheConnection = new SQLite.SQLiteConnection(InstancesCache);
-                } catch (Exception e){
-                    Console.WriteLine("Caught exception connecting to Function Sort Lists: " + e.Message);
-                }
-                log.MakeLog("Making tables.", true);
-                //
-                InstancesCacheConnection.CreateTable<InstancesMeshesS2>();
-                InstancesCacheConnection.CreateTable<InstancesMeshesS3>();
-                InstancesCacheConnection.CreateTable<InstancesMeshesS4>();
-                InstancesCacheConnection.CreateTable<InstancesRecolorsS2>();
-                InstancesCacheConnection.CreateTable<InstancesRecolorsS3>();
-                InstancesCacheConnection.CreateTable<InstancesRecolorsS4>();
-                var tableA = new List<string>(){
-                    "PRAGMA journal_mode=WAL",
-                    "PRAGMA journal_size_limit=5000",
-                    "PRAGMA foreign_keys = ON",
-                    "PRAGMA synchronous=EXTRA",
-                    "PRAGMA auto_vacuum=FULL",
-                    "PRAGMA default_cache_size=200"
-                };
-                foreach (string table in tableA){
-                    log.MakeLog(string.Format("Making table: {0}.", table), true);
-                    var result = InstancesCacheConnection.ExecuteScalar<int>(table);
-                    //Console.WriteLine(result);                    
-                }
-            } else {
-                try {
-                    InstancesCacheConnection = new SQLite.SQLiteConnection(InstancesCache);
-                } catch (Exception e){
-                    Console.WriteLine("Caught exception connecting to Function Sort Lists: " + e.Message);
-                } 
-            } 
+            }            
 
             var overridescountcmd = S4OverridesConnection.CreateCommand("SELECT count(*) FROM Instances");
             var overridescount = overridescountcmd.ExecuteScalar<int>();
@@ -495,53 +447,9 @@ namespace SSAGlobals {
             var specovcount = specoverridescountcmd.ExecuteScalar<int>();
             S4SpecificOverridesList = new List<SpecificOverrides>(specovcount);
             S4SpecificOverridesList = S4SpecificOverridesConnection.Query<SpecificOverrides>("SELECT * FROM Overrides");
-
-            GetInstanceData();
-        }
-
-        public static void GetInstanceData(){
-            lock (S2InstancesCacheRecolors)
-            {
-                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims2Recolors");
-                var count = countcmd.ExecuteScalar<int>();
-                S2InstancesCacheRecolors = new List<InstancesRecolorsS2>(count);
-                S2InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesRecolorsS2>("SELECT * FROM Sims2Recolors");
-            }
-
-            lock (S3InstancesCacheRecolors)
-            {
-                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims3Recolors");
-                var count = countcmd.ExecuteScalar<int>();
-                S3InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesRecolorsS3>("SELECT * FROM Sims3Recolors");
-            }
-
-            lock(S4InstancesCacheRecolors) 
-            {
-                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims4Recolors");
-                var count = countcmd.ExecuteScalar<int>();
-                S4InstancesCacheRecolors = InstancesCacheConnection.Query<InstancesRecolorsS4>("SELECT * FROM Sims4Recolors");
-            } 
-
-            lock(S2InstancesCacheMeshes)
-            {
-                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims2Meshes");
-                var count = countcmd.ExecuteScalar<int>();
-                S2InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesMeshesS2>("SELECT * FROM Sims2Meshes");
-            }
-
-            lock(S3InstancesCacheMeshes)
-            {
-                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims3Meshes");
-                var count = countcmd.ExecuteScalar<int>();
-                S3InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesMeshesS3>("SELECT * FROM Sims3Meshes");
-            }
-            
-            lock(S4InstancesCacheMeshes)
-            {
-                var countcmd = InstancesCacheConnection.CreateCommand("SELECT count(*) FROM Sims4Meshes");
-                var count = countcmd.ExecuteScalar<int>();
-                S4InstancesCacheMeshes = InstancesCacheConnection.Query<InstancesMeshesS4>("SELECT * FROM Sims4Meshes");
-            }
+            S2Types = S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S2Types"));
+            S3Types = S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S3Types"));
+            S4Types = S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S4Types"));
         }
     }
 
@@ -571,6 +479,7 @@ namespace SSAGlobals {
         /// <summary>
         /// Synchronous log file implementation. 
         /// </summary>
+        
         public static bool firstrunmain = true;
         public static bool firstrundebug = true;
         public static string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -578,9 +487,15 @@ namespace SSAGlobals {
         private static string debuglog = Path.Combine(internalLogFolder, "debug.log");
         static ReaderWriterLock locker = new ReaderWriterLock();
         //Function for logging to the logfile set at the start of the program
-        public void InitializeLog() {            
+        public void InitializeLog() {
             Methods.MakeFolder(SaveData.cacheFolder);
             Methods.MakeFolder(Path.Combine(mydocs, "Sims CC Manager\\data"));
+            if (File.Exists(debuglog)){
+                File.Delete(debuglog);
+            }
+            if (File.Exists(GlobalVariables.logfile)){
+                File.Delete(GlobalVariables.logfile);
+            }
             StreamWriter addToInternalLog = new StreamWriter (debuglog, append: false);
             addToInternalLog.WriteLine("Initializing debug log file.");
             addToInternalLog.Close();
@@ -648,20 +563,26 @@ namespace SSAGlobals {
         }
 
         public static string FixApostrophesforSQL(string input){
+            List<string> pattern = new() {@"'", @";"};
+            List<string> replace = new() {@"''", @"\;"};
             string output = "";
-            string pattern = @"'";
-            string replace = @"''";
 
-            output = Regex.Replace(input, pattern, replace);            
+            for (int i = 0; i < pattern.Count; i++){
+                output = Regex.Replace(input, pattern[i], replace[i]);
+                input = output;
+            }
 
             return output;
         }
         public static string RestoreApostrophesFromSQL(string input){
+            List<string> replace = new() {@"'", @";"};
+            List<string> pattern = new() {@"''", @"\;"};
             string output = "";
-            string pattern = @"''";
-            string replace = @"'";
 
-            output = Regex.Replace(input, pattern, replace);            
+            for (int i = 0; i < pattern.Count; i++){
+                output = Regex.Replace(input, pattern[i], replace[i]);
+                input = output;
+            }
 
             return output;
         }

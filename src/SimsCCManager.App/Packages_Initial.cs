@@ -77,10 +77,10 @@ namespace SimsCCManager.Packages.Initial {
                     File.Move(query.Location, newloc);
                     query.Location = newloc;
                     query.Status = "Broken";
-                        GlobalVariables.AllFiles.Enqueue(query);
+                        GlobalVariables.DatabaseConnection.InsertOrReplace(query);
                 } else {
                     query.Status = "Broken";
-                        GlobalVariables.AllFiles.Enqueue(query);
+                        GlobalVariables.DatabaseConnection.InsertOrReplace(query);
                 }
                 complete = true;
                 return complete;
@@ -143,7 +143,7 @@ namespace SimsCCManager.Packages.Initial {
                     af.Location = pack.FullName;
                     af.Type = "package";
                     af.Status = "SimCity 5 Package";
-                    GlobalVariables.AllFiles.Enqueue(af);
+                    GlobalVariables.DatabaseConnection.InsertOrReplace(af);
                     if(GlobalVariables.highdebug == false) log.MakeLog(string.Format("Log Dumped from StringBuilder: \n {0}", LogFile.ToString()), true);
                 } else {
                     LogMessage = string.Format("{0} was unidentifiable.", pack.FullName);
@@ -155,7 +155,7 @@ namespace SimsCCManager.Packages.Initial {
                     af.Location = pack.FullName;
                     af.Type = "package";
                     af.Status = "Unidentifiable version";
-                    GlobalVariables.AllFiles.Enqueue(af);
+                    GlobalVariables.DatabaseConnection.InsertOrReplace(af);
                     if(GlobalVariables.highdebug == false) log.MakeLog(string.Format("Log Dumped from StringBuilder: \n {0}", LogFile.ToString()), true);                
                 }                
                 packagereader.Dispose();

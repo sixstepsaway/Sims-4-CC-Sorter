@@ -98,7 +98,7 @@ namespace SimsCCManager.Packages.Sims3Search
             //Lists 
             
             List<EntryHolder> entries = new List<EntryHolder>();
-            List<fileHasList> fileHas = new List<fileHasList>();
+            List<PackageEntries> fileHas = new List<PackageEntries>();
             ArrayList linkData = new ArrayList();
             List<indexEntry> indexData = new List<indexEntry>();
             FileInfo packageinfo = new FileInfo(file); 

@@ -69,25 +69,24 @@ namespace SimsCCManager.SplashScreen
             tasklist.Add(new Action (() => {
                 this.Dispatcher.Invoke(new Action(() => LoadingText.Content = "Acquiring Caches"));
                 //if file exists, get it. if we already have it, delete it then and replace it
-                List<CacheLocations> caches = new List<CacheLocations>();
-                caches.Add(new CacheLocations{ CacheName = "localthumbcache.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\Electronic Arts\\The Sims 4\\localthumbcache.package"), CacheRename = "S4_localthumbcache.package" });
-                caches.Add(new CacheLocations{ CacheName = "CASThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\Electronic Arts\\The Sims 3\\Thumbnails\\CASThumbnails.package"), CacheRename = "S3_CASThumbnails.package" });
-                caches.Add(new CacheLocations{ CacheName = "ObjectThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\Electronic Arts\\The Sims 3\\Thumbnails\\ObjectThumbnails.package"), CacheRename = "S3_ObjectThumbnails.package" });
-                caches.Add(new CacheLocations{ CacheName = "CASThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\EA Games\\The Sims 2 Ultimate Collection\\Thumbnails\\BuildModeThumbnails.package"), CacheRename = "S2_CASThumbnails.package" });
-                caches.Add(new CacheLocations{ CacheName = "ObjectThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\EA Games\\The Sims 2 Ultimate Collection\\Thumbnails\\CASThumbnails.package"), CacheRename = "S2_ObjectThumbnails.package" });
-                caches.Add(new CacheLocations{ CacheName = "BuildModeThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\EA Games\\The Sims 2 Ultimate Collection\\Thumbnails\\ObjectThumbnails.package"), CacheRename = "S2_BuildModeThumbnails.package" });
-
-                foreach (CacheLocations cache in caches){
-                    string cachefolder = System.IO.Path.Combine(LoggingGlobals.mydocs, "\\Sims CC Manager\\cache");
-                    string location = System.IO.Path.Combine(LoggingGlobals.mydocs, System.IO.Path.Combine("\\Sims CC Manager\\cache\\", cache.CacheRename));
-                    string unnamedversion = System.IO.Path.Combine(LoggingGlobals.mydocs, System.IO.Path.Combine("\\Sims CC Manager\\cache\\", cache.CacheName));
+                string cachefolder = System.IO.Path.Combine(LoggingGlobals.mydocs, @"Sims CC Manager\cache");
+                GlobalVariables.caches.Add(new CacheLocations{ CacheName = "localthumbcache.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, @"Electronic Arts\The Sims 4\localthumbcache.package"), CacheRename = System.IO.Path.Combine(cachefolder, @"S4_localthumbcache.package")});
+                GlobalVariables.caches.Add(new CacheLocations{ CacheName = "CASThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, @"Electronic Arts\The Sims 3\Thumbnails\CASThumbnails.package"), CacheRename = System.IO.Path.Combine(cachefolder, @"S3_CASThumbnails.package")});
+                GlobalVariables.caches.Add(new CacheLocations{ CacheName = "ObjectThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, @"Electronic Arts\The Sims 3\Thumbnails\ObjectThumbnails.package"), CacheRename = System.IO.Path.Combine(cachefolder, @"S3_ObjectThumbnails.package")});
+                GlobalVariables.caches.Add(new CacheLocations{ CacheName = "CASThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, @"EA Games\The Sims 2 Ultimate Collection\Thumbnails\BuildModeThumbnails.package"), CacheRename = System.IO.Path.Combine(cachefolder, @"S2_CASThumbnails.package")});
+                GlobalVariables.caches.Add(new CacheLocations{ CacheName = "ObjectThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, @"EA Games\The Sims 2 Ultimate Collection\Thumbnails\CASThumbnails.package"), CacheRename = System.IO.Path.Combine(cachefolder, @"S2_ObjectThumbnails.package")});
+                GlobalVariables.caches.Add(new CacheLocations{ CacheName = "BuildModeThumbnails.package", CacheLocation = System.IO.Path.Combine(LoggingGlobals.mydocs, @"EA Games\The Sims 2 Ultimate Collection\Thumbnails\ObjectThumbnails.package"), CacheRename = System.IO.Path.Combine(cachefolder, @"S2_BuildModeThumbnails.package")});
+                
+                foreach (CacheLocations cache in GlobalVariables.caches){
+                    
+                    string location = System.IO.Path.Combine(LoggingGlobals.mydocs, System.IO.Path.Combine(@"Sims CC Manager\cache", cache.CacheRename));
+                    string unnamedversion = System.IO.Path.Combine(LoggingGlobals.mydocs, System.IO.Path.Combine(@"Sims CC Manager\cache", cache.CacheName));
                     if (File.Exists(cache.CacheLocation)) {
                         log.MakeLog(string.Format("Cache '{0}' exists. Retrieving.", cache.CacheName), true);
-                        if (File.Exists(location)){
-                            File.Delete(location);
-                            File.Copy(cache.CacheLocation, cachefolder);
-                            Microsoft.VisualBasic.FileIO.FileSystem.RenameFile(unnamedversion, cache.CacheRename);
+                        if (File.Exists(cache.CacheRename)){
+                            File.Delete(cache.CacheRename);                            
                         }
+                        File.Copy(cache.CacheLocation, cache.CacheRename);
                     } else {
                         log.MakeLog(string.Format("Cache '{0}' does not exist.", cache.CacheName), true);
                     }
@@ -127,6 +126,10 @@ namespace SimsCCManager.SplashScreen
                         } else {
                             GlobalVariables.eatentirecpu = true;
                         }
+                    }
+                    var lfu = GlobalVariables.Settings.Where(x => x.SettingName == "LastFolder").ToList();
+                    if (lfu.Any()){
+                        GlobalVariables.LastFolderUsed = lfu[0].SettingValue;
                     }
                 } else {
                     log.MakeLog("No settings found.", true);

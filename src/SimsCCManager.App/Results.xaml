@@ -6,10 +6,11 @@
         xmlns:local="clr-namespace:SimsCCManager.SortingUIResults"
         mc:Ignorable="d"
         Title="Results" 
-        ResizeMode="NoResize"
-        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"        
+        WindowStartupLocation="CenterScreen"
         WindowState="Normal"
         WindowStyle="None"
+        SizeToContent="WidthAndHeight"
         AllowsTransparency="True"
         Background="Transparent"
         Icon="img\simsccmanagericon.ico">
@@ -17,24 +18,41 @@
             <Style x:Key="ResultsDataGridStyle" TargetType="ListView">
                 <Setter Property="Background" Value="#C1C0DE"/>
             </Style>
+            <Style x:Key="ResultsItemStyle" TargetType="GridViewRowPresenter">
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="true">
+                        <Setter Property="Cursor" Value="Hand"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+
+
+
+
             <Style x:Key="ResultsRows" TargetType="ListViewItem">
                 <Style.Triggers>
                     <Trigger Property="Content" Value="Override">
                         <Setter Property="Background" Value="Red"/>
-                    </Trigger>
-                </Style.Triggers>
+                    </Trigger>                       
+                </Style.Triggers>                
             </Style>
              <Style TargetType="ListViewItem">
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Style.Triggers>
+                    <DataTrigger Binding="{Binding Orphan}" Value="True">
+                        <Setter Property="Background" Value="Red" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding Override}" Value="True">
-                      <Setter Property="Background" Value="Red" />
+                        <Setter Property="Background" Value="Red" />
                     </DataTrigger>
-                    <DataTrigger Binding="{Binding GameString}" Value="The Sims 2">
-                      <Setter Property="Background" Value="Green" />
-                    </DataTrigger>
-                </Style.Triggers>
-            </Style>
+                    <Trigger Property="IsMouseOver" Value="true">
+                        <Setter Property="Foreground" Value="Blue" />
+                        <Setter Property="Cursor" Value="Hand"/>
+                      </Trigger>
+                      
+                </Style.Triggers>                
+            </Style>            
             <DataTemplate x:Key="FirstCell">
                 <StackPanel Orientation="Horizontal">
                   <CheckBox IsChecked="{Binding Path=IsSelected, 
@@ -66,18 +84,30 @@
                     </Trigger>
                 </ControlTemplate.Triggers>
             </ControlTemplate>
-    
         </Window.Resources>  
-        <Grid Visibility="Visible" HorizontalAlignment="Center" Width="850" Height="650">
+        <Grid x:Name="MainResultsGrid"  Visibility="Visible" HorizontalAlignment="Center" Width="850" Height="650">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="tt"/>
+            </Grid.RenderTransform>
             <Grid.RowDefinitions>
                 <RowDefinition Height="25"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <Grid MouseDown="TitleBar_MouseDown" Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Right" Background="#3B4861" Width="850" Height="30">
-                <Label Margin="0, 0, 0, 5" Foreground="AliceBlue" Content="Manage CC" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="0"/>  
-                <Button Width="30" Height="30" Template="{StaticResource NoMouseOverButtonTemplate}" Click="CloseWindow_Click" HorizontalAlignment="Right">
-                  <Image Source="img/icons/fi-sr-cross-small_w.png"/>
-                </Button>
+            <Grid x:Name="TitleBar" MouseDown="TitleBar_MouseDown" Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Right" Background="#3B4861" Width="850" Height="30">
+                <Grid Margin="0, 0, 0, 5">
+                    <Label Foreground="AliceBlue" VerticalAlignment="Center" Content="Manage CC" HorizontalAlignment="Center"/>  
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Width="15" Height="30" Template="{StaticResource NoMouseOverButtonTemplate}" Click="Minimize_Click" Margin="0, 0, 10, 0">
+                            <Image Source="img/icons/fi-sr-window-minimize_w.png"/>
+                        </Button>
+                        <Button Width="15" Height="30" Template="{StaticResource NoMouseOverButtonTemplate}" Click="Maximize_Click" Margin="0, 0, 10, 0">
+                            <Image Source="img/icons/fi-sr-square_w.png"/>
+                        </Button>
+                        <Button Width="15" Height="30" Template="{StaticResource NoMouseOverButtonTemplate}" Click="CloseWindow_Click" Margin="0, 0, 10, 0">
+                            <Image Source="img/icons/fi-sr-cross_w.png"/>
+                        </Button>                    
+                    </StackPanel>
+                </Grid>
             </Grid>
             <Grid Grid.Row="1" Background="#FF231636" Visibility="Visible">
                 <Grid.ColumnDefinitions>
@@ -108,9 +138,54 @@
                 
                     
                 <StackPanel x:Name="MenuBar" Grid.Column="0" Orientation="Vertical" VerticalAlignment="Bottom" Grid.Row="1">
+                    <StackPanel.Resources>
+                        <Style x:Key="SidebarButtonStyle" TargetType="Button">
+                            <Setter Property="Width" Value="50"/>
+                            <Setter Property="Height" Value="50"/>
+                            <Setter Property="Margin" Value="5"/>                            
+                        </Style>
+                    </StackPanel.Resources>
                     <Rectangle Height="2" Fill="#AAA1CC"/>
-                    <Button Click="menu_Click" Width="60" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5" Padding="0" Background="Transparent">
-                        <Image Width="50" Source="img\icons\headline_gears 2d62d7495b01c1a8.png"/>
+                    <Button Command="{Binding PackageStats}" Style="{StaticResource SidebarButtonStyle}" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent">
+                        <Image Width="50" Source="img\icons\list-columns-reverse.png"/>
+                        <Button.ToolTip>
+                            <TextBlock>Collection Stats</TextBlock>
+                        </Button.ToolTip>
+                    </Button>
+                    <Rectangle Height="2" Fill="#AAA1CC"/>
+                    <Button Command="{Binding SwapView}" Style="{StaticResource SidebarButtonStyle}" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent">
+                        <Image Width="50" Source="img\icons\grid.png"/>
+                        <Button.ToolTip>
+                            <TextBlock>Swap View</TextBlock>
+                        </Button.ToolTip>
+                    </Button>
+                    <Rectangle Height="2" Fill="#AAA1CC"/>
+                    <Button Command="{Binding OrphanHunt}" Style="{StaticResource SidebarButtonStyle}" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent">
+                        <Image Width="50" Source="img\icons\x-octagon.png"/>
+                        <Button.ToolTip>
+                            <TextBlock>Find Orphans</TextBlock>
+                        </Button.ToolTip>
+                    </Button>
+                    <Rectangle Height="2" Fill="#AAA1CC"/>
+                    <Button Command="{Binding SimpleSort}" Style="{StaticResource SidebarButtonStyle}" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent">
+                        <Image Width="50" Source="img\icons\folder.png"/>
+                        <Button.ToolTip>
+                            <TextBlock>Simple Sort</TextBlock>
+                        </Button.ToolTip>
+                    </Button>
+                    <Rectangle Height="2" Fill="#AAA1CC"/>
+                    <Button Command="{Binding DetailedSort}" Style="{StaticResource SidebarButtonStyle}" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent">
+                        <Image Width="50" Source="img\icons\collection.png"/>
+                        <Button.ToolTip>
+                            <TextBlock>Detailed Sort</TextBlock>
+                        </Button.ToolTip>
+                    </Button>
+                    <Rectangle Height="2" Fill="#AAA1CC"/>
+                    <Button Click="CustomizeSortingRules_Click" Style="{StaticResource SidebarButtonStyle}" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent">
+                        <Image Width="50" Source="img\icons\diagram-3.png"/>
+                        <Button.ToolTip>
+                            <TextBlock>Customize Sorting Rules</TextBlock>
+                        </Button.ToolTip>
                     </Button>
                     <Rectangle Height="2" Fill="#AAA1CC"/>
                 </StackPanel>                   
@@ -121,9 +196,15 @@
                                 <DataTrigger Binding="{Binding Type}" Value="OVERRIDE">
                                     <Setter Property="Background" Value="#D3C4D0" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding MatchingConflicts}" Value="*">
+                                <DataTrigger Binding="{Binding HasConflicts}" Value="True">
                                     <Setter Property="Background" Value="#9274B6" />
                                 </DataTrigger>
+                                <DataTrigger Binding="{Binding Orphan}" Value="True">
+                                    <Setter Property="Background" Value="#C09B92" />
+                                </DataTrigger>                                
+                                <DataTrigger Binding="{Binding Thumbnail}" Value="{x:Null}">
+                                    <Setter Property="Height" Value="25" />
+                                </DataTrigger>                                
                             </Style.Triggers>
                         </Style>
                     </ListView.Resources>
@@ -165,19 +246,19 @@
                                     <GridViewColumnHeader Tag="PackageName" Command="{Binding HeaderPackageName}">PackageName</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Title}" Width="Auto">
+                            <GridViewColumn DisplayMemberBinding="{Binding Title}" Width="200">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Title" Command="{Binding HeaderTitle}">Title</GridViewColumnHeader>
+                                </GridViewColumn.Header>
+                            </GridViewColumn>                            
+                            <GridViewColumn DisplayMemberBinding="{Binding Description}" Width="200">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="Description" Command="{Binding HeaderDescription}">Description</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding Type}" Width="Auto">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Type" Command="{Binding HeaderType}">Type</GridViewColumnHeader>
-                                </GridViewColumn.Header>
-                            </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Description}" Width="Auto">
-                                <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="Description" Command="{Binding HeaderDescription}">Description</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding FileSize}" Width="Auto">
@@ -205,6 +286,11 @@
                                     <GridViewColumnHeader Tag="Location" Command="{Binding HeaderLocation}">Location</GridViewColumnHeader>
                                 </GridViewColumn.Header>
                             </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Orphan}" Width="Auto">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="Orphan" Command="{Binding HeaderOrphan}">Orphan</GridViewColumnHeader>
+                                </GridViewColumn.Header>
+                            </GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>
@@ -223,10 +309,10 @@
                         </Style>
                     </StackPanel.Resources>                    
                     <Button Name="FirstButton" Command="{Binding PageFirst}">
-                        <Image Source="img\icons\fi-sr-arrow-alt-to-left.png"/>
+                        <Image Source="img\icons\skip-start.png"/>
                     </Button>
                     <Button Name="BackButton" Command="{Binding PageBack}">
-                        <Image Source="img\icons\fi-sr-arrow-alt-left.png"/>
+                        <Image Source="img\icons\arrow-right.png"/>
                     </Button>
                     <StackPanel Orientation="Vertical">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -248,10 +334,10 @@
                     </StackPanel>
                                         
                     <Button Name="ForwardButton" Command="{Binding PageForward}">
-                        <Image Source="img\icons\fi-sr-arrow-alt-right.png"/>
+                        <Image Source="img\icons\arrow-right.png"/>
                     </Button>
                     <Button Name="LastButton" Command="{Binding PageLast}">
-                        <Image Source="img\icons\fi-sr-arrow-alt-to-right.png"/>
+                        <Image Source="img\icons\skip-end.png"/>
                     </Button>
                 </StackPanel>
 
