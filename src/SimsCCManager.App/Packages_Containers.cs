@@ -363,18 +363,21 @@ namespace SimsCCManager.Packages.Containers
             }
             if (this.GUIDs.Any() && this.GUIDs.Count >= 0){
                 var gids = this.GUIDs.Select(i => i.GuidID);
+                string guid2 = "";
                 if (!string.IsNullOrEmpty(complete)){
                     complete += string.Format("\n GUIDs:");
                 } else {
                     complete = string.Format("GUIDs:");
                 }
                 foreach (string id in gids){
-                    if (!string.IsNullOrEmpty(complete)){
-                        complete += string.Format(", {0}", id);
+                    if (!string.IsNullOrEmpty(guid2)){
+                        guid2 += string.Format(", {0}", id);
                     } else {
-                        complete = string.Format(" {0}", id);
+                        guid2 = string.Format(" {0}", id);
                     }
                 }  
+
+                complete += string.Format(" {0}", guid2);
             }
             if (!string.IsNullOrEmpty(this.Creator)){
                 if (!string.IsNullOrEmpty(complete)){

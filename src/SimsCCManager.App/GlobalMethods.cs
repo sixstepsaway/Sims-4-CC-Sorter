@@ -262,7 +262,7 @@ namespace SSAGlobals {
         //JsonSerializer serializer = new JsonSerializer();
         public static bool consolevr = false;
         public static bool debugMode = true;
-        public static bool highdebug = true;
+        public static bool highdebug = false;
         public static bool loadedSaveData = false;
         public static string ModFolder;
         public static string logfile;
