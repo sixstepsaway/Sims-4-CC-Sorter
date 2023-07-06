@@ -102,103 +102,103 @@ namespace SimsCCManager.Packages.Sims2Search
 
             //start actually reading the package 
             //iteLine("Reading Package #" + packageparsecount + "/" + GlobalVariables.PackageCount + ": " + packageinfo.Name);
-            LogMessage = "Logged Package #" + packageparsecount + " as " + packageinfo.FullName;
+            LogMessage = string.Format("Logged Package #{0} as {1}.", packageparsecount, packageinfo.FullName);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             thisPackage.Location = packageinfo.FullName;            
             thisPackage.Game = 2;
-            LogMessage = "Logged Package #" + packageparsecount + " as meant for The Sims " + thisPackage.Game;
+            LogMessage = string.Format("Logged Package #{0} as meant for The Sims {1}.", packageparsecount, thisPackage.Game);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));           
             test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
-            LogMessage = "P" + packageparsecount + " - DBPF Bytes: " + test;
+            LogMessage = string.Format("P{0} - DBPF Bytes: {1}.", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             uint major = readFile.ReadUInt32();
             test = major.ToString();  
-            LogMessage = "P" + packageparsecount + " - Major: " + test;  
+            LogMessage = string.Format("P{0} - Major: {1}", packageparsecount, test);  
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);  
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
             minor = readFile.ReadUInt32();
             test = minor.ToString();
-            LogMessage = "P" + packageparsecount + " - Minor: " + test;
+            LogMessage = string.Format("P{0} - Minor: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             string reserved = Encoding.UTF8.GetString(readFile.ReadBytes(12));
             test = reserved;
-            LogMessage = "P" + packageparsecount + " - Reserved: " + test;
+            LogMessage = string.Format("P{0} - Reserved: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             uint dateCreated = readFile.ReadUInt32();
             test = dateCreated.ToString();
-            LogMessage = "P" + packageparsecount + " - Date created: " + test;
+            LogMessage = string.Format("P{0} - Date Created: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             uint dateModified = readFile.ReadUInt32();
             test = dateModified.ToString();
-            LogMessage = "P" + packageparsecount + " - Date modified: " + test;
+            LogMessage = string.Format("P{0} - Date modified: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             uint indexMajorVersion = readFile.ReadUInt32();
             test = indexMajorVersion.ToString();
-            LogMessage = "P" + packageparsecount + " - Index Major: " + test;
+            LogMessage = string.Format("P{0} - Index Major: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             uint indexCount = readFile.ReadUInt32();
             test = indexCount.ToString();
-            LogMessage = "P" + packageparsecount + " - Index Count: " + test;
+            LogMessage = string.Format("P{0} - Index Count: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             uint indexOffset = readFile.ReadUInt32();
             test = indexOffset.ToString();
-            LogMessage = "P" + packageparsecount + " - Index Offset: " + test;
+            LogMessage = string.Format("P{0} - Index Offset: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             uint indexSize = readFile.ReadUInt32();
             test = indexSize.ToString();
-            LogMessage = "P" + packageparsecount + " - Index Size: " + test;
+            LogMessage = string.Format("P{0} - Index Size: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             uint holesCount = readFile.ReadUInt32();
             test = holesCount.ToString();
-            LogMessage = "P" + packageparsecount + " - Holes Count: " + test;
+            LogMessage = string.Format("P{0} - Holes Count: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
             uint holesOffset = readFile.ReadUInt32();
             test = holesOffset.ToString();
-            LogMessage = "P" + packageparsecount + " - Holes Offset: " + test;
+            LogMessage = string.Format("P{0} - Holes Offset: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             uint holesSize = readFile.ReadUInt32();
             test = holesSize.ToString();
-            LogMessage = "P" + packageparsecount + " - Holes Size: " + test;
+            LogMessage = string.Format("P{0} - Holes Size: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             uint indexMinorVersion = readFile.ReadUInt32() -1;
             test = indexMinorVersion.ToString();
-            LogMessage = "P" + packageparsecount + " - Index Minor Version: " + test;
+            LogMessage = string.Format("P{0} - Index Minor Version: {1}", packageparsecount, test);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
             
             string reserved2 = Encoding.UTF8.GetString(readFile.ReadBytes(32));
-            LogMessage = "P" + packageparsecount + " - Reserved 2: " + reserved2;
+            LogMessage = string.Format("P{0} - Reserved 2: {1}", packageparsecount, reserved2);
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
-            LogMessage = "P" + packageparsecount + " - ChunkOffset: " + chunkOffset;
+            LogMessage = string.Format("P{0} - Chunk Offset: {1}", packageparsecount, chunkOffset);
 
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
 
@@ -207,22 +207,22 @@ namespace SimsCCManager.Packages.Sims2Search
             dbpfFile.Seek(chunkOffset + indexOffset, SeekOrigin.Begin);
             for (int i = 0; i < indexCount; i++) {
                 indexEntry holderEntry = new indexEntry();
-                LogMessage = "P" + packageparsecount + " - Made index entry.";
+                LogMessage = string.Format("P{0} - Made Index Entry {1}", packageparsecount, i);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 holderEntry.typeID = readFile.ReadUInt32().ToString("X8");
-                LogMessage = "P" + packageparsecount + " - Index Entry TypeID: " + holderEntry.typeID;
+                LogMessage = string.Format("P{0} - Index Entry TypeID: {1}", packageparsecount, holderEntry.typeID);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 
                 holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
-                LogMessage = "P" + packageparsecount + " - Index Entry GroupID: " + holderEntry.groupID;
+                LogMessage = string.Format("P{0} - Index Entry GroupID: {1}", packageparsecount, holderEntry.groupID);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                 //Console.WriteLine(holderEntry.instanceID);
                 allInstanceIDs.Add(new PackageInstance() {InstanceID = holderEntry.instanceID.ToString()});
-                LogMessage = "P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID;
+                LogMessage = string.Format("P{0} - Index Entry InstanceID: {1}", packageparsecount, holderEntry.instanceID);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
@@ -231,20 +231,20 @@ namespace SimsCCManager.Packages.Sims2Search
                 } else {
                     holderEntry.instanceID2 = "00000000";
                 }
-                LogMessage = "P" + packageparsecount + " - InstanceID2: " + holderEntry.instanceID2;
+                LogMessage = string.Format("P{0} - Index Entry InstanceID2: {1}", packageparsecount, holderEntry.instanceID2);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
                 holderEntry.offset = readFile.ReadUInt32();
-                LogMessage = "P" + packageparsecount + " - Offset: " + holderEntry.offset;
+                LogMessage = string.Format("P{0} - Offset: {1}", packageparsecount, holderEntry.offset);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 holderEntry.filesize = readFile.ReadUInt32();
-                LogMessage = "P" + packageparsecount + " - Filesize: " + holderEntry.filesize;
+                LogMessage = string.Format("P{0} - FileSize: {1}", packageparsecount, holderEntry.filesize);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 holderEntry.truesize = 0;
-                LogMessage = "P" + packageparsecount + " - Truesize: " + holderEntry.truesize;
+                LogMessage = string.Format("P{0} - TrueSize: {1}", packageparsecount, holderEntry.truesize);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 holderEntry.compressed = false;
@@ -255,7 +255,7 @@ namespace SimsCCManager.Packages.Sims2Search
 
                 if (indexCount == 0) 
                 {
-                    LogMessage = "P" + packageparsecount + " - Package is broken. Closing.";
+                    LogMessage = string.Format("P{0} - Package is Broken. Closing.", packageparsecount);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     readFile.Close();
@@ -272,7 +272,7 @@ namespace SimsCCManager.Packages.Sims2Search
 
             var entrynum = 0;
             foreach (indexEntry iEntry in indexData) {
-                LogMessage = "P" + packageparsecount + " - Entry [" + entrynum + "]";
+                LogMessage = string.Format("P{0} - Entry [{1}].", packageparsecount, entrynum);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 
@@ -280,15 +280,20 @@ namespace SimsCCManager.Packages.Sims2Search
 
                 switch (iEntry.typeID.ToLower()) 
                 {                    
-                    case "fc6eb1f7": linkData.Add(iEntry); LogMessage = "P" + packageparsecount + " - File has SHPE."; if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true); if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage)); break;
+                    case "fc6eb1f7": 
+                        linkData.Add(iEntry);
+                        LogMessage = string.Format("P{0} - File has SHPE.", packageparsecount);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage)); 
+                        break;
                 }
 
                 List<typeList> types = GlobalVariables.S4FunctionTypesConnection.Query<typeList>(string.Format("SELECT * FROM S2Types"));
                 
                 foreach (typeList type in types) {
-                    //LogMessage = "P" + packageparsecount + " - Checking entry " + entrynum + " (type ID: " + iEntry.typeID + ") for: " + type.desc;if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
+                    //LogMessage = string.Format("P" + packageparsecount + " - Checking entry " + entrynum + " (type ID: " + iEntry.typeID + ") for: " + type.desc;if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     if (iEntry.typeID == type.typeID) {
-                        LogMessage = "P" + packageparsecount + " - Found: " + type.desc;
+                        LogMessage = string.Format("P{0}/E{1} - Found: {2}", packageparsecount, entrynum, type.desc);
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                         typefound = type.desc;
@@ -303,18 +308,7 @@ namespace SimsCCManager.Packages.Sims2Search
                 }
                 entrynum++;
             }
-
-            LogMessage = "P" + packageparsecount + " - This file has:";
-
-            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-
-            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-            foreach (PackageEntries item in fileHas) {
-                LogMessage = "--- " + item.Name + " at: " + item.Location;
-                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-            }
-
+            
             if (fileHas.Exists(x => x.Name == "DIR")) {       
                 int fh = 0;
                 foreach (PackageEntries item in fileHas) {
@@ -323,7 +317,7 @@ namespace SimsCCManager.Packages.Sims2Search
                     }
                     fh++;
                 }
-                LogMessage = "P" + packageparsecount + " - DIR is at entry [" + dirnum + "]";
+                LogMessage = string.Format("P{0} - DIR is at entry {1}", packageparsecount, dirnum);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 entrynum = 0;
@@ -337,13 +331,8 @@ namespace SimsCCManager.Packages.Sims2Search
                 instanceID2 = "";
                 myFilesize = 0;
                 
-                LogMessage = "P" + packageparsecount + " - DIR entry confirmation: ";
-                
-                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                
-                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                LogMessage = indexData[dirnum].typeID;
-                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                LogMessage = string.Format("P{0}/DIR: {1} at {2}", packageparsecount, indexData[dirnum].typeID, indexData[dirnum].offset);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);                
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
                 dbpfFile.Seek(this.chunkOffset + indexData[dirnum].offset, SeekOrigin.Begin);
@@ -356,42 +345,37 @@ namespace SimsCCManager.Packages.Sims2Search
                     numRecords = indexData[dirnum].filesize / 16;
                 }  
 
-                LogMessage = "P" + packageparsecount + " - Number of compressed records in entry:" + numRecords;  
-
+                LogMessage = string.Format("P{0}/DIR - Number of compressed records in entry: {1}", packageparsecount, numRecords);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);  
-
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 
                 for (int c = 0; c < numRecords; c++)
                 {
                     indexEntry holderEntry = new indexEntry();
-                    LogMessage = "P" + packageparsecount + " - Reading compressed record #" + c;
+                    LogMessage = string.Format("P{0}/DIR - Reading compressed record #{1}", packageparsecount, c);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     typeID = readFile.ReadUInt32().ToString("X8");
-                    LogMessage = "P" + packageparsecount + " - CR#" + c + ": Type ID is " + typeID;
+                    LogMessage = string.Format("P{0}/DIR  - CR#{1}: TypeID: {2}", packageparsecount, c, typeID);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     groupID = readFile.ReadUInt32().ToString("X8");
-                    LogMessage = "P" + packageparsecount + " - CR#" + c + ": Group ID is " + groupID;
+                    LogMessage = string.Format("P{0}/DIR  - CR#{1}: GroupID: {2}", packageparsecount, c, groupID);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     instanceID = readFile.ReadUInt32().ToString("X8");
-                    LogMessage = "P" + packageparsecount + " - CR#" + c + ": Instance ID is " + instanceID;
+                    LogMessage = string.Format("P{0}/DIR  - CR#{1}: InstanceID: {2}", packageparsecount, c, instanceID);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                     //Console.WriteLine(holderEntry.instanceID);
                     allInstanceIDs.Add(new PackageInstance() {InstanceID = holderEntry.instanceID.ToString()});
-                    LogMessage = "P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID;
-                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     if (indexMajorVersion == 7 && indexMinorVersion == 1) instanceID2 = readFile.ReadUInt32().ToString("X8");
-                    LogMessage = "P" + packageparsecount + " - CR#" + c + ": InstanceID2 is " + instanceID2;
+                    LogMessage = string.Format("P{0}/DIR  - CR#{1}: InstanceID2: {2}", packageparsecount, c, instanceID2);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     myFilesize = readFile.ReadUInt32();
-                    LogMessage = "P" + packageparsecount + " - CR#" + c + ": Filesize is " + myFilesize;
+                    LogMessage = string.Format("P{0}/DIR  - CR#{1}: FileSize: {2}", packageparsecount, c, myFilesize);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
@@ -405,7 +389,7 @@ namespace SimsCCManager.Packages.Sims2Search
                                 {
                                     idx.compressed = true;
                                     idx.truesize = myFilesize;
-                                    LogMessage = "P" + packageparsecount + " - CR#" + c + ": Index entry filesize is " + myFilesize;
+                                    LogMessage = string.Format("P{0}/DIR  - CR#{1}: Index Entry FileSize: {2}", packageparsecount, c, myFilesize);
                                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                     break;
@@ -415,7 +399,7 @@ namespace SimsCCManager.Packages.Sims2Search
                             {
                                 idx.compressed = true;
                                 idx.truesize = myFilesize;
-                                LogMessage = "P" + packageparsecount + " - CR#" + c + ": Index entry filesize is " + myFilesize;
+                                LogMessage = string.Format("P{0}/DIR  - CR#{1}: Index Entry FileSize: {2}", packageparsecount, c, myFilesize);
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                 break;
@@ -427,7 +411,7 @@ namespace SimsCCManager.Packages.Sims2Search
             
             if (fileHas.Exists(x => x.Name == "DIR")) {
                 dbpfFile.Seek(chunkOffset + indexData[dirnum].offset, SeekOrigin.Begin);
-                LogMessage = "Entry offset: " + indexData[dirnum].offset;
+                LogMessage = string.Format("P{0}/DIR - Entry offset: {1}", packageparsecount, indexData[dirnum].offset);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 if ((indexMajorVersion == 7) && indexMinorVersion == 1)
@@ -437,49 +421,38 @@ namespace SimsCCManager.Packages.Sims2Search
                     numRecords = indexData[dirnum].filesize / 16;
                 }
 
-                LogMessage = "Reading compressed entries from " + typefound;
-
-                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-
-                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                LogMessage = "Number of records: " + numRecords;
+                LogMessage = string.Format("P{0}/DIR - Number of Records: {1}", packageparsecount, numRecords);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 
                 for (int j = 0; j < numRecords; j++) {
                     indexEntry holderEntry = new indexEntry();
-                    LogMessage = "";
-                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                    LogMessage = "Compressed Entry #" + j;
+                    LogMessage = string.Format("P{0}/DIR - Compressed Entry {1}", packageparsecount, j);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     typeID = readFile.ReadUInt32().ToString("X8");
-                    LogMessage = "TypeID: "+ typeID;
+                    LogMessage = string.Format("P{0}/DIR/CR{1} - Type ID: {2}", packageparsecount, j, typeID);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     groupID = readFile.ReadUInt32().ToString("X8");
-                    LogMessage = "GroupID: "+ groupID;
+                    LogMessage = string.Format("P{0}/DIR/CR{1} - Group ID: {2}", packageparsecount, j, groupID);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     instanceID = readFile.ReadUInt32().ToString("X8");
-                    LogMessage = "InstanceID: "+ instanceID;
+                    LogMessage = string.Format("P{0}/DIR/CR{1} - Insance ID: {2}", packageparsecount, j, instanceID);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     holderEntry.instanceID = readFile.ReadUInt32().ToString("X8");
                     //Console.WriteLine(holderEntry.instanceID);
                     allInstanceIDs.Add(new PackageInstance() {InstanceID = holderEntry.instanceID.ToString()});
-                    LogMessage = "P" + packageparsecount + " - InstanceID: " + holderEntry.instanceID;
-                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     if (indexMajorVersion == 7 && indexMinorVersion == 1) {
                         instanceID2 = readFile.ReadUInt32().ToString("X8");
-                        LogMessage = "InstanceID2: "+ instanceID2;
+                        LogMessage = string.Format("P{0}/DIR/CR{1} - InstanceID2: {2}", packageparsecount, j, instanceID2);
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     }
                     compfilesize = readFile.ReadUInt32();
-                    LogMessage = "Filesize: "+ compfilesize;
+                    LogMessage = string.Format("P{0}/DIR/CR{1} - FileSize: {2}", packageparsecount, j, compfilesize);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
@@ -487,25 +460,25 @@ namespace SimsCCManager.Packages.Sims2Search
                     foreach (indexEntry idx in indexData) {
                         typefound = "";
                         idxcount++;
-                        LogMessage = "This idx type is: " + idx.typeID;
+                        LogMessage = string.Format("P{0}/DIR/CR{1} - IDX Type: {2}", packageparsecount, j, idx.typeID);
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                         foreach (typeList type in TypeListings.AllTypesS2) {
                             if (idx.typeID == type.typeID) {
-                                LogMessage = "Matched to: " + type.desc;
+                                LogMessage = string.Format("P{0}/DIR/CR{1} - IDX Type matched to: {2}", packageparsecount, j, type.info);
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                 typefound = type.desc;
                             }
                         }
-                        LogMessage = "Now reading IDX " + idxcount;
+                        LogMessage = string.Format("P{0}/DIR/CR{1} - Reading IDX {2}", packageparsecount, j, idxcount);
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                         cFileSize = 0;
                         cTypeID = "";
 
                         if (typefound == "CTSS"){
-                            LogMessage = "Confirming found " + typefound;
+                            LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - Found CTSS", packageparsecount, j, idxcount);
                             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                             dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
@@ -513,82 +486,87 @@ namespace SimsCCManager.Packages.Sims2Search
 							cTypeID = readFile.ReadUInt16().ToString("X4");
                             if (cTypeID == "FB10") 
 							{
+                                LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - cTypeID: {3}", packageparsecount, j, idxcount, cTypeID);
 								byte[] tempBytes = readFile.ReadBytes(3);
 								uint cFullSize = readentries.QFSLengthToInt(tempBytes);
 
 								DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
 								ctssvar = readentries.readCTSSchunk(decompressed);
+                                LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - CTSSVar returned with: {3}", packageparsecount, j, idxcount, ctssvar.SimsPackagetoString());
                                 
 							} 
 							else 
 							{
+                                LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - cTypeID: {3}", packageparsecount, j, idxcount, cTypeID);
 								dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
 								ctssvar = readentries.readCTSSchunk(readFile);
+                                LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - CTSSVar returned with: {3}", packageparsecount, j, idxcount, ctssvar.SimsPackagetoString());
 							}
                         } else if (typefound == "XOBJ" || typefound == "XFNC" || typefound == "XFLR" || typefound == "XMOL" || typefound == "XROF"  || typefound == "XTOL"  || typefound == "XHTN"){
-                            LogMessage = "Confirming found " + typefound + " and moving forward.";
+                            LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - Type: {3}", packageparsecount, j, idxcount, typefound);
                             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                             dbpfFile.Seek(this.chunkOffset + idx.offset, SeekOrigin.Begin);
                             cFileSize = readFile.ReadInt32();
                             cTypeID = readFile.ReadUInt16().ToString("X4");
-                            LogMessage = typefound + " size: " + cFileSize + ", ctypeid: " + cTypeID;
+                            LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - Type: {3}, FileSize: {4}, cTypeID: {5}", packageparsecount, j, idxcount, typefound, cFileSize, cTypeID);
                             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                             if (cTypeID == "FB10"){
-                                LogMessage = "FB10 confirmed.";
+                                LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - {3} confirmed.", packageparsecount, j, idxcount, cTypeID);
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                 byte[] tempBytes = readFile.ReadBytes(3);
                                 uint cFullSize = readentries.QFSLengthToInt(tempBytes);
-                                LogMessage = "cFullSize is: " + cFileSize;
+                                LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - cFullSize: {3}.", packageparsecount, j, idxcount, cFileSize);
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                 string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-                                LogMessage = "cpfTypeID is: " + cpfTypeID;
+                                LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - cpfTypeID: {3}.", packageparsecount, j, idxcount, cpfTypeID);
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                 if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")){
                                     dirvar = readentries.readCPFchunk(readFile);
-                                    log.MakeLog("Real CPF file. Processing as CPF chunk.",true);
+                                    LogMessage = "Real CPF file. Processing as CPF chunk.";
+                                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                 } else {
-                                    LogMessage = "Not a real CPF. Searching for more information.";
+                                    LogMessage = string.Format("Not a real CPF. Searching for more information.");
                                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                     dbpfFile.Seek(this.chunkOffset + idx.offset + 9, SeekOrigin.Begin);
                                     DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
                                     if (cpfTypeID == "E750E0E2")
                                     {
-                                        // Read first four bytes
+                                        // Read first four bytes                                        
                                         cpfTypeID = decompressed.ReadUInt32().ToString("X8");
-                                        LogMessage = "Secondary cpf type id: " + cpfTypeID;
+                                        LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - Secondary cpfTypeID: {3}.", packageparsecount, j, idxcount, cpfTypeID);
                                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                         if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
                                         {
-                                            LogMessage = "Real CPF. Decompressing.";
+                                            LogMessage = string.Format("Real CPF. Decompressing.");
                                             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                             dirvar = readentries.readCPFchunk(decompressed);
-                                            LogMessage = "dirvar returned with: " + dirvar.ToString();
+                                            LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - DirVar returned with: {3}.", packageparsecount, j, idxcount, dirvar.SimsPackagetoString());
                                             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                         } 
-                                    } else 
-                                    {
-                                        LogMessage = "Actually an XML. Reading.";
+                                    } else                                     {
+                                        LogMessage = string.Format("Actually an XML. Reading.");
                                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                         dirvar = readentries.readXMLchunk(decompressed);
-                                        LogMessage = "dirvar returned with: " + dirvar.ToString();
+                                        LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - DirVar returned with: {3}.", packageparsecount, j, idxcount, dirvar.SimsPackagetoString());
                                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                                     }
                                 }
 
                             } else {
-                                LogMessage = "Not FB10.";
+                                LogMessage = string.Format("P{0}/DIR/CR{1}/IDX{2} - cTypeID is not FB10: {3}.", packageparsecount, j, idxcount, cTypeID);
                                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
@@ -602,8 +580,9 @@ namespace SimsCCManager.Packages.Sims2Search
             
 
             if (fileHas.Exists(x => x.Name == "OBJD")) {
-                
-                    
+                LogMessage = string.Format("P{0} - This file has an OBJD.", packageparsecount);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));       
                 int fh = 0;
                 foreach (PackageEntries item in fileHas) {
                     if (item.Name == "OBJD"){
@@ -611,43 +590,40 @@ namespace SimsCCManager.Packages.Sims2Search
                     }
                     fh++;
                 }
-                log.MakeLog("P" + packageparsecount + " - OBJDs are at entries:",true);
-                foreach (int objloc in objdnum) {
-                    LogMessage = "---------- [" + objloc + "]";
-                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));               
+                int c = 0;
+                foreach (int objloc in objdnum) {                                
                     
                     dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
                     cFileSize = readFile.ReadInt32();
-                    LogMessage = "P" + packageparsecount + " - OBJD filesize is: " + cFileSize;
+                    LogMessage = string.Format("P{0}/OBJD{1} - FileSize: {2}.", packageparsecount, c, cFileSize);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     cTypeID = readFile.ReadUInt16().ToString("X4");
-                    LogMessage = "P" + packageparsecount + " - OBJD ctypeID is: " + cTypeID;
+                    LogMessage = string.Format("P{0}/OBJD{1} - cTypeID: {2}.", packageparsecount, c, cTypeID);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     if (cTypeID == "FB10")
                     {
-                        LogMessage = "P" + packageparsecount + " - OBJD ctypeID confirmed as: " + cTypeID;
+                        LogMessage = string.Format("P{0}/OBJD{1} - cTypeID confirmed as: {2}.", packageparsecount, c, cTypeID);
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                         byte[] tempBytes = readFile.ReadBytes(3);
-                        LogMessage = "P" + packageparsecount + " - OBJD temp bytes are: " + tempBytes;
+                        LogMessage = string.Format("P{0}/OBJD{1} - Temp Bytes: {2}.", packageparsecount, c, tempBytes);
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                         uint cFullSize = readentries.QFSLengthToInt(tempBytes);
-                        LogMessage = "P" + packageparsecount + " - OBJD size is: " + cFullSize;
+                        LogMessage = string.Format("P{0}/OBJD{1} - Full Size: {2}.", packageparsecount, c, cFullSize);
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                         DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
                         objdvar = readentries.readOBJDchunk(decompressed);
-                        LogMessage = "objdvar returned with: " + objdvar.ToString();
+                        LogMessage = string.Format("P{0}/OBJD{1} - OBJDVar returned with: {2}.", packageparsecount, c, objdvar.SimsPackagetoString());
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     } else { 
                         dbpfFile.Seek(this.chunkOffset + indexData[objloc].offset, SeekOrigin.Begin);
                         objdvar = readentries.readOBJDchunk(readFile);
-                        LogMessage = "objdvar returned with: " + objdvar.ToString();
+                        LogMessage = string.Format("P{0}/OBJD{1} - OBJDVar returned with: {2}.", packageparsecount, c, objdvar.SimsPackagetoString());
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     }
@@ -657,6 +633,9 @@ namespace SimsCCManager.Packages.Sims2Search
 
             if (fileHas.Exists(x => x.Name == "STR#"))
             {
+                LogMessage = string.Format("P{0} - This file has a STR.", packageparsecount);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));       
                 int fh = 0;
                 foreach (PackageEntries item in fileHas) {
                     if (item.Name == "STR#"){
@@ -664,47 +643,49 @@ namespace SimsCCManager.Packages.Sims2Search
                     }
                     fh++;
                 }
+                int c = 0;
                 
                 foreach (int strloc in strnm) {
-                    LogMessage = "P" + packageparsecount + " - STR entry confirmation: ";
-                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                    LogMessage = indexData[strloc].typeID;
+                    LogMessage = string.Format("P{0}/STR#{1} - TypeID: {2}.", packageparsecount, c, indexData[strloc].typeID);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     dbpfFile.Seek(chunkOffset + indexData[strloc].offset, SeekOrigin.Begin);
                     cFileSize = readFile.ReadInt32();
-                    LogMessage = "P" + packageparsecount + " - STR entry size: " + cFileSize;
+                    LogMessage = string.Format("P{0}/STR#{1} - cFileSize: {2}.", packageparsecount, c, cFileSize);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     cTypeID = readFile.ReadUInt16().ToString("X4");
-                    LogMessage = "P" + packageparsecount + " - STR entry typeid: " + cTypeID;
+                    LogMessage = string.Format("P{0}/STR#{1} - cTypeID: {2}.", packageparsecount, c, cTypeID);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     if (cTypeID == "FB10")
                     {
+                        LogMessage = string.Format("P{0}/STR#{1} - cTypeID Confirmed as: {2}.", packageparsecount, c, cTypeID);
                         byte[] tempBytes = readFile.ReadBytes(3);
                         uint cFullSize = readentries.QFSLengthToInt(tempBytes);
 
                         DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
                         strvar = readentries.readSTRchunk(decompressed);
-                        LogMessage = "strvar returned with: " + strvar.ToString();
+                        LogMessage = string.Format("P{0}/STR#{1} - STRVar Returned With: {2}.", packageparsecount, c, strvar.SimsPackagetoString());
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     } 
                     else 
                     {
-                        objdvar = readentries.readSTRchunk(readFile);
-                        LogMessage = "strvar returned with: " + strvar.ToString();
+                        strvar = readentries.readSTRchunk(readFile);
+                        LogMessage = string.Format("P{0}/STR#{1} - STRVar Returned With: {2}.", packageparsecount, c, strvar.SimsPackagetoString());
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                         if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     }                    
                 }
-                
+                c++;
             }
             if (fileHas.Exists(x => x.Name == "MMAT"))
             {
+                LogMessage = string.Format("P{0} - This file has an MMAT.", packageparsecount);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 int fh = 0;
                 foreach (PackageEntries item in fileHas) {
                     if (item.Name == "MMAT"){
@@ -712,19 +693,35 @@ namespace SimsCCManager.Packages.Sims2Search
                     }
                     fh++;
                 }
+                                
                 dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
                 cFileSize = readFile.ReadInt32();
+                LogMessage = string.Format("P{0}/MMAT - FileSize: {1}.", packageparsecount, cFileSize);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 cTypeID = readFile.ReadUInt16().ToString("X4");
+                LogMessage = string.Format("P{0}/MMAT - cTypeID: {1}.", packageparsecount, cTypeID);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                 
                 if (cTypeID == "FB10") 
                 {
                     byte[] tempBytes = readFile.ReadBytes(3);
                     uint cFullSize = readentries.QFSLengthToInt(tempBytes);
 
+                    LogMessage = string.Format("P{0}/MMAT - cFullSize: {1}.", packageparsecount, cFullSize);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                    LogMessage = string.Format("P{0}/MMAT - cpfTypeID: {1}.", packageparsecount, cpfTypeID);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
                     {
                         mmatvar = readentries.readCPFchunk(readFile);
+                        LogMessage = string.Format("P{0}/MMAT - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));                        
                     } 
                     else 
                     {
@@ -739,12 +736,18 @@ namespace SimsCCManager.Packages.Sims2Search
                             if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
                             {
                                 mmatvar = readentries.readCPFchunk(decompressed);
+                                LogMessage = string.Format("P{0}/MMAT - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
+                                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                             }
 
                         } 
                         else 
                         {
                             mmatvar = readentries.readXMLchunk(decompressed);
+                            LogMessage = string.Format("P{0}/MMAT - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                         }
                     }
                 } 
@@ -756,6 +759,9 @@ namespace SimsCCManager.Packages.Sims2Search
                     if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
                     {
                         mmatvar = readentries.readCPFchunk(readFile);
+                        LogMessage = string.Format("P{0}/MMAT - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
                     }
 
                     if  (cpfTypeID == "6D783F3C")
@@ -764,6 +770,9 @@ namespace SimsCCManager.Packages.Sims2Search
 
                         string xmlData = Encoding.UTF8.GetString(readFile.ReadBytes((int)indexData[mmatloc].filesize));
                         mmatvar = readentries.readXMLchunk(xmlData);
+                        LogMessage = string.Format("P{0}/MMAT - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
                     }
                 }
@@ -839,24 +848,23 @@ namespace SimsCCManager.Packages.Sims2Search
                 }
             }*/
 
-            LogMessage = "All methods complete, moving on to getting info.";
+            LogMessage = string.Format("All methods complete, moving on to getting info.");
 
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-            LogMessage = "Dirvar contains: " + dirvar.SimsPackagetoString();
+            LogMessage = string.Format("P{0} - DirVar Contains: {1}.", packageparsecount, dirvar.SimsPackagetoString());
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-            LogMessage = "Ctssvar contains: " + ctssvar.SimsPackagetoString();
+            LogMessage = string.Format("P{0} - CTSSVar Contains: {1}.", packageparsecount, ctssvar.SimsPackagetoString());
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-            LogMessage = "Mmatvar contains: " + mmatvar.SimsPackagetoString();
+            LogMessage = string.Format("P{0} - MMATVar Contains: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-            LogMessage = "Objdvar contains: " + objdvar.SimsPackagetoString();
+            LogMessage = string.Format("P{0} - OBJDVar Contains: {1}.", packageparsecount, objdvar.SimsPackagetoString());
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-            LogMessage = "Strvar contains: " + strvar.SimsPackagetoString();
+            LogMessage = string.Format("P{0} - Strvar Contains: {1}.", packageparsecount, strvar.SimsPackagetoString());
             if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
 
