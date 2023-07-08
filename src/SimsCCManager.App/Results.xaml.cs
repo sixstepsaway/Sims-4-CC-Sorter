@@ -404,6 +404,7 @@ namespace SimsCCManager.SortingUIResults {
                     if (thisPage[i].ThumbnailImage[o] != null) {
                         //System.Drawing.Bitmap bmp = new(104, 148);
                         //Console.WriteLine("Image {0} type: {1}", thisPage[i].PackageName, thisPage[i].ThumbnailImage[o].Type);
+
                         if (thisPage[i].ThumbnailImage[o].Source == "Package"){
                             bi.BeginInit();
                             //bi.StreamSource = new MemoryStream(S4Decryption.DecompressByte(thisPage[i].ThumbnailImage[o].Thumbnail));
@@ -415,8 +416,7 @@ namespace SimsCCManager.SortingUIResults {
                             if (thisPage[i].ThumbnailImage[o].Type == "3C1AF1F2" || thisPage[i].ThumbnailImage[o].Type == "3C2A8647" || thisPage[i].ThumbnailImage[o].Type == "5B282D45" || thisPage[i].ThumbnailImage[o].Type == "9C925813" || thisPage[i].ThumbnailImage[o].Type == "A1FF2FC4" ||  thisPage[i].ThumbnailImage[o].Type == "CD9DE247" ||  thisPage[i].ThumbnailImage[o].Type == "2F7D0004"){
                                 //System.Drawing.Bitmap bmp = new (new MemoryStream(Convert.FromBase64String(thisPage[i].ThumbnailImage[o].Thumbnail)));
                                 //byte[] data = S4Decryption.DecompressByte(thisPage[i].ThumbnailImage[o].Thumbnail);
-                                //byte[] data = Convert.FromBase64String(thisPage[i].ThumbnailImage[o].Thumbnail);
-                                bi.StreamSource = new MemoryStream(Convert.FromBase64String(thisPage[i].ThumbnailImage[o].Thumbnail));
+                                byte[] data = Convert.FromBase64String(thisPage[i].ThumbnailImage[o].Thumbnail);
                                 ImageTransformations imageTransformations = new();
                                 System.Drawing.Bitmap bmp = imageTransformations.TransformToPNG(data);
                                 var vi = ToBitmapImage(bmp);
@@ -425,7 +425,7 @@ namespace SimsCCManager.SortingUIResults {
                             } else {
                                 
                             }
-                        }                        
+                        }                
                         page.Page.Add(thisPage[i]);
                         break; 
                     }                                       

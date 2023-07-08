@@ -1499,6 +1499,12 @@ namespace SimsCCManager.Packages.Containers
         public int Id {get; set;}
         [Column("TypeID")]
         public string TypeID {get; set;}
+        [Column("GroupID")]
+        public string GroupID {get; set;}
+        [Column("InstanceID")]
+        public string InstanceID {get; set;}
+        [Column("Size")]
+        public string Size {get; set;}
         [Column("Name")]
         public string Name {get; set;}
         [Column("Location")]

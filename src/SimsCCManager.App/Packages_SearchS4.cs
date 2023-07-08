@@ -34,6 +34,7 @@ using System.Windows.Data;
 using System.IO.Packaging;
 using System.Drawing;
 using Microsoft.VisualBasic.Logging;
+using SimsCCManager.App.Images;
 
 namespace SimsCCManager.Packages.Sims4Search
 {
@@ -1223,7 +1224,7 @@ namespace SimsCCManager.Packages.Sims4Search
                         } else {
                             fileHas.Add(new PackageEntries() { TypeID = holderEntry.typeID, Location = i});
                         }
-                        type = new List<typeList>();
+                        type = new List<typeList>();    
 
                         holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
                         LogMessage = string.Format("P{0}/E{1} - Index Entry GroupID: {2}", packageparsecount, i, holderEntry.groupID);
@@ -1294,8 +1295,7 @@ namespace SimsCCManager.Packages.Sims4Search
                             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                         } else {
                             fileHas.Add(new PackageEntries() { TypeID = holderEntry.typeID, Location = i});
-                        }
-                        type = new List<typeList>();
+                        } 
 
                         holderEntry.groupID = readFile.ReadUInt32().ToString("X8");
                         LogMessage = string.Format("P{0}/E{1} - Index Entry GroupID: {2}", packageparsecount, i, holderEntry.groupID);
@@ -1454,6 +1454,8 @@ namespace SimsCCManager.Packages.Sims4Search
 
             }
 
+            
+
 
             if (fileHas.Exists(x => x.Name == "COBJ")){
 
@@ -1591,8 +1593,7 @@ namespace SimsCCManager.Packages.Sims4Search
                         LogFile = pobjd.lf;                       
                     }                
                     objdc++;
-                }
-                
+                }                
             }
 
             if (fileHas.Exists(x => x.Name == "GEOM")){
@@ -1615,6 +1616,7 @@ namespace SimsCCManager.Packages.Sims4Search
             }
 
             if (fileHas.Exists(x => x.Name == "THUM")){
+                ImageTransformations imageTransformations = new();
                 var entryspots = (from has in fileHas
                         where has.Name =="THUM"
                         select has.Location).ToList();                
@@ -1643,14 +1645,34 @@ namespace SimsCCManager.Packages.Sims4Search
                             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             MemoryStream decomps = S4Decryption.DecompressMS(Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize));
                             byte[] imagebyte = decomps.ToArray();
-                            string byteasstring = Convert.ToBase64String(imagebyte);                            
-                            //string byteasstring = S4Decryption.CompressByte(imagebyte);
+                            //LogMessage = string.Format("P{0}/THUM{1} - Image Byte: {2}", packageparsecount, c, Convert.ToBase64String(imagebyte));
+                            //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            //string byteasstring = Convert.ToBase64String(imagebyte);                                     
+                            //string byteasstringc = S4Decryption.CompressByte(imagebyte);
+                            //LogMessage = string.Format("P{0}/THUM{1} - JPG Byte: {2}", packageparsecount, c, Convert.ToBase64String(jpg));
+                            //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            string byteasstring = Convert.ToBase64String(imagebyte);
+                            //LogMessage = string.Format("P{0}/THUM{1} - Byte as String: {2}", packageparsecount, c, byteasstring);
+                            //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             PackageThumbnail thumb = new PackageThumbnail() {Thumbnail = byteasstring, Type = indexData[e].typeID, Source = "Package"};
                             thisPackage.ThumbnailImage.Add(thumb);
                     } else if (indexData[e].compressionType == "0000"){
                         byte[] imagebyte = Methods.ReadEntryBytes(readFile, (int)indexData[e].memSize);
-                        string byteasstring = Convert.ToBase64String(imagebyte);                            
-                        //string byteasstring = S4Decryption.CompressByte(imagebyte);
+                        //LogMessage = string.Format("P{0}/THUM{1} - Image Byte: {2}", packageparsecount, c, Convert.ToBase64String(imagebyte));
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = string.Format("P{0}/THUM{1} - JPG Byte: {2}", packageparsecount, c, Convert.ToBase64String(jpg));
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        string byteasstring = Convert.ToBase64String(imagebyte);
+                        //LogMessage = string.Format("P{0}/THUM{1} - Byte as String: {2}", packageparsecount, c, byteasstring);
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //string byteasstring = Convert.ToBase64String(imagebyte);                            
+                        //string byteasstringc = S4Decryption.CompressByte(imagebyte);                        
                         PackageThumbnail thumb = new PackageThumbnail() {Thumbnail = byteasstring, Type = indexData[e].typeID, Source = "Package"};
                         thisPackage.ThumbnailImage.Add(thumb);
                     }
@@ -1751,6 +1773,7 @@ namespace SimsCCManager.Packages.Sims4Search
 
             List<SpecificOverrides> speco = new List<SpecificOverrides>(specoverrides.Count);
             List<OverriddenList> OverridesList = new();
+            string overridedesc = "";
             foreach (OverridesList ov in overrides) {
                 if (ov.InstanceID != "0000000000000000"){
                     var specco = GlobalVariables.S4SpecificOverridesList.Where(p => p.Instance == ov.InstanceID).ToList();                    
@@ -1758,6 +1781,7 @@ namespace SimsCCManager.Packages.Sims4Search
                     if (specco.Any()){
                         description = specco[0].Description;
                         thisPackage.Type = string.Format("OVERRIDE: {0}", description);
+                        overridedesc = description;
                     }
                     OverridesList.Add(new OverriddenList(){InstanceID = ov.InstanceID, Name = ov.Name, Pack = ov.Pack, Type = ov.Type});
                 }
@@ -1766,6 +1790,157 @@ namespace SimsCCManager.Packages.Sims4Search
             if (OverridesList.Any()){
                 thisPackage.OverridesList.AddRange(OverridesList);
             }
+
+
+            if (overridedesc == "Eyes - Sim"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID == "7882EE328F843230" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.Location).FirstOrDefault();
+                LogMessage = string.Format("P{0} - Retrieving default {2} image from {1}", packageparsecount, overridedesc, indexData[entryspot].typeID);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
+                if (indexData[entryspot].typeID == "2BC04EDF"){
+                    LogMessage = string.Format("P{0} - {1} saved as LRLE.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                    ImageTransformations imageTransformations = new();
+                    if (indexData[entryspot].typeID == "5A42"){
+                        //MemoryStream decomps = S4Decryption.DecompressMS(Methods.ReadEntryBytes(readFile, (int)indexData[entryspot].memSize));
+                        //imageTransformations.LRLE(new BinaryReader(decomps), LogMessage, LogFile, log);
+                    } else if (indexData[entryspot].typeID == "0000"){
+                        //MemoryStream decomps = new (Methods.ReadEntryBytes(readFile, (int)indexData[entryspot].memSize));
+                        //imageTransformations.LRLE(readFile, LogMessage, LogFile, log);
+                    }
+                } else if (indexData[entryspot].typeID == "3453CF95"){
+                    LogMessage = string.Format("P{0} - {1} saved as RLE2.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                }
+            } else if (overridedesc == "Eyes - Vampire"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="C6BF87F05E8A3FA7" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.Location).FirstOrDefault();
+                LogMessage = string.Format("P{0} - Retrieving default {2} image from {1}", packageparsecount, overridedesc, indexData[entryspot].typeID);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
+                if (indexData[entryspot].typeID == "2BC04EDF"){
+                    LogMessage = string.Format("P{0} - {1} saved as LRLE.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                } else if (indexData[entryspot].typeID == "3453CF95"){
+                    LogMessage = string.Format("P{0} - {1} saved as RLE2.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                }
+            } else if (overridedesc == "Eyes - Werewolf"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="B30EE6C1DE1BF2AD" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.Location).FirstOrDefault();
+                LogMessage = string.Format("P{0} - Retrieving default {2} image from {1}", packageparsecount, overridedesc, indexData[entryspot].typeID);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
+                if (indexData[entryspot].typeID == "2BC04EDF"){
+                    LogMessage = string.Format("P{0} - {1} saved as LRLE.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                } else if (indexData[entryspot].typeID == "3453CF95"){
+                    LogMessage = string.Format("P{0} - {1} saved as RLE2.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                }
+            } else if (overridedesc == "Eyes - Merperson"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="0125D3F76E073504" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.Location).FirstOrDefault();                
+                LogMessage = string.Format("P{0} - Retrieving default {2} image from {1}", packageparsecount, overridedesc, indexData[entryspot].typeID);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
+                if (indexData[entryspot].typeID == "2BC04EDF"){
+                    LogMessage = string.Format("P{0} - {1} saved as LRLE.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                } else if (indexData[entryspot].typeID == "3453CF95"){
+                    LogMessage = string.Format("P{0} - {1} saved as RLE2.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                }
+            } else if (overridedesc == "Eyes - Alien"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="6C3AC424D2673953" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.Location).FirstOrDefault();                
+                LogMessage = string.Format("P{0} - Retrieving default {2} image from {1}", packageparsecount, overridedesc, indexData[entryspot].typeID);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
+                if (indexData[entryspot].typeID == "2BC04EDF"){
+                    LogMessage = string.Format("P{0} - {1} saved as LRLE.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                } else if (indexData[entryspot].typeID == "3453CF95"){
+                    LogMessage = string.Format("P{0} - {1} saved as RLE2.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                }
+            } else if (overridedesc == "Eyes - Cat"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="6EC5F5CED3435737" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.Location).FirstOrDefault();            
+                LogMessage = string.Format("P{0} - Retrieving default {2} image from {1}", packageparsecount, overridedesc, indexData[entryspot].typeID);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
+                if (indexData[entryspot].typeID == "2BC04EDF"){
+                    LogMessage = string.Format("P{0} - {1} saved as LRLE.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                } else if (indexData[entryspot].typeID == "3453CF95"){
+                    LogMessage = string.Format("P{0} - {1} saved as RLE2.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                }
+            } else if (overridedesc == "Eyes - Big Dog"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="809410A14AC0FD9A" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.Location).FirstOrDefault();
+                LogMessage = string.Format("P{0} - Retrieving default {2} image from {1}", packageparsecount, overridedesc, indexData[entryspot].typeID);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
+                if (indexData[entryspot].typeID == "2BC04EDF"){
+                    LogMessage = string.Format("P{0} - {1} saved as LRLE.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                } else if (indexData[entryspot].typeID == "3453CF95"){
+                    LogMessage = string.Format("P{0} - {1} saved as RLE2.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                }
+            } else if (overridedesc == "Eyes - Small Dog"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="770417D9838C8EF2" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.Location).FirstOrDefault();
+                LogMessage = string.Format("P{0} - Retrieving default {2} image from {1}", packageparsecount, overridedesc, indexData[entryspot].typeID);
+                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+
+                if (indexData[entryspot].typeID == "2BC04EDF"){
+                    LogMessage = string.Format("P{0} - {1} saved as LRLE.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                } else if (indexData[entryspot].typeID == "3453CF95"){
+                    LogMessage = string.Format("P{0} - {1} saved as RLE2.", packageparsecount, overridedesc);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                }
+            }
+
+
+
+
 
             if (thisPackage.CatalogTags.Any()){
                 LogMessage = string.Format("P{0}: Checking tags list for function.", packageparsecount);
@@ -2050,80 +2225,7 @@ namespace SimsCCManager.Packages.Sims4Search
             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
             if(GlobalVariables.highdebug == false) log.MakeLog(string.Format("Log Dumped from StringBuilder: \n {0}", LogFile.ToString()), true);
             return;
-        }  
-
-        public SimsPackage MakeNoNulls(SimsPackage thisPackage){
-            thisPackage.Title ??= "";
-            thisPackage.Description ??= "";
-            thisPackage.Subtype ??= "";
-            thisPackage.Category ??= "";
-            thisPackage.ModelName ??= "";
-            thisPackage.PackageName ??= "";
-            thisPackage.Type ??= "";
-            thisPackage.GameString ??= "";
-            thisPackage.Tuning ??= "";
-            thisPackage.Creator ??= "";
-            thisPackage.Age ??= "";
-            thisPackage.Gender ??= "";
-            thisPackage.MatchingMesh ??= "";
-            if (!thisPackage.RequiredEPs.Any()){
-                thisPackage.RequiredEPs.Add(new PackageRequiredEPs());
-            }
-            thisPackage.Function ??= "";
-            thisPackage.FunctionSubcategory ??= "";
-            if (!thisPackage.AgeGenderFlags.Any()){
-                thisPackage.AgeGenderFlags = new();
-            }
-            if (!thisPackage.FileHas.Any()){
-                thisPackage.FileHas.Add(new PackageEntries());
-            }
-            if (!thisPackage.RoomSort.Any()){
-                thisPackage.RoomSort.Add(new PackageRoomSort());
-            }
-            if (!thisPackage.Components.Any()){
-                thisPackage.Components.Add(new PackageComponent());
-            }
-            if (!thisPackage.Entries.Any()){
-                thisPackage.Entries.Add(new PackageTypeCounter());
-            }
-            if (!thisPackage.Flags.Any()){
-                thisPackage.Flags.Add(new PackageFlag());
-            }
-            if (!thisPackage.CatalogTags.Any()){
-                thisPackage.CatalogTags.Add(new TagsList());
-            }
-            if (!thisPackage.Components.Any()){
-                thisPackage.Components.Add(new PackageComponent ());
-            }
-            if (!thisPackage.OverridesList.Any()){
-                thisPackage.OverridesList.Add(new OverriddenList ());
-            }
-            if (!thisPackage.MeshKeys.Any()){
-                thisPackage.MeshKeys.Add(new PackageMeshKeys ());
-            }
-            if (!thisPackage.CASPartKeys.Any()){
-                thisPackage.CASPartKeys.Add(new PackageCASPartKeys ());
-            }
-            if (!thisPackage.OBJDPartKeys.Any()){
-                thisPackage.OBJDPartKeys.Add(new PackageOBJDKeys());
-            }
-            if (!thisPackage.MatchingRecolors.Any()){
-                thisPackage.MatchingRecolors.Add(new PackageMatchingRecolors ());
-            }
-            if (!string.IsNullOrEmpty(thisPackage.MatchingMesh)){
-                thisPackage.MatchingMesh = "";
-            }
-            if (!thisPackage.Conflicts.Any()){
-                thisPackage.Conflicts.Add(new PackageConflicts());
-            }
-            
-
-            return thisPackage;
-        }
-
-        public void FindS4ConflictsAndMatches(SimsPackage package){
-            
-        }
+        }         
 
         public static String hexToASCII(String hex)
         {
@@ -2163,7 +2265,7 @@ namespace SimsCCManager.Packages.Sims4Search
             var cache = GlobalVariables.caches.Where(c => c.CacheName == "localthumbcache.package").FirstOrDefault();
             
             if (File.Exists(cache.CacheRename))
-            {
+            {   ImageTransformations imageTransformations = new();
                 FileStream fs = new FileStream(cache.CacheRename, FileMode.Open, FileAccess.Read);
                 BinaryReader readFile = new BinaryReader(fs);
                 List<indexEntry> indexData = new List<indexEntry>();
@@ -2289,17 +2391,37 @@ namespace SimsCCManager.Packages.Sims4Search
                             if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             MemoryStream decomps = S4Decryption.DecompressMS(Methods.ReadEntryBytes(readFile, (int)thumb.memSize));
                             byte[] imagebyte = decomps.ToArray();
+                            //LogMessage = string.Format("THUMBCACHE THUM - ImageByte: {0}", Convert.ToBase64String(imagebyte));
+                            //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                             //string byteasstring = Convert.ToBase64String(imagebyte);    
-                            string byteasstring = S4Decryption.CompressByte(imagebyte);                        
+                            //string byteasstring = S4Decryption.CompressByte(imagebyte);  
+                            //LogMessage = string.Format("THUMBCACHE THUM - PNG: {0}", Convert.ToBase64String(imagebyte));
+                            string byteasstring = Convert.ToBase64String(imagebyte);
+                            //LogMessage = string.Format("THUMBCACHE THUM - ByteAsString: {0}", byteasstring);
                             PackageThumbnail thum = new PackageThumbnail() {Thumbnail = byteasstring, Type = thumb.typeID, Source = "Thumbcache"};
                             thisPackage.ThumbnailImage.Add(thum);
+                            fs.Close();
+                            fs.Dispose();
+                            readFile.Close();
+                            readFile.Dispose(); 
                             return;
                         } else if (thumb.compressionType == "0000"){
                             byte[] imagebyte = Methods.ReadEntryBytes(readFile, (int)thumb.memSize);
-                            //string byteasstring = Convert.ToBase64String(imagebyte); 
-                            string byteasstring = S4Decryption.CompressByte(imagebyte);                           
+                            //LogMessage = string.Format("THUMBCACHE THUM - ImageByte: {0}", Convert.ToBase64String(imagebyte));
+                            //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                            //string byteasstring = Convert.ToBase64String(imagebyte);    
+                            //string byteasstring = S4Decryption.CompressByte(imagebyte);  
+                            //LogMessage = string.Format("THUMBCACHE THUM - PNG: {0}", Convert.ToBase64String(png));
+                            string byteasstring = Convert.ToBase64String(imagebyte);
+                            //LogMessage = string.Format("THUMBCACHE THUM - ByteAsString: {0}", byteasstring);
                             PackageThumbnail thum = new PackageThumbnail() {Thumbnail = byteasstring, Type = thumb.typeID, Source = "Thumbcache"};
                             thisPackage.ThumbnailImage.Add(thum);
+                            fs.Close();
+                            fs.Dispose();
+                            readFile.Close();
+                            readFile.Dispose(); 
                             return;
                         }
                     }
@@ -2311,6 +2433,8 @@ namespace SimsCCManager.Packages.Sims4Search
             }
             
         }
+
+        
     }
     
 
@@ -2964,7 +3088,7 @@ namespace SimsCCManager.Packages.Sims4Search
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     
-                    if (lodcount == 0){
+                    if (lodcount == 0 || lodcount == 00 || lodcount == 000){
                         thisPackage.NoMesh = true;
                     } else {
                         var level = readFile.ReadByte();
@@ -3080,12 +3204,47 @@ namespace SimsCCManager.Packages.Sims4Search
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
 
-                    var currentPosition = readFile.BaseStream.Position;
+                    var currentPosition = readFile.BaseStream.Position;                    
                 
                     LogMessage = string.Format("P{0}/CASP{1} - LOD Count should be at: {2}.", packageparsecount, e, currentPosition);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
                     
+                    readFile.BaseStream.Position = tgioffset;
+                    var tginum = readFile.ReadByte();          
+                    
+                    LogMessage = string.Format("P{0}/CASP{1} - TGI Num: {2}.", packageparsecount, e, tginum);
+                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                    for (int t = 0; t < tginum; t++){
+                        ulong iid = readFile.ReadUInt64();                   
+                        LogMessage = string.Format("P{0}/CASP{1} - TGI {2}, IID: {3}.", packageparsecount, e, t, iid);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        uint gid = readFile.ReadUInt32();
+                        LogMessage = string.Format("P{0}/CASP{1} - TGI {2}, GID: {3}.", packageparsecount, e, t, gid);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        uint tid = readFile.ReadUInt32();
+                        LogMessage = string.Format("P{0}/CASP{1} - TGI {2}, TID: {3}.", packageparsecount, e, t, tid);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        string key = string.Format("{0}-{1}-{2}", tid.ToString("X8"), gid.ToString("X8"), iid.ToString("X16"));
+                        LogMessage = string.Format("P{0}/CASP{1} - TGI {2} Key: {3}", packageparsecount, e, t, key);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        if (key != "00000000-00000000-0000000000000000"){
+                            var match = thisPackage.CASPartKeys.Where(c => c.CASPartKey == key);
+                            if (!match.Any()){
+                                PackageCASPartKeys pcpk = new() {CASPartKey = key};
+                                thisPackage.CASPartKeys.Add(pcpk);
+                            } 
+                        }                                
+                    }
+                    
+                    readFile.BaseStream.Position = currentPosition;
+
+
                     var lodcount = readFile.ReadByte();
 
                     LogMessage = string.Format("P{0}/CASP{1} - LOD Count: {2}.", packageparsecount, e, lodcount.ToString("X2"));
@@ -3123,63 +3282,6 @@ namespace SimsCCManager.Packages.Sims4Search
                         }
                     }
                 }
-
-                
-                
-
-                
-                
-
-                
-                
-                /*readFile.BaseStream.Position = tgioffset;
-                var tginum = readFile.ReadByte();
-
-                for (int i = 0; i < 52; i++){
-                    LogMessage = string.Format("P{0}/CASP{1} - TGI Hunt: {2}.", packageparsecount, e, readFile.ReadUInt32().ToString("X8"));
-                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                }                
-                
-                LogMessage = string.Format("P{0}/CASP{1} - TGI Num: {2}.", packageparsecount, e, tginum);
-                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                for (int t = 0; t < tginum; t++){
-                    ulong iid = readFile.ReadUInt64();                   
-                    LogMessage = string.Format("P{0}/CASP{1} - TGI {2}, IID: {3}.", packageparsecount, e, t, iid);
-                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                    uint gid = readFile.ReadUInt32();
-                    LogMessage = string.Format("P{0}/CASP{1} - TGI {2}, GID: {3}.", packageparsecount, e, t, gid);
-                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                    uint tid = readFile.ReadUInt32();
-                    LogMessage = string.Format("P{0}/CASP{1} - TGI {2}, TID: {3}.", packageparsecount, e, t, tid);
-                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                    string key = string.Format("{0}-{1}-{2}", tid.ToString("X8"), gid.ToString("X8"), iid.ToString("X16"));
-                    LogMessage = string.Format("P{0}/CASP{1} - TGI {2} Key: {3}", packageparsecount, e, t, key);
-                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
-                    if (key != "00000000-00000000-0000000000000000"){
-                        var match = thisPackage.CASPartKeys.Where(c => c.CASPartKey == key);
-                        if (!match.Any()){
-                            PackageCASPartKeys pcpk = new() {CASPartKey = key};
-                            thisPackage.CASPartKeys.Add(pcpk);
-                        } 
-                    }                                
-                }
-                
-                readFile.BaseStream.Position = currentPosition;*/
-                //read more from here
-                
-
-
-
-
-
-
-
             this.lf = LogFile;
         }
         

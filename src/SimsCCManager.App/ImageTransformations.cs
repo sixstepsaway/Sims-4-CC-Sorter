@@ -1,6 +1,6 @@
 /*
 
-    Code taken and adjusted where applicable from S4PI.
+    Code taken and adjusted where applicable from S4PI and from Gibbed Sims 4.
 
 */
 
@@ -10,12 +10,69 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using SSAGlobals;
 
 namespace SimsCCManager.App.Images
 {
+    internal struct MipHeader
+    {
+        public int CommandOffset;
+        public int Offset2;
+        public int Offset3;
+        public int Offset0;
+        public int Offset1;
+        public int Offset4;
+
+        public override string ToString()
+        {
+            return string.Format("{0}, {1}, {2}, {3}, {4}, {5}",
+                                 this.CommandOffset,
+                                 this.Offset2,
+                                 this.Offset3,
+                                 this.Offset0,
+                                 this.Offset1,
+                                 this.Offset4);
+        }
+    }
     public class ImageTransformations
     {
+        /*public Bitmap LRLE(BinaryReader readFile, string LogMessage, StringBuilder LogFile, LoggingGlobals log){
+            Bitmap bmp = new Bitmap(1, 1);
+            var magic = readFile.ReadUInt32();
+            var version = readFile.ReadUInt32();
+            var width = readFile.ReadUInt16();
+            var height = readFile.ReadUInt16();
+            var mipCount = readFile.ReadUInt16();
+            var unk = readFile.ReadUInt16();
+            var mipHeaders = new MipHeader[mipCount + 1];            
+            for (var i = 0; i < mipCount; i++)
+            {
+                mipHeaders[i] = new MipHeader
+                {
+                    CommandOffset = readFile.ReadInt32(),
+                    Offset2 = readFile.ReadInt32(),
+                    Offset3 = readFile.ReadInt32(),
+                    Offset0 = readFile.ReadInt32(),
+                    Offset1 = readFile.ReadInt32(),
+                };
+            }
+            mipHeaders[mipCount] = new MipHeader
+            {
+                CommandOffset = mipHeaders[0].Offset2,
+                Offset2 = mipHeaders[0].Offset3,
+                Offset3 = mipHeaders[0].Offset0,
+                Offset0 = mipHeaders[0].Offset1,
+                Offset1 = (int)readFile.BaseStream.Length,
+            };
+
+            readFile.BaseStream.Position = 0;
+            var temp = readFile.ReadBytes((int)readFile.BaseStream.Length);
+            bmp = TransformToPNG(temp);
+            return bmp;
+        }     */   
+        
         public Bitmap TransformToPNG(byte[] rawData)
         {
             using (MemoryStream ms = new MemoryStream(rawData))

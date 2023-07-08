@@ -66,11 +66,8 @@ namespace SimsCCManager.Packages.Sims2Search
         
             //Misc Vars
             string test = "";        
-            int dirnum = 0;
-            List<int> objdnum = new List<int>();   
-            List<int> strnm = new List<int>();  
             List<int> imgnm = new List<int>();
-            int mmatloc = 0;
+            int dirnum = 0;
 
             SimsPackage thisPackage = new SimsPackage();
             SimsPackage infovar = new SimsPackage();
@@ -309,14 +306,10 @@ namespace SimsCCManager.Packages.Sims2Search
                 entrynum++;
             }
             
-            if (fileHas.Exists(x => x.Name == "DIR")) {       
-                int fh = 0;
-                foreach (PackageEntries item in fileHas) {
-                    if (item.Name == "DIR"){
-                        dirnum = fh;
-                    }
-                    fh++;
-                }
+            if (fileHas.Exists(x => x.Name == "DIR")) {
+                dirnum = (from has in fileHas
+                        where has.Name =="STR#"
+                        select has.Location).FirstOrDefault();
                 LogMessage = string.Format("P{0} - DIR is at entry {1}", packageparsecount, dirnum);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
@@ -584,12 +577,9 @@ namespace SimsCCManager.Packages.Sims2Search
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));       
                 int fh = 0;
-                foreach (PackageEntries item in fileHas) {
-                    if (item.Name == "OBJD"){
-                        objdnum.Add(fh);
-                    }
-                    fh++;
-                }
+                var objdnum = (from has in fileHas
+                        where has.Name =="OBJD"
+                        select has.Location).ToList();
                 int c = 0;
                 foreach (int objloc in objdnum) {                                
                     
@@ -636,13 +626,9 @@ namespace SimsCCManager.Packages.Sims2Search
                 LogMessage = string.Format("P{0} - This file has a STR.", packageparsecount);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));       
-                int fh = 0;
-                foreach (PackageEntries item in fileHas) {
-                    if (item.Name == "STR#"){
-                        strnm.Add(fh);
-                    }
-                    fh++;
-                }
+                var strnm = (from has in fileHas
+                        where has.Name =="STR#"
+                        select has.Location).ToList();
                 int c = 0;
                 
                 foreach (int strloc in strnm) {
@@ -686,96 +672,98 @@ namespace SimsCCManager.Packages.Sims2Search
                 LogMessage = string.Format("P{0} - This file has an MMAT.", packageparsecount);
                 if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                 if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                int fh = 0;
-                foreach (PackageEntries item in fileHas) {
-                    if (item.Name == "MMAT"){
-                        mmatloc = fh;
-                    }
-                    fh++;
-                }
-                                
-                dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
-                cFileSize = readFile.ReadInt32();
-                LogMessage = string.Format("P{0}/MMAT - FileSize: {1}.", packageparsecount, cFileSize);
-                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                cTypeID = readFile.ReadUInt16().ToString("X4");
-                LogMessage = string.Format("P{0}/MMAT - cTypeID: {1}.", packageparsecount, cTypeID);
-                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                
-                if (cTypeID == "FB10") 
-                {
-                    byte[] tempBytes = readFile.ReadBytes(3);
-                    uint cFullSize = readentries.QFSLengthToInt(tempBytes);
 
-                    LogMessage = string.Format("P{0}/MMAT - cFullSize: {1}.", packageparsecount, cFullSize);
+                var entryspots = (from has in fileHas
+                        where has.Name =="MMAT"
+                        select has.Location).ToList();
+                int mm = 0;
+                foreach (int mmatloc in entryspots){
+                    dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+                    cFileSize = readFile.ReadInt32();
+                    LogMessage = string.Format("P{0}/MMAT{2} - FileSize: {1}.", packageparsecount, cFileSize, mm);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                    string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-                    LogMessage = string.Format("P{0}/MMAT - cpfTypeID: {1}.", packageparsecount, cpfTypeID);
+                    cTypeID = readFile.ReadUInt16().ToString("X4");
+                    LogMessage = string.Format("P{0}/MMAT{2} - cTypeID: {1}.", packageparsecount, cTypeID, mm);
                     if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
                     if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                    if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
+                    
+                    if (cTypeID == "FB10") 
                     {
-                        mmatvar = readentries.readCPFchunk(readFile);
-                        LogMessage = string.Format("P{0}/MMAT - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
+                        byte[] tempBytes = readFile.ReadBytes(3);
+                        uint cFullSize = readentries.QFSLengthToInt(tempBytes);
+
+                        LogMessage = string.Format("P{0}/MMAT{2} - cFullSize: {1}.", packageparsecount, cFullSize, mm);
                         if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));                        
-                    } 
-                    else 
-                    {
-                        dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset + 9, SeekOrigin.Begin);
-                        DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-
-                        if (cpfTypeID == "E750E0E2") 
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
+                        string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                        LogMessage = string.Format("P{0}/MMAT{2} - cpfTypeID: {1}.", packageparsecount, cpfTypeID, mm);
+                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
+                        if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
                         {
-
-                            cpfTypeID = decompressed.ReadUInt32().ToString("X8");
-
-                            if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
-                            {
-                                mmatvar = readentries.readCPFchunk(decompressed);
-                                LogMessage = string.Format("P{0}/MMAT - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
-                                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                            }
-
+                            mmatvar = readentries.readCPFchunk(readFile);
+                            LogMessage = string.Format("P{0}/MMAT{2} - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString(), mm);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));                        
                         } 
                         else 
                         {
-                            mmatvar = readentries.readXMLchunk(decompressed);
-                            LogMessage = string.Format("P{0}/MMAT - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
-                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
+                            dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset + 9, SeekOrigin.Begin);
+                            DecryptByteStream decompressed = new DecryptByteStream(readentries.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+
+                            if (cpfTypeID == "E750E0E2") 
+                            {
+
+                                cpfTypeID = decompressed.ReadUInt32().ToString("X8");
+
+                                if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
+                                {
+                                    mmatvar = readentries.readCPFchunk(decompressed);
+                                    LogMessage = string.Format("P{0}/MMAT{2} - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString(), mm);
+                                    if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                    if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
+                                }
+
+                            } 
+                            else 
+                            {
+                                mmatvar = readentries.readXMLchunk(decompressed);
+                                LogMessage = string.Format("P{0}/MMAT{2} - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString(), mm);
+                                if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                                if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
+                            }
                         }
-                    }
-                } 
-                else 
-                {
-                    dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
-
-                    string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-                    if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
-                    {
-                        mmatvar = readentries.readCPFchunk(readFile);
-                        LogMessage = string.Format("P{0}/MMAT - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
-                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
-                    }
-
-                    if  (cpfTypeID == "6D783F3C")
+                    } 
+                    else 
                     {
                         dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
 
-                        string xmlData = Encoding.UTF8.GetString(readFile.ReadBytes((int)indexData[mmatloc].filesize));
-                        mmatvar = readentries.readXMLchunk(xmlData);
-                        LogMessage = string.Format("P{0}/MMAT - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString());
-                        if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
-                        if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
+                        string cpfTypeID = readFile.ReadUInt32().ToString("X8");
+                        if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
+                        {
+                            mmatvar = readentries.readCPFchunk(readFile);
+                            LogMessage = string.Format("P{0}/MMAT{2} - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString(), mm);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
+                        }
 
+                        if  (cpfTypeID == "6D783F3C")
+                        {
+                            dbpfFile.Seek(this.chunkOffset + indexData[mmatloc].offset, SeekOrigin.Begin);
+
+                            string xmlData = Encoding.UTF8.GetString(readFile.ReadBytes((int)indexData[mmatloc].filesize));
+                            mmatvar = readentries.readXMLchunk(xmlData);
+                            LogMessage = string.Format("P{0}/MMAT{2} - MMATVar Returned with: {1}.", packageparsecount, mmatvar.SimsPackagetoString(), mm);
+                            if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                            if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}", LogMessage));
+
+                        }
                     }
+                    mm++;
                 }
+                                
+                
             }
 
             /*if (fileHas.Exists(x => x.term == "IMG"))

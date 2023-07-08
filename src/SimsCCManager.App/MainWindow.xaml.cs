@@ -1053,7 +1053,7 @@ namespace SimsCCManager.App
                     });
                 });
                 reader.Wait();
-
+                Dispatcher.Invoke(new Action(() => UpdateProgressBar("processed packages", "Saving")));
                 Task UpdateDatabase = Task.Run(() => {
                     log.MakeLog(string.Format("Getting items produced by batch {0}.", batchnum), true);
                     list1 = GlobalVariables.AddPackages.ToList();                    
@@ -1090,8 +1090,6 @@ namespace SimsCCManager.App
         }
 
         private async Task UpdateDatabases(List<SimsPackage> list1, List<PackageFile> list2, List<PackageFile> list3, List<PackageFile> list4, int batchnum){
-            runprogress = false;
-            Dispatcher.Invoke(new Action(() => UpdateProgressBar("processed packages", "Saving")));
             Task task = Task.Run(() => {            
                 GlobalVariables.DatabaseConnection.InsertAllWithChildren(list1.ApostropheFix(), true);
                 log.MakeLog(string.Format("Batch {0}: {1} Items in AddPackages added to Database.", batchnum, list1.Count), true);
@@ -1541,9 +1539,16 @@ namespace SimsCCManager.App
 
         private void ElapsedProcessing(string thing){
             TimeSpan ts = sw.Elapsed;
-            string elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            string elapsedtime = "";
+            if (ts.Days != 0){
+                elapsedtime = String.Format("{4} days, {0:00}:{1:00}:{2:00}.{3:00}",
+                                ts.Hours, ts.Minutes, ts.Seconds,
+                                ts.Milliseconds / 10, ts.Days);
+            } else {
+                elapsedtime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
                                 ts.Hours, ts.Minutes, ts.Seconds,
                                 ts.Milliseconds / 10);
+            }
             log.MakeLog(string.Format("Processing {0} took {1}", thing, elapsedtime), true);
         }  
 
@@ -1581,11 +1586,26 @@ namespace SimsCCManager.App
                 List<string> times = new List<string>();
                 TimeSpan Elapsed = sw.Elapsed;
                 TimeSpan remaining = ((Elapsed / GlobalVariables.packagesRead) * maxi) - Elapsed;
-                string sofar = String.Format("{0:00}:{1:00}:{2:00}",
-                                Elapsed.Hours, Elapsed.Minutes, Elapsed.Seconds);
-
-                string togo = String.Format("{0:00}:{1:00}:{2:00}",
-                                remaining.Hours, remaining.Minutes, remaining.Seconds);
+                string sofar = "";
+                string togo = "";
+                if (Elapsed.Days != 0){
+                    sofar = String.Format("{4} days, {0:00}:{1:00}:{2:00}.{3:00}",
+                                    Elapsed.Hours, Elapsed.Minutes, Elapsed.Seconds,
+                                    Elapsed.Milliseconds / 10, Elapsed.Days);
+                } else {
+                    sofar = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                                    Elapsed.Hours, Elapsed.Minutes, Elapsed.Seconds,
+                                    Elapsed.Milliseconds / 10);
+                }
+                if (remaining.Days != 0){
+                    togo = String.Format("{4} days, {0:00}:{1:00}:{2:00}.{3:00}",
+                                    remaining.Hours, remaining.Minutes, remaining.Seconds,
+                                    remaining.Milliseconds / 10, remaining.Days);
+                } else {
+                    togo = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                                    remaining.Hours, remaining.Minutes, remaining.Seconds,
+                                    remaining.Milliseconds / 10);
+                }
                 times.Add(sofar);
                 times.Add(togo);
                 Dispatcher.Invoke(new Action(() => timeRemaining.Text = string.Format("Elapsed: {0} | Remaining: {1}", times[0], times[1])));
