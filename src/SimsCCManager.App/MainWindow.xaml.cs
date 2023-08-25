@@ -302,7 +302,7 @@ namespace SimsCCManager.App
         #region Load 
 
         private void loadData_Click(object sender, RoutedEventArgs e){              
-            new Thread(() => GetResults()) {IsBackground = true}.Start();            
+            Dispatcher.Invoke(new Action(() => GetResults()));            
         }
 
         private bool DetectHalfRun(){
@@ -932,7 +932,7 @@ namespace SimsCCManager.App
                 SetTextCurrentPkText("");
                 SetProgressBarMax();
                 ElapsedProcessing("identifying orphans");
-                GetResults();
+                Dispatcher.Invoke(new Action(() => GetResults()));
             } else {
                 cts.Dispose();
                 stop = false;
@@ -1474,14 +1474,14 @@ namespace SimsCCManager.App
             runprogress = false;
             HideProgressGrid();
             ShowLoadingResultsGrid();            
-            OpenResultsWindow();            
+            Dispatcher.Invoke(new Action(() => OpenResultsWindow()));            
         }
 
         private void OpenResultsWindow(){
             Dispatcher.Invoke(new Action(() => LoadingResults.Visibility = Visibility.Visible));
             Dispatcher.Invoke(new Action(() => {
                 try {
-                    ResultsWindow resultsWindow = new ResultsWindow(cts);
+                    ResultsWindow resultsWindow = new ResultsWindow();
                     resultsWindow.Show();
                 } catch (Exception e) {
                     Console.WriteLine("Failed to open results window. Error: " + e.Message);

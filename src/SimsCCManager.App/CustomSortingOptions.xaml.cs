@@ -25,6 +25,7 @@ using SSAGlobals;
 using SimsCCManager.Packages.Containers;
 using SimsCCManager.Packages.Sorting;
 using SimsCCManager.SortingUIResults;
+using SimsCCManager.UI.Utilities;
 
 namespace SimsCCManager.App.CustomSortingOptions
 {

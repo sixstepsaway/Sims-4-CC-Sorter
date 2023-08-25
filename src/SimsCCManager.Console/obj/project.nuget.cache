@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "VYlPUbPwJcu9z4cztHHRJWpyYnw5+aaKUkS1IjL1V978Qx8S/wpif6QCTm1YvfKNZlwtlAKdLqw1if9KSNsdMA==",
+  "dgSpecHash": "IOv4UezFjuwFFsZQTDbLjmFndB12Ft1zo/HXDApLEiNWqDlMG9+pfedbk3jJCYQ2/Z8lb1UuPzJLU+LAAdZjpg==",
   "success": true,
   "projectFilePath": "i:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.Console\\SimsCCManager.Terminal.csproj",
   "expectedPackageFiles": [
@@ -107,7 +107,7 @@
       "code": "NU1701",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Package 'SQLitePCLRaw.lib.e_sqlite3.linux 1.1.5' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8' instead of the project target framework 'net6.0'. This package may not be fully compatible with your project.",
+      "message": "Package 'SQLitePCLRaw.lib.e_sqlite3.linux 1.1.5' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net6.0'. This package may not be fully compatible with your project.",
       "libraryId": "SQLitePCLRaw.lib.e_sqlite3.linux",
       "targetGraphs": [
         "net6.0"
@@ -117,7 +117,7 @@
       "code": "NU1701",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Package 'SQLitePCLRaw.lib.e_sqlite3.osx 1.1.5' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8' instead of the project target framework 'net6.0'. This package may not be fully compatible with your project.",
+      "message": "Package 'SQLitePCLRaw.lib.e_sqlite3.osx 1.1.5' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net6.0'. This package may not be fully compatible with your project.",
       "libraryId": "SQLitePCLRaw.lib.e_sqlite3.osx",
       "targetGraphs": [
         "net6.0"
@@ -127,7 +127,7 @@
       "code": "NU1701",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Package 'SQLitePCLRaw.lib.e_sqlite3.v110_xp 1.1.5' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8' instead of the project target framework 'net6.0'. This package may not be fully compatible with your project.",
+      "message": "Package 'SQLitePCLRaw.lib.e_sqlite3.v110_xp 1.1.5' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net6.0'. This package may not be fully compatible with your project.",
       "libraryId": "SQLitePCLRaw.lib.e_sqlite3.v110_xp",
       "targetGraphs": [
         "net6.0"

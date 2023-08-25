@@ -1,9 +1,23 @@
-Next steps:
 
-- make it auto rename
-- see how moving files is set up
-- compare guids for missing meshes
+- Create an information file for each mod
 
-consider: packages section of db as, well, indexed db? and non-indexed go elsewhere? dunno
+so for example sinfulsimming_nyrahair.package and sinfulsimming_nyrahair.inf
 
-save file size. if size changes, rescan? save location; if it goes away, remove
+Inf will be either a ini or an xml, and contain the information from the item! 
+
+Save thumbs that way too? 
+
+- add folder
+- background process searches info 
+- file, of course 
+- author from internal name
+-- database. You can add to it 
+- "clear cache on launch" checkbox
+- load order? 
+- categories, folders, sections etc etc 
+- right click for rename delete etc 
+- right click "query" if auto info is off in settings 
+- always check if folder contains files still
+
+
+(need to get the info for new items from new packs too) 

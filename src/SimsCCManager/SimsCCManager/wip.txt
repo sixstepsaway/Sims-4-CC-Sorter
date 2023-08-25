@@ -1,0 +1,4 @@
+    finish hooking up the buttons
+    make all the list views actually have selectableness
+    and context menus
+    attempt running an exe from it? maybe? if i feel bold

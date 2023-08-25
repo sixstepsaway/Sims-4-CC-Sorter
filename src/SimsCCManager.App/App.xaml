@@ -3,7 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:SimsCCManager.App"
              StartupUri="SplashScreen.xaml">
-    <Application.Resources>
-         
-    </Application.Resources>
+        <Application.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="themes/Toolbar.xaml" />
+                    <ResourceDictionary Source="themes/ResultsView/GridStyle.xaml" />
+                    <ResourceDictionary Source="themes/ResultsView/ListStyle.xaml" />
+                    <ResourceDictionary Source="themes/Palette.xaml" />
+                </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary>
+        </Application.Resources>
 </Application>

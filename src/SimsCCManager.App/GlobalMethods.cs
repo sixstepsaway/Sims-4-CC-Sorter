@@ -274,6 +274,10 @@ namespace SSAGlobals {
         public static string currentpackage;
         public static int PackageCount = 0;       
         public static int packagesRead = 0;
+
+        public static int SortingCount = 0;       
+        public static int SortingSorted = 0;
+
         public static int pairingNum = 0;
         public static int pairingCount = 0;
         public static string pairingPack = "";
@@ -306,6 +310,9 @@ namespace SSAGlobals {
         public static List<SpecificOverrides> S4SpecificOverridesList = new List<SpecificOverrides>();
         public static ConcurrentQueue<SimsPackage> AddPackages = new();
         public static ConcurrentQueue<PackageFile> RemovePackages = new();
+        public static ConcurrentQueue<SimsPackage> RemoveSimsPackage = new();
+        public static ConcurrentQueue<AllFiles> RemoveAllfiles = new();
+        public static ConcurrentQueue<AllFiles> AddAllfiles = new();
         public static ConcurrentQueue<PackageFile> ProcessingReader = new();
         public static ConcurrentQueue<PackageFile> AllFiles = new();
         public static ConcurrentQueue<PackageThumbnail> Thumbnails = new();

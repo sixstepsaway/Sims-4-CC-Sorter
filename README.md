@@ -1,11 +1,23 @@
 ![enter image description here](https://img.shields.io/github/downloads/sixstepsaway/Sims-CC-Sorter/total?style=for-the-badge)        ![enter image description here](https://img.shields.io/github/issues/sixstepsaway/sims-cc-sorter?style=for-the-badge)  ![enter image description here](https://img.shields.io/github/watchers/sixstepsaway/sims-cc-sorter?style=for-the-badge)  ![enter image description here](https://img.shields.io/github/v/tag/sixstepsaway/sims-cc-sorter?style=for-the-badge) 
 # Sims-CC-Sorter
 
-My first real C# project, at least the first one that's turned into something that works. 
-
 ![An image of the WIP app as it is right now.](https://pbs.twimg.com/media/FuIOMMIXsAIiH4-?format=png&name=small)
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/M4M16X1W)
+
+I've been collecting Sims CC since before the Sims 4 came out in 2014, and because of it I have a large mixed up collection of different kinds of CC for different games, a lot of which is maybe not up to snuff compared to the more recent ones.
+
+Because of how much I have, I don't always want all of it in my game at once, and sometimes I want different builds for different kinds of gameplay, such as SFW for YouTube videos, or historical CC or defaults for decades challenges.
+
+It's surprisingly difficult to sift through and manage content for Sims 4. Sims 2 has Delphy's Mod Organizer, Sims 3 has CC Magic. Sims 4 has is Sims 4 Studio, a program I have quite a few problems with, and one which chokes when you try to open 10k+ files in "My CC". On top of that, you have to go through those files one by one, identifying them visually and sorting them in Windows Explorer. Nope, no good for me.
+
+A couple of years back, I made myself a Batch file that allowed me to create symbolic links for my CC and mods collection so that I wouldn't have to duplicate everything for different builds. Unfortunately, this required more extensive sorting, so I learned Powershell to create a CC sorter based on filenames. 
+
+It worked really well, up until the point I realized it was sorting things like chairs into the hair folders. 🙄
+
+After that I picked up C# to create a better CC sorting application, as well as a way to bulk rename some of the stupidly named Sims 2 floor and wall files I have according to their internal title. 
+
+Months later, here we are, and I've developed an app that lets me sort, filter and adjust my CC collection to my heart's content.
 
 ## Requirements
 

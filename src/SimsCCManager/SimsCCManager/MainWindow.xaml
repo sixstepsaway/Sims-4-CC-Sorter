@@ -1,0 +1,299 @@
+﻿<Window x:Class="SimsCCManager.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:SimsCCManager"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:System="clr-namespace:System;assembly=mscorlib"
+    mc:Ignorable="d"
+    Title="Sims CC Manager"
+    ResizeMode="CanResize"
+    WindowStartupLocation="Manual"
+    WindowState="Normal"
+    WindowStyle="None"
+    AllowsTransparency="True"
+    SizeToContent="WidthAndHeight"
+    Background="Transparent"
+    Closing="Window_Closing"
+    Icon="img\simsccmanagericon.ico"
+    Left="{Binding Location.X}"
+    Top="{Binding Location.Y}">
+    <Window.Visibility>
+        <Binding Path="WindowVisible" Mode="TwoWay"/>
+    </Window.Visibility>
+    <Window.DataContext>
+        <local:CCManagerViewModel/>
+    </Window.DataContext>
+    <Window.Resources>
+        <Style x:Key="GameLabels" TargetType="Label">
+            <Style.Setters>
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="FontFamily" Value="Arial"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style.Setters>
+        </Style>
+    </Window.Resources>
+    <Grid x:Name="MainGrid" Width="{Binding WindowWidth}" Height="{Binding WindowHeight}" Visibility="{Binding ShowMainGrid}">    
+        <Border BorderBrush="{StaticResource BarBrush}" BorderThickness="2" CornerRadius="{Binding Border}" Background="Transparent">
+            <Grid x:Name="SubBGGrid" Background="{StaticResource MainBackgroundBrush}" Visibility="Visible">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="25"/>
+                    <RowDefinition Height="150"/>
+                    <RowDefinition/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>        
+                <ContentControl x:Name="ToolBarCC" Template="{StaticResource ToolbarNoMax}" Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Width="{Binding WindowWidth}" Height="25" Content="Sims CC Manager"/>
+                <Grid Grid.Row="1" Height="150" VerticalAlignment="Top">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="250"/>
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="Black" Margin="23, -2, 23, -2">
+                        <Rectangle.OpacityMask>
+                            <ImageBrush ImageSource="img/simsccmanagericon.png"/>                      
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <Image Source="img/simsccmanagericon.png" Grid.Column="0"/>
+                </Grid>
+                <Grid Grid.Row="1" Height="50" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="375"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Height="60" Width="475" Margin="-50, 0, 0, 0">
+                        <Label FontFamily="fonts/#Piximisa" HorizontalAlignment="Left" Margin="0, 5, 5, 0" Padding="0" Content="Sims CC Manager" FontSize="55" Foreground="Black"/>
+                        <Label FontFamily="fonts/#Piximisa" HorizontalAlignment="Left" Padding="0" Content="Sims CC Manager" FontSize="55" Foreground="{StaticResource AccentBrush}"/>
+                    </Grid>
+                    
+                </Grid>
+
+                <Grid Grid.Row="2" Visibility="{Binding ChooseInstanceVis}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="5"/>
+                    </Grid.ColumnDefinitions>       
+                    <Grid Grid.Column="1" Margin="0, 0, 0, 0" HorizontalAlignment="Center" Visibility="{Binding ChooseInstanceVis}">
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                            <Label Content="Load Instance" FontFamily="fonts/#GeosansLight" FontSize="30" FontWeight="UltraBlack" HorizontalAlignment="Left" Foreground="{StaticResource Brush3}"/>
+                            
+                            <ListView ItemsSource="{Binding Instances}" Width="400" MaxHeight="300" MinHeight="100" SelectionMode="Single" SelectedItem="{Binding SelectedInstance, Mode=TwoWay}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Vertical">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="{Binding Icon}" Width="50" Height="50"/>
+                                                <Label Style="{StaticResource GameLabels}" Content="{Binding Name}" />
+                                            </StackPanel>
+                                            <Label Style="{StaticResource GameLabels}" FontSize="10" Content="{Binding Location}" />
+                                        </StackPanel>                                        
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>                                                                
+                            </ListView>
+                            <StackPanel Orientation="Horizontal" Margin="0, 10, 0, 0" HorizontalAlignment="Center">
+                                <Button Template="{StaticResource StandardButton}" Command="{Binding Pg0Back}" Visibility="Visible" Tag="{StaticResource IconBack}" Content="Back" Width="200" Height="45" HorizontalAlignment="Right" Margin="0, 0, 10, 10"/>
+                                <Button Template="{StaticResource StandardButton}" Command="{Binding Pg0Select}" Visibility="Visible" Tag="{StaticResource IconFore}" Content="Open" Width="200" Height="45" HorizontalAlignment="Right" Margin="0, 0, 10, 10"/>
+                            </StackPanel>
+                            <Button Template="{StaticResource StandardButton}" Command="{Binding Pg0MakeNew}" Visibility="Visible" Tag="{StaticResource IconMakeNew}" Content="New Instance" Width="250" Height="45" HorizontalAlignment="Center" Margin="0, 0, 10, 10"/>
+                        </StackPanel>                            
+                    </Grid>
+                </Grid>
+                
+                <Grid x:Name="SetupGrid" Grid.Row="2" Visibility="{Binding ShowSetupGrid}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="5"/>
+                    </Grid.ColumnDefinitions>       
+                    <Grid x:Name="SetupPage1" Grid.Column="1" Margin="0, 0, 0, 0" HorizontalAlignment="Center" Visibility="{Binding ShowSetupPg1}">
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                            <Label Content="(Optional) Name your instance." FontFamily="fonts/#GeosansLight" FontSize="30" FontWeight="UltraBlack" Foreground="{StaticResource Brush3}"/>
+                            <TextBox Text="{Binding InstanceName}" Width="300" Height="35" FontFamily="Arial" FontSize="30" TextAlignment="Center"/>
+                            <Label Content="Please choose a game to manage." Margin="0, 10, 0, 0" FontFamily="fonts/#GeosansLight" FontSize="30" FontWeight="UltraBlack" Foreground="{StaticResource Brush3}"/>
+                            <ListView x:Name="GameChoicesList" ItemsSource="{Binding GameList}" Width="400" SelectionMode="Single" SelectedItem="{Binding SelectedGame, Mode=TwoWay}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="{Binding Icon}" Width="50" Height="50"/>
+                                            <Label Style="{StaticResource GameLabels}" Content="{Binding Name}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>                                                                
+                            </ListView>
+                            <StackPanel Orientation="Horizontal" Margin="0, 10, 0, 0" HorizontalAlignment="Center">
+                                <Button x:Name="Pg1ButtonPrev" Template="{StaticResource StandardButton}" Command="{Binding Pg1ButtonPrev}" Visibility="Visible" Tag="{StaticResource IconBack}" Content="Cancel" Width="200" Height="45" HorizontalAlignment="Right" Margin="0, 0, 10, 10"/>
+                                <Button x:Name="Pg1ButtonNext" Template="{StaticResource StandardButton}" Command="{Binding Pg1ButtonNext}" Visibility="Visible" Tag="{StaticResource IconFore}" Content="Next" Width="200" Height="45" HorizontalAlignment="Right" Margin="0, 0, 10, 10"/>
+                            </StackPanel>
+                        </StackPanel>                            
+                    </Grid>
+
+                    <Grid x:Name="SetupPage2" Grid.Column="1" Margin="0, 0, 0, 0" HorizontalAlignment="Center" Visibility="{Binding ShowSetupPg2}">
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <Label Content="Game install Location" Style="{StaticResource GameLabels}" Foreground="{StaticResource Brush3}"/>
+                                <TextBox x:Name="InstallLocationBox" Width="275" Text="{Binding InstallLoc}" Height="30"/>
+                                <Button Content="Browse" Width="55" Height="30" Command="{Binding BrowseGameLoc}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Label Content="Documents Location" Style="{StaticResource GameLabels}" Foreground="{StaticResource Brush3}"/>
+                                <TextBox x:Name="DocumentsLocationBox" Width="325" Text="{Binding DocLoc}"/>
+                                <Button Content="Browse" Width="55" Height="30" Command="{Binding BrowseDocLoc}"/>
+                            </StackPanel>
+                            <TextBlock Text="The locations below are where your mods will be kept for organization and deployment. This is NOT your game Mods folder, it is the SCCM build folder for this particular game and should be somewhere other than your Documents/Mods folder, and somewhere other than any other game builds' folders. We won't be putting any files directly into your mods or data folders!" TextWrapping="Wrap" Margin="15" Foreground="{StaticResource Brush3}" Width="500"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Label Content="Instance Location" Style="{StaticResource GameLabels}" Foreground="{StaticResource Brush3}"/>
+                                <TextBox x:Name="GMLocationBox" Width="325" Text="{Binding GMLoc, Mode=TwoWay}"/>
+                                <Button Content="Browse" Width="55" Height="30" Command="{Binding BrowseGMLoc}"/>
+                            </StackPanel>                            
+                            <StackPanel Orientation="Horizontal">
+                                <Label Content="Mods and CC" Style="{StaticResource GameLabels}" Foreground="{StaticResource Brush3}"/>
+                                <TextBox x:Name="GMLocationBoxMODS" Width="325" Text="{Binding GMLocMODS}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Label Content="New Downloads" Style="{StaticResource GameLabels}" Foreground="{StaticResource Brush3}"/>
+                                <TextBox x:Name="GMLocationBoxDOWNLOADS" Width="325" Text="{Binding GMLocDOWNLOADS}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Label Content="Build Data" Style="{StaticResource GameLabels}" Foreground="{StaticResource Brush3}"/>
+                                <TextBox x:Name="GMLocationBoxDATA" Width="325" Text="{Binding GMLocDATA}"/>
+                            </StackPanel>                            
+                            <TextBlock Text="If everything looks fine, we can continue." TextWrapping="Wrap" Margin="15" Foreground="{StaticResource Brush3}"/>
+                            <StackPanel x:Name="ButtonPanel" Orientation="Horizontal" Margin="0, 10, 0, 0" HorizontalAlignment="Center">
+                                <Button x:Name="Pg2ButtonPrev" ForceCursor="true" Cursor="Hand" Template="{StaticResource StandardButton}" Command="{Binding Pg2ButtonPrev}" Visibility="Visible" Tag="{StaticResource IconBack}" Content="Back" Width="200" Height="45" HorizontalAlignment="Right" Margin="0, 0, 10, 10"/>
+                                <Button x:Name="Pg2ButtonNext" Click="PgButtonNext_Click" ForceCursor="true" Cursor="Hand" Template="{StaticResource StandardButton}" Command="{Binding Pg2ButtonNext}" Visibility="Visible" Tag="{StaticResource IconFore}" Content="Next" Width="200" Height="45" HorizontalAlignment="Right" Margin="0, 0, 10, 10"/>
+                            </StackPanel>
+                        </StackPanel>                            
+                    </Grid>
+                                    
+                </Grid> 
+
+
+
+                <Grid x:Name="InfoGrid" Grid.Row="2" Visibility="{Binding ShowInfoGrid}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="5"/>
+                    </Grid.ColumnDefinitions>                    
+                    <StackPanel Orientation="Vertical" Grid.Column="1" >
+                        <TextBlock Text="       To begin, Scan New and navigate to a folder containing the files you wish to scan. Don't worry about removing non-sims files, the app will sort through those and only apply itself to the relevant items." Width="450" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Top" TextAlignment="Justify" Margin="5" TextWrapping="Wrap"/>
+                        <TextBlock Text="       If you have a lot of files (10k+), it may be best to divide them into sub-folders and scan them a batch at a time. Every time you use Scan New, it adds to the database, rather than replacing it, so you can do it in as many batches as you may want." Width="450" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Top" TextAlignment="Justify" Margin="5" TextWrapping="Wrap"/>
+                        <TextBlock Text="       Moving or editing files inside the app is reflected in the database, but if you make changes to the location of files outside of the app, it will lose track of those files and they will have to be rescanned." Width="450" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Top" TextAlignment="Justify" Margin="5" TextWrapping="Wrap"/>
+                        <TextBlock Text="       If you've moved a lot of files around outside of the app, it might be prudent to do a complete reset and rescan your folders." Width="450" Foreground="AliceBlue" HorizontalAlignment="Center" VerticalAlignment="Top" TextAlignment="Justify" Margin="5" TextWrapping="Wrap"/>
+                        <Button x:Name="ButtonHelpBack" ForceCursor="true" Cursor="Hand" Template="{StaticResource StandardButton}" Command="{Binding HelpBack}" Visibility="Visible" Tag="{StaticResource IconBack}" Content="Back" Width="300" Height="45" HorizontalAlignment="Center" Margin="0, 15, 0, 0"/>
+                    </StackPanel>                    
+                </Grid> 
+
+
+
+                <Grid x:Name="SettingsGrid" Grid.Row="2" Visibility="{Binding ShowSettingsGrid}" Margin="0, 25">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="5"/>
+                    </Grid.ColumnDefinitions>                    
+                    <StackPanel Orientation="Vertical" Grid.Column="1" >
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0, 0, 0, 5">    
+                            <Label Foreground="AliceBlue" Content="Sims 2 Documents Folder" Margin="0, 0, 5, 0"/>
+                            <TextBox x:Name="Sims2Folder" Height="20" Width="150" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                            <Button x:Name="BrowseForS2Location" ForceCursor="true" Cursor="Hand" Command="{Binding browseS2Location}" Content="Browse" Width="60" Height="25" Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5, 0, 0, 0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0, 0, 0, 5">    
+                            <Label Foreground="AliceBlue" Content="Sims 3 Documents Folder" Margin="0, 0, 5, 0"/>
+                            <TextBox x:Name="Sims3Folder" Height="20" Width="150" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                            <Button x:Name="BrowseForS3Location" ForceCursor="true" Cursor="Hand" Command="{Binding browseS3Location}" Content="Browse" Width="60" Height="25" Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5, 0, 0, 0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0, 0, 0, 5">    
+                            <Label Foreground="AliceBlue" Content="Sims 4 Documents Folder" Margin="0, 0, 5, 0"/>
+                            <TextBox x:Name="Sims4Folder" Height="20" Width="150" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                            <Button x:Name="BrowseForS4Location" ForceCursor="true" Cursor="Hand" Command="{Binding browseS4Location}" Content="Browse" Width="60" Height="25" Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5, 0, 0, 0"/>
+                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 0, 5">
+                                    <Label Foreground="AliceBlue" Content="Restrict CPU Usage" Margin="0, 0, 5, 0"/>
+                                    <CheckBox Width="25" Height="25"/>
+                                </StackPanel>
+                            </StackPanel>                            
+                        </Grid>
+
+                        <Button Command="{Binding CustomizeSortingOptions}" Padding="0" Width="250" Height="25" Content="Customize Sorting Options" Margin="0, 10, 0, 0"/>
+                        <Button x:Name="ButtonSettingsBack" Template="{StaticResource StandardButton}" Command="{Binding SettingsBack}" Visibility="Visible" Tag="{StaticResource IconBack}" Content="Back" Width="300" Height="45" HorizontalAlignment="Center" Margin="0, 15, 0, 0"/>
+                    </StackPanel>                    
+                </Grid> 
+
+                
+                <Grid x:Name="ButtonsGrid" Grid.Row="2" Visibility="{Binding ShowButtonsGrid}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="400"/>
+                        <ColumnDefinition Width="5"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="5"/>
+                        <RowDefinition Height="400"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Margin="0, 0, 10, 0" Visibility="Visible" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                        <Button x:Name="ButtonLoad" Template="{StaticResource StandardButton}" Command="{Binding ManageCC}" Visibility="Visible" Tag="{StaticResource IconLoad}" Content="Manage CC" Width="300" Height="45" HorizontalAlignment="Right" Margin="0, 0, 0, 10"/>
+                        <Button x:Name="ButtonSettings" Template="{StaticResource StandardButton}" Command="{Binding OpenSettings}" Visibility="Visible" Tag="{StaticResource IconSettings}" Content="Settings" Width="300" Height="45" HorizontalAlignment="Right" Margin="0, 0, 0, 10"/>
+                        <Button x:Name="ButtonHelp" Template="{StaticResource StandardButton}" Command="{Binding OpenHelp}" Visibility="Visible" Tag="{StaticResource IconInfo}" Content="Help" Width="300" Height="45" HorizontalAlignment="Right" Margin="0, 0, 0, 10"/>
+                        <Button x:Name="ButtonQuit" Template="{StaticResource StandardButton}" Command="{Binding Exit}" Visibility="Visible" Tag="{StaticResource IconQuit}" Content="Quit" Width="300" Height="45" HorizontalAlignment="Right" Margin="0, 0, 0, 10"/>
+                    </StackPanel>                    
+                </Grid>
+
+                <Grid x:Name="ReportABugGrid" Grid.Row="2" Visibility="{Binding ShowReportBugGrid}" Width="350" Height="175" ZIndex="2">
+                    <Border Background="#212a3e" BorderBrush="#D3C4D0" BorderThickness="2,2,2,2" Padding="0" CornerRadius="10 10 10 10" ClipToBounds="True" Margin="0,0,0,0">
+                    </Border>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="There are two ways to report an issue. If you have a pressing concern you need a reply about as soon as possible, you might want to use Discord. If you have just found a bug you want to report for fixing in the next version, Github issues are the best option." Grid.Row="0" Margin="10, 10, 10, 20"  TextWrapping="Wrap" Foreground="AliceBlue" FontSize="14.5" TextAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="Github Issues" Command="{Binding GitIssues}" Grid.Row="1" Width="100" Height="25" Padding="0" FontSize="12" Margin="0, 0, 5, 0"/>
+                            <Button Content="Discord" Command="{Binding DiscordIssueButton}" Grid.Row="1" Width="100" Height="25" Padding="0" FontSize="12" Margin="0, 0, 5, 0"/>
+                            <Button Content="Cancel" Command="{Binding CancelIssue}" Grid.Row="1" Width="100" Height="25" Padding="0" FontSize="12"/>
+                        </StackPanel>
+                    </StackPanel>            
+                </Grid>
+
+                <Grid x:Name="ProcessingGrid" Grid.Row="2" Visibility="{Binding ShowProgressingGrid}" Width="500" Height="175" ZIndex="2">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                        <Label Content="Setting up Environment. Please wait..." VerticalContentAlignment="Center" FontSize="25" Foreground="{StaticResource Brush1}"/>
+                        <ProgressBar Width="300" Height="30" Margin="0, 10, 0, 0" Background="{StaticResource Brush9}" Foreground="{StaticResource Brush2}" IsIndeterminate="True"/>
+                    </StackPanel>
+                </Grid>
+
+                <Grid Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                    <Image Source="img\Tali.png" Width="75" ToolTip="In loving memory of Tali, who sat with me and helped me code months worth of this app, but didn't quite make it through to the release. She is missed every day."/>
+                </Grid>
+
+                
+                <Rectangle Grid.Column="0" Grid.Row="4" Fill="{StaticResource BarBrush}" Stretch="Fill"/>
+                <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Name="TwitterButton" Tag="{StaticResource IconTwitter}" Template="{StaticResource SocialsButton}" Height="25" Width="25" Margin="0, 0, 5, 0" Command="{Binding TwitterButton}" Padding="0" Background="Transparent" Foreground="{StaticResource Brush5}" BorderThickness="0"/> 
+                    <Button Name="TumblrButton" Tag="{StaticResource IconTumblr}" Template="{StaticResource SocialsButton}" Height="25" Width="25" Margin="0, 0, 5, 0" Command="{Binding TumblrButton}" Padding="0" Background="Transparent" Foreground="{StaticResource Brush5}" BorderThickness="0"/> 
+                    <Button Name="KofiButton" Tag="{StaticResource IconKofi}" Template="{StaticResource SocialsButton}" Height="25" Width="40" Margin="0, 0, 5, 0" Command="{Binding KofiButton}" Padding="0" Background="Transparent" Foreground="{StaticResource Brush5}" BorderThickness="0"/> 
+                    <Button Name="GithubButton" Tag="{StaticResource IconGithub}" Template="{StaticResource SocialsButton}" Height="25" Width="25" Margin="0, 0, 5, 0" Command="{Binding GitButton}" Padding="0" Background="Transparent" Foreground="{StaticResource Brush5}" BorderThickness="0"/> 
+                    <Button Name="DiscordButton" Tag="{StaticResource IconDiscord}" Template="{StaticResource SocialsButton}" Height="30" Width="30" Margin="0, 0, 5, 0" Command="{Binding DiscordButton}" Padding="0" Background="Transparent" Foreground="{StaticResource Brush5}" BorderThickness="0"/> 
+                </StackPanel>    
+
+                <Grid Grid.Row="4">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Label Content="Sims CC Manager | Alpha 1.0" FontFamily="fonts/#Accidental Presidency" Foreground="{StaticResource FontBrush}" FontSize="25" HorizontalAlignment="Left" Margin="10, 0, 0, 0"/>
+                        <Button Command="{Binding ReportABug}" Margin="25, 0, 0, 0" Height="20" Width="150" Template="{StaticResource StandardButtonTemplate}" Padding="0">
+                            <Label Content="Report a bug?" Foreground="{StaticResource Brush3}" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Button>
+                        <Button Command="{Binding DevTest}" Margin="-65, 0, 0, 0" Height="20" Width="150" Template="{StaticResource StandardButtonTemplate}" Visibility="{Binding DebugModeVis}" Padding="0">
+                            <Label Content="Dev Test Button" Foreground="{StaticResource Brush3}" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>            
+            </Grid>  
+        </Border>
+    </Grid>
+</Window>

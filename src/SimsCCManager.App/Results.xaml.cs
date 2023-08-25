@@ -1,43 +1,32 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Forms;
 using System.Diagnostics;
-using System.Reflection;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using SSAGlobals;
 using SimsCCManager.Packages.Containers;
-using SimsCCManager.App.PreviewImage;
-using System.Data.SQLite;
 using System.Data;
 using System.Threading;
 using SQLiteNetExtensions.Extensions;
 using SimsCCManager.App;
-using SimsCCManager.Packages.Sorting;
 using SimsCCManager.App.CustomSortingOptions;
-using System.Drawing.Imaging;
 using SimsCCManager.App.Images;
-using System.Runtime.InteropServices;
-using SimsCCManager.Packages.Decryption;
+using SimsCCManager.Packages.Sorting;
+using System.Threading.Tasks;
+using System.Windows.Threading;
+using System.Globalization;
 
-namespace SimsCCManager.SortingUIResults {
+namespace SimsCCManager.SortingUIResults
+{
     /// <summary>
     /// Results window; a datagrid with all of the package files. (Later, will include ts3packs and ts2packs as well.)
     /// </summary>
@@ -80,6 +69,14 @@ namespace SimsCCManager.SortingUIResults {
         private double smallsizeh = 650;
         private double fullheight = SystemParameters.FullPrimaryScreenHeight;
         private double fullwidth = SystemParameters.FullPrimaryScreenWidth;
+
+        public static TextBlock textCurrentPk = new();
+        public static System.Windows.Controls.ProgressBar mainProgressBar = new();
+        public static Grid mainResultsGrid = new();
+        public static Grid progressGrid = new();
+        
+        //public static DispatcherObject dispatcherObject = new DispatcherObject();
+
         public ResultsWindow(CancellationTokenSource cts) 
         {
             this.cts = cts;
@@ -96,6 +93,9 @@ namespace SimsCCManager.SortingUIResults {
             comboBox = this.ComboBoxSearch;
             pageNumberLabel = PageNumber;
             pageTotalLabel = PageTotal;
+
+            //dispatcherObject.Dispatcher = this.Dispatcher; 
+
             currentPage = pageNum + 1;            
             numPackages = GlobalVariables.DatabaseConnection.ExecuteScalar<int>("select count(PackageName) from Packages");
             pages = (int)Math.Ceiling((double)numPackages / (double)itemsPerPage);
@@ -123,6 +123,8 @@ namespace SimsCCManager.SortingUIResults {
                 "Matching Meshes"
             };
             this.ComboBoxSearch.ItemsSource = comboboxsearch;
+
+            
             
             DataContext = new PackagesViewModel();
             
@@ -163,7 +165,7 @@ namespace SimsCCManager.SortingUIResults {
         public void CustomizeSortingRules_Click(object sender, EventArgs e){
             SortingOptionsWindow sow = new();
             filesSort.InitializeSortingRules();
-            Dispatcher.Invoke(new Action(() => sow.Show()));
+            Dispatcher.CurrentDispatcher.Invoke(new Action(() => sow.Show()));
         }
 
         public void Maximize(){
@@ -325,8 +327,33 @@ namespace SimsCCManager.SortingUIResults {
     public class PackagesViewModel : INotifyPropertyChanged{
         private ICollectionView _packagesView;
         private ICollectionView _tagsView;
-        public event PropertyChangedEventHandler PropertyChanged;
+        
         private PackagesViewModel _selectedFile;
+        private int IsProgressBarVisible = 0;
+        private int IsMainGridVisible = 2;
+        // 0 = hidden, 1 = collapsed, 2 == visible
+        
+        public int ProgressBarVisibility{
+            get { return IsProgressBarVisible; }
+            private set
+            {
+                IsProgressBarVisible = value;
+                OnPropertyChanged("ProgressBarVisibility");
+            }
+        }
+        public int MainGridVisibility{
+            get { return IsMainGridVisible; }
+            private set
+            {
+                IsMainGridVisible = value;
+                OnPropertyChanged("MainGridVisibility");
+            }
+        }
+        
+
+        
+        
+        
 
         public ICollectionView Packages
         {
@@ -975,12 +1002,206 @@ namespace SimsCCManager.SortingUIResults {
         {  
             get { return new DelegateCommand(this.StartDetailedSort); }  
         } 
-        
- 
+
+        private void ShowProgressBar(){
+            Dispatcher.CurrentDispatcher.Invoke(new Action(() => {
+                ResultsWindow.mainResultsGrid.Visibility = Visibility.Collapsed;
+                ResultsWindow.progressGrid.Visibility = Visibility.Visible; 
+            }));
+        }
+        private void HideProgressBar(){
+            Dispatcher.CurrentDispatcher.Invoke(new Action(() => {
+                ResultsWindow.mainResultsGrid.Visibility = Visibility.Visible;
+                ResultsWindow.progressGrid.Visibility = Visibility.Collapsed;
+            }));
+        }
+
+        public LoggingGlobals log = new();
+        public bool runprogress = false;
+        int maxi = 0;
+        int batchSize = 0;
+        int databaseBatchSize = 0;
+        FilesSort filesSort = new();
+
         private void StartDetailedSort()  
         {   
-            
+            Console.WriteLine("Main Grid Visibility: {0}", MainGridVisibility);
+            MainGridVisibility = 1;
+            Console.WriteLine("Main Grid Visibility: {0}", MainGridVisibility);
+            Console.WriteLine("Progress Grid Visibility: {0}", ProgressBarVisibility);
+            ProgressBarVisibility = 2;
+            Console.WriteLine("Progress Grid Visibility: {0}", ProgressBarVisibility);
         }
+
+        private void SortDetailed(){
+             
+            
+
+            List<AllFiles> allfiles = new();
+            List<AllFiles> notpack = new();
+
+            Task getinfo = Task.Run(() => {                
+                allfiles = GlobalVariables.DatabaseConnection.GetAllWithChildren<AllFiles>();
+                notpack = allfiles.Where(f => f.Type != "package").ToList();
+            });
+            getinfo.Wait();
+            
+            Task sortfirstsection = Task.Run(() => {
+                new Thread(() => filesSort.MoveFile(notpack)){IsBackground = true}.Start();
+            });
+            sortfirstsection.Wait();
+
+            List<SimsPackage> allpackages = new();
+
+            Task sorttherest = Task.Run(() => {
+
+                allpackages = GlobalVariables.DatabaseConnection.GetAllWithChildren<SimsPackage>();
+                
+                GlobalVariables.SortingCount = allpackages.Count;
+                maxi = GlobalVariables.SortingCount;
+            });
+            sorttherest.Wait();
+
+            Task doMath1 = Task.Run(async () => {
+                if (allpackages.Count >= 10000){
+                    batchSize = 1000;
+                    databaseBatchSize = 1000;
+                } else if (allpackages.Count >= 1000){
+                    batchSize = 500;
+                    databaseBatchSize = 500;
+                } else {
+                    batchSize = allpackages.Count;
+                    databaseBatchSize = allpackages.Count;
+                }
+            });
+            doMath1.Wait();
+
+            int packageBatchesLow = 0;
+            int packageBatchesHigh = 0;
+            int filesReadNoOverflow = 0;
+            int packageOverflow = 0;
+            
+            Task doMath2 = Task.Run(async () => {
+                double packageBatchesMath = (double)allpackages.Count / batchSize;
+            
+                packageBatchesLow = (int)packageBatchesMath;
+                packageBatchesHigh = (int)Math.Ceiling(packageBatchesMath);
+                filesReadNoOverflow = packageBatchesLow * batchSize;
+                packageOverflow = allpackages.Count - filesReadNoOverflow;
+                log.MakeLog(string.Format("There will be {0} batches of packages.", packageBatchesHigh), true);
+                log.MakeLog(string.Format("The final batch will contain {0} files.", packageOverflow), true);
+                log.MakeLog(string.Format("Making batches list."), true);
+            });
+            doMath2.Wait();
+
+            var PackageBatches = new List<List<SimsPackage>>();
+                    
+            for (int i = 0; i < packageBatchesHigh; i++)
+            {                
+                PackageBatches.Add(allpackages.OrderBy(o=> o.PackageName).Skip(i * batchSize).Take(batchSize).ToList());
+            }
+            ParallelOptions parallelOptions = new ParallelOptions();
+            parallelOptions.MaxDegreeOfParallelism = 1000;
+
+            int batchnum = -1;
+            int totalitems = -1;
+            runprogress = true;
+            new Thread(() => RunUpdateProgressBar()) {IsBackground = true}.Start();            
+            foreach (var batch in PackageBatches){
+                batchnum++;
+                Task reader = Task.Run(() => {
+                    int itemnum = -1;
+                    Parallel.ForEach(batch, parallelOptions, p => {
+                        itemnum++;
+                        totalitems++;
+                        log.MakeLog(string.Format("Processing item {0} of batch {1}. Total items processed: {2}/{3}.", itemnum, batchnum, totalitems, allpackages.Count), true);
+                        filesSort.SortPackage(p);
+                    });
+                });
+                reader.Wait();
+                List<SimsPackage> list1 = new();
+                List<SimsPackage> list2 = new();
+                List<AllFiles> list3 = new();
+                List<AllFiles> list4 = new();
+                new Thread(() => UpdateProgressBar("processed packages", "Saving")){IsBackground = true}.Start();
+                Task UpdateDatabase = Task.Run(() => {
+                    log.MakeLog(string.Format("Getting items produced by batch {0}.", batchnum), true);
+                    list1 = GlobalVariables.AddPackages.ToList();                    
+                    GlobalVariables.AddPackages.Clear();
+                    log.MakeLog(string.Format("Batch {0}: AddPackages cleared.", batchnum), true);
+                    list2 = GlobalVariables.RemoveSimsPackage.ToList();
+                    GlobalVariables.RemoveSimsPackage.Clear();
+                    log.MakeLog(string.Format("Batch {0}: RemovePackages cleared.", batchnum), true);
+
+                    list3 = GlobalVariables.AddAllfiles.ToList();
+                    GlobalVariables.AddAllfiles.Clear();
+                    log.MakeLog(string.Format("Batch {0}: AddAllfiles cleared.", batchnum), true);
+                    list4 = GlobalVariables.RemoveAllfiles.ToList();                    
+                    GlobalVariables.RemoveAllfiles.Clear();
+                    log.MakeLog(string.Format("Batch {0}: RemoveAllfiles cleared.", batchnum), true);
+                    
+                    log.MakeLog(string.Format("Batch {0}: Finished getting items.", batchnum), true);
+                });
+                UpdateDatabase.Wait();
+                log.MakeLog(string.Format("Sending {0} items off for processing.", batchnum), true);
+            
+                UpdateDatabases(list1, list2, list3, list4, batchnum);
+                list1 = new();
+                list2 = new();                  
+            }
+
+            RefreshResults();
+            Task hpb = Task.Run(() => HideProgressBar());
+        }
+
+        private async Task UpdateDatabases(List<SimsPackage> list1, List<SimsPackage> list2, List<AllFiles> list3, List<AllFiles> list4, int batchnum){
+            Task task = Task.Run(() => {            
+                GlobalVariables.DatabaseConnection.InsertAllWithChildren(list1.ApostropheFix(), true);
+                log.MakeLog(string.Format("Batch {0}: {1} Items in AddPackages added to Database.", batchnum, list1.Count), true);
+                
+                GlobalVariables.DatabaseConnection.DeleteAll(list2.ApostropheFix(), true);
+                log.MakeLog(string.Format("Batch {0}: {1} Items in RemovePackages added to Database.", batchnum, list2.Count), true);
+                            
+                GlobalVariables.DatabaseConnection.InsertAllWithChildren(list3.ApostropheFix(), true);
+                log.MakeLog(string.Format("Batch {0}: {1} Items in AddPackages added to Database.", batchnum, list1.Count), true);
+                
+                GlobalVariables.DatabaseConnection.DeleteAll(list4.ApostropheFix(), true);
+                log.MakeLog(string.Format("Batch {0}: {1} Items in RemovePackages added to Database.", batchnum, list2.Count), true);
+            });
+            task.Wait();
+        }
+
+        public void UpdateProgressBar(string name, string verb){
+            Dispatcher.CurrentDispatcher.Invoke(new Action(() => {
+                ResultsWindow.textCurrentPk.Text = string.Format("{0}/{1} - {2} {3}", GlobalVariables.SortingSorted, maxi, verb, name);
+                ResultsWindow.mainProgressBar.Value++;
+            }));
+        }
+
+        private void RunUpdateProgressBar(){  
+            int interval = 5*1000;
+            DateTime dueTime = DateTime.Now.AddMilliseconds(interval);            
+            Dispatcher.CurrentDispatcher.Invoke(new Action(() => ResultsWindow.textCurrentPk.Text = string.Format("Preparing to read {0} packages.", maxi)));
+            while (runprogress == true)
+            {
+                if(DateTime.Now >= dueTime){
+                    if (GlobalVariables.SortingSorted >= 0 && (!String.IsNullOrWhiteSpace(GlobalVariables.currentpackage))){
+                        new Thread(() => AutoUpdateProgressBar()) {IsBackground = true}.Start();
+                    }
+                    dueTime = DateTime.Now.AddMilliseconds(interval);
+                } else {
+                    Thread.Sleep(1);
+                }
+            }
+        }
+
+        public void AutoUpdateProgressBar(){
+            Dispatcher.CurrentDispatcher.Invoke(new Action(() => {
+                ResultsWindow.textCurrentPk.Text = string.Format("{0}/{1} - {2}", GlobalVariables.SortingSorted, maxi, GlobalVariables.currentpackage);
+                ResultsWindow.mainProgressBar.Value = GlobalVariables.SortingSorted;
+            }));
+        }
+        
 
         public ICommand OrphanHunt  
         {  
@@ -1025,7 +1246,14 @@ namespace SimsCCManager.SortingUIResults {
 
 
 
+        public ICommand FindThumbnails  
+        {  
+            get { return new DelegateCommand(this.FindThumbnailsSearch); }  
+        }  
+        private void FindThumbnailsSearch()  
+        {
 
+        } 
 
         public ICommand RenameFile  
         {  
@@ -1262,16 +1490,14 @@ namespace SimsCCManager.SortingUIResults {
                 
             }
         }  
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string propertyName)  
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        } 
   
-        protected virtual void OnPropertyChanged(string propertyName)  
-        {  
-            PropertyChangedEventHandler handler = this.PropertyChanged;  
-            if (handler != null)  
-            {  
-                var e = new PropertyChangedEventArgs(propertyName);  
-                handler(this, e);  
-            }  
-        }      
+             
         
     }
 
@@ -1325,6 +1551,28 @@ namespace SimsCCManager.SortingUIResults {
         }
         public static IQueryable<T> Page<T>(this IQueryable<T> en, int pageSize, int page) {
             return en.Skip(page * pageSize).Take(pageSize);
+        }
+    }
+
+    public class IntToVisibilityValueConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            int intValue = (int)value;
+            if (intValue == 0) {
+                return Visibility.Hidden;
+            } else if (intValue == 1){
+                return Visibility.Collapsed;
+            } else if (intValue == 2){
+                return Visibility.Visible;
+            } else {
+                return Visibility.Hidden;
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 

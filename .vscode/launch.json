@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/SimsCCManager.App/bin/Debug/net6.0-windows/SimsCCManager.App.dll",
+            "program": "${workspaceFolder}/src/SimsCCManager/bin/Debug/net6.0-windows/SimsCCManager.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/SimsCCManager.App",
+            "cwd": "${workspaceFolder}/src/SimsCCManager",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false
