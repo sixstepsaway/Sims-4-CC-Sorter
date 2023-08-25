@@ -289,7 +289,10 @@
                             
                             <MenuItem Header="Scan Mod" Command="{Binding ScanFile}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" Visibility="{Binding ScanVis}"/>
                             
-                            <MenuItem Header="Root" Command="{Binding MakeRoot}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" DataContext="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" IsCheckable="True" IsChecked="{Binding Path=Root, RelativeSource={RelativeSource Self}}">                             
+                            <MenuItem Header="Root" Command="{Binding MakeRoot}" CommandParameter="{Binding DataContext}" DataContext="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}">
+                                <MenuItem.Icon>
+                                    <CheckBox IsChecked="{Binding Root}"/>
+                                </MenuItem.Icon>                             
                             </MenuItem>
 
                             <MenuItem Command="{Binding MarkOOD}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}"/>                           
