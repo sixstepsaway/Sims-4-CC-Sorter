@@ -78,7 +78,6 @@
             </Style.Triggers>
         </Style>
 
-
         <Style x:Key="ModListViewStyle" TargetType="ListView">
           <!--<Style.Triggers>
               <Trigger Property="IsMouseOver" Value="true">
@@ -102,32 +101,6 @@
               </Trigger>-->
           </Style.Triggers>
         </Style>
-        <DataTemplate x:Key="Alerts">
-            <StackPanel Orientation="Horizontal">
-                <Image Visibility="{Binding OutOfDateIcon, 
-              RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Source="{StaticResource AlertOutOfDate}" Width="10" Height="10" ToolTip="Out of Date"/>
-                <Image Visibility="{Binding BrokenIcon, 
-              RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Source="{StaticResource AlertBroken}" Width="10" Height="10" ToolTip="Broken"/>
-                <Image Visibility="{Binding ConflictsIcon, 
-              RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Source="{StaticResource AlertConflicts}" Width="10" Height="10" ToolTip="Has Conflicts"/>
-                <Image Visibility="{Binding WrongGameIcon, 
-              RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Source="{StaticResource AlertWrongGame}" Width="10" Height="10" ToolTip="Wrong Game"/>
-                <Image Visibility="{Binding OverrideIcon, 
-              RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Source="{StaticResource AlertOverride}" Width="10" Height="10" ToolTip="Override"/>
-                <Image Visibility="{Binding OrphanIcon, 
-              RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Source="{StaticResource AlertOrphan}" Width="10" Height="10" ToolTip="Orphan"/>
-                <Image Visibility="{Binding FaveIcon, 
-              RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Source="{StaticResource AlertFave}" Width="10" Height="10" ToolTip="Favorite"/>
-                <Image Visibility="{Binding RootIcon, 
-              RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Source="{StaticResource AlertRoot}" Width="10" Height="10" ToolTip="Root Mod"/>
-            </StackPanel>
-        </DataTemplate>
-        <DataTemplate x:Key="FirstCell">
-            <StackPanel Orientation="Horizontal">
-              <CheckBox IsChecked="{Binding Path=IsSelected, Mode=TwoWay, 
-                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/>
-            </StackPanel>
-        </DataTemplate> 
 
     </Window.Resources>
     <Grid x:Name="MainGrid" Visibility="{Binding ShowMainGrid}">    
@@ -215,59 +188,6 @@
                                 <!--<DataTrigger Binding="{Binding Thumbnail}" Value="{x:Null}">
                                     <Setter Property="Height" Value="25" />
                                 </DataTrigger>-->
-                                <DataTrigger Binding="{Binding OutOfDate}" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource Brush40}" />
-                                    <Setter Property="Foreground" Value="{StaticResource Brush36}" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Conflicts}" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource Brush67}" />
-                                    <Setter Property="Foreground" Value="{StaticResource Brush62}" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Orphan}" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource Brush85}" />
-                                    <Setter Property="Foreground" Value="{StaticResource Brush83}" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Root}" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource Brush35}" />
-                                    <Setter Property="Foreground" Value="{StaticResource Brush29}" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding New}" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource Brush60}" />
-                                    <Setter Property="Foreground" Value="{StaticResource Brush88}" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="GFileType.Sims2Pack">                                    
-                                    <Setter Property="ContextMenu">
-                                        <Setter.Value>
-                                            <ContextMenu>
-                                                <MenuItem Header="Unpack to Package" Command="{Binding UnpackS2Pack}" />
-                                            </ContextMenu>
-                                        </Setter.Value>
-                                    </Setter>        
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="GFileType.Sims3Pack">                                    
-                                    <Setter Property="ContextMenu">
-                                        <Setter.Value>
-                                            <ContextMenu>
-                                                <MenuItem Header="Unpack to Package" Command="{Binding UnpackS3Pack}"/>
-                                            </ContextMenu>
-                                        </Setter.Value>
-                                    </Setter>        
-                                </DataTrigger>                                
-                                <DataTrigger Binding="{Binding Type}" Value="GFileType.Compressed">                                    
-                                    <Setter Property="ContextMenu">
-                                        <Setter.Value>
-                                            <ContextMenu>
-                                                <MenuItem Header="Unzip File" Command="{Binding Unzip}"/>
-                                            </ContextMenu>
-                                        </Setter.Value>
-                                    </Setter>        
-                                </DataTrigger>
-                                <Trigger Property="ItemsControl.AlternationIndex"  Value="0">
-                                    <Setter Property="Background" Value="LightBlue" />
-                                </Trigger>
-                                <Trigger Property="ItemsControl.AlternationIndex"  Value="1">
-                                    <Setter Property="Background" Value="LightGray" />
-                                </Trigger> 
                             </Style.Triggers> 
                             <Style.Setters>
                                 <Setter Property="Background" Value="{Binding Category.Color}"/>
@@ -289,8 +209,49 @@
                                     <Setter TargetName="IMGAlertRoot" Property="Visibility" Value="Visible"/>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding Root}" Value="False">
-                                    <Setter TargetName="IMGAlertRoot" Property="Visibility" Value="Collapsed"/>
-                                    <Setter Property="Width" Value="0"/>
+                                    <Setter TargetName="IMGAlertRoot" Property="Visibility" Value="Hidden"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding OutOfDate}" Value="True">
+                                    <Setter TargetName="IMGAlertOutOfDate" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding OutOfDate}" Value="False">
+                                    <Setter TargetName="IMGAlertOutOfDate" Property="Visibility" Value="Hidden"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Broken}" Value="True">
+                                    <Setter TargetName="IMGAlertBroken" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Broken}" Value="False">
+                                    <Setter TargetName="IMGAlertBroken" Property="Visibility" Value="Hidden"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Conflicts}" Value="True">
+                                    <Setter TargetName="IMGAlertConflicts" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Conflicts}" Value="False">
+                                    <Setter TargetName="IMGAlertConflicts" Property="Visibility" Value="Hidden"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding WrongGame}" Value="True">
+                                    <Setter TargetName="IMGAlertWrongGame" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding WrongGame}" Value="False">
+                                    <Setter TargetName="IMGAlertWrongGame" Property="Visibility" Value="Hidden"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Override}" Value="True">
+                                    <Setter TargetName="IMGAlertOverride" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Override}" Value="False">
+                                    <Setter TargetName="IMGAlertOverride" Property="Visibility" Value="Hidden"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Orphan}" Value="True">
+                                    <Setter TargetName="IMGAlertOrphan" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Orphan}" Value="False">
+                                    <Setter TargetName="IMGAlertOrphan" Property="Visibility" Value="Hidden"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Fave}" Value="True">
+                                    <Setter TargetName="IMGAlertFave" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Fave}" Value="False">
+                                    <Setter TargetName="IMGAlertFave" Property="Visibility" Value="Hidden"/>
                                 </DataTrigger>
                             </DataTemplate.Triggers>
                         </DataTemplate>
@@ -328,17 +289,7 @@
                             
                             <MenuItem Header="Scan Mod" Command="{Binding ScanFile}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" Visibility="{Binding ScanVis}"/>
                             
-                            <MenuItem Header="Root" Command="{Binding MakeRoot}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}">
-                                <MenuItem.ItemContainerStyle> 
-                                    <Style TargetType="MenuItem">
-                                        <Setter Property="MenuItem.IsCheckable" Value="True"/>
-                                        <Style.Triggers> 
-                                            <DataTrigger Binding="{Binding}" Value="True">
-                                                <Setter Property="MenuItem.IsChecked" Value="True"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </MenuItem.ItemContainerStyle>                                
+                            <MenuItem Header="Root" Command="{Binding MakeRoot}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" DataContext="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" IsCheckable="True" IsChecked="{Binding Path=Root, RelativeSource={RelativeSource Self}}">                             
                             </MenuItem>
 
                             <MenuItem Command="{Binding MarkOOD}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}"/>                           

@@ -2509,6 +2509,8 @@ namespace SimsCCManager.Manager
         public bool HasScript {get; set;} = false;
         public GFileType Type {get; set;} 
         public bool WrongGame {get; set;} = false;
+        public bool Override {get; set;} = false;
+        public bool Fave {get; set;} = false;
         public bool Broken {get; set;} = false;
         public bool Combined {get; set;} = false;
         private bool _root;
