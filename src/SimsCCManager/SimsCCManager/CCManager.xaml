@@ -333,7 +333,7 @@
                                     <Style TargetType="MenuItem">
                                         <Setter Property="MenuItem.IsCheckable" Value="True"/>
                                         <Style.Triggers> 
-                                            <DataTrigger Binding="{Binding Root}" Value="True">
+                                            <DataTrigger Binding="{Binding}" Value="True">
                                                 <Setter Property="MenuItem.IsChecked" Value="True"/>
                                             </DataTrigger>
                                         </Style.Triggers>
