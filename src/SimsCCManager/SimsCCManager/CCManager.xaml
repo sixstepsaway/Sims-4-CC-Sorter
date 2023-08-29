@@ -13,12 +13,37 @@
     ResizeMode="CanResize"
     WindowStartupLocation="CenterScreen"
     WindowState="Normal"
+    d:DataContext="{DynamicResource ManagerWindowViewModel}"
     Closing="Window_Closing"
     Icon="img\simsccmanagericon.ico"
     Width="1000"
     Height="800"
     MinHeight="600">
     <Window.Resources>
+        <Style TargetType="{x:Type CheckBox}" x:Key="EnabledBoxStyle">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type CheckBox}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image x:Name="checkboxImage" Source="{StaticResource EnabledBoxUncheck}" Width="20"/>
+                            <ContentPresenter/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="checkboxImage" Property="Source" Value="{StaticResource EnabledBoxCheck}"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsChecked" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="checkboxImage" Property="Source" Value="{StaticResource EnabledBoxHover}"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="GameLabels" TargetType="Label">
             <Style.Setters>
                 <Setter Property="FontSize" Value="15"/>
@@ -51,6 +76,27 @@
                 <Setter Property="HorizontalAlignment" Value="Stretch"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
                 <Setter Property="Height" Value="20"/>
+            </Style.Setters>
+        </Style>
+        <Style x:Key="InfoLabels" TargetType="Label">
+            <Style.Setters>
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="FontFamily" Value="Arial"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style.Setters>
+        </Style>
+        <Style x:Key="InfoButtons" TargetType="Button">
+            <Style.Setters>
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="FontFamily" Value="Arial"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="Height" Value="20"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Margin" Value="0, 5, 0, 0"/>                
             </Style.Setters>
         </Style>
 
@@ -131,7 +177,7 @@
                         <Button ToolTip="Add Folder to Instance" Command="{Binding AddFolder}" Template="{StaticResource TopBarButton}" Width="40" Height="40" Tag="{StaticResource AddFolderIcon}" Foreground="{StaticResource Brush13}"/>
                         <Button ToolTip="Refresh Modlist" Command="{Binding RefreshList}" Template="{StaticResource TopBarButton}" Width="40" Height="40" Tag="{StaticResource RefreshIcon}" Foreground="{StaticResource Brush13}"/>
                         <Button ToolTip="Sort into Subfolders" Command="{Binding SortFiles}" Template="{StaticResource TopBarButton}" Width="40" Height="40" Tag="{StaticResource SortIcon}" Foreground="{StaticResource Brush13}"/>
-                        <Button ToolTip="Move to Another Instance" Command="{Binding MigrateInstances}" Template="{StaticResource TopBarButton}" Width="40" Height="40" Tag="{StaticResource MoveBtInstancesIcon}" Foreground="{StaticResource Brush13}"/>
+                        <Button ToolTip="Scan All Mods" Command="{Binding ScanAll}" Template="{StaticResource TopBarButton}" Width="45" Height="45" Tag="{StaticResource ScanAllIcon}" Foreground="{StaticResource Brush13}"/>
                         <Button ToolTip="Manage Categories" Command="{Binding ViewCategories}" Template="{StaticResource TopBarButton}" Width="40" Height="40" Tag="{StaticResource CategoriesIcon}" Foreground="{StaticResource Brush13}"/>
                         <Button ToolTip="Edit Executables" Command="{Binding EditExecutables}" Template="{StaticResource TopBarButton}" Width="40" Height="40" Tag="{StaticResource EditExeIcon}" Foreground="{StaticResource Brush13}"/>
                     </StackPanel>
@@ -176,11 +222,12 @@
                     <Grid.RowDefinitions>
                       <RowDefinition Height="30"/>
                       <RowDefinition/>
+                      <RowDefinition Height="{Binding InfoBoxHeight}"/>
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                         <TextBlock Grid.Row="0" Text="All Mods" Style="{StaticResource ColumnHeaderStyle}"/>
                         <TextBox Text="{Binding SearchAM, UpdateSourceTrigger=PropertyChanged}" Width="200" Height="20" FontSize="16" FontFamily="Arial" Margin="10, 0, 0, 0"/>
-                    </StackPanel>                    
+                    </StackPanel>                 
                     <ListView x:Name="AllMods" Background="{StaticResource Brush58}" Foreground="{StaticResource Brush55}" AlternationCount="2" Grid.Row="1" Validation.ErrorTemplate="{x:Null}" ItemsSource="{Binding InstanceModsCV}" IsSynchronizedWithCurrentItem="True" Style="{StaticResource ModListViewStyle}" SelectionMode="Extended" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True">
                       <ListView.Resources>
                         <Style TargetType="{x:Type ListViewItem}">                              
@@ -191,6 +238,7 @@
                             </Style.Triggers> 
                             <Style.Setters>
                                 <Setter Property="Background" Value="{Binding Category.Color}"/>
+                                <Setter Property="Tag" Value="Binding DataContext, ElementName=Window}"/>
                             </Style.Setters>    
                         </Style>
                         <DataTemplate x:Key="AlertsCell">
@@ -255,76 +303,7 @@
                                 </DataTrigger>
                             </DataTemplate.Triggers>
                         </DataTemplate>
-                      </ListView.Resources>
-                      <ListView.ContextMenu> 
-                        <ContextMenu> 
-                            <MenuItem Header="Add to Category" ItemsSource="{Binding Categories}">
-                                <MenuItem.ItemTemplate>
-                                    <DataTemplate>
-                                        <MenuItem CommandTarget="{Binding}" Command="{Binding AddToCategoryClick}">                                            
-                                            <MenuItem.Icon>
-                                                <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                    <DataTrigger>
-
-                                                    </DataTrigger>
-                                                </CheckBox>
-                                            </MenuItem.Icon>
-                                            <MenuItem.Header>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Rectangle Width="30" Height="20" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0, 0, 10, 0">
-                                                        <Rectangle.Fill>
-                                                            <SolidColorBrush Color="{Binding ColorBrush}" />
-                                                        </Rectangle.Fill>
-                                                    </Rectangle>
-                                                    <TextBlock>
-                                                    <TextBlock.Text><Binding StringFormat="Category: {0}" /></TextBlock.Text>
-                                                    </TextBlock>
-                                                </StackPanel>                        
-                                            </MenuItem.Header>
-                                        </MenuItem>
-                                    </DataTemplate>
-                                </MenuItem.ItemTemplate>                                
-                            </MenuItem>
-                            <MenuItem Header="Edit Details" Command="{Binding EditDetails}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" IsCheckable="True" IsChecked="{Binding Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                            
-                            <MenuItem Header="Scan Mod" Command="{Binding ScanFile}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" Visibility="{Binding ScanVis}"/>
-                            
-                            <MenuItem Header="Root" Command="{Binding MakeRoot}" CommandParameter="{Binding DataContext}" DataContext="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}">
-                                <MenuItem.Icon>
-                                    <CheckBox IsChecked="{Binding Root}"/>
-                                </MenuItem.Icon>                             
-                            </MenuItem>
-
-                            <MenuItem Command="{Binding MarkOOD}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}"/>                           
-                            
-                            <MenuItem Header="Add Creator" Command="{Binding AddCreator}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" IsCheckable="True" IsChecked="{Binding Root, Mode=TwoWay, 
-                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/> 
-                           
-                            <MenuItem Header="Add Source Link" Command="{Binding AddSource}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" IsCheckable="True" IsChecked="{Binding Root, Mode=TwoWay, 
-                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/> 
-                            
-                            <MenuItem Header="Rename from Title" Command="{Binding RenameFile}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" IsCheckable="True" IsChecked="{Binding Root, Mode=TwoWay, 
-                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/> 
-                            
-                            <Separator/>
-                            
-                            <MenuItem Header="Move Mod">
-                                <MenuItem Header="Into Subfolder" Command="{Binding MoveFileToSubfolder}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" IsCheckable="True" IsChecked="{Binding Root, Mode=TwoWay, 
-                                    RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/>
-                                <MenuItem Header="To Another Instance" Command="{Binding MoveFileToInstance}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" IsCheckable="True" IsChecked="{Binding Root, Mode=TwoWay, 
-                                    RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/>
-                            </MenuItem> 
-                            
-                            <MenuItem Header="Delete" Command="{Binding DeleteFile}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" IsCheckable="True" IsChecked="{Binding Root, Mode=TwoWay, 
-                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/>
-                            
-                            <MenuItem Header="Add Note" Command="{Binding AddNote}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" IsCheckable="True" IsChecked="{Binding Root, Mode=TwoWay, 
-                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/>
-                        </ContextMenu> 
-                      </ListView.ContextMenu>
-                      <ListView.InputBindings>
-                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding DoubleClickedCell}" CommandParameter="{Binding Tag, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}"/>
-                      </ListView.InputBindings>                       
+                      </ListView.Resources>                       
                       <ListBox.ItemContainerStyle>
                         <Style TargetType="{x:Type ListViewItem}">
                             <Setter Property="Background" Value="Transparent"/>
@@ -348,17 +327,66 @@
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>                            
-                        </Style>
+                        </Style>                        
                       </ListBox.ItemContainerStyle>
+                      <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="Black" BorderThickness="3" CornerRadius="10" Background="#FFD6D3D3" Margin="5">
+                                <Border x:Name="myBorder" BorderBrush="#FFD6D3D3" BorderThickness="4" CornerRadius="10" Padding="2">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1" >
+                                            <GradientStop Color="#FFA5A5A5" Offset="1"/>
+                                            <GradientStop Color="White"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <StackPanel>
+                                        <Image Source="{Binding Icon}" MaxHeight="32" MaxWidth="32"/>
+                                        <TextBlock x:Name="TxtContent" Text="{Binding Label}"/>
+                                    </StackPanel>
+                                </Border>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Path=Selected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="True">
+                                    <Setter TargetName="myBorder" Property="Background">
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0.5,1" EndPoint="0.5,0">
+                                                <GradientStop Color="#FFA5A5A5" Offset="1"/>
+                                                <GradientStop Color="White" />
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="TxtContent" Property="RenderTransform" >
+                                        <Setter.Value>
+                                            <TranslateTransform Y="2.0" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                      </ListView.ItemTemplate>
+                      <ListView.InputBindings>
+                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding DoubleClickedCell}" CommandParameter="{Binding Tag, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}"/>
+                      </ListView.InputBindings>
                       <ListView.View>
                         <GridView AllowsColumnReorder="True"  >
+                            <GridViewColumn Width="30">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="Selected"></GridViewColumnHeader>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Path=Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Command="{Binding SelectedClick}" CommandParameter="{Binding Path=Selected, Mode=TwoWay, 
+                                            RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
                             <GridViewColumn>
                                 <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="Enabled" Command="{Binding IMHeaderEnabled}"></GridViewColumnHeader>                                  
+                                    <GridViewColumnHeader Tag="Enabled" Command="{Binding IMHeaderEnabled}">Enabled</GridViewColumnHeader>                                  
                                 </GridViewColumn.Header>  
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <CheckBox Margin="5, 0" IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Command="{Binding EnabledClick}" CommandParameter="{Binding Path=Enabled, Mode=TwoWay, 
+                                        <CheckBox Margin="5, 0" Style="{StaticResource EnabledBoxStyle}" IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Command="{Binding EnabledClick}" CommandParameter="{Binding Path=Enabled, Mode=TwoWay, 
                                             RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
@@ -416,7 +444,67 @@
                         </GridView>
                       </ListView.View>
                     </ListView>
+                    
+                    
+                    <Grid Grid.Row="2" Margin="0, 5, 0, 0">
+                        <Border BorderBrush="{StaticResource Brush38}" BorderThickness="2" Background="{StaticResource Brush82}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Vertical" Grid.Column="0" Margin="5, 5, 0, 0">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <Label Content="Category: " Style="{StaticResource InfoLabels}" Margin="0, 0, 5, 0"/>
+                                        <ComboBox Width="150" Height="20" ItemsSource="{Binding Categories}" SelectedItem="{Binding CategoryPick, Mode=TwoWay}" IsSynchronizedWithCurrentItem="True"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Content="Add a Note" Style="{StaticResource InfoButtons}" Width="125"/>
+                                        <Button Content="Update" Style="{StaticResource InfoButtons}" Width="125"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Content="Edit Selected" Style="{StaticResource InfoButtons}" Width="125"/>
+                                        <Button Content="Move Selected" Style="{StaticResource InfoButtons}" Width="125"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Content="Delete Selected" Style="{StaticResource InfoButtons}" Width="125"/>
+                                        <Button Content="Scan Selected" Style="{StaticResource InfoButtons}" Width="125"/>
+                                    </StackPanel>
+                                    <Button Content="Rename Selected from Internal" HorizontalAlignment="Center" Style="{StaticResource InfoButtons}" Width="250"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Vertical" Grid.Column="1" Margin="5, 5, 5, 0" VerticalAlignment="Top">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0, 5, 0, 0">
+                                        <Label Content="Root" Style="{StaticResource InfoLabels}" Margin="0, 0, 5, 0"/>
+                                        <CheckBox Height="20" Width="20" IsThreeState="True" IsChecked="{Binding RootCheckbox}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0, 5, 0, 0">
+                                        <Label Content="Out of Date" Style="{StaticResource InfoLabels}" Margin="0, 0, 5, 0"/>
+                                        <CheckBox Height="20" Width="20" IsThreeState="True" IsChecked="{Binding OODCheckbox}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0, 5, 0, 0">
+                                        <Label Content="Favorite" Style="{StaticResource InfoLabels}" Margin="0, 0, 5, 0"/>
+                                        <CheckBox Height="20" Width="20" IsThreeState="True" IsChecked="{Binding FaveCheckbox}"/>
+                                    </StackPanel>
+                                    
+                                    
+                                    
+                                </StackPanel>
+                            </Grid>                        
+                        </Border>
+                    </Grid>
                   </Grid>
+
+                  
+
+
+
+
+
+
+
+
+
+
                   
                   <!-- Enabled Mods View -->
                     
@@ -597,10 +685,10 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Label Content="Sims CC Manager | Alpha 1.0" FontFamily="fonts/#Accidental Presidency" Foreground="{StaticResource FontBrush}" FontSize="25" HorizontalAlignment="Left" Margin="10, 0, 0, 0"/>
                         <Button Command="{Binding ReportABug}" Margin="25, 0, 0, 0" Height="20" Width="150" Template="{StaticResource StandardButtonTemplate}" Padding="0">
-                            <Label Content="Report a bug?" Foreground="{StaticResource Brush3}" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            <Label Content="Report a bug?" Foreground="{StaticResource Brush3}" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="0"/>
                         </Button>
                         <Button Command="{Binding DevTest}" Margin="-65, 0, 0, 0" Height="20" Width="150" Template="{StaticResource StandardButtonTemplate}" Visibility="{Binding DebugModeVis}" Padding="0">
-                            <Label Content="Dev Test Button" Foreground="{StaticResource Brush3}" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                            <Label Content="Dev Test Button" Foreground="{StaticResource Brush3}" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="0"/>
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -870,7 +958,7 @@
                             <Button Content="Cancel" Command="{Binding CancelProfile}" Padding="0" Width="100" Height="25" FontFamily="Arial" FontSize="15" FontWeight="Bold" Background="{StaticResource ButtonBrush}" Foreground="{StaticResource ButtonTextBrush}" VerticalAlignment="Center" Margin="0, 5, 0, 0"/>
                         </StackPanel>                        
                     </StackPanel>
-                </Grid>             
+                </Grid>           
             </Grid>
         </Border>
     </Grid>

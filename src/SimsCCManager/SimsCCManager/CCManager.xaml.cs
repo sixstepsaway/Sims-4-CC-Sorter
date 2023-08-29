@@ -416,6 +416,47 @@ namespace SimsCCManager.Manager
             }
         }
 
+        private int _infoboxheight;
+        public int InfoBoxHeight {
+            get { return _infoboxheight;}
+            set { _infoboxheight = value;
+                RaisePropertyChanged("InfoBoxHeight");
+            }
+        }
+
+        private bool? _rootcheckbox;
+        public bool? RootCheckbox{
+            get { return _rootcheckbox;}
+            set { _rootcheckbox = value;
+                RaisePropertyChanged("RootCheckbox");
+                if (initiallyloaded) RootCheckChanged();
+            }
+        }
+
+        private bool? _oodcheckbox;
+        public bool? OODCheckbox{
+            get { return _oodcheckbox;}
+            set { _oodcheckbox = value;
+                RaisePropertyChanged("OODCheckbox");
+                if (initiallyloaded) OODCheckChanged();
+            }
+        }
+        private bool? _favecheckbox;
+        public bool? FaveCheckbox{
+            get { return _favecheckbox;}
+            set { _favecheckbox = value;
+                RaisePropertyChanged("FaveCheckbox");
+                if (initiallyloaded) FaveCheckChanged();
+            }
+        }
+
+        private CategoryType _categorypick;
+        public CategoryType CategoryPick{
+            get { return _categorypick;}
+            set { _categorypick = value;
+                RaisePropertyChanged("CategoryPick");
+            }
+        }
 
 
 
@@ -473,6 +514,7 @@ namespace SimsCCManager.Manager
         private List<string> enabledmodslist {get; set;}
         private bool initiallyloaded {get; set;}
         InitialProcessing ip = new();
+        private int infoboxopen = 200;
 
 
 
@@ -514,6 +556,7 @@ namespace SimsCCManager.Manager
             NewProfileVis = Visibility.Hidden;
             ProfileScreenVis = Visibility.Hidden;
             CategoryScreenVis = Visibility.Hidden;
+            InfoBoxHeight = 0;
             Location = new System.Windows.Point(SystemParameters.PrimaryScreenWidth / 4, SystemParameters.PrimaryScreenHeight / 4);
             string instance = SettingsFile.LoadSetting("LastInstance");
             if (!File.Exists(Path.Combine(instance, @"data\modlist.ini"))){
@@ -533,6 +576,9 @@ namespace SimsCCManager.Manager
             InstanceModsCV.Filter = new Predicate<object>(o => AMFilter(o as ModInfo));
             EnabledModsCV.Filter = new Predicate<object>(o => EMFilter(o as ModInfo));
             DownloadsCV.Filter = new Predicate<object>(o => DLFilter(o as ModInfo));
+            InstanceModsCV.CurrentChanged += IMSelectionChanged;
+            EnabledModsCV.CurrentChanged += EMSelectionChanged;
+            DownloadsCV.CurrentChanged += DLSelectionChanged;
         }
 
         private bool AMFilter(ModInfo mod)    
@@ -615,15 +661,127 @@ namespace SimsCCManager.Manager
             }           
         }
 
+        private void SelectionClick(){
+            Console.WriteLine("Selection changed via check!");
+            OpenPanel();
+        }
+
         private void IMSelectionChanged(object sender, EventArgs e)
-        {
-            ModInfo mf = InstanceModsCV.CurrentItem as ModInfo;
-            int idx = InstanceMods.IndexOf(mf);
-            if (InstanceMods[idx].Selected == false){
-                InstanceMods[idx].Selected = true;
+        {               
+            ModInfo mod = InstanceModsCV.CurrentItem as ModInfo;  
+            int x = InstanceMods.IndexOf(mod);
+            ModInfo m = InstanceMods[x];
+            if (m.Selected == true){
+                InstanceMods[x].Selected = false;
             } else {
-                InstanceMods[idx].Selected = false;
+                InstanceMods[x].Selected = true;
             }
+            Console.WriteLine("Selection changed via click!");
+            OpenPanel();
+        }
+
+        private void OpenPanel(){
+            int selectednum = InstanceMods.Where(x => x.Selected).Count();
+            Console.WriteLine("Number of selected items: {0}", selectednum);
+            if (selectednum == 0) {
+                InfoBoxHeight = 0;
+            } else if (selectednum == 1){
+                ModInfo selectedmod = InstanceMods.Where(x => x.Selected).First();
+                if (selectedmod.Root == true){
+                    RootCheckbox = true;
+                } else {
+                    RootCheckbox = false;
+                }
+                if (selectedmod.OutOfDate == true){
+                    OODCheckbox = true;
+                } else {
+                    OODCheckbox = false;
+                }
+                if (selectedmod.Fave == true){
+                    FaveCheckbox = true;
+                } else {
+                    FaveCheckbox = false;
+                }
+                CategoryPick = Categories.Where(x => x == selectedmod.Category).First();
+                InfoBoxHeight = infoboxopen;
+            } else if (selectednum > 1){
+                List<ModInfo> selected = InstanceMods.Where(x => x.Selected).ToList();
+                CategoryType acat = selected[0].Category;
+                ModInfo item = selected[0];
+                if (selected.Where(x => x.Root == item.Root).Count() != selectednum){
+                    RootCheckbox = null;
+                } else {
+                    RootCheckbox = selected[0].Root;
+                }
+                if (selected.Where(x => x.OutOfDate == item.OutOfDate).Count() != selectednum){
+                    OODCheckbox = null;
+                } else {
+                    OODCheckbox = selected[0].OutOfDate;
+                }
+                if (selected.Where(x => x.Fave == item.Fave).Count() != selectednum){
+                    FaveCheckbox = null;
+                } else {
+                    FaveCheckbox = selected[0].Fave;
+                }                
+                if (selected.Where(x => x.Category == acat).Count() != selectednum){
+                    CategoryPick = new CategoryType();
+                } else {
+                    CategoryPick = acat;
+                }
+                InfoBoxHeight = infoboxopen;                
+            }
+        }
+
+        private void RootCheckChanged(){
+            int selectednum = InstanceMods.Where(x => x.Selected).Count();
+            if (selectednum != 0){
+                bool change = false;
+                List<ModInfo> selected = InstanceMods.Where(x => x.Selected).ToList();
+                if (RootCheckbox == true){
+                    change = true;
+                } else if (RootCheckbox == false){
+                    change = false;
+                }
+                foreach (ModInfo info in selected){
+                    int idx = InstanceMods.IndexOf(info);
+                    InstanceMods[idx].Root = change;
+                }
+            }
+            RefreshModlist();
+        }
+        private void OODCheckChanged(){
+            int selectednum = InstanceMods.Where(x => x.Selected).Count();
+            if (selectednum != 0){
+                bool change = false;
+                List<ModInfo> selected = InstanceMods.Where(x => x.Selected).ToList();
+                if (OODCheckbox == true){
+                    change = true;
+                } else if (OODCheckbox == false){
+                    change = false;
+                }
+                foreach (ModInfo info in selected){
+                    int idx = InstanceMods.IndexOf(info);
+                    InstanceMods[idx].OutOfDate = change;
+                }
+            }
+            RefreshModlist();
+        }
+        private void FaveCheckChanged(){
+            int selectednum = InstanceMods.Where(x => x.Selected).Count();
+            if (selectednum != 0){
+                bool change = false;
+                List<ModInfo> selected = InstanceMods.Where(x => x.Selected).ToList();
+                if (FaveCheckbox == true){
+                    change = true;
+                } else if (FaveCheckbox == false){
+                    change = false;
+                }
+                foreach (ModInfo info in selected){
+                    int idx = InstanceMods.IndexOf(info);
+                    InstanceMods[idx].Fave = change;
+                }
+            }
+            RefreshModlist();
         }
 
         private void EMSelectionChanged(object sender, EventArgs e)
@@ -696,6 +854,8 @@ namespace SimsCCManager.Manager
         void OnModListChange(object sender, PropertyChangedEventArgs e){
             if (e.PropertyName == "Enabled"){
                 EnabledModsChanged();
+            } else if (e.PropertyName == "Selected"){
+                RaisePropertyChanged("InstanceMods");
             } else if (e.PropertyName == "Root"){
                 RootChanged();
                 RaisePropertyChanged("InstanceMods");
@@ -1775,6 +1935,10 @@ namespace SimsCCManager.Manager
         {
             get { return new DelegateCommand(this.RefreshModlist); }
         }
+        public ICommand SelectedClick
+        {
+            get { return new DelegateCommand(this.RefreshModlist); }
+        }
         public ICommand SortFiles
         {
             get { return new DelegateCommand(this.SortFilesClick); }
@@ -2547,7 +2711,15 @@ namespace SimsCCManager.Manager
                     new PropertyChangedEventArgs(nameof(Enabled)));
             }
         }
-        public bool Selected {get; set;}
+        private bool _selected;
+        public bool Selected {
+            get { return _selected; }
+            set {
+                _selected = value;
+                PropertyChanged?.Invoke(this, 
+                    new PropertyChangedEventArgs(nameof(Selected)));
+            }
+        }
         private bool _editingname;
         public bool EditingName {
             get { return _editingname; }

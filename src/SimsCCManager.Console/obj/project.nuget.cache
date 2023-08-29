@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "IOv4UezFjuwFFsZQTDbLjmFndB12Ft1zo/HXDApLEiNWqDlMG9+pfedbk3jJCYQ2/Z8lb1UuPzJLU+LAAdZjpg==",
+  "dgSpecHash": "iVvrawIuTYqQgiF80MPZlFgWqqBA+hTBuYuG4TUenDktRnGbrq8shsPDZT1txDMvmTT7HNhXyqKoD1orQn9mYA==",
   "success": true,
   "projectFilePath": "i:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager.Console\\SimsCCManager.Terminal.csproj",
   "expectedPackageFiles": [
@@ -100,7 +100,11 @@
     "C:\\Users\\conta\\.nuget\\packages\\system.threading.tasks.extensions\\4.3.0\\system.threading.tasks.extensions.4.3.0.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\system.threading.timer\\4.3.0\\system.threading.timer.4.3.0.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\system.xml.readerwriter\\4.3.0\\system.xml.readerwriter.4.3.0.nupkg.sha512",
-    "C:\\Users\\conta\\.nuget\\packages\\system.xml.xdocument\\4.3.0\\system.xml.xdocument.4.3.0.nupkg.sha512"
+    "C:\\Users\\conta\\.nuget\\packages\\system.xml.xdocument\\4.3.0\\system.xml.xdocument.4.3.0.nupkg.sha512",
+    "C:\\Users\\conta\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.21\\microsoft.netcore.app.ref.6.0.21.nupkg.sha512",
+    "C:\\Users\\conta\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.21\\microsoft.windowsdesktop.app.ref.6.0.21.nupkg.sha512",
+    "C:\\Users\\conta\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\6.0.21\\microsoft.aspnetcore.app.ref.6.0.21.nupkg.sha512",
+    "C:\\Users\\conta\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\6.0.21\\microsoft.netcore.app.host.win-x64.6.0.21.nupkg.sha512"
   ],
   "logs": [
     {

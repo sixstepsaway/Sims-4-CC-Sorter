@@ -27,21 +27,22 @@
     <ImageSource x:Key="Sims3Icon">../../img/s3.png</ImageSource>
     <ImageSource x:Key="Sims2Icon">../../img/s2.png</ImageSource>
 
-    <ImageSource x:Key="AddIcon">../../img/icons/materialicons/twotone_add_circle_black_48dp.png</ImageSource>
-    <ImageSource x:Key="AddFolderIcon">../../img/icons/materialicons/twotone_add_box_black_48dp.png</ImageSource>
-    <ImageSource x:Key="RefreshIcon">../../img/icons/materialicons/twotone_autorenew_black_48dp.png</ImageSource>
+    <ImageSource x:Key="AddIcon">../../img/icons/materialicons/twotone_add_box_black_48dp.png</ImageSource>
+    <ImageSource x:Key="AddFolderIcon">../../img/icons/materialicons/twotone_library_add_black_48dp.png</ImageSource>
+    <ImageSource x:Key="RefreshIcon">../../img/icons/materialicons/twotone_archive_black_48dp.png</ImageSource>
     <ImageSource x:Key="MoveBtInstancesIcon">../../img/icons/materialicons/twotone_redo_black_48dp.png</ImageSource>
     <ImageSource x:Key="ProfilesIcon">../../img/icons/materialicons/twotone_portrait_black_48dp.png</ImageSource>
     <ImageSource x:Key="SettingsIcon">../../img/icons/materialicons/twotone_settings_black_48dp.png</ImageSource>
-    <ImageSource x:Key="SwapIcon">../../img/icons/materialicons/twotone_sync_alt_black_48dp.png</ImageSource>
+    <ImageSource x:Key="SwapIcon">../../img/icons/materialicons/twotone_next_plan_black_48dp.png</ImageSource>
     <ImageSource x:Key="ListIcon">../../img/icons/materialicons/twotone_toc_black_48dp.png</ImageSource>
-    <ImageSource x:Key="SortIcon">../../img/icons/materialicons/twotone_sort_black_48dp.png</ImageSource>
+    <ImageSource x:Key="SortIcon">../../img/icons/materialicons/twotone_assignment_black_48dp.png</ImageSource>
     <ImageSource x:Key="HelpIcon">../../img/icons/materialicons/twotone_contact_support_black_48dp.png</ImageSource>
     <ImageSource x:Key="ErrorsIcon">../../img/icons/materialicons/twotone_error_black_48dp.png</ImageSource>
     <ImageSource x:Key="PlayIcon">../../img/icons/materialicons/twotone_play_arrow_black_48dp.png</ImageSource>
     <ImageSource x:Key="ChangeExeIcon">../../img/icons/materialicons/twotone_repeat_black_48dp.png</ImageSource>
     <ImageSource x:Key="EditExeIcon">../../img/icons/materialicons/twotone_settings_applications_black_48dp.png</ImageSource>
     <ImageSource x:Key="CategoriesIcon">../../img/icons/materialicons/twotone_article_black_48dp.png</ImageSource>
+    <ImageSource x:Key="ScanAllIcon">../../img/icons/materialicons/twotone_pageview_black_48dp.png</ImageSource>
 
     <ImageSource x:Key="AlertOutOfDate">../../img/icons/materialicons/twotone_access_alarm_black_48dp.png</ImageSource>
     <ImageSource x:Key="AlertBroken">../../img/icons/materialicons/twotone_cancel_black_48dp.png</ImageSource>
@@ -51,5 +52,9 @@
     <ImageSource x:Key="AlertOrphan">../../img/icons/materialicons/twotone_extension_off_black_48dp.png</ImageSource>
     <ImageSource x:Key="AlertFave">../../img/icons/materialicons/twotone_favorite_black_48dp.png</ImageSource>
     <ImageSource x:Key="AlertRoot">../../img/icons/materialicons/twotone_create_new_folder_black_48dp.png</ImageSource>
+    
+    <ImageSource x:Key="EnabledBoxUncheck">../../img/icons/materialicons/twotone_brightness_1_black_48dp.png</ImageSource>
+    <ImageSource x:Key="EnabledBoxCheck">../../img/icons/materialicons/twotone_check_circle_outline_black_48dp.png</ImageSource>
+    <ImageSource x:Key="EnabledBoxHover">../../img/icons/materialicons/twotone_check_circle_black_48dp.png</ImageSource>
     
 </ResourceDictionary> 
