@@ -2,13 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Controls.Ribbon;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace SimsCCManager.UI.Utilities
 {
@@ -95,5 +98,90 @@ namespace SimsCCManager.UI.Utilities
         #endregion
     }
 
+    public class MTObservableCollection<T> : ObservableCollection<T>
+    {
+        public override event NotifyCollectionChangedEventHandler CollectionChanged;
+        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            NotifyCollectionChangedEventHandler CollectionChanged = this.CollectionChanged;
+            if (CollectionChanged != null)
+                foreach (NotifyCollectionChangedEventHandler nh in CollectionChanged.GetInvocationList())
+                {
+                    DispatcherObject dispObj = nh.Target as DispatcherObject;
+                    if (dispObj != null)
+                    {
+                        Dispatcher dispatcher = dispObj.Dispatcher;
+                        if (dispatcher != null && !dispatcher.CheckAccess())
+                        {
+                            dispatcher.BeginInvoke(
+                                (Action)(() => nh.Invoke(this,
+                                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset))),
+                                DispatcherPriority.DataBind);
+                            continue;
+                        }
+                    }
+                    nh.Invoke(this, e);
+                }
+        }
+    }
 
+
+}
+
+namespace SimsCCManager.CustomUIElements {
+    public class CustomDataGrid : DataGrid
+    {
+        public CustomDataGrid ()
+        {
+            this.SelectionChanged += CustomDataGrid_SelectionChanged;
+        }
+
+        void CustomDataGrid_SelectionChanged (object sender, SelectionChangedEventArgs e)
+        {
+            this.SelectedItemsList = this.SelectedItems;
+        }
+        #region SelectedItemsList
+
+        public IList SelectedItemsList
+        {
+            get { return (IList)GetValue (SelectedItemsListProperty); }
+            set { SetValue (SelectedItemsListProperty, value); }
+        }
+
+        public static readonly DependencyProperty SelectedItemsListProperty =
+                DependencyProperty.Register ("SelectedItemsList", typeof (IList), typeof (CustomDataGrid), new PropertyMetadata (null));
+
+        #endregion
+    }
+
+    class StringMatchConverter : IMultiValueConverter
+    {
+        public object Convert(object [] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+
+            if(values.Length < 2)
+            {
+                return false;
+            }
+
+            for (int i = 1; i < values.Length; i++)
+            {
+                string one = values[0] as string;
+                string two = values[i] as string;
+                    if (!one.Equals(two))
+                    {
+                        return false;
+                    }
+            }
+
+            return true;
+
+        }
+
+        public object[] ConvertBack(object value, Type[] targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return null;
+        }
+    }
+    
 }

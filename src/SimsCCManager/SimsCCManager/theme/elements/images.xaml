@@ -53,8 +53,14 @@
     <ImageSource x:Key="AlertFave">../../img/icons/materialicons/twotone_favorite_black_48dp.png</ImageSource>
     <ImageSource x:Key="AlertRoot">../../img/icons/materialicons/twotone_create_new_folder_black_48dp.png</ImageSource>
     
-    <ImageSource x:Key="EnabledBoxUncheck">../../img/icons/materialicons/twotone_brightness_1_black_48dp.png</ImageSource>
-    <ImageSource x:Key="EnabledBoxCheck">../../img/icons/materialicons/twotone_check_circle_outline_black_48dp.png</ImageSource>
-    <ImageSource x:Key="EnabledBoxHover">../../img/icons/materialicons/twotone_check_circle_black_48dp.png</ImageSource>
+    <ImageSource x:Key="EnabledBoxUncheck">../../img/icons/materialicons/twotone_radio_button_unchecked_black_48dp.png</ImageSource>
+    <ImageSource x:Key="EnabledBoxCheck">../../img/icons/materialicons/twotone_play_circle_filled_black_48dp.png</ImageSource>
+    <ImageSource x:Key="EnabledBoxHover">../../img/icons/materialicons/twotone_play_circle_outline_black_48dp.png</ImageSource>
+
+    <ImageSource x:Key="SelectedBoxUncheck">../../img/icons/materialicons/twotone_radio_button_unchecked_black_48dp.png</ImageSource>
+    <ImageSource x:Key="SelectedBoxCheck">../../img/icons/materialicons/twotone_check_circle_black_48dp.png</ImageSource>
+    <ImageSource x:Key="SelectedBoxHover">../../img/icons/materialicons/twotone_check_circle_outline_black_48dp.png</ImageSource>
+
+    <ImageSource x:Key="IconGroup">../../img/icons/materialicons/twotone_topic_black_48dp.png</ImageSource>
     
 </ResourceDictionary> 

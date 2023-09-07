@@ -27,6 +27,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms.VisualStyles;
 using System.Reflection.Metadata.Ecma335;
+using System.Windows.Controls;
+using System.Collections;
+using MoreLinq;
 
 namespace SimsCCManager.Manager
 {
@@ -90,8 +93,8 @@ namespace SimsCCManager.Manager
                 RaisePropertyChanged("ActiveExe");}
         }
 
-        private ObservableCollection<ModInfo> _instancemods;
-        public ObservableCollection<ModInfo> InstanceMods {
+        private List<ModInfo> _instancemods;
+        public List<ModInfo> InstanceMods {
             get { return _instancemods; }
             set { _instancemods = value;
                 RaisePropertyChanged("InstanceMods");
@@ -99,8 +102,8 @@ namespace SimsCCManager.Manager
                 log.MakeLog("Property changed: InstanceMods", true);}
         }
 
-        private ObservableCollection<ModInfo> _enabledmods;
-        public ObservableCollection<ModInfo> EnabledMods {
+        private List<ModInfo> _enabledmods;
+        public List<ModInfo> EnabledMods {
             get { return _enabledmods; }
             set { _enabledmods = value;
                 RaisePropertyChanged("EnabledMods");
@@ -109,21 +112,21 @@ namespace SimsCCManager.Manager
                 log.MakeLog("Property changed: EnabledMods", true);}
         }
 
-        private ObservableCollection<NewDownloadInfo> _downloads;
-        public ObservableCollection<NewDownloadInfo> Downloads {
+        private List<NewDownloadInfo> _downloads;
+        public List<NewDownloadInfo> Downloads {
             get { return _downloads; }
             set { _downloads = value;
                 RaisePropertyChanged("Downloads");    
                 log.MakeLog("Property changed: Downloads", true);}
         }
 
-        private ObservableCollection<Executable> _executables;
-        public ObservableCollection<Executable> Executables{
+        private List<Executable> _executables;
+        public List<Executable> Executables{
             get { return _executables; }
             set { _executables = value;
                 RaisePropertyChanged("Executables");
                 log.MakeLog("Property changed: Executables", true);}
-        }        
+        }
 
         private Profile _currentprofile;
         public Profile CurrentProfile {
@@ -271,6 +274,21 @@ namespace SimsCCManager.Manager
             get { return _popupgreyed;}
             set { _popupgreyed = value;
                 RaisePropertyChanged("PopupGreyed");
+            }
+        }
+        private Visibility _progressbargridvis;
+        public Visibility ProgressBarGridVis{
+            get { return _progressbargridvis;}
+            set { _progressbargridvis = value;
+                RaisePropertyChanged("ProgressBarGridVis");
+            }
+        }
+
+        private bool _progindet;
+        public bool ProgIndet{
+            get { return _progindet;}
+            set { _progindet = value;
+            RaisePropertyChanged("ProgIndet");
             }
         }
 
@@ -424,32 +442,6 @@ namespace SimsCCManager.Manager
             }
         }
 
-        private bool? _rootcheckbox;
-        public bool? RootCheckbox{
-            get { return _rootcheckbox;}
-            set { _rootcheckbox = value;
-                RaisePropertyChanged("RootCheckbox");
-                if (initiallyloaded) RootCheckChanged();
-            }
-        }
-
-        private bool? _oodcheckbox;
-        public bool? OODCheckbox{
-            get { return _oodcheckbox;}
-            set { _oodcheckbox = value;
-                RaisePropertyChanged("OODCheckbox");
-                if (initiallyloaded) OODCheckChanged();
-            }
-        }
-        private bool? _favecheckbox;
-        public bool? FaveCheckbox{
-            get { return _favecheckbox;}
-            set { _favecheckbox = value;
-                RaisePropertyChanged("FaveCheckbox");
-                if (initiallyloaded) FaveCheckChanged();
-            }
-        }
-
         private CategoryType _categorypick;
         public CategoryType CategoryPick{
             get { return _categorypick;}
@@ -457,6 +449,53 @@ namespace SimsCCManager.Manager
                 RaisePropertyChanged("CategoryPick");
             }
         }
+
+        private IList _selectedmods = new List<ModInfo>();
+
+        public IList SelectedMods {
+            get { return _selectedmods;}
+            set { _selectedmods = value;
+                RaisePropertyChanged("SelectedMods");
+                IMSelectedModChanged();
+            }
+        }
+
+        private string _namechange;
+        public string NameChange {
+            get { return _namechange;}
+            set { _namechange = value;
+                RaisePropertyChanged("NameChange");
+            }
+        }
+        private string _progbarlabel;
+        public string ProgBarLabel {
+            get { return _progbarlabel;}
+            set { _progbarlabel = value;
+                RaisePropertyChanged("ProgBarLabel");
+            }
+        }
+
+        private List<ModInfo> _groups;
+        public List<ModInfo> Groups{
+            get { return _groups; }
+            set {
+                _groups = value;
+                RaisePropertyChanged("Groups");
+            }
+        }
+
+        
+        private string _usedcat;
+        public string UsedCat{
+            get { return _usedcat; }
+            set {
+                _usedcat = value;
+                RaisePropertyChanged("UsedCat");
+            }
+        }
+
+
+        private int editingmodnum = -1;
 
 
 
@@ -557,8 +596,11 @@ namespace SimsCCManager.Manager
             ProfileScreenVis = Visibility.Hidden;
             CategoryScreenVis = Visibility.Hidden;
             InfoBoxHeight = 0;
+            Groups = new();
             Location = new System.Windows.Point(SystemParameters.PrimaryScreenWidth / 4, SystemParameters.PrimaryScreenHeight / 4);
             string instance = SettingsFile.LoadSetting("LastInstance");
+            ProgIndet = true;
+            ProgressBarGridVis = Visibility.Hidden;
             if (!File.Exists(Path.Combine(instance, @"data\modlist.ini"))){
                 CreateFileTree(instance);                
             }
@@ -606,9 +648,11 @@ namespace SimsCCManager.Manager
         }
         private void AddToInstanceModsCollection(ModInfo modInfo){
             if (!InstanceMods.Contains(modInfo)){
-                InstanceMods.Add(modInfo);
+                ModInfo minf = modInfo;
+                minf.EditingName = false;
+                InstanceMods.Add(minf);
                 InstanceModsCV.Refresh();
-            }            
+            }
         }
         private void AddToEnabledModsCollection(ModInfo modInfo){            
             if (!EnabledMods.Contains(modInfo)){
@@ -668,25 +712,25 @@ namespace SimsCCManager.Manager
 
         private void IMSelectionChanged(object sender, EventArgs e)
         {               
-            ModInfo mod = InstanceModsCV.CurrentItem as ModInfo;  
+            /*ModInfo mod = InstanceModsCV.CurrentItem as ModInfo;  
             int x = InstanceMods.IndexOf(mod);
             ModInfo m = InstanceMods[x];
-            if (m.Selected == true){
-                InstanceMods[x].Selected = false;
+            if (m.IsSelected == true){
+                InstanceMods[x].IsSelected = false;
             } else {
-                InstanceMods[x].Selected = true;
+                InstanceMods[x].IsSelected = true;
             }
             Console.WriteLine("Selection changed via click!");
-            OpenPanel();
+            OpenPanel();*/
         }
 
         private void OpenPanel(){
-            int selectednum = InstanceMods.Where(x => x.Selected).Count();
+            /*int selectednum = InstanceMods.Where(x => x.IsSelected).Count();
             Console.WriteLine("Number of selected items: {0}", selectednum);
             if (selectednum == 0) {
                 InfoBoxHeight = 0;
             } else if (selectednum == 1){
-                ModInfo selectedmod = InstanceMods.Where(x => x.Selected).First();
+                ModInfo selectedmod = InstanceMods.Where(x => x.IsSelected).First();
                 if (selectedmod.Root == true){
                     RootCheckbox = true;
                 } else {
@@ -705,7 +749,7 @@ namespace SimsCCManager.Manager
                 CategoryPick = Categories.Where(x => x == selectedmod.Category).First();
                 InfoBoxHeight = infoboxopen;
             } else if (selectednum > 1){
-                List<ModInfo> selected = InstanceMods.Where(x => x.Selected).ToList();
+                List<ModInfo> selected = InstanceMods.Where(x => x.IsSelected).ToList();
                 CategoryType acat = selected[0].Category;
                 ModInfo item = selected[0];
                 if (selected.Where(x => x.Root == item.Root).Count() != selectednum){
@@ -729,60 +773,8 @@ namespace SimsCCManager.Manager
                     CategoryPick = acat;
                 }
                 InfoBoxHeight = infoboxopen;                
-            }
-        }
-
-        private void RootCheckChanged(){
-            int selectednum = InstanceMods.Where(x => x.Selected).Count();
-            if (selectednum != 0){
-                bool change = false;
-                List<ModInfo> selected = InstanceMods.Where(x => x.Selected).ToList();
-                if (RootCheckbox == true){
-                    change = true;
-                } else if (RootCheckbox == false){
-                    change = false;
-                }
-                foreach (ModInfo info in selected){
-                    int idx = InstanceMods.IndexOf(info);
-                    InstanceMods[idx].Root = change;
-                }
-            }
-            RefreshModlist();
-        }
-        private void OODCheckChanged(){
-            int selectednum = InstanceMods.Where(x => x.Selected).Count();
-            if (selectednum != 0){
-                bool change = false;
-                List<ModInfo> selected = InstanceMods.Where(x => x.Selected).ToList();
-                if (OODCheckbox == true){
-                    change = true;
-                } else if (OODCheckbox == false){
-                    change = false;
-                }
-                foreach (ModInfo info in selected){
-                    int idx = InstanceMods.IndexOf(info);
-                    InstanceMods[idx].OutOfDate = change;
-                }
-            }
-            RefreshModlist();
-        }
-        private void FaveCheckChanged(){
-            int selectednum = InstanceMods.Where(x => x.Selected).Count();
-            if (selectednum != 0){
-                bool change = false;
-                List<ModInfo> selected = InstanceMods.Where(x => x.Selected).ToList();
-                if (FaveCheckbox == true){
-                    change = true;
-                } else if (FaveCheckbox == false){
-                    change = false;
-                }
-                foreach (ModInfo info in selected){
-                    int idx = InstanceMods.IndexOf(info);
-                    InstanceMods[idx].Fave = change;
-                }
-            }
-            RefreshModlist();
-        }
+            }*/
+        }        
 
         private void EMSelectionChanged(object sender, EventArgs e)
         {
@@ -835,6 +827,74 @@ namespace SimsCCManager.Manager
 
         #region Property Changed Handling
 
+        private void IMSelectedModChanged(){
+            if (SelectedMods != null){
+                Console.WriteLine("Selected: {0}", SelectedMods.Count);           
+                if (SelectedMods.Count == 0){
+                    if (InstanceMods.Where(x => x.EditingName == true).Any()){
+                        List<ModInfo> en = InstanceMods.Where(x => x.EditingName == true).ToList();
+                        foreach (ModInfo info in en){
+                            int idx = InstanceMods.IndexOf(info);
+                            InstanceMods[idx].EditingName = false;
+                        }
+                    }
+                } else if (SelectedMods.Count == 1){
+                    ModInfo sm = SelectedMods[0] as ModInfo;
+                    ModInfo m = InstanceMods.Where(x => x.Name == sm.Name).First();
+                    int idx = InstanceMods.IndexOf(m);
+                    if (InstanceMods.Where(x => x.EditingName == true).Any()){
+                        List<ModInfo> en = InstanceMods.Where(x => x.EditingName == true).ToList();
+                        foreach (ModInfo info in en){
+                            int ix = InstanceMods.IndexOf(info);
+                            if (ix != idx){
+                                InstanceMods[ix].EditingName = false;
+                            }                            
+                        }
+                    }
+                    if (InstanceMods.Where(x => x.Selected == true).Any()){
+                        List<ModInfo> en = InstanceMods.Where(x => x.Selected == true).ToList();
+                        en = InstanceMods.Where(x => x.Selected == true).ToList();
+                        foreach (ModInfo info in en){
+                            int ix = InstanceMods.IndexOf(info);
+                            if (ix != idx){
+                                InstanceMods[ix].Selected = false;
+                            }                            
+                        }
+                    }
+                    InstanceMods[idx].Selected = true;                    
+                } else {
+                    List<int> indxs = new();
+                    foreach (ModInfo mm in SelectedMods){
+                        indxs.Add(InstanceMods.IndexOf(mm));
+                    }
+                    if (InstanceMods.Where(x => x.EditingName == true).Any()){
+                        List<ModInfo> en = InstanceMods.Where(x => x.EditingName == true).ToList();
+                        foreach (ModInfo info in en){
+                            int ix = InstanceMods.IndexOf(info);
+                            if (!indxs.Contains(ix)){
+                                InstanceMods[ix].EditingName = false;
+                            }
+                        }
+                    }
+                    if (InstanceMods.Where(x => x.Selected == true).Any()){
+                        List<ModInfo> en = InstanceMods.Where(x => x.Selected == true).ToList();
+                        en = InstanceMods.Where(x => x.Selected == true).ToList();
+                        foreach (ModInfo info in en){
+                            int ix = InstanceMods.IndexOf(info);
+                            if (!indxs.Contains(ix)){
+                                InstanceMods[ix].Selected = false;
+                            }                            
+                        }
+                    }
+                    foreach (int idx in indxs){
+                        InstanceMods[idx].Selected = true;
+                    }                    
+                }
+            }            
+            /*datagrid selectionversion*/
+            
+        }
+
         private void EnabledModsCheck(){
             foreach (ModInfo mod in EnabledMods){
                 ModInfo m = InstanceMods.Where(x => x.Name == mod.Name).First();
@@ -854,7 +914,7 @@ namespace SimsCCManager.Manager
         void OnModListChange(object sender, PropertyChangedEventArgs e){
             if (e.PropertyName == "Enabled"){
                 EnabledModsChanged();
-            } else if (e.PropertyName == "Selected"){
+            } else if (e.PropertyName == "IsSelected"){
                 RaisePropertyChanged("InstanceMods");
             } else if (e.PropertyName == "Root"){
                 RootChanged();
@@ -862,6 +922,8 @@ namespace SimsCCManager.Manager
             } else if (e.PropertyName == "Name"){
                 ModInfo mod = sender as ModInfo;
                 RenameMod(mod);
+            } else if (e.PropertyName == "Category"){
+                RaisePropertyChanged("InstanceMods");
             } else {
                 RaisePropertyChanged("InstanceMods");
             }
@@ -876,16 +938,17 @@ namespace SimsCCManager.Manager
                 dir = modi.Parent.FullName;
                 newname = Path.Combine(dir, mod.Name);
                 ininame = Path.Combine(dir, string.Format("{0}.ini", mod.Name));
+                Directory.Move(mod.Location, newname);
             } else {
                 FileInfo modi = new FileInfo(mod.Location);
                 dir = modi.DirectoryName;
                 string nameext = string.Format("{0}{1}", mod.Name, modi.Extension);
                 newname = Path.Combine(dir, nameext);
                 ininame = Path.Combine(dir, string.Format("{0}.ini", mod.Name));
-            }
-            File.Move(mod.Location, newname);
+                File.Move(mod.Location, newname);
+            }            
             File.Move(FileToIni(mod.Location), ininame);
-            var modv = InstanceMods.Where(x => x.Location == EditingMod.Location).First();
+            var modv = InstanceMods.Where(x => x.Location == mod.Location).First();
             int idx = InstanceMods.IndexOf(modv);
             InstanceMods[idx].Location = newname;
             ModInfoToFile(InstanceMods[idx], FileToIni(InstanceMods[idx].Location));
@@ -1285,15 +1348,25 @@ namespace SimsCCManager.Manager
 
         #region Folder Handlers
 
+        private void RefreshListClick(){
+            Task t = Task.Run(() => {
+                ProgBarLabel = "Refreshing Modlist";
+                PopupGreyed = Visibility.Visible;
+                ProgressBarGridVis = Visibility.Visible;
+            });
+            t.Wait();
+            new Thread(() => RefreshModlist()){IsBackground = true}.Start();
+        }
+
         private void RefreshModlist(){
             ReadModFolder();   
             ReadDownloadsFolder();         
             //ModsFromModList();
             LoadProfileData();    
             RefreshAllCollections();
+            PopupGreyed = Visibility.Hidden;
+            ProgressBarGridVis = Visibility.Hidden;
         }
-
-        
 
         private void ReadModFolder(){
             //get the directoryinfo
@@ -1307,7 +1380,38 @@ namespace SimsCCManager.Manager
             }
             if (mf.GetFiles().Length != 0){
                 ProcessFiles(ThisInstance.InstanceModFolder);
-            }            
+            }
+            if (Groups.Count != 0){
+                foreach (ModInfo group in Groups){
+                    DirectoryInfo g = new(group.Location);
+                    if (g.GetDirectories().Length != 0){
+                        List<DirectoryInfo> dirs = g.GetDirectories().ToList();
+                        if (dirs.Where(x => x.Name.Contains("___Group")).Any()){
+                            foreach (DirectoryInfo dir in dirs.Where(x => x.Name.Contains("___Group")).ToList()){
+                                MakeGroupHolder(dir);
+                            }
+                        }
+                    }
+                }
+            }
+            if (Groups.Count != 0){
+                foreach (ModInfo group in Groups){
+                    ReadGroupsFolder(group);
+                }
+            }
+        }
+
+        private void ReadGroupsFolder(ModInfo group){
+            DirectoryInfo g = new(group.Location);
+            if (g.GetFiles().Length != 0){
+                ProcessFiles(g.FullName);
+            }
+            if (g.GetDirectories().Length != 0){
+                List<string> Directories = Directory.GetDirectories(g.FullName).ToList();
+                foreach (string dir in Directories){
+                    ProcessDirectory(dir);
+                }
+            }
         }
 
         private void ReadDownloadsFolder(){
@@ -1390,7 +1494,8 @@ namespace SimsCCManager.Manager
                     sw.WriteLine(string.Format("Installed={0}", BoolToString(newDownload.Installed)));
                     sw.WriteLine(string.Format("DateAdded={0}", newDownload.DateAdded.ToString()));
                     sw.Flush();
-                    sw.Close();                }
+                    sw.Close();                
+                }
                 fs.Close(); fs.Dispose();
             }
         }
@@ -1410,10 +1515,9 @@ namespace SimsCCManager.Manager
             }
         }
 
-        private void ProcessDirectory(string directory){
-            
+        private void ProcessDirectory(string directory){            
             DirectoryInfo dir = new(directory);
-            if (!dir.Name.EndsWith("_Group")){ //_Group is a sorted folder, this is a single mod
+            if (!dir.Name.EndsWith("___Group")){ //_Group is a sorted folder, this is a single mod
                 ModInfo modInfo = new();
                 modInfo.Name = dir.Name;
                 modInfo.Location = dir.FullName;
@@ -1462,9 +1566,20 @@ namespace SimsCCManager.Manager
                     AddModToList(modInfo);
                     ModInfoToFile(modInfo, iniext);
                 }
-            } else if (dir.Name.EndsWith("_Group")) { //This is a sorted folder! So we have to treat this like our mod folder
-                ProcessFolder(dir.FullName);
+            } else if (dir.Name.EndsWith("___Group")) { //This is a sorted folder! So we have to treat this like our mod folder
+                MakeGroupHolder(dir);
+                //ProcessFolder(dir.FullName);
             }
+        }
+
+        private void MakeGroupHolder(DirectoryInfo dir){
+            ModInfo modInfo = new();
+            modInfo.Location = dir.FullName;
+            modInfo.IsGroup = true;            
+            string groupName = dir.Name.Replace("___Group", "");
+            modInfo.Name = groupName;
+            InstanceMods.Add(modInfo);
+            Groups.Add(modInfo);
         }
 
         private void ProcessFiles(string directory){
@@ -1492,81 +1607,7 @@ namespace SimsCCManager.Manager
                             AddToInstanceModsCollection(modInfo);
                             AddModToList(modInfo);
                         } else {
-                            modInfo.Location = fileinfo.FullName;
-                            modInfo.Name = basename;
-                            modInfo.DateAdded = DateTime.Now;
-                            modInfo.OutOfDate = false;
-                            modInfo.DateUpdated = DateTime.Now;
-                            modInfo.Category = Categories.Where(x => x.Name == "Default").First();
-                            modInfo.New = true;
-                            if (fileinfo.Extension == ".package"){
-                                modInfo.Type = GFileType.Package;
-                            } else if (fileinfo.Extension == ".sims2pack"){
-                                modInfo.Type = GFileType.Sims2Pack;
-                                modInfo.Game = "The Sims 2";
-                            } else if (fileinfo.Extension == ".sims3pack"){
-                                modInfo.Type = GFileType.Sims3Pack;
-                                modInfo.Game = "The Sims 3";
-                            } else if (fileinfo.Extension == ".ts4script"){
-                                modInfo.Type = GFileType.TS4Script;
-                            } else if (fileinfo.Extension == ".zip" || fileinfo.Extension == ".rar" || fileinfo.Extension == ".7z" || fileinfo.Extension == ".pkg"){
-                                modInfo.Type = GFileType.Compressed;
-                            } else if (fileinfo.Extension == ".trayitem" || fileinfo.Extension == ".bpi" || fileinfo.Extension == ".hhi" || fileinfo.Extension == ".sgi" || fileinfo.Extension == ".householdbinary"){
-                                modInfo.Type = GFileType.Tray;
-                            }
-                            if (modInfo.Type == GFileType.Package){
-                                InitialCheck ic = ip.CheckThrough(fileinfo.FullName);
-                                if (ic.Unidentifiable == true){
-                                    modInfo.Broken = true;
-                                }
-                                if (ic.Game == "Sims2"){
-                                    modInfo.Game = "The Sims 2";
-                                } else if (ic.Game == "Sims3"){
-                                    modInfo.Game = "The Sims 3";
-                                } else if (ic.Game == "Sims4"){
-                                    modInfo.Game = "The Sims 4";
-                                } else if (ic.Game == "SC5"){
-                                    modInfo.Game = "SimCity 5";
-                                } else if (ic.Unidentifiable == true){
-                                    modInfo.Game = "Unknown";
-                                } else {
-                                    modInfo.Game = "Other";
-                                }
-                                if (File.Exists(Path.Combine(filedir, scriptf))){
-                                    modInfo.HasScript = true;
-                                }
-
-                            } else if (modInfo.Type != GFileType.TS4Script){
-                                modInfo.Size = fileinfo.Length;
-                                modInfo.Processed = true; 
-                            } else if (modInfo.Type == GFileType.TS4Script){
-                                if (!File.Exists(Path.Combine(filedir, packf))){
-                                    modInfo.LooseScript = true;
-                                } else {
-                                    modInfo.Combined = true;
-                                    modInfo.Files.Add(Path.Combine(filedir, packf));
-                                    modInfo.Files.Add(Path.Combine(filedir, scriptf));
-                                }
-                            } else if (modInfo.Type == GFileType.Tray){
-                                List<string> comb = new();
-                                string[] identi = basename.Split("!");
-                                string ident = identi[0];
-                                var result = fiFiles.Where(x => x.Name.Contains(ident)).ToList();
-                                comb.AddRange(result.Select(x => x.FullName));
-                                modInfo.Files = comb;
-                            } else if (modInfo.Type == GFileType.Compressed){
-                                if (fileinfo.Extension == ".zip"){
-                                    modInfo.CompressionType = CompressedType.Zip;
-                                } else if (fileinfo.Extension == ".rar"){
-                                    modInfo.CompressionType = CompressedType.Rar;
-                                } else if (fileinfo.Extension == ".7z"){
-                                    modInfo.CompressionType = CompressedType.SevenZip;
-                                } else if (fileinfo.Extension == ".pkg"){
-                                    modInfo.CompressionType = CompressedType.Pkg;
-                                } else {
-                                    modInfo.CompressionType = CompressedType.Unknown;
-                                }
-                            }
+                            modInfo = ProcessModFile(modInfo, fileinfo, fiFiles);
                             ModInfoToFile(modInfo, iniext);
                             AddModToList(modInfo);
                         }
@@ -1580,6 +1621,97 @@ namespace SimsCCManager.Manager
                     }
                 }
             }
+        }
+
+        private ModInfo ProcessModFile(ModInfo modInfo, FileInfo fileinfo, List<FileInfo> fiFiles){
+            string filedir = fileinfo.DirectoryName;
+            string filename = fileinfo.Name;
+            string basename = filename.Replace(fileinfo.Extension, "");
+            string ini = FileToIni(filename);
+            string iniext = Path.Combine(fileinfo.DirectoryName, ini);
+            string scriptf = string.Format("{0}.ts4script", basename);
+            string packf = string.Format("{0}.package", basename);
+            modInfo.Location = fileinfo.FullName;
+            modInfo.Name = basename;
+            modInfo.DateAdded = DateTime.Now;
+            modInfo.OutOfDate = false;
+            modInfo.DateUpdated = DateTime.Now;
+            modInfo.Category = Categories.Where(x => x.Name == "Default").First();
+            modInfo.New = true;
+            if (fileinfo.DirectoryName.Contains("___Group")){
+                DirectoryInfo dir = new(fileinfo.DirectoryName);
+                modInfo.Group = dir.Name;
+            }
+            if (fileinfo.Extension == ".package"){
+                modInfo.Type = GFileType.Package;
+            } else if (fileinfo.Extension == ".sims2pack"){
+                modInfo.Type = GFileType.Sims2Pack;
+                modInfo.Game = "The Sims 2";
+            } else if (fileinfo.Extension == ".sims3pack"){
+                modInfo.Type = GFileType.Sims3Pack;
+                modInfo.Game = "The Sims 3";
+            } else if (fileinfo.Extension == ".ts4script"){
+                modInfo.Type = GFileType.TS4Script;
+            } else if (fileinfo.Extension == ".zip" || fileinfo.Extension == ".rar" || fileinfo.Extension == ".7z" || fileinfo.Extension == ".pkg"){
+                modInfo.Type = GFileType.Compressed;
+            } else if (fileinfo.Extension == ".trayitem" || fileinfo.Extension == ".bpi" || fileinfo.Extension == ".hhi" || fileinfo.Extension == ".sgi" || fileinfo.Extension == ".householdbinary"){
+                modInfo.Type = GFileType.Tray;
+            }
+            if (modInfo.Type == GFileType.Package){
+                InitialCheck ic = ip.CheckThrough(fileinfo.FullName);
+                if (ic.Unidentifiable == true){
+                    modInfo.Broken = true;
+                }
+                if (ic.Game == "Sims2"){
+                    modInfo.Game = "The Sims 2";
+                } else if (ic.Game == "Sims3"){
+                    modInfo.Game = "The Sims 3";
+                } else if (ic.Game == "Sims4"){
+                    modInfo.Game = "The Sims 4";
+                } else if (ic.Game == "SC5"){
+                    modInfo.Game = "SimCity 5";
+                } else if (ic.Unidentifiable == true){
+                    modInfo.Game = "Unknown";
+                } else {
+                    modInfo.Game = "Other";
+                }
+                if (File.Exists(Path.Combine(filedir, scriptf))){
+                    modInfo.HasScript = true;
+                }
+
+            } else if (modInfo.Type != GFileType.TS4Script){
+                modInfo.Size = fileinfo.Length;
+                modInfo.Processed = true; 
+            } else if (modInfo.Type == GFileType.TS4Script){
+                if (!File.Exists(Path.Combine(filedir, packf))){
+                    modInfo.LooseScript = true;
+                } else {
+                    modInfo.Combined = true;
+                    modInfo.Files.Add(Path.Combine(filedir, packf));
+                    modInfo.Files.Add(Path.Combine(filedir, scriptf));
+                }
+            } else if (modInfo.Type == GFileType.Tray){
+                List<string> comb = new();
+                string[] identi = basename.Split("!");
+                string ident = identi[0];
+                var result = fiFiles.Where(x => x.Name.Contains(ident)).ToList();
+                comb.AddRange(result.Select(x => x.FullName));
+                modInfo.Files = comb;
+            } else if (modInfo.Type == GFileType.Compressed){
+                if (fileinfo.Extension == ".zip"){
+                    modInfo.CompressionType = CompressedType.Zip;
+                } else if (fileinfo.Extension == ".rar"){
+                    modInfo.CompressionType = CompressedType.Rar;
+                } else if (fileinfo.Extension == ".7z"){
+                    modInfo.CompressionType = CompressedType.SevenZip;
+                } else if (fileinfo.Extension == ".pkg"){
+                    modInfo.CompressionType = CompressedType.Pkg;
+                } else {
+                    modInfo.CompressionType = CompressedType.Unknown;
+                }
+            }
+
+            return modInfo;
         }
 
 
@@ -1717,7 +1849,7 @@ namespace SimsCCManager.Manager
 
         #region Ini Handlers
 
-        private void ModsFromModList(){
+        /*private void ModsFromModList(){
             var modlist = Path.Combine(ThisInstance.InstanceDataFolder, "modlist.ini");
             List<string> mods = new();
             using (FileStream fs = new FileStream(modlist, FileMode.Open, FileAccess.Read)){
@@ -1741,7 +1873,7 @@ namespace SimsCCManager.Manager
                 info.PropertyChanged += OnModListChange;                
                 AddToInstanceModsCollection(info);
             }
-        }
+        }*/
 
         private void EnabledModsFromProfile(){
             foreach (string mod in enabledmodslist){
@@ -1763,11 +1895,12 @@ namespace SimsCCManager.Manager
 
         public void MakeRelays(){
             EditDetails = new RelayCommand(this.EditMod);
-            MakeRoot = new RelayCommand(this.MakeModRoot);
+            AddToCategoryClick = new RelayCommand(this.AddToCategory);
+            //MakeRoot = new RelayCommand(this.MakeModRoot);
         }
-        public RelayCommand MakeRoot {get; set;}
+        //public RelayCommand MakeRoot {get; set;}
         public RelayCommand EditDetails {get; set;}
-
+        public RelayCommand AddToCategoryClick {get; set;}
         /*ScanFile
         MarkOOD
         AddCreator
@@ -1781,39 +1914,78 @@ namespace SimsCCManager.Manager
 
         private void EditMod(object param){
             var modin = param as IEnumerable<object>;
-            EditingMod = modin.First() as ModInfo;
+            EditingMod = SelectedMods[0] as ModInfo;
             EditScreenVis = Visibility.Visible;
             PopupGreyed = Visibility.Visible;            
         }
 
-        private void MakeModRoot(object param){
-            var modin = param as IEnumerable<object>;
-            List<ModInfo> modInfo = new();
-            foreach (var item in modin)
-            {
-                modInfo.Add(item as ModInfo);
+        private void AddToCategory(object param){
+            CategoryType pickedcat = param as CategoryType;
+            List<int> modindxs = new();
+            foreach (var m in SelectedMods){
+                var mm = m as ModInfo;
+                modindxs.Add(InstanceMods.IndexOf(mm));
+            } 
+            foreach (int x in modindxs){
+                InstanceMods[x].Category = pickedcat;
+                ModInfoToFile(InstanceMods[x], FileToIni(InstanceMods[x].Location));
             }
-
-            int selected = modInfo.Count;
-            if (selected == 0){
-                
-            } else if (selected == 1){
-                int idx = InstanceMods.IndexOf(modInfo[0]);    
-                if(modInfo[0].Root == false){
-                    InstanceMods[idx].Root = true;                    
-                } else {
-                    InstanceMods[idx].Root = false;                    
-                }
-                ModInfoToFile(InstanceMods[idx], FileToIni(InstanceMods[idx].Location));
-            } else if (selected > 1){
-                foreach (ModInfo item in modInfo){
-                    int idx = InstanceMods.IndexOf(item);    
-                    if(item.Root == false){
-                        InstanceMods[idx].Root = true;
+            
+        }
+        
+        private void MakeModRoot(){
+            if (SelectedMods != null){                
+                if (SelectedMods.Count == 0){
+                    
+                } else if (SelectedMods.Count == 1){
+                    ModInfo sm = SelectedMods[0] as ModInfo;
+                    ModInfo m = InstanceMods.Where(x => x.Name == sm.Name).First();
+                    int idx = InstanceMods.IndexOf(m);
+                    if (InstanceMods[idx].Root == true){
+                        InstanceMods[idx].Root = false;  
                     } else {
-                        InstanceMods[idx].Root = false;
+                        InstanceMods[idx].Root = true; 
                     }
-                    ModInfoToFile(InstanceMods[idx], FileToIni(InstanceMods[idx].Location));
+                } else {
+                    List<int> indxs = new();
+                    foreach (ModInfo mm in SelectedMods){
+                        indxs.Add(InstanceMods.IndexOf(mm));
+                    }                    
+                    foreach (int idx in indxs){
+                        if (InstanceMods[idx].Root == true){
+                            InstanceMods[idx].Root = false;  
+                        } else {
+                            InstanceMods[idx].Root = true; 
+                        }
+                    }
+                }
+            }
+        }
+        private void MarkModOOD(){
+            if (SelectedMods != null){                
+                if (SelectedMods.Count == 0){
+                    
+                } else if (SelectedMods.Count == 1){
+                    ModInfo sm = SelectedMods[0] as ModInfo;
+                    ModInfo m = InstanceMods.Where(x => x.Name == sm.Name).First();
+                    int idx = InstanceMods.IndexOf(m);
+                    if (InstanceMods[idx].OutOfDate == true){
+                        InstanceMods[idx].OutOfDate = false;  
+                    } else {
+                        InstanceMods[idx].OutOfDate = true; 
+                    }
+                } else {
+                    List<int> indxs = new();
+                    foreach (ModInfo mm in SelectedMods){
+                        indxs.Add(InstanceMods.IndexOf(mm));
+                    }                    
+                    foreach (int idx in indxs){
+                        if (InstanceMods[idx].OutOfDate == true){
+                            InstanceMods[idx].OutOfDate = false;  
+                        } else {
+                            InstanceMods[idx].OutOfDate = true; 
+                        }
+                    }
                 }
             }
         }
@@ -1823,7 +1995,29 @@ namespace SimsCCManager.Manager
 
 
         #region ICommands
-        
+
+        public ICommand MakeRoot
+        {
+            get { return new DelegateCommand(this.MakeModRoot); }
+        }
+        public ICommand MarkOOD
+        {
+            get { return new DelegateCommand(this.MarkModOOD); }
+        }
+
+        public ICommand NameEditEnterKey
+        {
+            get { return new DelegateCommand(this.EditingNameEnter); }
+        }
+        public ICommand NameEditEscapeKey
+        {
+            get { return new DelegateCommand(this.EditingNameEscape); }
+        }
+
+        public ICommand EditingNameClick
+        {
+            get { return new DelegateCommand(this.EditingNameCommand); }
+        }
         public ICommand ViewProfiles
         {
             get { return new DelegateCommand(this.ViewProfilesClick); }
@@ -1929,7 +2123,7 @@ namespace SimsCCManager.Manager
 
         public ICommand RefreshList
         {
-            get { return new DelegateCommand(this.RefreshModlist); }
+            get { return new DelegateCommand(this.RefreshListClick); }
         }
         public ICommand EnabledClick
         {
@@ -1962,6 +2156,54 @@ namespace SimsCCManager.Manager
         Profile editingprofile = new();
 
         #region User Controls
+
+        private void EditingNameCommand(){
+            int idx = 0;
+            if (SelectedMods != null){
+                if (SelectedMods.Count == 0){
+                    
+                } else if (SelectedMods.Count == 1){
+                    ModInfo sm = SelectedMods[0] as ModInfo;
+                    ModInfo m = InstanceMods.Where(x => x.Name == sm.Name).First();
+                    idx = InstanceMods.IndexOf(m);                    
+                } else {
+                    ModInfo sm = SelectedMods[0] as ModInfo;
+                    ModInfo m = InstanceMods.Where(x => x.Name == sm.Name).First();
+                    idx = InstanceMods.IndexOf(m);
+                }
+
+                if (InstanceMods[idx].EditingName == false){   
+                    NameChange = InstanceMods[idx].Name;
+                    InstanceMods[idx].EditingName = true;
+                    editingmodnum = idx;                    
+                } else {
+                    InstanceMods[idx].EditingName = true;
+                    editingmodnum = -1;
+                }
+            }
+        }
+
+        private void EditingNameEnter(){
+            if (editingmodnum != -1){                
+                InstanceMods[editingmodnum].EditingName = false;
+                InstanceMods[editingmodnum].Name = NameChange;
+            }
+        }
+
+        private void EditingNameEscape(){
+            ModInfo mi = InstanceMods.Where(x => x.EditingName == true).First();
+            int idx = InstanceMods.IndexOf(mi);
+            ModInfo sm = SelectedMods[0] as ModInfo;
+            int indx = InstanceMods.IndexOf(sm);
+            if (idx == indx){
+                InstanceMods[idx].EditingName = false;
+                editingmodnum = -1;
+            } else {
+                InstanceMods[idx].EditingName = false;
+                InstanceMods[indx].EditingName = false;
+                editingmodnum = -1;
+            }
+        }
 
         private void ViewProfilesClick(){
             ProfilesCV.Refresh();
@@ -2199,6 +2441,7 @@ namespace SimsCCManager.Manager
             }
             NewCategoryVis = Visibility.Hidden;
             CategoriesCV.Refresh();
+            SaveInstanceInfo();
         }
 
         private void SaveModEditClick(){            
@@ -2238,7 +2481,7 @@ namespace SimsCCManager.Manager
         private void SortFilesClick(){
             //temp dev button
             var m = InstanceMods.Where(x => x.Name == "sunblind").First();            
-            Console.WriteLine("{0}: Enabled is {1}", m.Name, m.Enabled);
+            Console.WriteLine("{0}: EditingName is {1}", m.Name, m.EditingName);
         }
 
         private void AddModsToInstance(){
@@ -2569,8 +2812,8 @@ namespace SimsCCManager.Manager
         public bool LocalSettings {get; set;}
         public bool LocalTray {get; set;}
         public bool LocalScreenshots {get; set;}
-        private ObservableCollection<ModInfo> _EnabledMods;
-        public ObservableCollection<ModInfo> EnabledMods {get { return _EnabledMods; }
+        private List<ModInfo> _EnabledMods;
+        public List<ModInfo> EnabledMods {get { return _EnabledMods; }
             set {
                 _EnabledMods = value;
                 PropertyChanged?.Invoke(this, 
@@ -2747,6 +2990,28 @@ namespace SimsCCManager.Manager
                     new PropertyChangedEventArgs(nameof(Category)));
             }
         }
+        
+        private bool _isgroup;
+        public bool IsGroup {
+            get { return _isgroup; }
+            set {
+                _isgroup = value;
+                PropertyChanged?.Invoke(this, 
+                    new PropertyChangedEventArgs(nameof(IsGroup)));
+            }
+        }
+
+        private string _group;
+        public string Group {
+            get { return _group; }
+            set {
+                _group = value;
+                PropertyChanged?.Invoke(this, 
+                    new PropertyChangedEventArgs(nameof(Group)));
+            }
+        }
+
+
         public ImageSource Thumbnail {get; set;}
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -2754,6 +3019,7 @@ namespace SimsCCManager.Manager
         public ModInfo(){
             Files = new();
             Category = new() {Name = "Default", ColorHex = "#EBEDEF"};
+            EditingName = false;
         }
     }
 
@@ -2791,7 +3057,7 @@ namespace SimsCCManager.Manager
             return this.Name;
         }
 
-    }
+    }    
 
     public class NewDownloadInfo{
         public string Name {get; set;}
