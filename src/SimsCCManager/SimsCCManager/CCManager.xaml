@@ -202,7 +202,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="0"/>
                     <RowDefinition Height="100"/>
-                    <RowDefinition/>
+                    <RowDefinition/> <!-- Main Content (Row 2)-->
                     <RowDefinition Height="5"/>
                     <RowDefinition Height="40"/>
                 </Grid.RowDefinitions>                        
@@ -260,357 +260,360 @@
                 <Grid Grid.Row="2">
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="5"/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="5"/>
                   </Grid.ColumnDefinitions>
+                  <GridSplitter Grid.Column="2" Width="3" HorizontalAlignment="Stretch" Foreground="{StaticResource Brush58}" />
                   <Grid Grid.Column="1">
                     <Grid.RowDefinitions>
                       <RowDefinition Height="30"/>
                       <RowDefinition/>
                       <RowDefinition Height="{Binding InfoBoxHeight}"/>
                     </Grid.RowDefinitions>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Grid.Row="0">
                         <TextBlock Grid.Row="0" Text="All Mods" Style="{StaticResource ColumnHeaderStyle}"/>
                         <TextBox Text="{Binding SearchAM, UpdateSourceTrigger=PropertyChanged}" Width="200" Height="20" FontSize="16" FontFamily="Arial" Margin="10, 0, 0, 0"/>
                     </StackPanel> 
                     
-                    
-
-                    <gridns:CustomDataGrid x:Name="AllMods" SelectedItemsList="{Binding SelectedMods, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" GridLinesVisibility="None" Background="{StaticResource Brush58}" AlternatingRowBackground="{StaticResource Brush61}" VerticalAlignment="Stretch" ItemsSource="{Binding InstanceModsCV}" Grid.Row="1" AutoGenerateColumns="False" SelectionMode="Extended" SelectionUnit="FullRow">
-                        <DataGrid.Resources>                            
-                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="{StaticResource Color27}" />
-                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{StaticResource Color28}" />
-                            <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="Transparent" />
-                            <Style TargetType="{x:Type DataGrid}">
-                                <Setter Property="RowStyle" >
-                                    <Setter.Value>
-                                        <Style TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                                            <!--<Setter Property="Background" Value="{StaticResource Brush58}" />-->
-                                            <Setter Property="Foreground" Value="{StaticResource Brush55}" />
-                                            <Setter Property="Background" Value="{Binding Category.ColorBrush}"/>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter Property="Background" Value="{StaticResource Brush21}"></Setter>
-                                                </Trigger>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="{StaticResource Brush48}"></Setter>
-                                                </Trigger>
-                                            </Style.Triggers>                            
-                                        </Style>
-                                    </Setter.Value>
-                                </Setter>                                
-                            </Style>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="Margin" Value="0"/>
-                                <Setter Property="Padding" Value="0"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                            </Style>
-                            <ContextMenu x:Key="DataGridContextMenu"> 
-                                <MenuItem Header="Add to Category" ItemsSource="{Binding DataContext.Categories, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}">
-                                    <MenuItem.ItemTemplate>
+                    <Grid Grid.Row="1">
+                        <gridns:CustomDataGrid x:Name="AllMods" SelectedItemsList="{Binding SelectedMods, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" GridLinesVisibility="None" Background="{StaticResource Brush58}" AlternatingRowBackground="{StaticResource Brush61}" VerticalAlignment="Stretch" ItemsSource="{Binding InstanceModsCV}" Grid.Row="1" AutoGenerateColumns="False" SelectionMode="Extended" SelectionUnit="FullRow">
+                            <DataGrid.Resources>                            
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="{StaticResource Color27}" />
+                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{StaticResource Color28}" />
+                                <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="Transparent" />
+                                <Style TargetType="{x:Type DataGrid}">
+                                    <Setter Property="RowStyle" >
+                                        <Setter.Value>
+                                            <Style TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                                <!--<Setter Property="Background" Value="{StaticResource Brush58}" />-->
+                                                <Setter Property="Foreground" Value="{StaticResource Brush55}" />
+                                                <Setter Property="Background" Value="{Binding Category.ColorBrush}"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource Brush21}"></Setter>
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource Brush48}"></Setter>
+                                                    </Trigger>
+                                                </Style.Triggers>                            
+                                            </Style>
+                                        </Setter.Value>
+                                    </Setter>                                
+                                </Style>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                </Style>
+                                <ContextMenu x:Key="DataGridContextMenu"> 
+                                    <MenuItem Header="Add to Category" ItemsSource="{Binding DataContext.Categories, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}">
+                                        <MenuItem.ItemTemplate>
+                                            <DataTemplate>
+                                                <MenuItem CommandTarget="{Binding}" Command="{Binding DataContext.AddToCategoryClick, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" CommandParameter="{Binding}">
+                                                    <MenuItem.Header>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Rectangle Width="30" Height="20" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0, 0, 10, 0">
+                                                                <Rectangle.Fill>
+                                                                    <SolidColorBrush Color="{Binding ColorBrush}" />
+                                                                </Rectangle.Fill>
+                                                            </Rectangle>
+                                                            <TextBlock>
+                                                            <TextBlock.Text><Binding StringFormat="Category: {0}" /></TextBlock.Text>
+                                                            </TextBlock>
+                                                        </StackPanel>                        
+                                                    </MenuItem.Header>
+                                                </MenuItem>
+                                            </DataTemplate>
+                                        </MenuItem.ItemTemplate>                                
+                                    </MenuItem>
+                                    <MenuItem Header="Edit Details" Command="{Binding DataContext.EditDetails, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+                                    
+                                    <MenuItem Header="Scan" Command="{Binding DataContext.ScanFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+                                    
+                                    <MenuItem Header="Toggle Root" Command="{Binding DataContext.MakeRoot, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+        
+                                    <MenuItem Header="Toggle Out of Date" Command="{Binding DataContext.MarkOOD, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>                          
+                                    
+                                    <MenuItem Header="Add Creator" Command="{Binding DataContext.AddCreator, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+                                    
+                                    <MenuItem Header="Add Source Link" Command="{Binding DataContext.AddSource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/> 
+                                    
+                                    <MenuItem Header="Rename from Title" Command="{Binding DataContext.RenameFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/> 
+                                    
+                                    <Separator/>
+                                    
+                                    <MenuItem Header="Move Mod">
+                                        <MenuItem Header="Into Subfolder" Command="{Binding DataContext.MoveFileToSubfolder, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+                                        <MenuItem Header="To Another Instance" Command="{Binding DataContext.MoveFileToInstance, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+                                    </MenuItem> 
+                                    
+                                    <MenuItem Header="Delete Files" Command="{Binding DataContext.DeleteFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+                                    
+                                    <MenuItem Header="Add Note" Command="{Binding DataContext.AddNote, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+                                </ContextMenu>
+                            </DataGrid.Resources>
+                            <DataGrid.InputBindings>
+                                <MouseBinding Gesture="LeftDoubleClick" Command="{Binding EditingNameClick}"/>
+                                <KeyBinding Key="Escape" Command="{Binding NameEditEscapeKey}"/>
+                                <KeyBinding Key="Enter" Command="{Binding NameEditEnterKey}"/>
+                            </DataGrid.InputBindings>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="ContextMenu" Value="{StaticResource DataGridContextMenu}"/>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <!--<DataGridTemplateColumn  Width="22">
+                                    <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <MenuItem CommandTarget="{Binding}" Command="{Binding DataContext.AddToCategoryClick, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" CommandParameter="{Binding}">
-                                                <MenuItem.Header>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <Rectangle Width="30" Height="20" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0, 0, 10, 0">
-                                                            <Rectangle.Fill>
-                                                                <SolidColorBrush Color="{Binding ColorBrush}" />
-                                                            </Rectangle.Fill>
-                                                        </Rectangle>
-                                                        <TextBlock>
-                                                        <TextBlock.Text><Binding StringFormat="Category: {0}" /></TextBlock.Text>
-                                                        </TextBlock>
-                                                    </StackPanel>                        
-                                                </MenuItem.Header>
-                                            </MenuItem>
+                                            <CheckBox Padding="0" Style="{StaticResource SelectedBoxStyle}" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Command="{Binding SelectedClick}" CommandParameter="{Binding Path=IsSelected, Mode=TwoWay, 
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}"/>
+                                        </DataTemplate>                                    
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>-->
+                                <DataGridTemplateColumn Width="22" SortMemberPath="Enabled" CanUserSort="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <CheckBox x:Name="EnabledCheck" Padding="0" Style="{StaticResource EnabledBoxStyle}" IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Command="{Binding EnabledClick}" CommandParameter="{Binding Path=Enabled, Mode=TwoWay, 
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}"/>
+                                                <Rectangle x:Name="IsGroupIcon" Width="20" Height="20" Fill="{StaticResource Brush4}" ToolTip="This is a group">
+                                                    <Rectangle.OpacityMask>
+                                                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource IconGroup}"/>                      
+                                                    </Rectangle.OpacityMask>
+                                                </Rectangle>
+                                            </Grid>                                        
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding IsGroup}" Value="True">
+                                                    <Setter TargetName="EnabledCheck" Property="Visibility" Value="Hidden"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsGroup}" Value="False">
+                                                    <Setter TargetName="IsGroupIcon" Property="Visibility" Value="Hidden"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate> 
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn  Width="300" Header="Name" SortMemberPath="Name" CanUserSort="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Label x:Name="NameLabel" Visibility="Visible" Content="{Binding Name}" Style="{StaticResource GridLabels}"/>
+                                                <TextBox x:Name="NameBox" Visibility="Hidden" Text="{Binding DataContext.NameChange, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" Style="{StaticResource GridBoxes}"/>
+                                            </Grid>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding EditingName}" Value="True">
+                                                    <Setter TargetName="NameBox" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
                                         </DataTemplate>
-                                    </MenuItem.ItemTemplate>                                
-                                </MenuItem>
-                                <MenuItem Header="Edit Details" Command="{Binding DataContext.EditDetails, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
-                                
-                                <MenuItem Header="Scan" Command="{Binding DataContext.ScanFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
-                                
-                                <MenuItem Header="Toggle Root" Command="{Binding DataContext.MakeRoot, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
-    
-                                <MenuItem Header="Toggle Out of Date" Command="{Binding DataContext.MarkOOD, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>                          
-                                
-                                <MenuItem Header="Add Creator" Command="{Binding DataContext.AddCreator, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
-                                
-                                <MenuItem Header="Add Source Link" Command="{Binding DataContext.AddSource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/> 
-                                
-                                <MenuItem Header="Rename from Title" Command="{Binding DataContext.RenameFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/> 
-                                
-                                <Separator/>
-                                
-                                <MenuItem Header="Move Mod">
-                                    <MenuItem Header="Into Subfolder" Command="{Binding DataContext.MoveFileToSubfolder, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
-                                    <MenuItem Header="To Another Instance" Command="{Binding DataContext.MoveFileToInstance, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
-                                </MenuItem> 
-                                
-                                <MenuItem Header="Delete Files" Command="{Binding DataContext.DeleteFile, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
-                                
-                                <MenuItem Header="Add Note" Command="{Binding DataContext.AddNote, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
-                            </ContextMenu>
-                        </DataGrid.Resources>
-                        <DataGrid.InputBindings>
-                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding EditingNameClick}"/>
-                            <KeyBinding Key="Escape" Command="{Binding NameEditEscapeKey}"/>
-                            <KeyBinding Key="Enter" Command="{Binding NameEditEnterKey}"/>
-                        </DataGrid.InputBindings>
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
-                                <Setter Property="ContextMenu" Value="{StaticResource DataGridContextMenu}"/>
-                            </Style>
-                        </DataGrid.RowStyle>
-                        <DataGrid.Columns>
-                            <!--<DataGridTemplateColumn  Width="22">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox Padding="0" Style="{StaticResource SelectedBoxStyle}" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Command="{Binding SelectedClick}" CommandParameter="{Binding Path=IsSelected, Mode=TwoWay, 
-                                            RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}"/>
-                                    </DataTemplate>                                    
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>-->
-                            <DataGridTemplateColumn Width="22" SortMemberPath="Enabled" CanUserSort="True">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <CheckBox x:Name="EnabledCheck" Padding="0" Style="{StaticResource EnabledBoxStyle}" IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Command="{Binding EnabledClick}" CommandParameter="{Binding Path=Enabled, Mode=TwoWay, 
-                                            RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}"/>
-                                            <Rectangle x:Name="IsGroupIcon" Width="20" Height="20" Fill="{StaticResource Brush4}" ToolTip="This is a group">
-                                                <Rectangle.OpacityMask>
-                                                    <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource IconGroup}"/>                      
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                        </Grid>                                        
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn  Width="SizeToHeader" Header="">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Rectangle x:Name="IMGAlertRoot" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush19}" ToolTip="Root Mod">
+                                                    <Rectangle.OpacityMask>
+                                                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertRoot}"/>                      
+                                                    </Rectangle.OpacityMask>
+                                                </Rectangle>
+                                                <Rectangle x:Name="IMGAlertOutOfDate" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush17}" ToolTip="Mod Out of Date">
+                                                    <Rectangle.OpacityMask>
+                                                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertOutOfDate}"/>                      
+                                                    </Rectangle.OpacityMask>
+                                                </Rectangle>
+                                                <Rectangle x:Name="IMGAlertBroken" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush66}" ToolTip="Mod Broken">
+                                                    <Rectangle.OpacityMask>
+                                                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertBroken}"/>
+                                                    </Rectangle.OpacityMask>
+                                                </Rectangle>
+                                                <Rectangle x:Name="IMGAlertConflicts" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush71}" ToolTip="Has Conflicts">
+                                                    <Rectangle.OpacityMask>
+                                                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertConflicts}"/>
+                                                    </Rectangle.OpacityMask>
+                                                </Rectangle>
+                                                <Rectangle x:Name="IMGAlertWrongGame" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush65}" ToolTip="Wrong Game">
+                                                    <Rectangle.OpacityMask>
+                                                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertWrongGame}"/>
+                                                    </Rectangle.OpacityMask>
+                                                </Rectangle>
+                                                <Rectangle x:Name="IMGAlertOverride" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush85}" ToolTip="Override">
+                                                    <Rectangle.OpacityMask>
+                                                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertOverride}"/>
+                                                    </Rectangle.OpacityMask>
+                                                </Rectangle>
+                                                <Rectangle x:Name="IMGAlertOrphan" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush88}" ToolTip="Orphan Mod">
+                                                    <Rectangle.OpacityMask>
+                                                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertOrphan}"/>
+                                                    </Rectangle.OpacityMask>
+                                                </Rectangle>
+                                                <Rectangle x:Name="IMGAlertFave" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush1}" ToolTip="Fave Mod">
+                                                    <Rectangle.OpacityMask>
+                                                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertFave}"/>
+                                                    </Rectangle.OpacityMask>
+                                                </Rectangle>
+                                            </StackPanel>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding Root}" Value="True">
+                                                    <Setter TargetName="IMGAlertRoot" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Root}" Value="False">
+                                                    <Setter TargetName="IMGAlertRoot" Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding OutOfDate}" Value="True">
+                                                    <Setter TargetName="IMGAlertOutOfDate" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding OutOfDate}" Value="False">
+                                                    <Setter TargetName="IMGAlertOutOfDate" Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Broken}" Value="True">
+                                                    <Setter TargetName="IMGAlertBroken" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Broken}" Value="False">
+                                                    <Setter TargetName="IMGAlertBroken" Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Conflicts}" Value="True">
+                                                    <Setter TargetName="IMGAlertConflicts" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Conflicts}" Value="False">
+                                                    <Setter TargetName="IMGAlertConflicts" Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding WrongGame}" Value="True">
+                                                    <Setter TargetName="IMGAlertWrongGame" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding WrongGame}" Value="False">
+                                                    <Setter TargetName="IMGAlertWrongGame" Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Override}" Value="True">
+                                                    <Setter TargetName="IMGAlertOverride" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Override}" Value="False">
+                                                    <Setter TargetName="IMGAlertOverride" Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Orphan}" Value="True">
+                                                    <Setter TargetName="IMGAlertOrphan" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Orphan}" Value="False">
+                                                    <Setter TargetName="IMGAlertOrphan" Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Fave}" Value="True">
+                                                    <Setter TargetName="IMGAlertFave" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Fave}" Value="False">
+                                                    <Setter TargetName="IMGAlertFave" Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn  Width="SizeToHeader" Header="Creator" SortMemberPath="Creator" CanUserSort="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Label Content="{Binding Creator}" Style="{StaticResource GridLabels}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn  Width="SizeToHeader" Header="DateAdded" SortMemberPath="DateAdded" CanUserSort="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Label Content="{Binding DateAdded}" Style="{StaticResource GridLabels}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn  Width="SizeToHeader" Header="DateUpdated" SortMemberPath="DateUpdated" CanUserSort="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Label Content="{Binding DateUpdated}" Style="{StaticResource GridLabels}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn  Width="50" Header="Game" SortMemberPath="Game" CanUserSort="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Label x:Name="GameLabel" Content="Unknown" Padding="0" Style="{StaticResource GridLabels}"/>
                                         <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding Game}" Value="The Sims 2">
+                                                <Setter TargetName="GameLabel" Property="Content" Value="Sims 2"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Game}" Value="The Sims 3">
+                                                <Setter TargetName="GameLabel" Property="Content" Value="Sims 3"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Game}" Value="The Sims 4">
+                                                <Setter TargetName="GameLabel" Property="Content" Value="Sims 4"/>
+                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding IsGroup}" Value="True">
-                                                <Setter TargetName="EnabledCheck" Property="Visibility" Value="Hidden"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding IsGroup}" Value="False">
-                                                <Setter TargetName="IsGroupIcon" Property="Visibility" Value="Hidden"/>
+                                                <Setter TargetName="GameLabel" Property="Content" Value=""/>
                                             </DataTrigger>
                                         </DataTemplate.Triggers>
-                                    </DataTemplate> 
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  Width="300" Header="Name" SortMemberPath="Name" CanUserSort="True">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <Label x:Name="NameLabel" Visibility="Visible" Content="{Binding Name}" Style="{StaticResource GridLabels}"/>
-                                            <TextBox x:Name="NameBox" Visibility="Hidden" Text="{Binding DataContext.NameChange, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" Style="{StaticResource GridBoxes}"/>
-                                        </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="SizeToHeader" Header="Scanned" SortMemberPath="Scanned" CanUserSort="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Label x:Name="ScannedLabel" Content="" Padding="0" Style="{StaticResource GridLabels}"/>
                                         <DataTemplate.Triggers>
-                                            <DataTrigger Binding="{Binding EditingName}" Value="True">
-                                                <Setter TargetName="NameBox" Property="Visibility" Value="Visible"/>
+                                            <DataTrigger Binding="{Binding Scanned}" Value="False">
+                                                <Setter TargetName="ScannedLabel" Property="Content" Value="No"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Scanned}" Value="True">
+                                                <Setter TargetName="ScannedLabel" Property="Content" Value="Yes"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsGroup}" Value="True">
+                                                <Setter TargetName="ScannedLabel" Property="Content" Value=""/>
                                             </DataTrigger>
                                         </DataTemplate.Triggers>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  Width="SizeToHeader" Header="">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Rectangle x:Name="IMGAlertRoot" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush19}" ToolTip="Root Mod">
-                                                <Rectangle.OpacityMask>
-                                                    <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertRoot}"/>                      
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                            <Rectangle x:Name="IMGAlertOutOfDate" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush17}" ToolTip="Mod Out of Date">
-                                                <Rectangle.OpacityMask>
-                                                    <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertOutOfDate}"/>                      
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                            <Rectangle x:Name="IMGAlertBroken" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush66}" ToolTip="Mod Broken">
-                                                <Rectangle.OpacityMask>
-                                                    <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertBroken}"/>
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                            <Rectangle x:Name="IMGAlertConflicts" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush71}" ToolTip="Has Conflicts">
-                                                <Rectangle.OpacityMask>
-                                                    <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertConflicts}"/>
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                            <Rectangle x:Name="IMGAlertWrongGame" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush65}" ToolTip="Wrong Game">
-                                                <Rectangle.OpacityMask>
-                                                    <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertWrongGame}"/>
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                            <Rectangle x:Name="IMGAlertOverride" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush85}" ToolTip="Override">
-                                                <Rectangle.OpacityMask>
-                                                    <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertOverride}"/>
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                            <Rectangle x:Name="IMGAlertOrphan" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush88}" ToolTip="Orphan Mod">
-                                                <Rectangle.OpacityMask>
-                                                    <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertOrphan}"/>
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                            <Rectangle x:Name="IMGAlertFave" Style="{StaticResource AlertIconsStyle}" Fill="{StaticResource Brush1}" ToolTip="Fave Mod">
-                                                <Rectangle.OpacityMask>
-                                                    <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource AlertFave}"/>
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                        </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="SizeToHeader" Header="Script" SortMemberPath="Script" CanUserSort="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Label x:Name="ScriptLabel" Content="" Padding="0" Style="{StaticResource GridLabels}"/>
                                         <DataTemplate.Triggers>
-                                            <DataTrigger Binding="{Binding Root}" Value="True">
-                                                <Setter TargetName="IMGAlertRoot" Property="Visibility" Value="Visible"/>
+                                            <DataTrigger Binding="{Binding HasScript}" Value="False">
+                                                <Setter TargetName="ScriptLabel" Property="Content" Value="No"/>
                                             </DataTrigger>
-                                            <DataTrigger Binding="{Binding Root}" Value="False">
-                                                <Setter TargetName="IMGAlertRoot" Property="Visibility" Value="Collapsed"/>
+                                            <DataTrigger Binding="{Binding HasScript}" Value="True">
+                                                <Setter TargetName="ScriptLabel" Property="Content" Value="Yes"/>
                                             </DataTrigger>
-                                            <DataTrigger Binding="{Binding OutOfDate}" Value="True">
-                                                <Setter TargetName="IMGAlertOutOfDate" Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding OutOfDate}" Value="False">
-                                                <Setter TargetName="IMGAlertOutOfDate" Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Broken}" Value="True">
-                                                <Setter TargetName="IMGAlertBroken" Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Broken}" Value="False">
-                                                <Setter TargetName="IMGAlertBroken" Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Conflicts}" Value="True">
-                                                <Setter TargetName="IMGAlertConflicts" Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Conflicts}" Value="False">
-                                                <Setter TargetName="IMGAlertConflicts" Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding WrongGame}" Value="True">
-                                                <Setter TargetName="IMGAlertWrongGame" Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding WrongGame}" Value="False">
-                                                <Setter TargetName="IMGAlertWrongGame" Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Override}" Value="True">
-                                                <Setter TargetName="IMGAlertOverride" Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Override}" Value="False">
-                                                <Setter TargetName="IMGAlertOverride" Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Orphan}" Value="True">
-                                                <Setter TargetName="IMGAlertOrphan" Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Orphan}" Value="False">
-                                                <Setter TargetName="IMGAlertOrphan" Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Fave}" Value="True">
-                                                <Setter TargetName="IMGAlertFave" Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Fave}" Value="False">
-                                                <Setter TargetName="IMGAlertFave" Property="Visibility" Value="Collapsed"/>
+                                            <DataTrigger Binding="{Binding IsGroup}" Value="True">
+                                                <Setter TargetName="ScriptLabel" Property="Content" Value=""/>
                                             </DataTrigger>
                                         </DataTemplate.Triggers>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  Width="SizeToHeader" Header="Creator" SortMemberPath="Creator" CanUserSort="True">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Label Content="{Binding Creator}" Style="{StaticResource GridLabels}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  Width="SizeToHeader" Header="DateAdded" SortMemberPath="DateAdded" CanUserSort="True">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Label Content="{Binding DateAdded}" Style="{StaticResource GridLabels}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  Width="SizeToHeader" Header="DateUpdated" SortMemberPath="DateUpdated" CanUserSort="True">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Label Content="{Binding DateUpdated}" Style="{StaticResource GridLabels}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  Width="50" Header="Game" SortMemberPath="Game" CanUserSort="True">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Label x:Name="GameLabel" Content="Unknown" Padding="0" Style="{StaticResource GridLabels}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn  Width="SizeToHeader" Header="File Type" SortMemberPath="Type" CanUserSort="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Label x:Name="TypeLabel" Content="{Binding Type}" Padding="0" Style="{StaticResource GridLabels}"/>
+                                            <DataTemplate.Triggers>                                            
+                                                <DataTrigger Binding="{Binding TypeLabel}" Value="True">
+                                                    <Setter TargetName="TypeLabel" Property="Content" Value=""/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>                            
+                            </DataGrid.Columns>
+                            <DataGrid.RowDetailsTemplate>
+                                <DataTemplate>
+                                    <ListView x:Name="FilesView" MaxHeight="150" MinHeight="0" ItemsSource="{Binding Files}" Background="{StaticResource Brush58}" Foreground="{StaticResource Brush55}" Validation.ErrorTemplate="{x:Null}" Margin="5, 0, 0, 0" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
                                     <DataTemplate.Triggers>
-                                        <DataTrigger Binding="{Binding Game}" Value="The Sims 2">
-                                            <Setter TargetName="GameLabel" Property="Content" Value="Sims 2"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding Game}" Value="The Sims 3">
-                                            <Setter TargetName="GameLabel" Property="Content" Value="Sims 3"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding Game}" Value="The Sims 4">
-                                            <Setter TargetName="GameLabel" Property="Content" Value="Sims 4"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsGroup}" Value="True">
-                                            <Setter TargetName="GameLabel" Property="Content" Value=""/>
+                                        <DataTrigger Binding="{Binding Combined}" Value="False">
+                                            <Setter TargetName="FilesView" Property="Height" Value="0"/>
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Width="SizeToHeader" Header="Scanned" SortMemberPath="Scanned" CanUserSort="True">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Label x:Name="ScannedLabel" Content="" Padding="0" Style="{StaticResource GridLabels}"/>
-                                    <DataTemplate.Triggers>
-                                        <DataTrigger Binding="{Binding Scanned}" Value="False">
-                                            <Setter TargetName="ScannedLabel" Property="Content" Value="No"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding Scanned}" Value="True">
-                                            <Setter TargetName="ScannedLabel" Property="Content" Value="Yes"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsGroup}" Value="True">
-                                            <Setter TargetName="ScannedLabel" Property="Content" Value=""/>
-                                        </DataTrigger>
-                                    </DataTemplate.Triggers>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Width="SizeToHeader" Header="Script" SortMemberPath="Script" CanUserSort="True">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Label x:Name="ScriptLabel" Content="" Padding="0" Style="{StaticResource GridLabels}"/>
-                                    <DataTemplate.Triggers>
-                                        <DataTrigger Binding="{Binding HasScript}" Value="False">
-                                            <Setter TargetName="ScriptLabel" Property="Content" Value="No"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding HasScript}" Value="True">
-                                            <Setter TargetName="ScriptLabel" Property="Content" Value="Yes"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsGroup}" Value="True">
-                                            <Setter TargetName="ScriptLabel" Property="Content" Value=""/>
-                                        </DataTrigger>
-                                    </DataTemplate.Triggers>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  Width="SizeToHeader" Header="File Type" SortMemberPath="Type" CanUserSort="True">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Label x:Name="TypeLabel" Content="{Binding Type}" Padding="0" Style="{StaticResource GridLabels}"/>
-                                        <DataTemplate.Triggers>                                            
-                                            <DataTrigger Binding="{Binding TypeLabel}" Value="True">
-                                                <Setter TargetName="TypeLabel" Property="Content" Value=""/>
-                                            </DataTrigger>
-                                        </DataTemplate.Triggers>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>                            
-                        </DataGrid.Columns>
-                        <DataGrid.RowDetailsTemplate>
-                            <DataTemplate>
-                                <ListView x:Name="FilesView" MaxHeight="150" MinHeight="0" ItemsSource="{Binding Files}" Background="{StaticResource Brush58}" Foreground="{StaticResource Brush55}" Validation.ErrorTemplate="{x:Null}" Margin="5, 0, 0, 0" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True"/>
-                                <DataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding Combined}" Value="False">
-                                        <Setter TargetName="FilesView" Property="Height" Value="0"/>
-                                    </DataTrigger>
-                                </DataTemplate.Triggers>
-                            </DataTemplate>
-                        </DataGrid.RowDetailsTemplate>                        
-                    </gridns:CustomDataGrid>
+                                </DataTemplate>
+                            </DataGrid.RowDetailsTemplate>                        
+                        </gridns:CustomDataGrid>
+                    </Grid>
+
+                    
                     
                     
                     
@@ -678,10 +681,11 @@
                     
                     <Grid Grid.Column="3">
                       <Grid.RowDefinitions>
-                        <RowDefinition/>
+                        <RowDefinition Height="*"/>
                         <RowDefinition Height="5"/>
-                        <RowDefinition Height="250"/>
+                        <RowDefinition Height="*"/>
                       </Grid.RowDefinitions>
+                      <GridSplitter Grid.Row="1" Height="3" HorizontalAlignment="Stretch" Foreground="{StaticResource Brush58}" />
                       <Grid Grid.Row="0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30"/>
@@ -690,7 +694,7 @@
                           <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                             <TextBlock Grid.Row="0" Text="Enabled Mods" Style="{StaticResource ColumnHeaderStyle}"/>
                             <TextBox Text="{Binding SearchEM, UpdateSourceTrigger=PropertyChanged}" Width="200" Height="20" FontSize="16" FontFamily="Arial" Margin="10, 0, 0, 0"/>
-                        </StackPanel>   
+                          </StackPanel>   
                           <ListView x:Name="EnabledMods" Grid.Row="1" ItemsSource="{Binding EnabledModsCV}" IsSynchronizedWithCurrentItem="True" Style="{StaticResource EnabledModsViewStyle}" SelectionMode="Extended" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="True">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="{x:Type ListViewItem}">
@@ -863,7 +867,7 @@
 
                 <Rectangle Grid.Row="1" Stretch="Fill" Fill="AliceBlue" Opacity="0" Visibility="{Binding PopupGreyed}"/>
                 <Rectangle Grid.Row="2" Stretch="Fill" Fill="AliceBlue" Opacity="0" Visibility="{Binding PopupGreyed}"/>
-                 
+                 <!--
                 <Grid Visibility="{Binding FoundZipsGridVis}" Grid.Row="2" Width="400" Height="200">
                     <Border Background="{StaticResource MainBackgroundBrush}" BorderBrush="{StaticResource Brush15}" BorderThickness="2,2,2,2" 
                         Padding="0" CornerRadius="5 5 5 5" ClipToBounds="True" Margin="-0,0,0,0">
@@ -1136,7 +1140,7 @@
                         <Label Content="{Binding ProgBarLabel}" FontFamily="Arial" FontSize="22" Foreground="{StaticResource Brush3}"/>
                         <ProgressBar IsIndeterminate="{Binding ProgIndet}" Background="{StaticResource Brush17}" Foreground="{StaticResource Brush27}" Height="25" Width="350" Margin="0, 10, 0, 0"/>
                     </StackPanel>                    
-                </Grid>
+                </Grid>-->
             </Grid>
         </Border>
     </Grid>
