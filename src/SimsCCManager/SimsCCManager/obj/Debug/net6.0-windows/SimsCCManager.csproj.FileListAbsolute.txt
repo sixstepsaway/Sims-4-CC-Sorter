@@ -91,3 +91,4 @@ I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager\SimsCCManager\obj\Debug\net6.0-windo
 I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager\SimsCCManager\obj\Debug\net6.0-windows\SimsCCManager.pdb
 i:\Code\C#\Sims-CC-Sorter\src\SimsCCManager\SimsCCManager\obj\Debug\net6.0-windows\SimsCCManager.genruntimeconfig.cache
 i:\Code\C#\Sims-CC-Sorter\src\SimsCCManager\SimsCCManager\obj\Debug\net6.0-windows\ref\SimsCCManager.dll
+I:\Code\C#\Sims-CC-Sorter\src\SimsCCManager\SimsCCManager\bin\Debug\net6.0-windows\Skybrud.Colors.dll

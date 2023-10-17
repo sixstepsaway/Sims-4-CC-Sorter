@@ -30,6 +30,8 @@ using System.Reflection.Metadata.Ecma335;
 using System.Windows.Controls;
 using System.Collections;
 using MoreLinq;
+using SimsCCManager.Packages.Containers;
+using Skybrud.Colors;
 
 namespace SimsCCManager.Manager
 {
@@ -100,6 +102,16 @@ namespace SimsCCManager.Manager
                 RaisePropertyChanged("InstanceMods");
                 if (initiallyloaded == true) ThingsChangedUpdate();
                 log.MakeLog("Property changed: InstanceMods", true);}
+        }
+
+        private List<SimsPackage> _detailedmods;
+        public List<SimsPackage> DetailedMods{
+            get { return _detailedmods; }
+            set { _detailedmods = value;
+                RaisePropertyChanged("InstanceMods");
+                //if (initiallyloaded == true) ThingsChangedUpdate();
+                //log.MakeLog("Property changed: InstanceMods", true);
+                }
         }
 
         private List<ModInfo> _enabledmods;
@@ -338,6 +350,16 @@ namespace SimsCCManager.Manager
                 RaisePropertyChanged("NewCategoryColor");
             }
         }
+        private string _newcategoryaltcolor;
+        public string NewCategoryAltColor{
+            get { return _newcategoryaltcolor;}
+            set { _newcategoryaltcolor = value;
+                RaisePropertyChanged("NewCategoryAltColor");
+            }
+        }
+
+        private string NewCategoryFG = "";
+        private string NewCategoryAltFG = "";
 
         private System.Windows.Media.Color _newcategorycolorbrush;
         public System.Windows.Media.Color NewCategoryColorBrush{
@@ -346,6 +368,21 @@ namespace SimsCCManager.Manager
                 RaisePropertyChanged("NewCategoryColorBrush");
             }
         }
+        private System.Windows.Media.Color _newcategoryaltcolorbrush;
+        public System.Windows.Media.Color NewCategoryAltColorBrush{
+            get { return _newcategoryaltcolorbrush;}
+            set { _newcategoryaltcolorbrush = value;
+                RaisePropertyChanged("NewCategoryAltColorBrush");
+            }
+        }
+
+        private RgbColor _newcategoryrgb;
+        public RgbColor NewCategoryRGB{
+            get { return _newcategoryrgb; }
+            set { _newcategoryrgb = value;
+            RaisePropertyChanged("NewCategoryRGB");}
+        }
+
 
         private Visibility _categoryscreenvis;
         public Visibility CategoryScreenVis{
@@ -451,12 +488,18 @@ namespace SimsCCManager.Manager
         }
 
         private IList _selectedmods = new List<ModInfo>();
-
         public IList SelectedMods {
             get { return _selectedmods;}
             set { _selectedmods = value;
                 RaisePropertyChanged("SelectedMods");
                 IMSelectedModChanged();
+            }
+        }
+        private IList _selectedmodsdetailed = new List<SimsPackage>();
+        public IList SelectedModsDetailed {
+            get { return _selectedmodsdetailed;}
+            set { _selectedmodsdetailed = value;
+                RaisePropertyChanged("SelectedModsDetailed");
             }
         }
 
@@ -493,6 +536,30 @@ namespace SimsCCManager.Manager
                 RaisePropertyChanged("UsedCat");
             }
         }
+        
+        private string _viewtoggletxt;
+        public string ViewToggleText{
+            get { return _viewtoggletxt;}
+            set { _viewtoggletxt = value;
+                RaisePropertyChanged("ViewToggleText");
+            }
+        }
+
+        private Visibility _detailedviewvis;
+        public Visibility DetailedViewVis{
+            get {return _detailedviewvis; }
+            set {_detailedviewvis = value;
+            RaisePropertyChanged("DetailedViewVis");}
+        }
+        private Visibility _simpleviewvis;
+        public Visibility SimpleViewVis{
+            get {return _simpleviewvis; }
+            set {_simpleviewvis = value;
+            RaisePropertyChanged("SimpleViewVis");}
+        }
+
+        private bool AltColor = false;
+
 
 
         private int editingmodnum = -1;
@@ -508,6 +575,15 @@ namespace SimsCCManager.Manager
                 InstanceModsCV.CurrentChanged += new EventHandler(IMSelectionChanged);
             }   
         }  
+
+        public ICollectionView DetailedModsCV
+        {    
+            get { return CollectionViewSource.GetDefaultView(DetailedMods); } 
+            set {
+                DetailedModsCV.CurrentChanged += new EventHandler(DMSelectionChanged);
+            }   
+        } 
+
         public ICollectionView EnabledModsCV
         {    
             get { return CollectionViewSource.GetDefaultView(EnabledMods); }   
@@ -595,6 +671,9 @@ namespace SimsCCManager.Manager
             NewProfileVis = Visibility.Hidden;
             ProfileScreenVis = Visibility.Hidden;
             CategoryScreenVis = Visibility.Hidden;
+            SimpleViewVis = Visibility.Visible;
+            DetailedViewVis = Visibility.Hidden;
+            ViewToggleText = "Simple";
             InfoBoxHeight = 0;
             Groups = new();
             Location = new System.Windows.Point(SystemParameters.PrimaryScreenWidth / 4, SystemParameters.PrimaryScreenHeight / 4);
@@ -626,30 +705,46 @@ namespace SimsCCManager.Manager
         private bool AMFilter(ModInfo mod)    
         {    
             return SearchAM == null    
-                || mod.Name.IndexOf(SearchAM, StringComparison.OrdinalIgnoreCase) != -1    
-                || mod.Location.IndexOf(SearchAM, StringComparison.OrdinalIgnoreCase) != -1    
-                || mod.Game.IndexOf(SearchAM, StringComparison.OrdinalIgnoreCase) != -1;    
+                || GetSearchIndex(mod.Name, SearchAM) != -1    
+                || GetSearchIndex(mod.Location, SearchAM) != -1    
+                || GetSearchIndex(mod.Game, SearchAM) != -1;    
         }
 
         private bool EMFilter(ModInfo mod)    
         {    
             return SearchEM == null    
-                || mod.Name.IndexOf(SearchEM, StringComparison.OrdinalIgnoreCase) != -1    
-                || mod.Location.IndexOf(SearchEM, StringComparison.OrdinalIgnoreCase) != -1    
-                || mod.Game.IndexOf(SearchEM, StringComparison.OrdinalIgnoreCase) != -1;    
+                || GetSearchIndex(mod.Name, SearchEM) != -1    
+                || GetSearchIndex(mod.Location, SearchEM) != -1    
+                || GetSearchIndex(mod.Game, SearchEM) != -1;    
         }
         
         private bool DLFilter(ModInfo mod)    
         {    
             return SearchDL == null    
-                || mod.Name.IndexOf(SearchDL, StringComparison.OrdinalIgnoreCase) != -1    
-                || mod.Location.IndexOf(SearchDL, StringComparison.OrdinalIgnoreCase) != -1    
-                || mod.Game.IndexOf(SearchDL, StringComparison.OrdinalIgnoreCase) != -1;    
+                || GetSearchIndex(mod.Name, SearchDL) != -1    
+                || GetSearchIndex(mod.Location, SearchDL) != -1    
+                || GetSearchIndex(mod.Game, SearchDL) != -1;    
+        }
+
+        private int GetSearchIndex(dynamic input, string match){
+            //var inp = input;
+            if (input != null) {
+                return input.IndexOf(match, StringComparison.OrdinalIgnoreCase);
+            } else {
+                return -1;
+            }
         }
         private void AddToInstanceModsCollection(ModInfo modInfo){
             if (!InstanceMods.Contains(modInfo)){
                 ModInfo minf = modInfo;
                 minf.EditingName = false;
+                if (AltColor == true){
+                    minf.AltColor = true;
+                    AltColor = false;
+                } else {
+                    minf.AltColor = false;
+                    AltColor = true;
+                }
                 InstanceMods.Add(minf);
                 InstanceModsCV.Refresh();
             }
@@ -722,6 +817,10 @@ namespace SimsCCManager.Manager
             }
             Console.WriteLine("Selection changed via click!");
             OpenPanel();*/
+        }
+
+        private void DMSelectionChanged(object sender, EventArgs e){
+
         }
 
         private void OpenPanel(){
@@ -829,7 +928,14 @@ namespace SimsCCManager.Manager
 
         private void IMSelectedModChanged(){
             if (SelectedMods != null){
-                Console.WriteLine("Selected: {0}", SelectedMods.Count);           
+                Console.WriteLine("Selected: {0}", SelectedMods.Count);
+                if (SelectedMods.Count == 1){
+                    ModInfo mod = SelectedMods[0] as ModInfo;
+                    Console.WriteLine("Selected mod color: {0}", mod.Category.ColorHex);
+                    Console.WriteLine("Selected mod alt color: {0}", mod.Category.ColorHexAlt);
+                    Console.WriteLine("Selected mod font color: {0}", mod.Category.ColorHexFG);
+                    Console.WriteLine("Selected mod alt color: {0}", mod.Category.ColorHexAltFG);                    
+                }
                 if (SelectedMods.Count == 0){
                     if (InstanceMods.Where(x => x.EditingName == true).Any()){
                         List<ModInfo> en = InstanceMods.Where(x => x.EditingName == true).ToList();
@@ -1023,7 +1129,7 @@ namespace SimsCCManager.Manager
             if (!Directory.Exists(ThisInstance.InstanceDownloadsFolder)){
                 Directory.CreateDirectory(ThisInstance.InstanceDownloadsFolder);
             }
-            ThisInstance.InstanceDownloadsFolder = Path.Combine(instance, "profiles"); 
+            ThisInstance.InstanceProfilesFolder = Path.Combine(instance, "profiles"); 
             if (!Directory.Exists(ThisInstance.InstanceProfilesFolder)){
                 Directory.CreateDirectory(ThisInstance.InstanceProfilesFolder);
             }
@@ -1032,7 +1138,7 @@ namespace SimsCCManager.Manager
             File.WriteAllText(Path.Combine(ThisInstance.Location, @"data\executables.ini"), "");  
             File.WriteAllText(Path.Combine(ThisInstance.Location, @"data\settings.ini"), "");
             string wfile = Path.Combine(ThisInstance.Location, @"data\profile_default.ini");
-            Categories.Add(new CategoryType() { Name="Default", ColorHex = "#EBEDEF"});
+            Categories.Add(new CategoryType() { Name="Default", ColorHex = "#EBEDEF", ColorHexAlt = "#C9D1D9"});
             using (FileStream fs = File.Create(wfile)){
                 using (StreamWriter sw = new(fs)){
                     sw.WriteLine("ProfileName=Default");
@@ -1112,7 +1218,8 @@ namespace SimsCCManager.Manager
                                     List<string> split = line.Split(";").ToList();
                                     cat.Name = split[0];
                                     cat.ColorHex = split[1];
-                                    if (split[2] != null) cat.Description = split[2];
+                                    cat.ColorHexAlt = split[2];
+                                    if (split[3] != null) cat.Description = split[3];
                                     Categories.Add(cat);
                                 }
                             } else {
@@ -1178,7 +1285,7 @@ namespace SimsCCManager.Manager
                     sw.WriteLineAsync(string.Format("ActiveExe={0}", ThisInstance.ActiveExe));
                     sw.WriteLineAsync(string.Format("[CATEGORIES]"));
                     foreach (CategoryType cat in Categories){
-                        sw.WriteLineAsync(string.Format("{0};{2};{1}", cat.Name, cat.Description, cat.ColorHex));
+                        sw.WriteLineAsync(string.Format("{0};{2};{3};{1}", cat.Name, cat.Description, cat.ColorHex, cat.ColorHexAlt));
                     }
                     sw.WriteLineAsync(string.Format("[EXECUTABLES]"));
                     foreach (Executable exe in Executables){
@@ -1609,6 +1716,7 @@ namespace SimsCCManager.Manager
                         } else {
                             modInfo = ProcessModFile(modInfo, fileinfo, fiFiles);
                             ModInfoToFile(modInfo, iniext);
+                            AddToInstanceModsCollection(modInfo);
                             AddModToList(modInfo);
                         }
                     } else if (extensions.Contains(fileinfo.Extension)) {
@@ -1638,6 +1746,7 @@ namespace SimsCCManager.Manager
             modInfo.DateUpdated = DateTime.Now;
             modInfo.Category = Categories.Where(x => x.Name == "Default").First();
             modInfo.New = true;
+            modInfo.Size = fileinfo.Length;
             if (fileinfo.DirectoryName.Contains("___Group")){
                 DirectoryInfo dir = new(fileinfo.DirectoryName);
                 modInfo.Group = dir.Name;
@@ -1735,7 +1844,7 @@ namespace SimsCCManager.Manager
                                     if(split[0] == "Location") mod.Location = split[1];
                                     if(split[0] == "Creator") mod.Creator = split[1];
                                     if(split[0] == "Game") mod.Game = split[1];
-                                    if(split[0] == "Size") mod.Size = Convert.ToInt32(split[1]);
+                                    if(split[0] == "Size") mod.Size = Convert.ToInt64(split[1]);
                                     if(split[0] == "Type") mod.Type = TypeFromString(split[1]);
                                     if(split[0] == "CompressionType") mod.CompressionType = CompressedTypeFromString(split[1]);
                                     if(split[0] == "OutOfDate") mod.OutOfDate = StringToBool(split[1]);
@@ -1793,7 +1902,7 @@ namespace SimsCCManager.Manager
                     sw.WriteLine(string.Format("DateAdded={0}", mod.DateAdded.ToString()));
                     sw.WriteLine(string.Format("DateUpdated={0}", mod.DateUpdated.ToString()));
                     sw.WriteLine(string.Format("Game={0}", mod.Game));
-                    sw.WriteLine(string.Format("Size={0}", mod.Size));
+                    sw.WriteLine(string.Format("Size={0}", ((int)mod.Size).ToString()));
                     sw.WriteLine(string.Format("Processed={0}", BoolToString(mod.Processed)));
                     sw.WriteLine(string.Format("Scanned={0}", BoolToString(mod.Scanned)));
                     sw.WriteLine(string.Format("HasScript={0}", BoolToString(mod.HasScript)));
@@ -1929,8 +2038,7 @@ namespace SimsCCManager.Manager
             foreach (int x in modindxs){
                 InstanceMods[x].Category = pickedcat;
                 ModInfoToFile(InstanceMods[x], FileToIni(InstanceMods[x].Location));
-            }
-            
+            }            
         }
         
         private void MakeModRoot(){
@@ -2148,6 +2256,11 @@ namespace SimsCCManager.Manager
             get { return new DelegateCommand(this.AddModsFolderToInstance); } 
         }
 
+        public ICommand ViewToggleClick
+        {
+            get { return new DelegateCommand(this.ViewToggle); }
+        }
+
         #endregion
 
 
@@ -2156,6 +2269,18 @@ namespace SimsCCManager.Manager
         Profile editingprofile = new();
 
         #region User Controls
+
+        private void ViewToggle(){
+            if (ViewToggleText == "Simple"){
+                ViewToggleText = "Detailed";
+                DetailedViewVis = Visibility.Visible;
+                SimpleViewVis = Visibility.Hidden;
+            } else if (ViewToggleText == "Detailed"){
+                ViewToggleText = "Simple";                
+                SimpleViewVis = Visibility.Visible;
+                DetailedViewVis = Visibility.Hidden;
+            }
+        }
 
         private void EditingNameCommand(){
             int idx = 0;
@@ -2385,8 +2510,21 @@ namespace SimsCCManager.Manager
         private void DeleteCategoryClick(){
             editingcat = CategoriesCV.CurrentItem as CategoryType;
             int idx = Categories.IndexOf(editingcat);
+            new Thread(() => RemoveFromCategories(editingcat)){IsBackground = true}.Start();
             Categories.Remove(editingcat);
-            CategoriesCV.Refresh();
+            CategoriesCV.Refresh();            
+            InstanceModsCV.Refresh();
+        }
+
+        private void RemoveFromCategories(CategoryType category){
+            List<ModInfo> mods = InstanceMods.Where(x => x.Category == category).ToList();
+            if (mods.Count != 0){
+                foreach (ModInfo mod in mods){
+                    int idx = InstanceMods.IndexOf(mod);
+                    InstanceMods[idx].Category = Categories[0];
+                    ModInfoToFile(InstanceMods[idx], FileToIni(InstanceMods[idx].Location));
+                }
+            }
         }
 
         private void CloseCategoryWindowClick(){
@@ -2407,8 +2545,19 @@ namespace SimsCCManager.Manager
             ColorDialog colorDialog = new ColorDialog();
             if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                NewCategoryColor = string.Format("#{0:X2}{1:X2}{2:X2}", colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B);
+                NewCategoryRGB = MakeRGBColor(colorDialog.Color);
+                NewCategoryColor = NewCategoryRGB.ToHex();
+                HsvColor alt = NewCategoryRGB.ToHsv();
+                if (alt.Value <= 50){
+                    alt.Value += 0.1;
+                    alt.Saturation -= 0.1;
+                } else {
+                    alt.Value -= 0.1;
+                    alt.Saturation += 0.1;
+                }
+                NewCategoryAltColor = alt.ToHex();
                 NewCategoryColorBrush = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(NewCategoryColor);
+                NewCategoryAltColorBrush = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(NewCategoryAltColor);
             }
         }
 
@@ -2425,7 +2574,7 @@ namespace SimsCCManager.Manager
                     System.Windows.Forms.MessageBox.Show("A profile with this name already exists.");
                 } else {
                     int idx = Categories.IndexOf(editingcat);
-                    CategoryType newcat = new(){ Name = NewCategoryName, Description = NewCategoryDescription, ColorHex = NewCategoryColor, ColorBrush = NewCategoryColorBrush};
+                    CategoryType newcat = new(){ Name = NewCategoryName, Description = NewCategoryDescription, ColorHex = NewCategoryColor, ColorBrush = NewCategoryColorBrush, ColorHexAlt = NewCategoryAltColor, ColorBrushAlt = NewCategoryAltColorBrush};
                     Categories.Remove(editingcat);
                     Categories.Add(newcat);
                 }
@@ -2435,14 +2584,14 @@ namespace SimsCCManager.Manager
                 } else if (Categories.Where(x => x.Name == NewCategoryName).Any()) {
                     System.Windows.Forms.MessageBox.Show("A category with this name already exists.");
                 } else {
-                    Categories.Add(new CategoryType() { Name = NewCategoryName, Description = NewCategoryDescription, ColorHex = NewCategoryColor});
+                    Categories.Add(new CategoryType() { Name = NewCategoryName, Description = NewCategoryDescription, ColorHex = NewCategoryColor, ColorBrush = NewCategoryColorBrush, ColorHexAlt = NewCategoryAltColor, ColorBrushAlt = NewCategoryAltColorBrush});
                     NewCategoryVis = Visibility.Hidden;
                 }
             }
             NewCategoryVis = Visibility.Hidden;
             CategoriesCV.Refresh();
             SaveInstanceInfo();
-        }
+        }        
 
         private void SaveModEditClick(){            
             EditScreenVis = Visibility.Hidden;
@@ -2721,6 +2870,11 @@ namespace SimsCCManager.Manager
             return ff;
         }
 
+        public static RgbColor MakeRGBColor(System.Drawing.Color color){
+            RgbColor rgbColor = new(color.R, color.G, color.B);
+            return rgbColor;
+        }
+
         #endregion
 
 
@@ -2878,7 +3032,14 @@ namespace SimsCCManager.Manager
         public DateTime DateUpdated {get; set;}
         public DateTime DateEnabled {get; set;}
         public string Game {get; set;}
-        public long Size {get; set;}
+        private long _size;
+        public long Size {
+            get { return _size; }
+            set { _size = value; 
+            SizeString = Converters.SizeSuffix(Size, 2);
+            }
+        }
+        public string SizeString {get; set;}
         public bool Processed {get; set;} = false;
         private bool _scanned;
         public bool Scanned {
@@ -3011,6 +3172,14 @@ namespace SimsCCManager.Manager
             }
         }
 
+        private bool _altcolor;
+        public bool AltColor {
+            get {return _altcolor;}
+            set {_altcolor = value;
+            PropertyChanged?.Invoke(this,
+            new PropertyChangedEventArgs(nameof(AltColor)));}
+        }
+
 
         public ImageSource Thumbnail {get; set;}
 
@@ -3018,7 +3187,7 @@ namespace SimsCCManager.Manager
 
         public ModInfo(){
             Files = new();
-            Category = new() {Name = "Default", ColorHex = "#EBEDEF"};
+            Category = new() {Name = "Default", ColorHex = "#EBEDEF", ColorHexAlt = "#C9D1D9"};
             EditingName = false;
         }
     }
@@ -3030,14 +3199,92 @@ namespace SimsCCManager.Manager
             get {return _colorhex; }
             set { _colorhex = value; 
             ColorBrush = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(_colorhex);
+            ColorHexFG = GetFGColor(value);
             RaisePropertyChanged("ColorHex");}
         }
+        private string _colorhexalt;
+        public string ColorHexAlt {
+            get {return _colorhexalt; }
+            set { _colorhexalt = value; 
+            ColorBrushAlt = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(_colorhexalt);
+            ColorHexAltFG = GetFGColor(value);
+            RaisePropertyChanged("ColorHexAlt");}
+        }
+
+        private string _colorhexfg;
+        public string ColorHexFG{
+            get { return _colorhexfg; }
+            set { _colorhexfg = value; 
+            ColorBrushFG = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(value));
+            }
+        }
+        private string _colorhexaltfg;
+        public string ColorHexAltFG{
+            get { return _colorhexaltfg; }
+            set { _colorhexaltfg = value; 
+            ColorBrushAltFG = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(value));
+            }
+        }
+        
+        private System.Windows.Media.Brush _colorbrushfg;
+        public System.Windows.Media.Brush ColorBrushFG{
+            get { return _colorbrushfg; }
+            set { _colorbrushfg = value; }
+        }
+        private System.Windows.Media.Brush _colorbrushaltfg;
+        public System.Windows.Media.Brush ColorBrushAltFG{
+            get { return _colorbrushaltfg; }
+            set { _colorbrushaltfg = value; }
+        }
+
+        private static string GetFGColor(string hexinput){
+            System.Drawing.Color color = ColorTranslator.FromHtml(hexinput);
+            RgbColor rgb = new(color.R, color.G, color.B);
+            /*HsvColor hsv = rgb.ToHsv();
+            Console.WriteLine("Color: {0}, {1}, {2}", hsv.Hue, hsv.Saturation, hsv.Value);
+            if (hsv.Value <= 0.50){
+                hsv.Value = hsv.Value * 2;
+            } else {
+                hsv.Value = 0.15;
+            }
+            if (hsv.Saturation <= 0.50){
+                hsv.Saturation = 0.85;
+            } else {
+                hsv.Saturation = 0.15;
+            }*/
+            double newcolor = 0;
+            double luminance = (0.299 * rgb.R + 0.587 * rgb.G + 0.114 * rgb.B)/255;
+            if (luminance > 0.5){
+                newcolor = 0; // bright colors - black font
+            } else {
+                newcolor = 255; // dark colors - white font
+            }
+            RgbColor newc = new()
+            {
+                Red = (byte)newcolor,
+                Blue = (byte)newcolor,
+                Green = (byte)newcolor
+            };
+
+            return newc.ToHex();
+        }
+
+
+
         private System.Windows.Media.Color _colorbrush;
         public System.Windows.Media.Color ColorBrush {
             set { _colorbrush = value;
                 RaisePropertyChanged("ColorBrush");}
             get { return _colorbrush;}
         }
+
+        private System.Windows.Media.Color _colorbrushalt;
+        public System.Windows.Media.Color ColorBrushAlt {
+            set { _colorbrushalt = value;
+                RaisePropertyChanged("ColorBrushAlt");}
+            get { return _colorbrushalt;}
+        }
+
         public string Description {get; set;}
         
         public event PropertyChangedEventHandler PropertyChanged;
@@ -3050,6 +3297,11 @@ namespace SimsCCManager.Manager
             {
                 handler(this, new PropertyChangedEventArgs(propertyName));
             }
+        }
+        
+        public string RemoveHash(string hex){
+            string nohash = hex.Replace("#", "");
+            return nohash;
         }
 
         public override string ToString()

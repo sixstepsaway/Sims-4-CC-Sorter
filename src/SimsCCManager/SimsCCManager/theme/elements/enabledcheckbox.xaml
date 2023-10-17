@@ -1,0 +1,88 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:col="clr-namespace:System.Collections;assembly=mscorlib"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:System="clr-namespace:System;assembly=mscorlib">
+        <ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary Source="Palette.xaml" />
+            <ResourceDictionary Source="images.xaml"/>
+        </ResourceDictionary.MergedDictionaries>        
+    <ControlTemplate x:Key="EnabledCheckboxTemplate" 
+                TargetType="CheckBox">                
+            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+        <!-- Add only required visual state triggers -->
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsEnabled"
+                    Value="False">
+            <Setter Property="Background"
+                    Value="{x:Static SystemColors.ControlLightBrush}" />
+            <Setter Property="Foreground"
+                    Value="{x:Static SystemColors.GrayTextBrush}" />
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+    <ControlTemplate x:Key="StandardButton" TargetType="Button" >
+        <Button Background="Transparent" ForceCursor="true" Cursor="Hand" Tag="{TemplateBinding Tag}" Template="{StaticResource StandardButtonTemplate}" Command="{TemplateBinding Command}">
+            <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                <Border Background="{StaticResource ButtonNormal}" Padding="0" BorderBrush="{StaticResource FontBrush}" BorderThickness="2" CornerRadius="5, 15, 5, 15">
+                    <Grid>
+                        <Rectangle x:Name="hoverRect" Fill="{StaticResource ButtonHover}" Stretch="Fill" Visibility="Hidden"/>
+                        <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">                            
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="25"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="{TemplateBinding Content}" Margin="10, 0, 0, 0" FontSize="30" FontWeight="UltraBold" FontFamily="../../fonts/#GeosansLight" Foreground="{StaticResource BarTextBrush}" Grid.Column="1"/>
+                            <Label x:Name="hoverText" Visibility="Hidden" Content="{TemplateBinding Content}" Margin="10, 0, 0, 0" FontSize="30" FontWeight="UltraBold" FontFamily="../../fonts/#GeosansLight" Foreground="{StaticResource Brush17}" Grid.Column="1"/>
+                        </Grid>  
+                    </Grid>
+                </Border>
+                <Grid Margin="-10,-15,0,0">
+                    <Rectangle Width="40" Height="40" HorizontalAlignment="Left" Fill="{StaticResource FontBrush}">
+                        <Rectangle.OpacityMask>
+                            <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{Binding Tag, RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type Button}}}"/>                      
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <Rectangle Margin="2, 0, 0, 0" Width="35" Height="35" HorizontalAlignment="Left" Fill="{StaticResource Brush3}">
+                        <Rectangle.OpacityMask>
+                            <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{Binding Tag, RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type Button}}}"/>                      
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <Rectangle x:Name="hoverRect2" Visibility="Hidden" Margin="2, 0, 0, 0" Width="35" Height="35" HorizontalAlignment="Left" Fill="{StaticResource Brush17}">
+                        <Rectangle.OpacityMask>
+                            <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{Binding Tag, RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type Button}}}"/>                      
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                </Grid>
+            </Grid>
+        </Button>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="hoverRect" Property="Visibility" Value="Visible" />
+                <Setter TargetName="hoverRect2" Property="Visibility" Value="Visible" />
+                <Setter TargetName="hoverText" Property="Visibility" Value="Visible" />
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+    <ControlTemplate x:Key="SocialsButton" TargetType="Button">
+        <Button Height="{TemplateBinding Height}" Width="{TemplateBinding Width}" ForceCursor="true" Cursor="Hand" Tag="{TemplateBinding Tag}" Template="{StaticResource StandardButtonTemplate}" Command="{TemplateBinding Command}">
+            <Grid>
+                <Rectangle Margin="2, 0, 0, 0" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" HorizontalAlignment="Left" Fill="{StaticResource Brush15}">
+                    <Rectangle.OpacityMask>
+                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{Binding Tag, RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type Button}}}"/>                      
+                    </Rectangle.OpacityMask>
+                </Rectangle>
+                <Rectangle x:Name="socialHoverRect" Margin="2, 0, 0, 0" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" HorizontalAlignment="Left" Fill="{TemplateBinding Foreground}" Visibility="Hidden">
+                    <Rectangle.OpacityMask>
+                        <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{Binding Tag, RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type Button}}}"/>                      
+                    </Rectangle.OpacityMask>
+                </Rectangle>
+            </Grid>                        
+        </Button> 
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="socialHoverRect" Property="Visibility" Value="Visible" />
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+</ResourceDictionary> 
