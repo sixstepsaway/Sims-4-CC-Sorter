@@ -32,6 +32,7 @@ using System.Collections;
 using MoreLinq;
 using SimsCCManager.Packages.Containers;
 using Skybrud.Colors;
+using System.Text;
 
 namespace SimsCCManager.Manager
 {
@@ -164,6 +165,14 @@ namespace SimsCCManager.Manager
                 RaisePropertyChanged("ThisProfile");
                 if (initiallyloaded == true) LoadProfileData();
                 log.MakeLog("Property changed: ThisProfile", true);}
+        }
+
+        private List<CreatorInfo> _creators;
+        public List<CreatorInfo> Creators {
+            get { return _creators; }
+            set { _creators = value; 
+            RaisePropertyChanged("Creators");
+            SaveCreators();}
         }
 
 
@@ -1824,6 +1833,58 @@ namespace SimsCCManager.Manager
         }
 
 
+        private void SaveCreators(){
+            string creatorinfo = Path.Combine(ThisInstance.InstanceDataFolder, "creators.txt");
+            StringBuilder stringBuilder = new();
+            foreach (CreatorInfo creator in Creators){
+                string info = string.Format("{0}: {1}, {2}", creator.CreatorName, creator.CreatorURL, creator.Fave.ToString());
+                stringBuilder.AppendLine(info);
+            }
+            using (FileStream fs = File.Create(creatorinfo)){
+                using (StreamWriter sw = new(fs)){
+                    sw.Write(stringBuilder);
+                    sw.Flush();
+                    sw.Close();
+                }
+                fs.Close(); fs.Dispose();
+            }
+        }
+
+        private void LoadCreators(){
+            string creatorinfo = Path.Combine(ThisInstance.InstanceDataFolder, "creators.txt");
+            Creators.Clear();
+            using (FileStream fs = new FileStream(creatorinfo, FileMode.Open, FileAccess.Read)){
+                using (StreamReader ss = new StreamReader(fs)){
+                    bool eos = false;                
+                        while (eos == false){
+                            if(!ss.EndOfStream){
+                                string line = ss.ReadLine();
+                                Creators.Add(LoadCreatorLine(line));
+                            } else {
+                                eos = true;
+                            }
+                        }
+                    ss.Close();
+                }
+                fs.Close(); fs.Dispose();
+            }
+        }
+
+        private CreatorInfo LoadCreatorLine(string line){
+            CreatorInfo cr = new();
+            string[] name = line.Split(": ");
+            string[] url = name[1].Split(", ");
+            cr.CreatorName = name[0];
+            cr.CreatorURL = url[0];
+            if (url[1] == "true"){
+                cr.Fave = true;
+            } else {
+                cr.Fave = false;
+            }
+            return cr;
+        }
+
+
         #endregion
 
 
@@ -2005,9 +2066,7 @@ namespace SimsCCManager.Manager
         public void MakeRelays(){
             EditDetails = new RelayCommand(this.EditMod);
             AddToCategoryClick = new RelayCommand(this.AddToCategory);
-            //MakeRoot = new RelayCommand(this.MakeModRoot);
         }
-        //public RelayCommand MakeRoot {get; set;}
         public RelayCommand EditDetails {get; set;}
         public RelayCommand AddToCategoryClick {get; set;}
         /*ScanFile
@@ -2050,10 +2109,11 @@ namespace SimsCCManager.Manager
                     ModInfo m = InstanceMods.Where(x => x.Name == sm.Name).First();
                     int idx = InstanceMods.IndexOf(m);
                     if (InstanceMods[idx].Root == true){
-                        InstanceMods[idx].Root = false;  
+                        InstanceMods[idx].Root = false;                        
                     } else {
                         InstanceMods[idx].Root = true; 
                     }
+                    ModInfoToFile(InstanceMods[idx], FileToIni(InstanceMods[idx].Location));
                 } else {
                     List<int> indxs = new();
                     foreach (ModInfo mm in SelectedMods){
@@ -2065,6 +2125,7 @@ namespace SimsCCManager.Manager
                         } else {
                             InstanceMods[idx].Root = true; 
                         }
+                        ModInfoToFile(InstanceMods[idx], FileToIni(InstanceMods[idx].Location));
                     }
                 }
             }
@@ -2082,6 +2143,7 @@ namespace SimsCCManager.Manager
                     } else {
                         InstanceMods[idx].OutOfDate = true; 
                     }
+                    ModInfoToFile(InstanceMods[idx], FileToIni(InstanceMods[idx].Location));
                 } else {
                     List<int> indxs = new();
                     foreach (ModInfo mm in SelectedMods){
@@ -2093,6 +2155,7 @@ namespace SimsCCManager.Manager
                         } else {
                             InstanceMods[idx].OutOfDate = true; 
                         }
+                        ModInfoToFile(InstanceMods[idx], FileToIni(InstanceMods[idx].Location));
                     }
                 }
             }
@@ -3346,5 +3409,11 @@ namespace SimsCCManager.Manager
         public uint Major {get; set;}
         public uint Minor {get; set;}
 
+    }
+
+    public class CreatorInfo {
+        public string CreatorName {get; set;}
+        public string CreatorURL {get; set;}
+        public bool Fave {get; set;}
     }
 }

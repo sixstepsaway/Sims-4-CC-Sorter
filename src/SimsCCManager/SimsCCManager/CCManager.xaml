@@ -48,19 +48,24 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type CheckBox}">
                         <StackPanel Orientation="Horizontal">
-                            <Image x:Name="checkboxImage" Source="{StaticResource EnabledBoxUncheck}" Width="20"/>
+                            <Rectangle x:Name="CheckboxRect" Height="20" Width="20" Fill="{TemplateBinding Foreground}" Tag="{StaticResource EnabledBoxUncheck}">                                
+                                <Rectangle.OpacityMask>
+                                    <ImageBrush x:Name="checkboxImage" AlignmentX="Left" Stretch="Fill" ImageSource="{Binding Tag, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Rectangle}}}"/>
+                                </Rectangle.OpacityMask>
+                            </Rectangle>
+                            <!--<Image x:Name="checkboxImage" Source="{StaticResource EnabledBoxUncheck}" Width="20"/>-->
                             <ContentPresenter/>
                         </StackPanel>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="checkboxImage" Property="Source" Value="{StaticResource EnabledBoxCheck}"/>
+                                <Setter TargetName="CheckboxRect" Property="Tag" Value="{StaticResource EnabledBoxCheck}"/>
                             </Trigger>
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
                                     <Condition Property="IsMouseOver" Value="True"/>
                                     <Condition Property="IsChecked" Value="False"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="checkboxImage" Property="Source" Value="{StaticResource EnabledBoxHover}"/>
+                                <Setter TargetName="CheckboxRect" Property="Tag" Value="{StaticResource EnabledBoxHover}"/>
                             </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -410,8 +415,6 @@
                                             <Grid>
                                                 <CheckBox x:Name="EnabledCheck" Padding="0" Style="{StaticResource EnabledBoxStyle}" IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Command="{Binding EnabledClick}" CommandParameter="{Binding Path=Enabled, Mode=TwoWay, 
                                                 RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}"/>
-                                                
-                                                
                                                 <Rectangle x:Name="IsGroupIcon" Width="20" Height="20" Fill="{StaticResource Brush4}" ToolTip="This is a group">
                                                     <Rectangle.OpacityMask>
                                                         <ImageBrush AlignmentX="Left" Stretch="Fill" ImageSource="{StaticResource IconGroup}"/>                      
@@ -424,12 +427,12 @@
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding IsGroup}" Value="False">
                                                     <Setter TargetName="IsGroupIcon" Property="Visibility" Value="Hidden"/>
-                                                </DataTrigger>                                                                                              
+                                                </DataTrigger>
                                                 <DataTrigger Binding="{Binding DataContext.AltColor, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}" Value="True">
-                                                    <Setter TargetName="TypeLabel" Property="Foreground" Value="{Binding DataContext.Category.ColorBrushAltFG, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}"/>
+                                                    <Setter TargetName="EnabledCheck" Property="Foreground" Value="{Binding DataContext.Category.ColorBrushAltFG, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding DataContext.AltColor, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}" Value="False">
-                                                    <Setter TargetName="TypeLabel" Property="Foreground" Value="{Binding DataContext.Category.ColorBrushFG, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}"/>
+                                                    <Setter TargetName="EnabledCheck" Property="Foreground" Value="{Binding DataContext.Category.ColorBrushFG, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}"/>
                                                 </DataTrigger>
                                             </DataTemplate.Triggers>
                                         </DataTemplate> 
@@ -564,7 +567,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Label x:Name="CreatorLabel" Content="{Binding Creator}" Style="{StaticResource GridLabels}"/>
-                                            <DataTemplate.Triggers>                                                
+                                            <DataTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding DataContext.AltColor, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}" Value="True">
                                                     <Setter TargetName="CreatorLabel" Property="Foreground" Value="{Binding DataContext.Category.ColorBrushAltFG, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}"/>
                                                 </DataTrigger>
@@ -1585,6 +1588,43 @@
                         <ProgressBar IsIndeterminate="{Binding ProgIndet}" Background="{StaticResource Brush17}" Foreground="{StaticResource Brush27}" Height="25" Width="350" Margin="0, 10, 0, 0"/>
                     </StackPanel>                    
                 </Grid>
+                <!--<Grid Visibility="{Binding CreatorsVis}" Grid.Row="2" Width="400" Height="200">
+                    <Border Background="{StaticResource MainBackgroundBrush}" BorderBrush="{StaticResource Brush15}" BorderThickness="2,2,2,2" 
+                        Padding="0" CornerRadius="5 5 5 5" ClipToBounds="True" Margin="-0,0,0,0">
+                    </Border>
+                    <StackPanel Orientation="Vertical">
+                        <Label Content="Creators" Style="{StaticResource GridLabels}" FontSize="20" HorizontalAlignment="Center" Margin="0, 10, 0, 0" Foreground="{StaticResource Brush3}"/>
+                        <Grid Visibility="Collapsed" Margin="10, 10, 10, 0"> Visibility="{Binding MakeNewVis}"
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition Height="40"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Vertical"  Grid.Column="0" Grid.Row="0">
+                                <Label Style="{StaticResource GridLabels}" Height="25" FontSize="15" Foreground="{StaticResource Brush5}" Content="Name" HorizontalAlignment="Stretch" Margin="0, 5, 0, 0"/>
+                                <Label Style="{StaticResource GridLabels}" Height="25" FontSize="15" Foreground="{StaticResource Brush5}"  Content="Source URL" HorizontalAlignment="Stretch" Margin="0, 5, 0, 0"/>
+                                <Label Style="{StaticResource GridLabels}" Height="25" FontSize="15" Foreground="{StaticResource Brush5}"  Content="Favorite Creator" HorizontalAlignment="Stretch" Margin="0, 5, 0, 0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical"  Grid.Column="1" Grid.Row="0">
+                                <TextBox Style="{StaticResource GridBoxes}" Height="25" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0, 5, 0, 0"/>
+                                <TextBox Style="{StaticResource GridBoxes}" Height="25" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0, 5, 0, 0"/>
+                                <CheckBox Width="25" Height="25" Margin="0, 5, 0, 0"/>
+                            </StackPanel>
+                            <Button Content="Save New Creator" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Height="25" Width="150"/>
+                            <Button Content="Back" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Height="25" Width="150"/>
+                        </Grid>
+                        <Grid Visibility="{Binding SelectCreatorVis}" Margin="10, 10, 10, 0">
+                            <StackPanel Orientation="Vertical">
+                                <Label Content="Known Creators" Margin="0, 0, 0, 10"/>
+                                <ComboBox Height="25" Width="250"/>
+                                <Button Content="New Creator" Width="150" Height="25" Margin="0, 10, 0, 0"/>
+                            </StackPanel>                            
+                        </Grid>
+                    </StackPanel>
+                </Grid> -->
             </Grid>
         </Border>
     </Grid>
