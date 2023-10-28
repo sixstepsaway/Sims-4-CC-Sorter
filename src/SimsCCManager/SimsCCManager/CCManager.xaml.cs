@@ -2161,11 +2161,21 @@ namespace SimsCCManager.Manager
             }
         }
 
+        private void ScanMods(){
+            
+        }
+
+
         #endregion
         
 
 
         #region ICommands
+
+        public ICommand ScanFile 
+        {
+            get { return new DelegateCommand(this.ScanMods); }
+        }
 
         public ICommand MakeRoot
         {

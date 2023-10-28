@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "i:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\SimsCCManager.csproj": {}
+    "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\SimsCCManager.csproj": {}
   },
   "projects": {
-    "i:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\SimsCCManager.csproj": {
+    "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\SimsCCManager.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "i:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\SimsCCManager.csproj",
+        "projectUniqueName": "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\SimsCCManager.csproj",
         "projectName": "SimsCCManager",
-        "projectPath": "i:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\SimsCCManager.csproj",
+        "projectPath": "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\SimsCCManager.csproj",
         "packagesPath": "C:\\Users\\conta\\.nuget\\packages\\",
-        "outputPath": "i:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\obj\\",
+        "outputPath": "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

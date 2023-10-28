@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "kOtf+DfV0vrLI0qqkNiws+/NxXO+SI54MOYTSnlmRDET0ESzgN2h2Vgt42RjXr+sv1zRSMvAHSDAcuRz5fznUw==",
+  "dgSpecHash": "zBKH7nDfuf/QnbpbwXKEyFf6hIJHIoE8aPaU43nTuxBc7xI2fUB38hrnHONfJWSDoCD//zWgIP7t72gHLhYU8Q==",
   "success": true,
-  "projectFilePath": "i:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\SimsCCManager.csproj",
+  "projectFilePath": "I:\\Code\\C#\\Sims-CC-Sorter\\src\\SimsCCManager\\SimsCCManager\\SimsCCManager.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\conta\\.nuget\\packages\\fontawesome.wpf\\4.7.0.9\\fontawesome.wpf.4.7.0.9.nupkg.sha512",
     "C:\\Users\\conta\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\5.0.0\\microsoft.bcl.asyncinterfaces.5.0.0.nupkg.sha512",
