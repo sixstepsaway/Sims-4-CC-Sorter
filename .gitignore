@@ -1,6 +1,4 @@
-/src/SimsCCManager.App/bin
-/src/SimsCCManager.App/obj
-/src/SimsCCManager.Console/bin
-/src/SimsCCManager.Console/obj
-/src/SimsCCManager/bin
-/src/SimsCCManager/obj
+/Recordings
+/src/SimsCCManager.App
+/src/SimsCCManager.App/.godot
+/src/SimsCCManager.App/.vscode
