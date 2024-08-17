@@ -1,0 +1,688 @@
+[gd_scene load_steps=47 format=3 uid="uid://c4rjghpqcjk60"]
+
+[ext_resource type="Script" path="res://UI/PackageDisplay.cs" id="1_l1mrx"]
+[ext_resource type="Texture2D" uid="uid://cuhu3356ym5r7" path="res://assets/icons/materialicons/twotone_account_box_black_48dp.png" id="2_4xbwd"]
+[ext_resource type="PackedScene" uid="uid://dnkueu3pxnu2b" path="res://UI/background.tscn" id="2_tqnmv"]
+[ext_resource type="FontFile" uid="uid://b6qecjkljkdcj" path="res://assets/fonts/Averia_Sans_Libre/AveriaSansLibre-Regular.ttf" id="3_gnae7"]
+[ext_resource type="Texture2D" uid="uid://bucjsdv7htgdm" path="res://assets/images/dress_plain_coat.png" id="4_7ldur"]
+[ext_resource type="Texture2D" uid="uid://d1216ob5rait5" path="res://assets/icons/materialicons/twotone_arrow_drop_down_black_48dp.png" id="4_bi1fu"]
+[ext_resource type="Texture2D" uid="uid://cr0iyclc7hnb5" path="res://assets/icons/materialicons/twotone_add_box_black_48dp.png" id="5_6teur"]
+[ext_resource type="Texture2D" uid="uid://dso4s7aqi8x4c" path="res://assets/icons/materialicons/twotone_library_add_black_48dp.png" id="6_ulswl"]
+[ext_resource type="Texture2D" uid="uid://dosqoo8wirnm8" path="res://assets/icons/materialicons/twotone_archive_black_48dp.png" id="7_j0y88"]
+[ext_resource type="PackedScene" uid="uid://ryrvwl0ec34b" path="res://UI/PackageDisplay_Elements/topbar_button.tscn" id="7_j6a54"]
+[ext_resource type="Texture2D" uid="uid://btjijgdsk4da0" path="res://assets/icons/materialicons/twotone_assignment_black_48dp.png" id="8_6oeh4"]
+[ext_resource type="Texture2D" uid="uid://c0b5qcfj7rwq2" path="res://assets/icons/materialicons/twotone_pageview_black_48dp.png" id="9_21c15"]
+[ext_resource type="Texture2D" uid="uid://b6njo80bsr20m" path="res://assets/icons/materialicons/twotone_article_black_48dp.png" id="10_nviw3"]
+[ext_resource type="Texture2D" uid="uid://b5n2gwxghupb1" path="res://assets/icons/materialicons/twotone_settings_applications_black_48dp.png" id="11_ltwr1"]
+[ext_resource type="Texture2D" uid="uid://bvsroafqogyd0" path="res://assets/images/s4.png" id="12_5fvq2"]
+[ext_resource type="Texture2D" uid="uid://dtc02rko6kqee" path="res://assets/icons/materialicons/twotone_play_arrow_black_48dp.png" id="13_xlbmk"]
+[ext_resource type="Texture2D" uid="uid://pclpeqlqhoje" path="res://assets/icons/materialicons/twotone_next_plan_black_48dp.png" id="15_djphk"]
+[ext_resource type="Texture2D" uid="uid://bkuudak2gjupp" path="res://assets/icons/materialicons/twotone_settings_black_48dp.png" id="16_bvsww"]
+[ext_resource type="PackedScene" uid="uid://cgimwkyuwfqpf" path="res://UI/PackageDisplay_Elements/exe_choice_popup_panel.tscn" id="17_wuhvj"]
+[ext_resource type="Texture2D" uid="uid://bp0j34pwjatb4" path="res://assets/icons/materialicons/twotone_help_black_48dp.png" id="18_yrn8a"]
+[ext_resource type="PackedScene" uid="uid://d2xe1vnmdo7ng" path="res://UI/PackageDisplay_Elements/view_errors_container.tscn" id="19_qbjob"]
+[ext_resource type="Theme" uid="uid://b4fe82i5mblf5" path="res://themes/packagedisplay_headers.tres" id="19_upvln"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3p7jc"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_s0tsl"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uaob4"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 3.0
+bg_color = Color(0.862745, 0.862745, 0.862745, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pum2v"]
+
+[sub_resource type="Image" id="Image_vhp2c"]
+data = {
+"data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 26, 255, 255, 255, 146, 255, 255, 255, 189, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 189, 255, 255, 255, 144, 255, 255, 255, 25, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 146, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 144, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 189, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 237, 237, 237, 195, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 189, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 177, 177, 177, 209, 37, 37, 37, 252, 178, 178, 178, 209, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 176, 176, 176, 209, 32, 32, 32, 254, 26, 26, 26, 255, 84, 84, 84, 235, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 176, 176, 176, 209, 32, 32, 32, 254, 26, 26, 26, 255, 78, 78, 78, 237, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 253, 253, 253, 192, 222, 222, 222, 198, 255, 255, 255, 191, 255, 255, 255, 191, 175, 175, 175, 210, 32, 32, 32, 254, 26, 26, 26, 255, 79, 79, 79, 237, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 253, 253, 253, 192, 90, 90, 90, 234, 45, 45, 45, 249, 212, 212, 212, 200, 174, 174, 174, 210, 32, 32, 32, 254, 26, 26, 26, 255, 79, 79, 79, 237, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 232, 232, 232, 196, 54, 54, 54, 246, 26, 26, 26, 255, 43, 43, 43, 250, 32, 32, 32, 254, 26, 26, 26, 255, 81, 81, 81, 237, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 226, 226, 226, 197, 54, 54, 54, 246, 26, 26, 26, 255, 26, 26, 26, 255, 81, 81, 81, 237, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 226, 226, 226, 197, 54, 54, 54, 246, 81, 81, 81, 236, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 189, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 230, 230, 230, 197, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 189, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 144, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 143, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 25, 255, 255, 255, 144, 255, 255, 255, 189, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 189, 255, 255, 255, 143, 255, 255, 255, 24, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
+"format": "RGBA8",
+"height": 16,
+"mipmaps": false,
+"width": 16
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_hxidq"]
+image = SubResource("Image_vhp2c")
+
+[sub_resource type="Image" id="Image_sod76"]
+data = {
+"data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 13, 255, 255, 255, 96, 255, 255, 255, 136, 255, 255, 255, 173, 255, 255, 255, 173, 255, 255, 255, 136, 255, 255, 255, 95, 255, 255, 255, 11, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 56, 255, 255, 255, 171, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 168, 255, 255, 255, 51, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 56, 255, 255, 255, 191, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 190, 255, 255, 255, 50, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 12, 255, 255, 255, 171, 198, 198, 198, 255, 198, 198, 198, 255, 176, 176, 176, 255, 81, 81, 81, 255, 43, 43, 43, 255, 43, 43, 43, 255, 83, 83, 83, 255, 177, 177, 177, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 168, 255, 255, 255, 10, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 97, 198, 198, 198, 255, 198, 198, 198, 255, 176, 176, 176, 255, 37, 37, 37, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 39, 39, 39, 255, 179, 179, 179, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 96, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 137, 198, 198, 198, 255, 198, 198, 198, 255, 81, 81, 81, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 86, 86, 86, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 154, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 174, 198, 198, 198, 255, 198, 198, 198, 255, 43, 43, 43, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 43, 43, 43, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 180, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 173, 198, 198, 198, 255, 198, 198, 198, 255, 43, 43, 43, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 44, 44, 44, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 180, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 136, 198, 198, 198, 255, 198, 198, 198, 255, 83, 83, 83, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 88, 88, 88, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 152, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 95, 198, 198, 198, 255, 198, 198, 198, 255, 178, 178, 178, 255, 39, 39, 39, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 42, 42, 42, 255, 181, 181, 181, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 94, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 11, 255, 255, 255, 169, 198, 198, 198, 255, 198, 198, 198, 255, 179, 179, 179, 255, 86, 86, 86, 255, 43, 43, 43, 255, 44, 44, 44, 255, 88, 88, 88, 255, 181, 181, 181, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 165, 255, 255, 255, 9, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 52, 255, 255, 255, 190, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 189, 255, 255, 255, 46, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 50, 255, 255, 255, 168, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 165, 255, 255, 255, 46, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 10, 255, 255, 255, 96, 255, 255, 255, 154, 255, 255, 255, 180, 255, 255, 255, 180, 255, 255, 255, 152, 255, 255, 255, 94, 255, 255, 255, 9, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
+"format": "RGBA8",
+"height": 16,
+"mipmaps": false,
+"width": 16
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_tihjn"]
+image = SubResource("Image_sod76")
+
+[sub_resource type="Image" id="Image_xwnad"]
+data = {
+"data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 42, 42, 42, 12, 26, 26, 26, 67, 26, 26, 26, 105, 27, 27, 27, 122, 27, 27, 27, 122, 26, 26, 26, 105, 27, 27, 27, 66, 46, 46, 46, 11, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 29, 29, 29, 44, 27, 27, 27, 122, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 122, 30, 30, 30, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 29, 29, 29, 44, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 30, 30, 30, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 42, 42, 42, 12, 27, 27, 27, 122, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 121, 46, 46, 46, 11, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 67, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 65, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 105, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 104, 255, 255, 255, 0, 255, 255, 255, 0, 27, 27, 27, 122, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 122, 255, 255, 255, 0, 255, 255, 255, 0, 27, 27, 27, 122, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 121, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 105, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 103, 255, 255, 255, 0, 255, 255, 255, 0, 27, 27, 27, 66, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 65, 255, 255, 255, 0, 255, 255, 255, 0, 46, 46, 46, 11, 27, 27, 27, 122, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 121, 51, 51, 51, 10, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 30, 30, 30, 42, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 31, 31, 31, 41, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 30, 30, 30, 42, 27, 27, 27, 121, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 121, 31, 31, 31, 41, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 46, 46, 46, 11, 27, 27, 27, 65, 27, 27, 27, 104, 27, 27, 27, 122, 27, 27, 27, 121, 27, 27, 27, 103, 27, 27, 27, 65, 51, 51, 51, 10, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
+"format": "RGBA8",
+"height": 16,
+"mipmaps": false,
+"width": 16
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_srmcp"]
+image = SubResource("Image_xwnad")
+
+[sub_resource type="Image" id="Image_tdl7u"]
+data = {
+"data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 179, 179, 179, 30, 178, 178, 178, 103, 178, 178, 178, 46, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 31, 178, 178, 178, 115, 178, 178, 178, 115, 176, 176, 176, 48, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 48, 178, 178, 178, 115, 178, 178, 178, 115, 176, 176, 176, 48, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 177, 177, 177, 49, 178, 178, 178, 115, 178, 178, 178, 115, 173, 173, 173, 31, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 177, 177, 177, 49, 178, 178, 178, 115, 178, 178, 178, 115, 181, 181, 181, 31, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 48, 178, 178, 178, 115, 178, 178, 178, 115, 179, 179, 179, 47, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 31, 178, 178, 178, 115, 178, 178, 178, 115, 179, 179, 179, 47, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 179, 179, 179, 30, 178, 178, 178, 103, 178, 178, 178, 46, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
+"format": "RGBA8",
+"height": 16,
+"mipmaps": false,
+"width": 8
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_ghu27"]
+image = SubResource("Image_tdl7u")
+
+[sub_resource type="Image" id="Image_bftra"]
+data = {
+"data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 178, 178, 178, 46, 178, 178, 178, 103, 176, 176, 176, 29, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 48, 178, 178, 178, 115, 178, 178, 178, 115, 181, 181, 181, 31, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 48, 178, 178, 178, 115, 178, 178, 178, 115, 181, 181, 181, 48, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 31, 178, 178, 178, 115, 178, 178, 178, 115, 177, 177, 177, 49, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 31, 178, 178, 178, 115, 178, 178, 178, 115, 177, 177, 177, 49, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 176, 176, 176, 48, 178, 178, 178, 115, 178, 178, 178, 115, 181, 181, 181, 48, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 176, 176, 176, 48, 178, 178, 178, 115, 178, 178, 178, 115, 173, 173, 173, 31, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 178, 178, 178, 46, 178, 178, 178, 103, 179, 179, 179, 30, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
+"format": "RGBA8",
+"height": 16,
+"mipmaps": false,
+"width": 8
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_cfb28"]
+image = SubResource("Image_bftra")
+
+[sub_resource type="Image" id="Image_62sak"]
+data = {
+"data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 30, 30, 30, 17, 26, 26, 26, 98, 26, 26, 26, 127, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 127, 26, 26, 26, 97, 30, 30, 30, 17, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 98, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 97, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 127, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 127, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 127, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 127, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 97, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 96, 255, 255, 255, 0, 255, 255, 255, 0, 30, 30, 30, 17, 26, 26, 26, 97, 26, 26, 26, 127, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 127, 26, 26, 26, 96, 32, 32, 32, 16, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
+"format": "RGBA8",
+"height": 16,
+"mipmaps": false,
+"width": 16
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_fb7kr"]
+image = SubResource("Image_62sak")
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_spj25"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fnxwo"]
+bg_color = Color(0.819608, 0.819608, 0.847059, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ugehs"]
+
+[sub_resource type="Theme" id="Theme_t880j"]
+Button/colors/font_color = Color(0.152941, 0.152941, 0.152941, 1)
+Button/fonts/font = ExtResource("3_gnae7")
+Button/styles/disabled = SubResource("StyleBoxEmpty_s0tsl")
+Button/styles/focus = SubResource("StyleBoxEmpty_s0tsl")
+Button/styles/hover = SubResource("StyleBoxFlat_uaob4")
+Button/styles/normal = SubResource("StyleBoxFlat_uaob4")
+Button/styles/pressed = SubResource("StyleBoxFlat_uaob4")
+OptionButton/colors/font_hover_color = Color(0.313726, 0.458824, 0.54902, 1)
+OptionButton/icons/arrow = ExtResource("4_bi1fu")
+OptionButton/styles/disabled = SubResource("StyleBoxEmpty_pum2v")
+OptionButton/styles/disabled_mirrored = SubResource("StyleBoxEmpty_pum2v")
+OptionButton/styles/focus = SubResource("StyleBoxEmpty_pum2v")
+OptionButton/styles/hover = SubResource("StyleBoxFlat_uaob4")
+OptionButton/styles/hover_mirrored = null
+OptionButton/styles/normal = SubResource("StyleBoxFlat_uaob4")
+OptionButton/styles/normal_mirrored = null
+PopupMenu/colors/font_accelerator_color = Color(0.7, 0.7, 0.7, 0.8)
+PopupMenu/colors/font_color = Color(0.243137, 0.223529, 0.278431, 1)
+PopupMenu/colors/font_disabled_color = Color(0.4, 0.4, 0.4, 0.8)
+PopupMenu/colors/font_hover_color = Color(0.875, 0.875, 0.875, 1)
+PopupMenu/colors/font_outline_color = Color(1, 1, 1, 1)
+PopupMenu/colors/font_separator_color = Color(0.875, 0.875, 0.875, 1)
+PopupMenu/colors/font_separator_outline_color = Color(1, 1, 1, 1)
+PopupMenu/constants/h_separation = 4
+PopupMenu/constants/icon_max_width = 0
+PopupMenu/constants/indent = 10
+PopupMenu/constants/item_end_padding = 2
+PopupMenu/constants/item_start_padding = 2
+PopupMenu/constants/outline_size = 0
+PopupMenu/constants/separator_outline_size = 0
+PopupMenu/constants/v_separation = 4
+PopupMenu/font_sizes/font_separator_size = 16
+PopupMenu/font_sizes/font_size = 16
+PopupMenu/fonts/font = ExtResource("3_gnae7")
+PopupMenu/fonts/font_separator = ExtResource("3_gnae7")
+PopupMenu/icons/checked = SubResource("ImageTexture_hxidq")
+PopupMenu/icons/checked_disabled = SubResource("ImageTexture_hxidq")
+PopupMenu/icons/radio_checked = SubResource("ImageTexture_tihjn")
+PopupMenu/icons/radio_checked_disabled = SubResource("ImageTexture_tihjn")
+PopupMenu/icons/radio_unchecked = SubResource("ImageTexture_srmcp")
+PopupMenu/icons/radio_unchecked_disabled = SubResource("ImageTexture_srmcp")
+PopupMenu/icons/submenu = SubResource("ImageTexture_ghu27")
+PopupMenu/icons/submenu_mirrored = SubResource("ImageTexture_cfb28")
+PopupMenu/icons/unchecked = SubResource("ImageTexture_fb7kr")
+PopupMenu/icons/unchecked_disabled = SubResource("ImageTexture_fb7kr")
+PopupMenu/styles/hover = SubResource("StyleBoxEmpty_spj25")
+PopupMenu/styles/labeled_separator_left = SubResource("StyleBoxEmpty_spj25")
+PopupMenu/styles/labeled_separator_right = SubResource("StyleBoxEmpty_spj25")
+PopupMenu/styles/panel = SubResource("StyleBoxFlat_fnxwo")
+PopupMenu/styles/separator = SubResource("StyleBoxEmpty_spj25")
+PopupPanel/styles/panel = SubResource("StyleBoxEmpty_ugehs")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yu83b"]
+bg_color = Color(0.333333, 0.294118, 0.34902, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.8, 0.670588, 0.847059, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="Theme" id="Theme_lhcnj"]
+Panel/styles/panel = SubResource("StyleBoxFlat_yu83b")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sw8eu"]
+bg_color = Color(0.184314, 0.184314, 0.192157, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_tmp8c"]
+
+[node name="PackageDisplay" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_l1mrx")
+
+[node name="Background" parent="." groups=["Background"] instance=ExtResource("2_tqnmv")]
+layout_mode = 2
+
+[node name="MainWindowSizer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 65
+
+[node name="HSplitContainer" type="HSplitContainer" parent="MainWindowSizer"]
+layout_mode = 2
+
+[node name="MainPanels" type="MarginContainer" parent="MainWindowSizer"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_top = 104
+
+[node name="HSplitContainer" type="HSplitContainer" parent="MainWindowSizer/MainPanels"]
+layout_mode = 2
+
+[node name="AllMods_Frame_Container" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ContainerHeader" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="LabelPositioner" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="AllMods_Label" type="Label" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader/LabelPositioner" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+theme = ExtResource("19_upvln")
+text = "All Mods"
+
+[node name="SearchPositioner" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader"]
+layout_mode = 2
+
+[node name="AllMods_SearchBox" type="LineEdit" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader/SearchPositioner"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+theme = ExtResource("19_upvln")
+placeholder_text = "Search..."
+
+[node name="AllMods_Container" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_top = 40
+
+[node name="Panel" type="Panel" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/AllMods_Container"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3p7jc")
+
+[node name="GridContainer" type="Control" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/AllMods_Container"]
+layout_mode = 2
+
+[node name="VSplitContainer" type="VSplitContainer" parent="MainWindowSizer/MainPanels/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PackageViewer_Frame_Container" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContainerHeader" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="LabelPositioner" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/ContainerHeader"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/ContainerHeader/LabelPositioner" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 1
+theme = ExtResource("19_upvln")
+text = "Package Viewer"
+
+[node name="PackageViewer_Container" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_top = 40
+
+[node name="Panel" type="Panel" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3p7jc")
+
+[node name="PackageViewer" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container/PackageViewer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container/PackageViewer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container/PackageViewer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container/PackageViewer/VBoxContainer/HBoxContainer/Control"]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 24.0
+offset_right = 233.0
+offset_bottom = 320.0
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("4_7ldur")
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container/PackageViewer/VBoxContainer"]
+layout_mode = 2
+
+[node name="NewDownloads_Frame_Container" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContainerHeader" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="LabelPositioner" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/ContainerHeader"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/ContainerHeader/LabelPositioner" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 1
+theme = ExtResource("19_upvln")
+text = "New Downloads"
+
+[node name="SearchPositioner" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/ContainerHeader"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="NewDL_SearchBox" type="LineEdit" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/ContainerHeader/SearchPositioner"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+theme = ExtResource("19_upvln")
+placeholder_text = "Search..."
+
+[node name="NewDL_Container" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_top = 40
+
+[node name="Panel" type="Panel" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/NewDL_Container"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3p7jc")
+
+[node name="GridContainer" type="Control" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/NewDL_Container"]
+layout_mode = 2
+
+[node name="TopPanels" type="MarginContainer" parent="MainWindowSizer"]
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="Panel" type="Panel" parent="MainWindowSizer/TopPanels"]
+layout_mode = 2
+
+[node name="Buttons" type="MarginContainer" parent="MainWindowSizer/TopPanels"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+theme_override_constants/margin_top = 50
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainWindowSizer/TopPanels/Buttons"]
+layout_mode = 2
+theme_override_constants/separation = -1
+
+[node name="AddFiles_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+layout_mode = 2
+tooltip_text = "Add Files to Instance"
+buttonImage = ExtResource("5_6teur")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFiles_Topbar_Button" index="1"]
+tooltip_text = "Add Files"
+
+[node name="AddFolder_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+layout_mode = 2
+tooltip_text = "Add Folder to Instance"
+buttonImage = ExtResource("6_ulswl")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFolder_Topbar_Button" index="1"]
+tooltip_text = "Add Folder"
+
+[node name="Refresh_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+layout_mode = 2
+tooltip_text = "Refresh Modlisting"
+buttonImage = ExtResource("7_j0y88")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/Refresh_Topbar_Button" index="1"]
+tooltip_text = "Refresh Files"
+
+[node name="SortSubfolders_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+layout_mode = 2
+tooltip_text = "Sort Subfolders"
+buttonImage = ExtResource("8_6oeh4")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/SortSubfolders_Topbar_Button" index="1"]
+tooltip_text = "Sort Subfolders"
+
+[node name="ScanAll_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+layout_mode = 2
+tooltip_text = "Scan All Unscanned Mods"
+buttonImage = ExtResource("9_21c15")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ScanAll_Topbar_Button" index="1"]
+tooltip_text = "Deep Scan All"
+
+[node name="ManageCats_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+layout_mode = 2
+tooltip_text = "Manage Categories"
+buttonImage = ExtResource("10_nviw3")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ManageCats_Topbar_Button" index="1"]
+tooltip_text = "Manage Categories"
+
+[node name="EditExes_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+layout_mode = 2
+tooltip_text = "Edit Executables"
+buttonImage = ExtResource("11_ltwr1")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/EditExes_Topbar_Button" index="1"]
+tooltip_text = "Edit Exes"
+
+[node name="Profiles" type="MarginContainer" parent="MainWindowSizer/TopPanels"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainWindowSizer/TopPanels/Profiles"]
+layout_mode = 2
+
+[node name="Profiles_Button" parent="MainWindowSizer/TopPanels/Profiles/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+tooltip_text = "Swap Instances"
+buttonImage = ExtResource("2_4xbwd")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Profiles/HBoxContainer/Profiles_Button" index="1"]
+tooltip_text = "Edit Profiles"
+
+[node name="OptionButton" type="OptionButton" parent="MainWindowSizer/TopPanels/Profiles/HBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme = SubResource("Theme_t880j")
+selected = 0
+item_count = 1
+popup/item_0/text = "Default"
+
+[node name="GameStartControls" type="MarginContainer" parent="MainWindowSizer/TopPanels"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Panel" type="Panel" parent="MainWindowSizer/TopPanels/GameStartControls" groups=["PanelsWBorders"]]
+layout_mode = 2
+theme = SubResource("Theme_lhcnj")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainWindowSizer/TopPanels/GameStartControls"]
+layout_mode = 2
+
+[node name="ChangeExe_Container" type="MarginContainer" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer"]
+layout_mode = 2
+
+[node name="ExeIcon_Container" type="MarginContainer" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container"]
+layout_mode = 2
+
+[node name="MarginContainer3" type="MarginContainer" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer"]
+custom_minimum_size = Vector2(13, 0)
+layout_mode = 2
+
+[node name="GameChoice_Dropdown" type="Button" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer/MarginContainer3"]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_sw8eu")
+
+[node name="MarginContainer" type="MarginContainer" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer/MarginContainer3"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="TextureRect" type="TextureRect" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer/MarginContainer3/MarginContainer"]
+clip_children = 1
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_bi1fu")
+expand_mode = 3
+
+[node name="ColorRect" type="ColorRect" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer/MarginContainer3/MarginContainer/TextureRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.8, 0.670588, 0.847059, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer"]
+custom_minimum_size = Vector2(65, 65)
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="ExeIcon_Image" type="TextureRect" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer/MarginContainer"]
+layout_mode = 2
+texture = ExtResource("12_5fvq2")
+expand_mode = 5
+
+[node name="Name_Container" type="MarginContainer" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/Name_Container"]
+layout_mode = 2
+
+[node name="ExeName_Label" type="Label" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/Name_Container/VBoxContainer"]
+layout_mode = 2
+text = "Default"
+
+[node name="ExeExe_Label" type="Label" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/Name_Container/VBoxContainer"]
+layout_mode = 2
+text = "TS4x64.exe"
+
+[node name="PlayButton_Container" type="MarginContainer" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_right = 8
+
+[node name="Play_Button" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/PlayButton_Container" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+custom_minimum_size = Vector2(55, 55)
+layout_mode = 2
+tooltip_text = "Play Game with Mods"
+buttonImage = ExtResource("13_xlbmk")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/PlayButton_Container/Play_Button" index="1"]
+tooltip_text = "Play Game with Mods"
+
+[node name="ExeChoice_PopupPanel_Control" type="Control" parent="MainWindowSizer/TopPanels/GameStartControls"]
+visible = false
+custom_minimum_size = Vector2(250, 75)
+layout_mode = 2
+
+[node name="HidePopup_Button" type="Button" parent="MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control"]
+layout_mode = 0
+offset_left = -375.0
+offset_top = -12.0
+offset_right = 4625.0
+offset_bottom = 4988.0
+theme_override_styles/focus = SubResource("StyleBoxEmpty_tmp8c")
+theme_override_styles/disabled_mirrored = SubResource("StyleBoxEmpty_tmp8c")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_tmp8c")
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxEmpty_tmp8c")
+theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_tmp8c")
+theme_override_styles/hover_mirrored = SubResource("StyleBoxEmpty_tmp8c")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_tmp8c")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxEmpty_tmp8c")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_tmp8c")
+theme_override_styles/normal_mirrored = SubResource("StyleBoxEmpty_tmp8c")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_tmp8c")
+
+[node name="ExeChoice_PopupPanel" parent="MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control" instance=ExtResource("17_wuhvj")]
+
+[node name="SettingsAndHelpControls" type="MarginContainer" parent="MainWindowSizer/TopPanels"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls"]
+layout_mode = 2
+
+[node name="SwapInstances_SettingsHelpButtons" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+custom_minimum_size = Vector2(45, 45)
+layout_mode = 2
+tooltip_text = "Swap Instances"
+buttonImage = ExtResource("15_djphk")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/SwapInstances_SettingsHelpButtons" index="1"]
+tooltip_text = "Return to Main Menu"
+
+[node name="Settings_SettingsHelpButtons" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+custom_minimum_size = Vector2(45, 45)
+layout_mode = 2
+tooltip_text = "Settings"
+buttonImage = ExtResource("16_bvsww")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/Settings_SettingsHelpButtons" index="1"]
+tooltip_text = "Settings"
+
+[node name="ViewErrors_Container" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer" instance=ExtResource("19_qbjob")]
+custom_minimum_size = Vector2(45, 45)
+layout_mode = 2
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/ViewErrors_Container/View Errors_SettingsHelpButtons" index="1"]
+tooltip_text = "View Errors"
+
+[node name="Help_SettingsHelpButtons" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+custom_minimum_size = Vector2(45, 45)
+layout_mode = 2
+tooltip_text = "Help"
+buttonImage = ExtResource("18_yrn8a")
+
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/Help_SettingsHelpButtons" index="1"]
+tooltip_text = "Help"
+
+[node name="RightClickMenu" type="PopupMenu" parent="."]
+position = Vector2i(125, 195)
+size = Vector2i(192, 309)
+item_count = 12
+item_0/text = "Add to Category"
+item_1/text = "Edit Details"
+item_1/id = 1
+item_2/text = "Scan"
+item_2/checkable = 1
+item_2/id = 2
+item_3/text = "Toggle Root"
+item_3/checkable = 1
+item_3/id = 3
+item_4/text = "Toggle Out of Date"
+item_4/checkable = 1
+item_4/id = 4
+item_5/text = "Add Creator"
+item_5/id = 5
+item_6/text = "Add Source Link"
+item_6/id = 6
+item_7/text = "Rename from Title"
+item_7/id = 7
+item_8/id = 8
+item_8/separator = true
+item_9/text = "Move Mod"
+item_9/id = 9
+item_10/text = "Delete Files"
+item_10/id = 10
+item_11/text = "Add Note"
+item_11/id = 11
+
+[connection signal="pressed" from="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer/MarginContainer3/GameChoice_Dropdown" to="." method="_on_game_choice_dropdown_pressed"]
+[connection signal="ButtonClicked" from="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/PlayButton_Container/Play_Button" to="." method="_on_play_button_button_clicked"]
+[connection signal="pressed" from="MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control/HidePopup_Button" to="." method="_on_hide_popup_button_pressed"]
+[connection signal="PickedExe" from="MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control/ExeChoice_PopupPanel" to="." method="_on_exe_choice_popup_panel_picked_exe"]
+[connection signal="ButtonClicked" from="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/SwapInstances_SettingsHelpButtons" to="." method="_on_swap_instances_settings_help_buttons_button_clicked"]
+
+[editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFiles_Topbar_Button"]
+[editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFolder_Topbar_Button"]
+[editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/Refresh_Topbar_Button"]
+[editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/SortSubfolders_Topbar_Button"]
+[editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ScanAll_Topbar_Button"]
+[editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ManageCats_Topbar_Button"]
+[editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/EditExes_Topbar_Button"]
+[editable path="MainWindowSizer/TopPanels/Profiles/HBoxContainer/Profiles_Button"]
+[editable path="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/PlayButton_Container/Play_Button"]
+[editable path="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/SwapInstances_SettingsHelpButtons"]
+[editable path="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/Settings_SettingsHelpButtons"]
+[editable path="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/ViewErrors_Container"]
+[editable path="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/ViewErrors_Container/View Errors_SettingsHelpButtons"]
+[editable path="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/Help_SettingsHelpButtons"]

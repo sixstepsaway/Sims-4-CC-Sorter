@@ -1,0 +1,54 @@
+[gd_resource type="Theme" load_steps=8 format=3 uid="uid://b1wri3elgo0xr"]
+
+[ext_resource type="FontFile" uid="uid://cum4yxi7ul06s" path="res://assets/fonts/Gotu/Gotu-Regular.ttf" id="1_fi8ol"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1jkhp"]
+bg_color = Color(0.921569, 0.929412, 0.937255, 1)
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0.52549, 0.52549, 0.52549, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qlol2"]
+bg_color = Color(0.921569, 0.929412, 0.937255, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hb4gb"]
+bg_color = Color(0.662745, 0.745098, 0.85098, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_borxy"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ulhff"]
+content_margin_left = 6.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.921569, 0.929412, 0.937255, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_phvot"]
+
+[resource]
+Button/styles/hover = SubResource("StyleBoxFlat_1jkhp")
+Button/styles/normal = SubResource("StyleBoxFlat_qlol2")
+Button/styles/pressed = SubResource("StyleBoxFlat_hb4gb")
+Label/colors/font_color = Color(0.262745, 0.262745, 0.262745, 1)
+Label/constants/line_spacing = 3
+Label/font_sizes/font_size = 13
+Label/fonts/font = ExtResource("1_fi8ol")
+LineEdit/colors/font_color = Color(0.262745, 0.262745, 0.262745, 1)
+LineEdit/colors/font_placeholder_color = Color(0.262745, 0.262745, 0.262745, 1)
+LineEdit/colors/font_uneditable_color = Color(0.262745, 0.262745, 0.262745, 1)
+LineEdit/font_sizes/font_size = 13
+LineEdit/fonts/font = ExtResource("1_fi8ol")
+LineEdit/styles/focus = SubResource("StyleBoxEmpty_borxy")
+LineEdit/styles/normal = SubResource("StyleBoxEmpty_borxy")
+LineEdit/styles/read_only = SubResource("StyleBoxEmpty_borxy")
+Panel/styles/panel = SubResource("StyleBoxFlat_ulhff")
+TextEdit/colors/font_color = Color(0.262745, 0.262745, 0.262745, 1)
+TextEdit/font_sizes/font_size = 13
+TextEdit/fonts/font = ExtResource("1_fi8ol")
+TextEdit/styles/focus = SubResource("StyleBoxEmpty_phvot")
+TextEdit/styles/normal = SubResource("StyleBoxEmpty_phvot")
+TextEdit/styles/read_only = SubResource("StyleBoxEmpty_phvot")

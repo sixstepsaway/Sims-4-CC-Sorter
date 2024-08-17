@@ -1,0 +1,12 @@
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://blowbhtn7n10r"]
+
+[ext_resource type="FontFile" uid="uid://c4blp27gexn6p" path="res://assets/fonts/VanillaExtractRegular.ttf" id="1_s3u6m"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vm1ky"]
+
+[resource]
+Button/fonts/font = ExtResource("1_s3u6m")
+Button/styles/disabled = SubResource("StyleBoxEmpty_vm1ky")
+Button/styles/focus = SubResource("StyleBoxEmpty_vm1ky")
+Button/styles/hover = SubResource("StyleBoxEmpty_vm1ky")
+Button/styles/normal = SubResource("StyleBoxEmpty_vm1ky")

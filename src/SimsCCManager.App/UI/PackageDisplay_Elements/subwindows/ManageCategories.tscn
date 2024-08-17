@@ -1,0 +1,309 @@
+[gd_scene load_steps=9 format=3 uid="uid://d06eea23cj2hi"]
+
+[ext_resource type="Theme" uid="uid://g0km5usrw6sf" path="res://themes/itemgrid_header.tres" id="1_h6qaj"]
+[ext_resource type="Theme" uid="uid://elq77dslte5a" path="res://themes/ManageCategories_buttons.tres" id="3_nc7wl"]
+[ext_resource type="Theme" uid="uid://b4fe82i5mblf5" path="res://themes/packagedisplay_headers.tres" id="4_o1gs5"]
+[ext_resource type="Theme" uid="uid://blals5ff6xqff" path="res://themes/category_labels.tres" id="5_ahlna"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kytpl"]
+bg_color = Color(0.14902, 0.145098, 0.160784, 1)
+border_width_left = 1
+border_width_top = 20
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.658414, 0.849922, 0.963471, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g6iyv"]
+bg_color = Color(0.921569, 0.929412, 0.937255, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qmfos"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 1
+border_width_right = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8pe2o"]
+bg_color = Color(0.870588, 0.870588, 0.870588, 1)
+
+[node name="ManageCategories" type="MarginContainer"]
+offset_right = 500.0
+offset_bottom = 400.0
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_kytpl")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 35
+theme_override_constants/margin_top = 65
+theme_override_constants/margin_right = 35
+theme_override_constants/margin_bottom = 40
+
+[node name="Panel" type="Panel" parent="MarginContainer/HBoxContainer/MarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_g6iyv")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/HBoxContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="NameColumn" type="VBoxContainer" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/NameColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Panel" type="Panel" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/NameColumn/MarginContainer"]
+layout_mode = 2
+theme = ExtResource("1_h6qaj")
+
+[node name="Panel2" type="Panel" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/NameColumn/MarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_qmfos")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/NameColumn/MarginContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="Label" type="Label" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/NameColumn/MarginContainer/MarginContainer"]
+layout_mode = 2
+theme = ExtResource("1_h6qaj")
+text = "Name"
+
+[node name="DataGridRowItem" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/NameColumn"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+layout_mode = 2
+script = null
+
+[node name="ColorColumn" type="VBoxContainer" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/ColorColumn"]
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/ColorColumn/MarginContainer2"]
+layout_mode = 2
+theme = ExtResource("1_h6qaj")
+
+[node name="Panel2" type="Panel" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/ColorColumn/MarginContainer2"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_qmfos")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/ColorColumn/MarginContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="Label" type="Label" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/ColorColumn/MarginContainer2/MarginContainer"]
+layout_mode = 2
+theme = ExtResource("1_h6qaj")
+text = "Color"
+
+[node name="DataGridRowItem" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/ColorColumn"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+layout_mode = 2
+script = null
+
+[node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/MarginContainer2"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HBoxContainer/MarginContainer2/VBoxContainer"]
+layout_mode = 2
+
+[node name="NewCategory_Button" type="Button" parent="MarginContainer/HBoxContainer/MarginContainer2/VBoxContainer/MarginContainer"]
+layout_mode = 2
+theme = ExtResource("3_nc7wl")
+text = "New"
+
+[node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/HBoxContainer/MarginContainer2/VBoxContainer"]
+layout_mode = 2
+
+[node name="EditCategory_Button" type="Button" parent="MarginContainer/HBoxContainer/MarginContainer2/VBoxContainer/MarginContainer2"]
+layout_mode = 2
+theme = ExtResource("3_nc7wl")
+text = "Edit"
+
+[node name="MarginContainer3" type="MarginContainer" parent="MarginContainer/HBoxContainer/MarginContainer2/VBoxContainer"]
+layout_mode = 2
+
+[node name="DeleteCategory_Button" type="Button" parent="MarginContainer/HBoxContainer/MarginContainer2/VBoxContainer/MarginContainer3"]
+layout_mode = 2
+theme = ExtResource("3_nc7wl")
+text = "Delete"
+
+[node name="MarginContainer5" type="MarginContainer" parent="MarginContainer/HBoxContainer/MarginContainer2/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="MarginContainer4" type="MarginContainer" parent="MarginContainer/HBoxContainer/MarginContainer2/VBoxContainer"]
+layout_mode = 2
+
+[node name="CloseCategory_Button" type="Button" parent="MarginContainer/HBoxContainer/MarginContainer2/VBoxContainer/MarginContainer4"]
+layout_mode = 2
+theme = ExtResource("3_nc7wl")
+text = "Close"
+
+[node name="MarginContainer2" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_top = 30
+
+[node name="Label" type="Label" parent="MarginContainer2"]
+layout_mode = 2
+size_flags_vertical = 0
+theme = ExtResource("4_o1gs5")
+text = "Category Management"
+horizontal_alignment = 1
+
+[node name="CategoryCreation" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="CategoryCreation"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_kytpl")
+
+[node name="MarginContainer" type="MarginContainer" parent="CategoryCreation"]
+layout_mode = 2
+theme_override_constants/margin_left = 75
+theme_override_constants/margin_top = 45
+theme_override_constants/margin_right = 75
+theme_override_constants/margin_bottom = 45
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CategoryCreation/MarginContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CategoryCreation/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CategoryCreation/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 5
+
+[node name="Label" type="Label" parent="CategoryCreation/MarginContainer/VBoxContainer/HBoxContainer/MarginContainer"]
+layout_mode = 2
+theme = ExtResource("5_ahlna")
+text = "Name"
+
+[node name="LineEdit" type="LineEdit" parent="CategoryCreation/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+theme = ExtResource("5_ahlna")
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="CategoryCreation/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CategoryCreation/MarginContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 5
+
+[node name="Label" type="Label" parent="CategoryCreation/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer"]
+layout_mode = 2
+theme = ExtResource("5_ahlna")
+text = "Description"
+
+[node name="LineEdit" type="LineEdit" parent="CategoryCreation/MarginContainer/VBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+theme = ExtResource("5_ahlna")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CategoryCreation/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="MarginContainer" type="MarginContainer" parent="CategoryCreation/MarginContainer/VBoxContainer/VBoxContainer"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+
+[node name="ColorPick_Button" type="Button" parent="CategoryCreation/MarginContainer/VBoxContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+theme = ExtResource("3_nc7wl")
+theme_override_styles/focus = SubResource("StyleBoxFlat_8pe2o")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_8pe2o")
+theme_override_styles/hover = SubResource("StyleBoxFlat_8pe2o")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_8pe2o")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8pe2o")
+
+[node name="MarginContainer2" type="MarginContainer" parent="CategoryCreation/MarginContainer/VBoxContainer/VBoxContainer"]
+custom_minimum_size = Vector2(150, 25)
+layout_mode = 2
+
+[node name="PickColor_Category_Button" type="Button" parent="CategoryCreation/MarginContainer/VBoxContainer/VBoxContainer/MarginContainer2"]
+layout_mode = 2
+theme = ExtResource("3_nc7wl")
+text = "Pick Color"
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="CategoryCreation/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Save_Category_Button" type="Button" parent="CategoryCreation/MarginContainer/VBoxContainer/HBoxContainer3"]
+layout_mode = 2
+theme = ExtResource("3_nc7wl")
+text = "Save"
+
+[node name="Cancel_Category_Button" type="Button" parent="CategoryCreation/MarginContainer/VBoxContainer/HBoxContainer3"]
+layout_mode = 2
+theme = ExtResource("3_nc7wl")
+text = "Cancel"
+
+[node name="MarginContainer2" type="MarginContainer" parent="CategoryCreation"]
+layout_mode = 2
+theme_override_constants/margin_top = 43
+
+[node name="BoxName" type="Label" parent="CategoryCreation/MarginContainer2"]
+layout_mode = 2
+size_flags_vertical = 0
+theme = ExtResource("4_o1gs5")
+theme_override_font_sizes/font_size = 26
+text = "New Category"
+horizontal_alignment = 1

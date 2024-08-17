@@ -1,0 +1,131 @@
+[gd_scene load_steps=12 format=3 uid="uid://irapd2eho84h"]
+
+[ext_resource type="Script" path="res://UI/MainMenu.cs" id="1_47kx6"]
+[ext_resource type="PackedScene" uid="uid://dnkueu3pxnu2b" path="res://UI/background.tscn" id="1_pexg1"]
+[ext_resource type="PackedScene" uid="uid://cevqdk2sipct5" path="res://UI/logo.tscn" id="3_57kfk"]
+[ext_resource type="Texture2D" uid="uid://yfcxmxm6eddm" path="res://assets/images/Tali.png" id="3_vx6va"]
+[ext_resource type="Texture2D" uid="uid://b6njo80bsr20m" path="res://assets/icons/materialicons/twotone_article_black_48dp.png" id="5_4emft"]
+[ext_resource type="Texture2D" uid="uid://b5n2gwxghupb1" path="res://assets/icons/materialicons/twotone_settings_applications_black_48dp.png" id="6_7jmu2"]
+[ext_resource type="Texture2D" uid="uid://dyh5q6dmv03ax" path="res://assets/icons/materialicons/twotone_grid_on_black_48dp.png" id="6_h7mhk"]
+[ext_resource type="PackedScene" uid="uid://dpna1rktoenjc" path="res://UI/MainMenu_Elements/mm_button.tscn" id="6_pbt0c"]
+[ext_resource type="Texture2D" uid="uid://dwy6vrnug6a5c" path="res://assets/icons/materialicons/twotone_help_center_black_48dp.png" id="7_2s6u4"]
+[ext_resource type="Texture2D" uid="uid://drntqgk06oftk" path="res://assets/icons/materialicons/twotone_exit_to_app_black_48dp.png" id="8_68hk8"]
+[ext_resource type="Texture2D" uid="uid://dwuth3ffohccl" path="res://assets/icons/materialicons/twotone_warning_black_48dp.png" id="11_45wje"]
+
+[node name="MainMenu" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_47kx6")
+
+[node name="Background" parent="." groups=["Background"] instance=ExtResource("1_pexg1")]
+layout_mode = 2
+
+[node name="Logo" parent="." instance=ExtResource("3_57kfk")]
+layout_mode = 2
+
+[node name="Tali" type="MarginContainer" parent="."]
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+tooltip_text = "In memory of my beloved Tali. My blanket will always have an empty space where you used to curl up while we coded this app."
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_bottom = 70
+
+[node name="TextureRect" type="TextureRect" parent="Tali"]
+layout_mode = 2
+texture = ExtResource("3_vx6va")
+expand_mode = 5
+
+[node name="Menu" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/margin_right = 45
+
+[node name="MarginContainer" type="MarginContainer" parent="Menu"]
+layout_mode = 2
+theme_override_constants/margin_left = 252
+theme_override_constants/margin_top = 125
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Menu/MarginContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/separation = -16
+alignment = 2
+
+[node name="MMButton_NewInstance" parent="Menu/MarginContainer/VBoxContainer" groups=["MMButtons"] instance=ExtResource("6_pbt0c")]
+custom_minimum_size = Vector2(500, 80)
+layout_mode = 2
+ButtonName = "New Instance"
+buttonImage = ExtResource("6_h7mhk")
+
+[node name="Label" parent="Menu/MarginContainer/VBoxContainer/MMButton_NewInstance/Node2D/MMContainer/PanelContainer/MarginContainer" index="0"]
+text = "New Instance"
+
+[node name="MMButton_LoadInstance" parent="Menu/MarginContainer/VBoxContainer" groups=["MMButtons"] instance=ExtResource("6_pbt0c")]
+visible = false
+custom_minimum_size = Vector2(500, 80)
+layout_mode = 2
+ButtonName = "Load Instance"
+buttonImage = ExtResource("5_4emft")
+
+[node name="Label" parent="Menu/MarginContainer/VBoxContainer/MMButton_LoadInstance/Node2D/MMContainer/PanelContainer/MarginContainer" index="0"]
+text = "Load Instance"
+
+[node name="MMButton_Settings" parent="Menu/MarginContainer/VBoxContainer" groups=["MMButtons"] instance=ExtResource("6_pbt0c")]
+custom_minimum_size = Vector2(500, 80)
+layout_mode = 2
+ButtonName = "Settings"
+buttonImage = ExtResource("6_7jmu2")
+
+[node name="Label" parent="Menu/MarginContainer/VBoxContainer/MMButton_Settings/Node2D/MMContainer/PanelContainer/MarginContainer" index="0"]
+text = "Settings"
+
+[node name="MMButton_Help" parent="Menu/MarginContainer/VBoxContainer" groups=["MMButtons"] instance=ExtResource("6_pbt0c")]
+custom_minimum_size = Vector2(500, 80)
+layout_mode = 2
+ButtonName = "Help"
+buttonImage = ExtResource("7_2s6u4")
+
+[node name="Label" parent="Menu/MarginContainer/VBoxContainer/MMButton_Help/Node2D/MMContainer/PanelContainer/MarginContainer" index="0"]
+text = "Help"
+
+[node name="MMButton_Quit" parent="Menu/MarginContainer/VBoxContainer" groups=["MMButtons"] instance=ExtResource("6_pbt0c")]
+custom_minimum_size = Vector2(500, 80)
+layout_mode = 2
+ButtonName = "Quit"
+buttonImage = ExtResource("8_68hk8")
+
+[node name="Label" parent="Menu/MarginContainer/VBoxContainer/MMButton_Quit/Node2D/MMContainer/PanelContainer/MarginContainer" index="0"]
+text = "Quit"
+
+[node name="MMButton_DevTest" parent="Menu/MarginContainer/VBoxContainer" groups=["MMButtons"] instance=ExtResource("6_pbt0c")]
+custom_minimum_size = Vector2(500, 80)
+layout_mode = 2
+ButtonName = "DevTest"
+buttonImage = ExtResource("11_45wje")
+
+[node name="Label" parent="Menu/MarginContainer/VBoxContainer/MMButton_DevTest/Node2D/MMContainer/PanelContainer/MarginContainer" index="0"]
+text = "DevTest"
+
+[connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_NewInstance" to="." method="_on_mm_button_new_instance_button_clicked"]
+[connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_LoadInstance" to="." method="_on_mm_button_load_instance_button_clicked"]
+[connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_Settings" to="." method="_on_mm_button_settings_button_clicked"]
+[connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_Help" to="." method="_on_mm_button_help_button_clicked"]
+[connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_Quit" to="." method="_on_mm_button_quit_button_clicked"]
+[connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_DevTest" to="." method="_on_mm_button_dev_test_button_clicked"]
+[connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_DevTest" to="." method="_on_mm_button_quit_button_clicked"]
+
+[editable path="Menu/MarginContainer/VBoxContainer/MMButton_NewInstance"]
+[editable path="Menu/MarginContainer/VBoxContainer/MMButton_LoadInstance"]
+[editable path="Menu/MarginContainer/VBoxContainer/MMButton_Settings"]
+[editable path="Menu/MarginContainer/VBoxContainer/MMButton_Help"]
+[editable path="Menu/MarginContainer/VBoxContainer/MMButton_Quit"]
+[editable path="Menu/MarginContainer/VBoxContainer/MMButton_DevTest"]

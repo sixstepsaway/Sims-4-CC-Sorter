@@ -1,0 +1,47 @@
+[gd_scene load_steps=4 format=3 uid="uid://cfjfc8xwj2jlm"]
+
+[ext_resource type="Script" path="res://UI/CustomDataGrid/DataGridHeaderCell.cs" id="1_m1t31"]
+[ext_resource type="Theme" uid="uid://g0km5usrw6sf" path="res://themes/itemgrid_header.tres" id="2_ja1iy"]
+[ext_resource type="PackedScene" uid="uid://dvndap6xua40n" path="res://UI/CustomDataGrid/DataGridHeaderResizer.tscn" id="3_k4xji"]
+
+[node name="DataGrid_HeaderCell" type="Control"]
+clip_contents = true
+layout_mode = 3
+anchors_preset = 0
+offset_right = 70.0
+offset_bottom = 25.0
+size_flags_horizontal = 0
+size_flags_vertical = 4
+script = ExtResource("1_m1t31")
+
+[node name="MarginContainer2" type="MarginContainer" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -11.5
+offset_right = 8.0
+offset_bottom = 11.5
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 2
+
+[node name="Label" type="Label" parent="MarginContainer2"]
+layout_mode = 2
+theme = ExtResource("2_ja1iy")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+
+[node name="DataGridHeader_Resizer" parent="MarginContainer" instance=ExtResource("3_k4xji")]
+layout_mode = 2
+size_flags_horizontal = 8
+
+[connection signal="resized" from="." to="." method="_on_resized"]

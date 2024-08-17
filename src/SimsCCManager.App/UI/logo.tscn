@@ -1,0 +1,52 @@
+[gd_scene load_steps=4 format=3 uid="uid://cevqdk2sipct5"]
+
+[ext_resource type="Texture2D" uid="uid://bntp5u6idtu8g" path="res://assets/images/SCCM.png" id="1_uefdf"]
+[ext_resource type="FontFile" uid="uid://djlm6ldm5y0xn" path="res://assets/fonts/Yusei_Magic/YuseiMagic-Regular.ttf" id="2_jf2lk"]
+
+[sub_resource type="Theme" id="Theme_7sbu6"]
+Label/colors/font_color = Color(0.141176, 0.839216, 0.709804, 1)
+Label/colors/font_outline_color = Color(0.972549, 0.658824, 0.662745, 0.384314)
+Label/colors/font_shadow_color = Color(0.113725, 0.113725, 0.113725, 1)
+Label/constants/outline_size = 7
+Label/constants/shadow_offset_x = 0
+Label/constants/shadow_offset_y = 7
+Label/constants/shadow_outline_size = 10
+Label/font_sizes/font_size = 73
+Label/fonts/font = ExtResource("2_jf2lk")
+
+[node name="MarginContainer" type="MarginContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Header_Image" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = -10
+
+[node name="MarginContainer" type="MarginContainer" parent="Header_Image"]
+custom_minimum_size = Vector2(400, 400)
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="Header_Image/MarginContainer"]
+layout_mode = 2
+texture = ExtResource("1_uefdf")
+expand_mode = 5
+
+[node name="Header_Label" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 235
+theme_override_constants/margin_top = 110
+
+[node name="MarginContainer" type="MarginContainer" parent="Header_Label"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="Label" type="Label" parent="Header_Label/MarginContainer"]
+layout_mode = 2
+theme = SubResource("Theme_7sbu6")
+text = "Sims CC Manager"
+horizontal_alignment = 1
+uppercase = true
