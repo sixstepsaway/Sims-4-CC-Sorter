@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 public partial class DataGridCell : Control
@@ -31,8 +32,8 @@ public partial class DataGridCell : Control
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{		
-		header = (GetParent().GetParent().GetParent().GetChild(0).GetChild(1).GetChild(GetIndex())) as DataGridHeaderCell;
-		GD.Print(string.Format("Header content: {0}", header.Label));
+		//header = (GetParent().GetParent().GetParent().GetChild(0).GetChild(1).GetChild(GetIndex())) as DataGridHeaderCell;
+		//GD.Print(string.Format("Header content: {0}", header.Label));
 		if (Enabled) TrueFalse = false;
 		if (Enabled) IsTrue = false;
 		/*GetNode<MarginContainer>("TextOption").Visible = Text;

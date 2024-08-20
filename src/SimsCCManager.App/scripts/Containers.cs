@@ -41,12 +41,16 @@ namespace SimsCCManager.Containers
         public abstract string InstanceDownloadsFolder {get; set;}
         protected string instanceprofilesfolder;
         public abstract string InstanceProfilesFolder {get; set;}
+        protected string instancesharedgamedatafolder;
+        public abstract string InstanceSharedGameDataFolder {get; set;}
         protected List<Category> categories;
         public abstract List<Category> Categories {get; set;}
         protected List<Executable> executables;
         public abstract List<Executable> Executables {get; set;}
         protected List<string> profiles;
         public abstract List<string> Profiles {get; set;}
+        public abstract List<string> ProfileFolders {get; set;}
+
 
         public GameInstanceBase(){
             categories = new List<Category>();
@@ -59,6 +63,15 @@ namespace SimsCCManager.Containers
         }
 
         public abstract void TestInstance();
+        
+
+        public void SetCoreDirectories(){
+            InstanceDownloadsFolder = Path.Combine(InstanceFolder, "Downloads");;
+            InstanceDataFolder = Path.Combine(InstanceFolder, "Data");
+            InstancePackagesFolder = Path.Combine(InstanceFolder, "Packages");
+            InstanceProfilesFolder = Path.Combine(InstanceFolder, "Profiles");
+            InstanceSharedGameDataFolder = Path.Combine(InstanceFolder, "SharedGameData");            
+        }
 
 
         public void BuildInstanceCore(){
@@ -71,15 +84,41 @@ namespace SimsCCManager.Containers
                     SettingsFileManagement.SaveSettings();
                 }
             }
+            string defaultprofilefolder = Path.Combine(InstanceProfilesFolder, "Default");
+            Directory.CreateDirectory(defaultprofilefolder);
             Directory.CreateDirectory(InstanceFolder);
-            InstanceDownloadsFolder = Path.Combine(InstanceFolder, "Downloads");;
             Directory.CreateDirectory(InstanceDownloadsFolder);
-            InstanceDataFolder = Path.Combine(InstanceFolder, "Data");
             Directory.CreateDirectory(InstanceDataFolder);
-            InstancePackagesFolder = Path.Combine(InstanceFolder, "Packages");
             Directory.CreateDirectory(InstancePackagesFolder);
-            InstanceProfilesFolder = Path.Combine(InstanceFolder, "Profiles");
             Directory.CreateDirectory(InstanceProfilesFolder);
+            Directory.CreateDirectory(InstanceSharedGameDataFolder);
+            Identifier = Guid.NewGuid();
+            string nm = "";
+            if (GameChoice == Games.Sims2) nm = "The Sims 2";
+            if (GameChoice == Games.Sims3) nm = "The Sims 3";
+            if (GameChoice == Games.Sims4) nm = "The Sims 4";
+            Executables.Add(new Executable() { Path = ExePath, Exe = GameExe, Arguments = "", Selected = true, Name = nm});
+            Categories.Add(new Category() { Name = "Default", Description = "The default category.", Background = new Godot.Color(Color.FromHtml("DDDDDD")), TextColor = new Godot.Color(Color.FromHtml("222222"))});
+            Profiles.Add("Default");
+        }
+
+        public void BuildInstanceCoreFromCurrent(){
+            if (Directory.Exists(InstanceFolder)){
+                string renamed = RenameExistingFolder(InstanceFolder);
+                Directory.Move(InstanceFolder, renamed);
+                var old = LoadedSettings.SetSettings.Instances.Where(x => x.InstanceLocation == InstanceFolder);
+                if (old.Any()){
+                    LoadedSettings.SetSettings.Instances[LoadedSettings.SetSettings.Instances.IndexOf(old.First())].InstanceLocation = renamed;
+                    SettingsFileManagement.SaveSettings();
+                }
+            }
+            string defaultprofilefolder = Path.Combine(InstanceProfilesFolder, "Default");
+            Directory.CreateDirectory(defaultprofilefolder);
+            Directory.CreateDirectory(InstanceFolder);
+            Directory.CreateDirectory(InstanceDownloadsFolder);
+            Directory.CreateDirectory(InstanceDataFolder);
+            Directory.CreateDirectory(InstanceProfilesFolder);
+            Directory.CreateDirectory(InstanceSharedGameDataFolder);
             Identifier = Guid.NewGuid();
             string nm = "";
             if (GameChoice == Games.Sims2) nm = "The Sims 2";
@@ -91,6 +130,7 @@ namespace SimsCCManager.Containers
         }
 
         public abstract void MakeFolderTree();
+        public abstract void CreateFromCurrent();
         public abstract void Load(string inifile);
 
         public abstract StringBuilder WriteIni();
@@ -230,6 +270,9 @@ namespace SimsCCManager.Containers
         public override string InstanceProfilesFolder{ 
             get { return instanceprofilesfolder; } set { instanceprofilesfolder = value; } 
         }
+        public override string InstanceSharedGameDataFolder{ 
+            get { return instancesharedgamedatafolder; } set { instancesharedgamedatafolder = value; } 
+        }
         public override List<Category> Categories{ 
             get { return categories; } set { categories = value; } 
         }
@@ -239,6 +282,15 @@ namespace SimsCCManager.Containers
         public override List<string> Profiles{ 
             get { return profiles; } set { profiles = value; } 
         }
+
+        public override List<string> ProfileFolders {get; set;} = new(){
+            "Neighborhoods",
+            "Screenshots",
+            "Music",
+            "Collections",
+            "Movies",
+            "PackagedLots"
+        };
 
         public string DownloadsFolder {get; set;} = "";
         public string ScreenshotsFolder {get; set;} = "";
@@ -251,8 +303,68 @@ namespace SimsCCManager.Containers
         public string NeighborhoodsFolder {get; set;} = "";
         public string MoviesFolder {get; set;} = "";
         public string PackagedLotsFolder {get; set;} = "";
+        public string InstanceTerrainsFolder {get; set;} = "";
+        public string InstanceLotCatalogFolder {get; set;} = "";
+        public string InstanceConfigFolder {get; set;} = "";
+        public string InstanceCamerasFolder {get; set;} = "";
+
         public List<string> CacheFiles {get; set; } = new List<string>();
         public List<string> ThumbnailsFiles {get; set;} = new List<string>();
+        
+
+
+        public void BuildInstance(bool createfromcurrent){
+            SetCoreDirectories();
+            MakeFolderTree();
+            if (createfromcurrent){
+                BuildInstanceCoreFromCurrent();
+                CreateFromCurrent();
+            } else {
+                BuildInstanceCore();
+            }            
+            WriteIni();
+        }
+
+        public override void CreateFromCurrent()
+        {
+            string profilefolder = Path.Combine(InstanceProfilesFolder, "Default");
+            try { Directory.Move(DownloadsFolder, InstancePackagesFolder);
+            Directory.CreateDirectory(DownloadsFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", DownloadsFolder, e.Message));
+            }
+            foreach (string foldername in ProfileFolders){
+                string homefolder = Path.Combine(GameDocumentsFolder, foldername);
+                string destfolder = Path.Combine(profilefolder, foldername);
+                Directory.Move(homefolder, destfolder);
+                Directory.CreateDirectory(homefolder);
+            }
+            try { Directory.Move(TerrainsFolder, InstanceTerrainsFolder);
+            Directory.CreateDirectory(TerrainsFolder); }
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", TerrainsFolder, e.Message));
+            }
+            
+            try { Directory.Move(LotCatalogFolder, InstanceLotCatalogFolder);
+            Directory.CreateDirectory(LotCatalogFolder); }
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", LotCatalogFolder, e.Message));
+            }
+
+            try { Directory.Move(ConfigFolder, InstanceConfigFolder);
+            Directory.CreateDirectory(ConfigFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", ConfigFolder, e.Message));
+            }
+
+            try { Directory.Move(CamerasFolder, InstanceCamerasFolder);
+            Directory.CreateDirectory(CamerasFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", CamerasFolder, e.Message));
+            }
+
+        }
+
 
         public override void TestInstance()
         {
@@ -281,6 +393,11 @@ namespace SimsCCManager.Containers
             NeighborhoodsFolder = Path.Combine(GameDocumentsFolder, "Neighborhoods");
             MoviesFolder = Path.Combine(GameDocumentsFolder, "Movies");
             PackagedLotsFolder = Path.Combine(GameDocumentsFolder, "PackagedLots");
+
+            InstanceTerrainsFolder = Path.Combine(InstanceSharedGameDataFolder, "SC4Terrains");
+            InstanceLotCatalogFolder = Path.Combine(InstanceSharedGameDataFolder, "LotCatalog");
+            InstanceConfigFolder = Path.Combine(InstanceSharedGameDataFolder, "Config");
+            InstanceCamerasFolder = Path.Combine(InstanceSharedGameDataFolder, "Cameras");
             
             CacheFiles.Add(Path.Combine(GameDocumentsFolder, "Accessory.cache"));
             CacheFiles.Add(Path.Combine(GameDocumentsFolder, "Groups.cache"));
@@ -475,12 +592,6 @@ namespace SimsCCManager.Containers
             }
         }
 
-        public void BuildInstance(){
-            MakeFolderTree();
-            BuildInstanceCore();
-            WriteIni();
-        }
-
         public override StringBuilder WriteIni(){
             
             StringBuilder sb = new();
@@ -584,6 +695,9 @@ namespace SimsCCManager.Containers
         public override string InstanceProfilesFolder{ 
             get { return instanceprofilesfolder; } set { instanceprofilesfolder = value; } 
         }
+        public override string InstanceSharedGameDataFolder{ 
+            get { return instancesharedgamedatafolder; } set { instancesharedgamedatafolder = value; } 
+        }
         public override List<Category> Categories{ 
             get { return categories; } set { categories = value; } 
         }
@@ -594,12 +708,23 @@ namespace SimsCCManager.Containers
             get { return profiles; } set { profiles = value; } 
         }
 
+        public override List<string> ProfileFolders {get; set;} = new(){
+            "Collections",
+            "CustomMusic",
+            "Exports",
+            "Library",
+            "Videos",
+            "SavedOutfits",
+            "SavedSims",
+            "Saves",
+            "Screenshots"
+        };
+
         public string CollectionsFolder {get; set;} = "";
         public string CustomMusicFolder {get; set;} = "";
         public string InstalledWorldsFolder {get; set;} = "";
         public string DownloadsFolder {get; set;} = "";
         public string ExportsFolder {get; set;} = "";
-        public string LibraryFolder {get; set;} = "";
         public string ModsFolder {get; set;} = "";
         public string VideosFolder {get; set;} = "";
         public string SavedOutfitsFolder {get; set;} = "";
@@ -607,12 +732,69 @@ namespace SimsCCManager.Containers
         public string SavesFolder {get; set;} = "";
         public string ScreenshotsFolder {get; set;} = "";
         public string ThumbnailsFolder {get; set;} = "";
+
+        public string InstanceInstalledWorldsFolder {get; set;} = "";
+        public string InstanceExportsFolder {get; set;} = "";
+        public string InstanceThumbnailsFolder {get; set;} = "";
+        public string InstanceS3DownloadsFolder {get; set;}
+
         public List<string> CacheFiles {get; set;} = new List<string>();
         public List<string> ThumbnailsFiles {get; set;} = new List<string>();
 
         public override void TestInstance()
         {
             throw new NotImplementedException();
+        }
+
+        public override void CreateFromCurrent()
+        {
+            string profilefolder = Path.Combine(InstanceProfilesFolder, "Default");
+            
+            try {File.Move(Path.Combine(ModsFolder, "Resource.cfg"), Path.Combine(InstanceSharedGameDataFolder, "Resource.cfg"));}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move resource file: {0}", e.Message));
+            }
+            
+            try { Directory.Move(ModsFolder, InstancePackagesFolder);
+            Directory.CreateDirectory(ModsFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", ModsFolder, e.Message));
+            }
+            foreach (string foldername in ProfileFolders){
+                string homefolder = Path.Combine(GameDocumentsFolder, foldername);
+                string destfolder = Path.Combine(profilefolder, foldername);
+                try { Directory.Move(homefolder, destfolder);
+                Directory.CreateDirectory(homefolder);
+                }
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", homefolder, e.Message));
+            }
+            }
+
+            try {Directory.Move(InstalledWorldsFolder, InstanceInstalledWorldsFolder);
+            Directory.CreateDirectory(InstalledWorldsFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", InstalledWorldsFolder, e.Message));
+            }
+            
+            try {Directory.Move(ExportsFolder, InstanceExportsFolder);
+            Directory.CreateDirectory(ExportsFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", ExportsFolder, e.Message));
+            }
+
+            try {Directory.Move(ThumbnailsFolder, InstanceThumbnailsFolder);
+            Directory.CreateDirectory(ThumbnailsFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", ThumbnailsFolder, e.Message));
+            }
+
+            try {Directory.Move(DownloadsFolder, InstanceS3DownloadsFolder);
+            Directory.CreateDirectory(DownloadsFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", DownloadsFolder, e.Message));
+            }
+
         }
         
         public override void MakeFolderTree(){
@@ -622,7 +804,6 @@ namespace SimsCCManager.Containers
             CustomMusicFolder = Path.Combine(GameDocumentsFolder, "CustomMusic");
             InstalledWorldsFolder = Path.Combine(GameDocumentsFolder, "InstalledWorlds");
             ExportsFolder = Path.Combine(GameDocumentsFolder, "Exports");
-            LibraryFolder = Path.Combine(GameDocumentsFolder, "Library");
             ModsFolder = Path.Combine(GameDocumentsFolder, "Mods");
             VideosFolder = Path.Combine(GameDocumentsFolder, "Recorded Videos");
             SavedOutfitsFolder = Path.Combine(GameDocumentsFolder, "SavedOutfits");
@@ -630,6 +811,11 @@ namespace SimsCCManager.Containers
             SavesFolder = Path.Combine(GameDocumentsFolder, "Saves");
             ScreenshotsFolder = Path.Combine(GameDocumentsFolder, "Screenshots");
             ThumbnailsFolder = Path.Combine(GameDocumentsFolder, "Thumbnails");
+
+            InstanceInstalledWorldsFolder = Path.Combine(InstanceSharedGameDataFolder, "InstalledWorldsFolder");
+            InstanceExportsFolder = Path.Combine(InstanceSharedGameDataFolder, "ExportsFolder");
+            InstanceThumbnailsFolder = Path.Combine(InstanceSharedGameDataFolder, "ThumbnailsFolder");
+            InstanceS3DownloadsFolder = Path.Combine(InstanceSharedGameDataFolder, "Downloads");
             
             CacheFiles.Add(Path.Combine(GameDocumentsFolder, "CASPartCache.package"));
             CacheFiles.Add(Path.Combine(GameDocumentsFolder, "compositorCache.package"));
@@ -645,9 +831,15 @@ namespace SimsCCManager.Containers
             ThumbnailsFiles.Add(Path.Combine(GameDocumentsFolder, "simCompositorCache.package"));
         }
 
-        public void BuildInstance(){
+        public void BuildInstance(bool createfromcurrent){
+            SetCoreDirectories();
             MakeFolderTree();
-            BuildInstanceCore();
+            if (createfromcurrent){
+                BuildInstanceCoreFromCurrent();
+                CreateFromCurrent();
+            } else {
+                BuildInstanceCore();
+            }            
             WriteIni();
         }
 
@@ -940,6 +1132,9 @@ namespace SimsCCManager.Containers
         public override string InstanceProfilesFolder{ 
             get { return instanceprofilesfolder; } set { instanceprofilesfolder = value; } 
         }
+        public override string InstanceSharedGameDataFolder{ 
+            get { return instancesharedgamedatafolder; } set { instancesharedgamedatafolder = value; } 
+        }
         public override List<Category> Categories{ 
             get { return categories; } set { categories = value; } 
         }
@@ -949,6 +1144,13 @@ namespace SimsCCManager.Containers
         public override List<string> Profiles{ 
             get { return profiles; } set { profiles = value; } 
         }
+
+        public override List<string> ProfileFolders {get; set;} = new(){
+            "Videos",
+            "Screenshots",
+            "Tray",
+            "Saves"
+        };
         
         public string ContentFolder {get; set;} = "";
         public string ModsFolder {get; set;} = "";
@@ -956,6 +1158,11 @@ namespace SimsCCManager.Containers
         public string ScreenshotsFolder {get; set;} = "";
         public string TrayFolder {get; set;} = "";
         public string SavesFolder {get; set;} = "";
+
+        public string InstanceContentFolder {get; set;} = "";
+        public string InstanceScreenshotsFolder {get; set;} = "";
+        public string InstanceVideosFolder {get; set;} = "";
+
         public List<string> CacheFiles {get; set; } = new List<string>();
         public List<string> ThumbnailsFiles {get; set;} = new List<string>();
         public override void MakeFolderTree(){
@@ -964,8 +1171,10 @@ namespace SimsCCManager.Containers
             ModsFolder = Path.Combine(GameDocumentsFolder, "Mods");
             VideosFolder = Path.Combine(GameDocumentsFolder, "Videos");
             TrayFolder = Path.Combine(GameDocumentsFolder, "Tray");
-            ModsFolder = Path.Combine(GameDocumentsFolder, "Mods");
             SavesFolder = Path.Combine(GameDocumentsFolder, "Saves");
+            InstanceContentFolder = Path.Combine(InstanceSharedGameDataFolder, "Content");
+            InstanceScreenshotsFolder = Path.Combine(InstanceSharedGameDataFolder, "Screenshots");
+            InstanceVideosFolder = Path.Combine(InstanceSharedGameDataFolder, "Videos");
             
             CacheFiles.Add(Path.Combine(GameDocumentsFolder, "avatarcache.package"));
             CacheFiles.Add(Path.Combine(GameDocumentsFolder, "localthumbcache.package"));
@@ -975,15 +1184,64 @@ namespace SimsCCManager.Containers
             ThumbnailsFiles.Add(Path.Combine(GameDocumentsFolder, "localthumbcache.package"));
         }
 
-        public void BuildInstance(){
+        public void BuildInstance(bool createfromcurrent){
+            SetCoreDirectories();
             MakeFolderTree();
-            BuildInstanceCore();
+            if (createfromcurrent){
+                BuildInstanceCoreFromCurrent();
+                CreateFromCurrent();
+            } else {
+                BuildInstanceCore();
+            }            
             WriteIni();
         }
 
         public override void TestInstance()
         {
             throw new NotImplementedException();
+        }
+
+        public override void CreateFromCurrent()
+        {
+            string profilefolder = Path.Combine(InstanceProfilesFolder, "Default");
+            try {File.Move(Path.Combine(ModsFolder, "Resource.cfg"), Path.Combine(InstanceSharedGameDataFolder, "Resource.cfg"));}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move resource file: {0}", e.Message));
+            }
+            
+            
+            try { Directory.Move(ModsFolder, InstancePackagesFolder);
+            Directory.CreateDirectory(ModsFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", ModsFolder, e.Message));
+            }
+            foreach (string foldername in ProfileFolders){
+                string homefolder = Path.Combine(GameDocumentsFolder, foldername);
+                string destfolder = Path.Combine(profilefolder, foldername);
+                try { Directory.Move(homefolder, destfolder);
+                Directory.CreateDirectory(homefolder);}
+                catch (Exception e) {
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", homefolder, e.Message));
+                }
+            }
+
+            try { Directory.Move(ContentFolder, InstanceContentFolder);
+            Directory.CreateDirectory(ContentFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", ContentFolder, e.Message));
+            }
+            
+            try { Directory.Move(ScreenshotsFolder, InstanceScreenshotsFolder);
+            Directory.CreateDirectory(ScreenshotsFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", ContentFolder, e.Message));
+            }
+
+            try { Directory.Move(VideosFolder, InstanceVideosFolder);
+            Directory.CreateDirectory(VideosFolder);}
+            catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", ContentFolder, e.Message));
+            }
         }
 
         public override void Load(string inifile)
@@ -1235,5 +1493,14 @@ namespace SimsCCManager.Containers
     public class ExeInfo {
         public string folder {get; set;}
         public string name {get; set;}
+    }
+
+    public class ProfileInfo {
+        public string ProfileName {get; set;}
+        public string SavesFolder {get; set;}
+        public string ScreenshotsFolder {get; set;}
+        public string VideosFolder {get; set;}
+        public string TrayFolder {get; set;}
+        //public string 
     }
 }

@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://UI/CustomDataGrid/DataGridHeaderRow.cs" id="1_xjhbu"]
 
 [node name="DataGrid_HeaderRow" type="MarginContainer"]
+size_flags_horizontal = 3
 size_flags_vertical = 0
 script = ExtResource("1_xjhbu")
 

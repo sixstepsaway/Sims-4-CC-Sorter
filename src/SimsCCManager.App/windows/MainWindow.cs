@@ -148,6 +148,10 @@ public partial class MainWindow : MarginContainer
 		foreach (ColorRect accent in accents){
 			accent.Color = theme.AccentColor;
 		}
+		List<Node> plainbg = GetTree().GetNodesInGroup("PlainBG").ToList();
+		foreach (ColorRect bg in plainbg){
+			bg.Color = theme.BackgroundColor;
+		}
 		List<Node> backgrounds = GetTree().GetNodesInGroup("Background").ToList();
 		foreach (Background background in backgrounds){
 			background.ChangeTheme();
@@ -198,6 +202,7 @@ public partial class MainWindow : MarginContainer
 			button.RemoveThemeStyleboxOverride("pressed");
 			button.AddThemeStyleboxOverride("pressed", sb);
 		}
+
 	}
 
 	public void ShowPbar(){

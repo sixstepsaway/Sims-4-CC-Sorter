@@ -180,11 +180,6 @@ public partial class NewInstance : MarginContainer
 			gameinstance.InstancePackagesFolder = Path.Combine(gameinstance.InstanceFolder, "Profiles");
 		}
 		BuildInstance();
-		if (createfromcurrent){
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog("dont forget to set up creating from current!");
-		} else {
-			//create the package display thing
-		}
 	}
 
 	private void _on_install_folder_button_pressed(){
@@ -356,24 +351,42 @@ public partial class NewInstance : MarginContainer
 		}
 	}
 
-	private void BuildInstance(){	
+	private void BuildInstance(){			
 		string game = "";
 		StringBuilder sb = new();	
 		if (GameChoice == Games.Sims2){
 			Sims2Instance instance = gameinstance as Sims2Instance;
-			instance.BuildInstance();
+			if (createfromcurrent){
+				instance.BuildInstance(true);
+			} else {
+				instance.BuildInstance(false);
+			}			
 			sb = instance.WriteIni();
 			game = "Sims2";
 		} else if (GameChoice == Games.Sims3){
 			Sims3Instance instance = gameinstance as Sims3Instance;
-			instance.BuildInstance();
+			if (createfromcurrent){
+				instance.BuildInstance(true);
+			} else {
+				instance.BuildInstance(false);
+			}	
 			sb = instance.WriteIni();
 			game = "Sims3";
+			if (createfromcurrent){
+
+			}
 		} else if (GameChoice == Games.Sims4){
 			Sims4Instance instance = gameinstance as Sims4Instance;
-			instance.BuildInstance();
+			if (createfromcurrent){
+				instance.BuildInstance(true);
+			} else {
+				instance.BuildInstance(false);
+			}	
 			sb = instance.WriteIni();
 			game = "Sims4";
+			if (createfromcurrent){
+				
+			}
 		}		
 		string inifile = Path.Combine(gameinstance.InstanceFolder, "Instance.ini");
 		if (File.Exists(inifile)){
@@ -383,6 +396,9 @@ public partial class NewInstance : MarginContainer
 		using (StreamWriter streamWriter = new(inifile)){
 			streamWriter.Write(sb);
 		}  
+
+		
+
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding new instance to instance list..."));
 		LoadedSettings.SetSettings.ChangeSetting(new Instance(){ Game = game, InstanceLocation = gameinstance.InstanceFolder, Name = gameinstance.InstanceName, Identifier = gameinstance.Identifier });
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Emitting signal with {0} guid.", gameinstance.Identifier.ToString()));

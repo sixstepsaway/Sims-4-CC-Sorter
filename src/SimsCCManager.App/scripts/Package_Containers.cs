@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Godot;
 using SimsCCManager.Containers;
 using SimsCCManager.Debugging;
@@ -15,7 +16,8 @@ using SimsCCManager.Packages.Initial;
 
 namespace SimsCCManager.Packages.Containers
 {
-
+    [XmlInclude(typeof(SimsPackage))]
+    [XmlInclude(typeof(SimsDownload))]
     public abstract class SimsFile {
         protected Guid identifier;
         public abstract Guid Identifier {get; set;}        
@@ -74,13 +76,13 @@ namespace SimsCCManager.Packages.Containers
             }
         }
 
-        public void GetInfo(string file){
+        public bool GetInfo(string file){
             FileInfo fileinfo = new(file);
             if (string.IsNullOrEmpty(this.InfoFile)){
                 SetInfoFile(fileinfo);
             }
             if (File.Exists(this.InfoFile)){
-                using (StreamReader streamReader = new StreamReader(infofile)){
+                /*using (StreamReader streamReader = new StreamReader(infofile)){
                     bool eos = false;                
                     while (eos == false){
                         if(!streamReader.EndOfStream){
@@ -100,7 +102,8 @@ namespace SimsCCManager.Packages.Containers
                         }
                     }
                     streamReader.Close();
-                }
+                }*/
+                return true;                
             } else {
                 this.FileName = fileinfo.Name;
 				this.FileSize = fileinfo.Length;
@@ -111,6 +114,7 @@ namespace SimsCCManager.Packages.Containers
 				this.DateAdded = DateTime.Today;
 				this.DateUpdated = DateTime.Today;
 				ContinueCreateInfo(fileinfo);
+                return false;
             }
         }
 
@@ -374,7 +378,8 @@ namespace SimsCCManager.Packages.Containers
         public List<string> OverriddenPackages {get; set;}
         public bool Enabled {get; set;} = false;
         public bool Scanned {get; set;} = false;
-        ScanData ScanData {get; set;}
+
+        public ScanData ScanData {get; set;}
 
         public SimsPackage(){
             Conflicts = new();
@@ -410,7 +415,7 @@ namespace SimsCCManager.Packages.Containers
 
         public override void WriteInfoFile()
         {
-            StringBuilder sb = new();
+            /*StringBuilder sb = new();
             sb = WriteCoreInfo();
             sb.AppendLine(string.Format("{0}={1}", "Creator", GetProperty("Creator")));
             sb.AppendLine(string.Format("{0}={1}", "Notes", GetProperty("Notes")));
@@ -437,12 +442,20 @@ namespace SimsCCManager.Packages.Containers
             sb.AppendLine(string.Format("{0}={1}", "Enabled", GetProperty("Enabled")));
             sb.AppendLine("[SCAN DATA]");
             if (ScanData != null){
-                //sb = ScanData.GetStringBuilder(sb);
+                sb = ScanData.GetStringBuilder(sb);
             }
             using (StreamWriter streamWriter = new(this.InfoFile)){                
                 streamWriter.Write(sb);
+            }*/
+            if (File.Exists(InfoFile)){
+                File.Delete(InfoFile);                
             }
-        }
+            XmlSerializer packageSerializer = new XmlSerializer(this.GetType());
+            using (var writer = new StreamWriter(InfoFile))
+            {
+                packageSerializer.Serialize(writer, this);
+            }
+        }        
 
         public override void NamedSetting(string name, StreamReader reader)
         {
@@ -450,15 +463,18 @@ namespace SimsCCManager.Packages.Containers
             while (eos == false){
                 if(!reader.EndOfStream){
                     if (name == "SCAN DATA"){
+                        string setting = reader.ReadLine();
+                        string line = setting.Replace("[", "");
+                        line = line.Replace("]", "");
                         if (Game == Games.Sims2){
-                            Sims2ScanData sims2ScanData = new();
-                            //ReadScanData(sims2ScanData, reader);   
+                            ScanData = new Sims2ScanData(); 
+                            S2ReadScanData(line, reader);
                         } else if (Game == Games.Sims3){
-                            Sims3ScanData sims3ScanData = new();
-                            //ReadScanData(sims3ScanData, reader);   
+                            ScanData = new Sims3ScanData();
+                            //S3ReadScanData(line, reader);
                         } else if (Game == Games.Sims3){
-                            Sims4ScanData sims4ScanData = new();
-                            //ReadScanData(sims4ScanData, reader);   
+                            ScanData = new Sims4ScanData();
+                            //S4ReadScanData(line, reader);
                         }                                         
                     }
                 } else {
@@ -468,7 +484,349 @@ namespace SimsCCManager.Packages.Containers
             return;
         }
 
+
+        public void S2ReadScanData(string name, StreamReader reader){
+            /*bool eos = false;
+            while (eos == false){
+                if(!reader.EndOfStream){
+                    if (name == "INSTANCES") {
+                        bool inst = true;
+                        while (inst){
+                            string setting = reader.ReadLine();
+                            if (setting == null) return;
+                            if (setting.Contains('[')){
+                                string line = setting.Replace("[", "");
+                                line = line.Replace("]", "");
+                                S2ReadScanData(line, reader);                   
+                            } else {
+                                (ScanData as Sims2ScanData).InstanceIDs.Add(setting);
+                            }
+                        }
+                    } else if (name == "GUIDS") {
+                        bool guids = true;
+                        while (guids){
+                            string setting = reader.ReadLine();
+                            if (setting == null) return;
+                            if (setting.Contains('[')){
+                                string line = setting.Replace("[", "");
+                                line = line.Replace("]", "");
+                                S2ReadScanData(line, reader);                   
+                            } else {
+                                (ScanData as Sims2ScanData).GUIDs.Add(setting);
+                            }
+                        }
+                    } else if (name == "REQUIRED EPS") {
+                        bool eps = true;
+                        while (eps){
+                            string setting = reader.ReadLine();
+                            if (setting == null) return;
+                            if (setting.Contains('[')){
+                                string line = setting.Replace("[", "");
+                                line = line.Replace("]", "");
+                                S2ReadScanData(line, reader);                   
+                            } else {
+                                (ScanData as Sims2ScanData).RequiredEPs.Add(S2ExpansionFromString(setting));
+                            }
+                        }
+                    } else if (name == "TAGS") {
+                        bool tgs = true;
+                        while (tgs){
+                            string setting = reader.ReadLine();
+                            if (setting == null) return;
+                            if (setting.Contains('[')){
+                                string line = setting.Replace("[", "");
+                                line = line.Replace("]", "");
+                                S2ReadScanData(line, reader);                   
+                            } else {
+                                (ScanData as Sims2ScanData).CatalogTags.Add(new TagsList(){Description = setting});
+                            }
+                        }
+                    }                    
+                } else {
+                    eos = true;
+                }
+            }
+            return;*/
+        }
+
+        public void S3ReadScanData(StreamReader reader){
+
+        }
+
+        public void S4ReadScanData(StreamReader reader){
+
+        }
+
+
+
+        public static string ExpansionToString(Sims2Expansions expansion){
+            if (expansion == Sims2Expansions.BaseGame) { return "BaseGame"; }
+            if (expansion == Sims2Expansions.University) { return "University"; }
+            if (expansion == Sims2Expansions.Nightlife) { return "Nightlife"; }
+            if (expansion == Sims2Expansions.OpenforBusiness) { return "OpenforBusiness"; }
+            if (expansion == Sims2Expansions.Pets) { return "Pets"; }
+            if (expansion == Sims2Expansions.Seasons) { return "Seasons"; }
+            if (expansion == Sims2Expansions.BonVoyage) { return "BonVoyage"; }
+            if (expansion == Sims2Expansions.FreeTime) { return "FreeTime"; }
+            if (expansion == Sims2Expansions.ApartmentLife) { return "ApartmentLife"; }
+            if (expansion == Sims2Expansions.FamilyFunStuff) { return "FamilyFunStuff"; }
+            if (expansion == Sims2Expansions.GlamourLifeStuff) { return "GlamourLifeStuff"; }
+            if (expansion == Sims2Expansions.HappyHolidayStuff) { return "HappyHolidayStuff"; }
+            if (expansion == Sims2Expansions.CelebrationStuff) { return "CelebrationStuff"; }
+            if (expansion == Sims2Expansions.HMFashionStuff) { return "HMFashionStuff"; }
+            if (expansion == Sims2Expansions.TeenStyleStuff) { return "TeenStyleStuff"; }
+            if (expansion == Sims2Expansions.KitchenBathInteriorDesignStuff) { return "KitchenBathInteriorDesignStuff"; }
+            if (expansion == Sims2Expansions.IKEAHomeStuff) { return "IKEAHomeStuff"; }
+            if (expansion == Sims2Expansions.MansionGardenStuff) { return "MansionGardenStuff"; }
+
+            return "";
+        }
+        public static string ExpansionToString(Sims3Expansions expansion){
+            if (expansion == Sims3Expansions.BaseGame) { return "BaseGame"; }
+            if (expansion == Sims3Expansions.WorldAdventures) { return "WorldAdventures"; }
+            if (expansion == Sims3Expansions.Ambitions) { return "Ambitions"; }
+            if (expansion == Sims3Expansions.LateNight) { return "LateNight"; }
+            if (expansion == Sims3Expansions.Generations) { return "Generations"; }
+            if (expansion == Sims3Expansions.Pets) { return "Pets"; }
+            if (expansion == Sims3Expansions.Showtime) { return "Showtime"; }
+            if (expansion == Sims3Expansions.Supernatural) { return "Supernatural"; }
+            if (expansion == Sims3Expansions.Seasons) { return "Seasons"; }
+            if (expansion == Sims3Expansions.UniversityLife) { return "UniversityLife"; }
+            if (expansion == Sims3Expansions.IslandParadise) { return "IslandParadise"; }
+            if (expansion == Sims3Expansions.IntotheFuture) { return "IntotheFuture"; }
+            if (expansion == Sims3Expansions.HighEndLoftStuff) { return "HighEndLoftStuff"; }
+            if (expansion == Sims3Expansions.FastLaneStuff) { return "FastLaneStuff"; }
+            if (expansion == Sims3Expansions.OutdoorLivingStuff) { return "OutdoorLivingStuff"; }
+            if (expansion == Sims3Expansions.TownLifeStuff) { return "TownLifeStuff"; }
+            if (expansion == Sims3Expansions.MasterSuiteStuff) { return "MasterSuiteStuff"; }
+            if (expansion == Sims3Expansions.KatyPerrysSweetTreats) { return "KatyPerrysSweetTreats"; }
+            if (expansion == Sims3Expansions.DieselStuff) { return "DieselStuff"; }
+            if (expansion == Sims3Expansions.DecadesStuff) { return "DecadesStuff"; }
+            if (expansion == Sims3Expansions.MovieStuff) { return "MovieStuff"; }
+
+            return "";
+        }
+        public static string ExpansionToString(Sims4Expansions expansion){
+            if (expansion == Sims4Expansions.BaseGame) { return "BaseGame"; }
+            if (expansion == Sims4Expansions.GettoWork) { return "GettoWork"; }
+            if (expansion == Sims4Expansions.GetTogether) { return "GetTogether"; }
+            if (expansion == Sims4Expansions.CityLiving) { return "CityLiving"; }
+            if (expansion == Sims4Expansions.CatsDogs) { return "CatsDogs"; }
+            if (expansion == Sims4Expansions.Seasons) { return "Seasons"; }
+            if (expansion == Sims4Expansions.GetFamous) { return "GetFamous"; }
+            if (expansion == Sims4Expansions.IslandLiving) { return "IslandLiving"; }
+            if (expansion == Sims4Expansions.DiscoverUniversity) { return "DiscoverUniversity"; }
+            if (expansion == Sims4Expansions.EcoLifestyle) { return "EcoLifestyle"; }
+            if (expansion == Sims4Expansions.SnowyEscape) { return "SnowyEscape"; }
+            if (expansion == Sims4Expansions.CottageLiving) { return "CottageLiving"; }
+            if (expansion == Sims4Expansions.HighSchoolYears) { return "HighSchoolYears"; }
+            if (expansion == Sims4Expansions.GrowingTogether) { return "GrowingTogether"; }
+            if (expansion == Sims4Expansions.HorseRanch) { return "HorseRanch"; }
+            if (expansion == Sims4Expansions.ForRent) { return "ForRent"; }
+            if (expansion == Sims4Expansions.Lovestruck) { return "Lovestruck"; }
+            if (expansion == Sims4Expansions.OutdoorRetreat) { return "OutdoorRetreat"; }
+            if (expansion == Sims4Expansions.SpaDay) { return "SpaDay"; }
+            if (expansion == Sims4Expansions.DineOut) { return "DineOut"; }
+            if (expansion == Sims4Expansions.Vampires) { return "Vampires"; }
+            if (expansion == Sims4Expansions.Parenthood) { return "Parenthood"; }
+            if (expansion == Sims4Expansions.JungleAdventure) { return "JungleAdventure"; }
+            if (expansion == Sims4Expansions.StrangerVille) { return "StrangerVille"; }
+            if (expansion == Sims4Expansions.RealmofMagic) { return "RealmofMagic"; }
+            if (expansion == Sims4Expansions.JourneytoBatuu) { return "JourneytoBatuu"; }
+            if (expansion == Sims4Expansions.DreamHomeDecorator) { return "DreamHomeDecorator"; }
+            if (expansion == Sims4Expansions.MyWeddingStories) { return "MyWeddingStories"; }
+            if (expansion == Sims4Expansions.Werewolves) { return "Werewolves"; }
+            if (expansion == Sims4Expansions.LuxuryPartyStuff) { return "LuxuryPartyStuff"; }
+            if (expansion == Sims4Expansions.PerfectPatioStuff) { return "PerfectPatioStuff"; }
+            if (expansion == Sims4Expansions.CoolKitchenStuff) { return "CoolKitchenStuff"; }
+            if (expansion == Sims4Expansions.SpookyStuff) { return "SpookyStuff"; }
+            if (expansion == Sims4Expansions.MovieHangoutStuff) { return "MovieHangoutStuff"; }
+            if (expansion == Sims4Expansions.RomanticGardenStuff) { return "RomanticGardenStuff"; }
+            if (expansion == Sims4Expansions.KidsRoomStuff) { return "KidsRoomStuff"; }
+            if (expansion == Sims4Expansions.BackyardStuff) { return "BackyardStuff"; }
+            if (expansion == Sims4Expansions.VintageGlamourStuff) { return "VintageGlamourStuff"; }
+            if (expansion == Sims4Expansions.BowlingNightStuff) { return "BowlingNightStuff"; }
+            if (expansion == Sims4Expansions.FitnessStuff) { return "FitnessStuff"; }
+            if (expansion == Sims4Expansions.ToddlerStuff) { return "ToddlerStuff"; }
+            if (expansion == Sims4Expansions.LaundryDayStuff) { return "LaundryDayStuff"; }
+            if (expansion == Sims4Expansions.MyFirstPetStuff) { return "MyFirstPetStuff"; }
+            if (expansion == Sims4Expansions.MoschinoStuff) { return "MoschinoStuff"; }
+            if (expansion == Sims4Expansions.TinyLivingStuff) { return "TinyLivingStuff"; }
+            if (expansion == Sims4Expansions.NiftyKnittingStuff) { return "NiftyKnittingStuff"; }
+            if (expansion == Sims4Expansions.ParanormalStuff) { return "ParanormalStuff"; }
+            if (expansion == Sims4Expansions.HomeChefHustleStuff) { return "HomeChefHustleStuff"; }
+            if (expansion == Sims4Expansions.CrystalCreationsStuff) { return "CrystalCreationsStuff"; }
+            if (expansion == Sims4Expansions.BusttheDustKit) { return "BusttheDustKit"; }
+            if (expansion == Sims4Expansions.CountryKitchenKit) { return "CountryKitchenKit"; }
+            if (expansion == Sims4Expansions.ThrowbackFitKit) { return "ThrowbackFitKit"; }
+            if (expansion == Sims4Expansions.CourtyardOasisKit) { return "CourtyardOasisKit"; }
+            if (expansion == Sims4Expansions.IndustrialLoftKit) { return "IndustrialLoftKit"; }
+            if (expansion == Sims4Expansions.FashionStreetKit) { return "FashionStreetKit"; }
+            if (expansion == Sims4Expansions.IncheonArrivalsKit) { return "IncheonArrivalsKit"; }
+            if (expansion == Sims4Expansions.BloomingRoomsKit) { return "BloomingRoomsKit"; }
+            if (expansion == Sims4Expansions.ModernMenswearKit) { return "ModernMenswearKit"; }
+            if (expansion == Sims4Expansions.CarnavalStreetwearKit) { return "CarnavalStreetwearKit"; }
+            if (expansion == Sims4Expansions.DécortotheMaxKit) { return "DécortotheMaxKit"; }
+            if (expansion == Sims4Expansions.MoonlightChicKit) { return "MoonlightChicKit"; }
+            if (expansion == Sims4Expansions.LittleCampersKit) { return "LittleCampersKit"; }
+            if (expansion == Sims4Expansions.FirstFitsKit) { return "FirstFitsKit"; }
+            if (expansion == Sims4Expansions.DesertLuxeKit) { return "DesertLuxeKit"; }
+            if (expansion == Sims4Expansions.EverydayClutterKit) { return "EverydayClutterKit"; }
+            if (expansion == Sims4Expansions.PastelPopKit) { return "PastelPopKit"; }
+            if (expansion == Sims4Expansions.BathroomClutterKit) { return "BathroomClutterKit"; }
+            if (expansion == Sims4Expansions.SimtimatesCollectionKit) { return "SimtimatesCollectionKit"; }
+            if (expansion == Sims4Expansions.BasementTreasuresKit) { return "BasementTreasuresKit"; }
+            if (expansion == Sims4Expansions.GreenhouseHavenKit) { return "GreenhouseHavenKit"; }
+            if (expansion == Sims4Expansions.GrungeRevivalKit) { return "GrungeRevivalKit"; }
+            if (expansion == Sims4Expansions.BookNookKit) { return "BookNookKit"; }
+            if (expansion == Sims4Expansions.ModernLuxeKit) { return "ModernLuxeKit"; }
+            if (expansion == Sims4Expansions.PoolsideSplashKit) { return "PoolsideSplashKit"; }
+            if (expansion == Sims4Expansions.CastleEstateKit) { return "CastleEstateKit"; }
+            if (expansion == Sims4Expansions.GothGaloreKit) { return "GothGaloreKit"; }
+            if (expansion == Sims4Expansions.UrbanHomageKit) { return "UrbanHomageKit"; }
+            if (expansion == Sims4Expansions.PartyEssentialsKit) { return "PartyEssentialsKit"; }
+            if (expansion == Sims4Expansions.RivieraRetreatKit) { return "RivieraRetreatKit"; }
+            if (expansion == Sims4Expansions.CozyBistroKit) { return "CozyBistroKit"; }
+            return "";
+        }
+
+        public static Sims2Expansions S2ExpansionFromString (string expansion){
+            if (expansion == "BaseGame") { return Sims2Expansions.BaseGame; }
+            if (expansion == "University") { return Sims2Expansions.University; }
+            if (expansion == "Nightlife") { return Sims2Expansions.Nightlife; }
+            if (expansion == "OpenforBusiness") { return Sims2Expansions.OpenforBusiness; }
+            if (expansion == "Pets") { return Sims2Expansions.Pets; }
+            if (expansion == "Seasons") { return Sims2Expansions.Seasons; }
+            if (expansion == "BonVoyage") { return Sims2Expansions.BonVoyage; }
+            if (expansion == "FreeTime") { return Sims2Expansions.FreeTime; }
+            if (expansion == "ApartmentLife") { return Sims2Expansions.ApartmentLife; }
+            if (expansion == "FamilyFunStuff") { return Sims2Expansions.FamilyFunStuff; }
+            if (expansion == "GlamourLifeStuff") { return Sims2Expansions.GlamourLifeStuff; }
+            if (expansion == "HappyHolidayStuff") { return Sims2Expansions.HappyHolidayStuff; }
+            if (expansion == "CelebrationStuff") { return Sims2Expansions.CelebrationStuff; }
+            if (expansion == "HMFashionStuff") { return Sims2Expansions.HMFashionStuff; }
+            if (expansion == "TeenStyleStuff") { return Sims2Expansions.TeenStyleStuff; }
+            if (expansion == "KitchenBathInteriorDesignStuff") { return Sims2Expansions.KitchenBathInteriorDesignStuff; }
+            if (expansion == "IKEAHomeStuff") { return Sims2Expansions.IKEAHomeStuff; }
+            if (expansion == "MansionGardenStuff") { return Sims2Expansions.MansionGardenStuff; }
+            return Sims2Expansions.BaseGame;
+        }
+        public static Sims3Expansions S3ExpansionFromString (string expansion){
+            if (expansion == "BaseGame") { return Sims3Expansions.BaseGame; }
+            if (expansion == "WorldAdventures") { return Sims3Expansions.WorldAdventures; }
+            if (expansion == "Ambitions") { return Sims3Expansions.Ambitions; }
+            if (expansion == "LateNight") { return Sims3Expansions.LateNight; }
+            if (expansion == "Generations") { return Sims3Expansions.Generations; }
+            if (expansion == "Pets") { return Sims3Expansions.Pets; }
+            if (expansion == "Showtime") { return Sims3Expansions.Showtime; }
+            if (expansion == "Supernatural") { return Sims3Expansions.Supernatural; }
+            if (expansion == "Seasons") { return Sims3Expansions.Seasons; }
+            if (expansion == "UniversityLife") { return Sims3Expansions.UniversityLife; }
+            if (expansion == "IslandParadise") { return Sims3Expansions.IslandParadise; }
+            if (expansion == "IntotheFuture") { return Sims3Expansions.IntotheFuture; }
+            if (expansion == "HighEndLoftStuff") { return Sims3Expansions.HighEndLoftStuff; }
+            if (expansion == "FastLaneStuff") { return Sims3Expansions.FastLaneStuff; }
+            if (expansion == "OutdoorLivingStuff") { return Sims3Expansions.OutdoorLivingStuff; }
+            if (expansion == "TownLifeStuff") { return Sims3Expansions.TownLifeStuff; }
+            if (expansion == "MasterSuiteStuff") { return Sims3Expansions.MasterSuiteStuff; }
+            if (expansion == "KatyPerrysSweetTreats") { return Sims3Expansions.KatyPerrysSweetTreats; }
+            if (expansion == "DieselStuff") { return Sims3Expansions.DieselStuff; }
+            if (expansion == "DecadesStuff") { return Sims3Expansions.DecadesStuff; }
+            if (expansion == "MovieStuff") { return Sims3Expansions.MovieStuff; }           
+           
+            return Sims3Expansions.BaseGame;
+        }
+        public static Sims4Expansions S4ExpansionFromString (string expansion){
+            if (expansion == "BaseGame") { return Sims4Expansions.BaseGame; }
+            if (expansion == "GettoWork") { return Sims4Expansions.GettoWork; }
+            if (expansion == "GetTogether") { return Sims4Expansions.GetTogether; }
+            if (expansion == "CityLiving") { return Sims4Expansions.CityLiving; }
+            if (expansion == "CatsDogs") { return Sims4Expansions.CatsDogs; }
+            if (expansion == "Seasons") { return Sims4Expansions.Seasons; }
+            if (expansion == "GetFamous") { return Sims4Expansions.GetFamous; }
+            if (expansion == "IslandLiving") { return Sims4Expansions.IslandLiving; }
+            if (expansion == "DiscoverUniversity") { return Sims4Expansions.DiscoverUniversity; }
+            if (expansion == "EcoLifestyle") { return Sims4Expansions.EcoLifestyle; }
+            if (expansion == "SnowyEscape") { return Sims4Expansions.SnowyEscape; }
+            if (expansion == "CottageLiving") { return Sims4Expansions.CottageLiving; }
+            if (expansion == "HighSchoolYears") { return Sims4Expansions.HighSchoolYears; }
+            if (expansion == "GrowingTogether") { return Sims4Expansions.GrowingTogether; }
+            if (expansion == "HorseRanch") { return Sims4Expansions.HorseRanch; }
+            if (expansion == "ForRent") { return Sims4Expansions.ForRent; }
+            if (expansion == "Lovestruck") { return Sims4Expansions.Lovestruck; }
+            if (expansion == "OutdoorRetreat") { return Sims4Expansions.OutdoorRetreat; }
+            if (expansion == "SpaDay") { return Sims4Expansions.SpaDay; }
+            if (expansion == "DineOut") { return Sims4Expansions.DineOut; }
+            if (expansion == "Vampires") { return Sims4Expansions.Vampires; }
+            if (expansion == "Parenthood") { return Sims4Expansions.Parenthood; }
+            if (expansion == "JungleAdventure") { return Sims4Expansions.JungleAdventure; }
+            if (expansion == "StrangerVille") { return Sims4Expansions.StrangerVille; }
+            if (expansion == "RealmofMagic") { return Sims4Expansions.RealmofMagic; }
+            if (expansion == "JourneytoBatuu") { return Sims4Expansions.JourneytoBatuu; }
+            if (expansion == "DreamHomeDecorator") { return Sims4Expansions.DreamHomeDecorator; }
+            if (expansion == "MyWeddingStories") { return Sims4Expansions.MyWeddingStories; }
+            if (expansion == "Werewolves") { return Sims4Expansions.Werewolves; }
+            if (expansion == "LuxuryPartyStuff") { return Sims4Expansions.LuxuryPartyStuff; }
+            if (expansion == "PerfectPatioStuff") { return Sims4Expansions.PerfectPatioStuff; }
+            if (expansion == "CoolKitchenStuff") { return Sims4Expansions.CoolKitchenStuff; }
+            if (expansion == "SpookyStuff") { return Sims4Expansions.SpookyStuff; }
+            if (expansion == "MovieHangoutStuff") { return Sims4Expansions.MovieHangoutStuff; }
+            if (expansion == "RomanticGardenStuff") { return Sims4Expansions.RomanticGardenStuff; }
+            if (expansion == "KidsRoomStuff") { return Sims4Expansions.KidsRoomStuff; }
+            if (expansion == "BackyardStuff") { return Sims4Expansions.BackyardStuff; }
+            if (expansion == "VintageGlamourStuff") { return Sims4Expansions.VintageGlamourStuff; }
+            if (expansion == "BowlingNightStuff") { return Sims4Expansions.BowlingNightStuff; }
+            if (expansion == "FitnessStuff") { return Sims4Expansions.FitnessStuff; }
+            if (expansion == "ToddlerStuff") { return Sims4Expansions.ToddlerStuff; }
+            if (expansion == "LaundryDayStuff") { return Sims4Expansions.LaundryDayStuff; }
+            if (expansion == "MyFirstPetStuff") { return Sims4Expansions.MyFirstPetStuff; }
+            if (expansion == "MoschinoStuff") { return Sims4Expansions.MoschinoStuff; }
+            if (expansion == "TinyLivingStuff") { return Sims4Expansions.TinyLivingStuff; }
+            if (expansion == "NiftyKnittingStuff") { return Sims4Expansions.NiftyKnittingStuff; }
+            if (expansion == "ParanormalStuff") { return Sims4Expansions.ParanormalStuff; }
+            if (expansion == "HomeChefHustleStuff") { return Sims4Expansions.HomeChefHustleStuff; }
+            if (expansion == "CrystalCreationsStuff") { return Sims4Expansions.CrystalCreationsStuff; }
+            if (expansion == "BusttheDustKit") { return Sims4Expansions.BusttheDustKit; }
+            if (expansion == "CountryKitchenKit") { return Sims4Expansions.CountryKitchenKit; }
+            if (expansion == "ThrowbackFitKit") { return Sims4Expansions.ThrowbackFitKit; }
+            if (expansion == "CourtyardOasisKit") { return Sims4Expansions.CourtyardOasisKit; }
+            if (expansion == "IndustrialLoftKit") { return Sims4Expansions.IndustrialLoftKit; }
+            if (expansion == "FashionStreetKit") { return Sims4Expansions.FashionStreetKit; }
+            if (expansion == "IncheonArrivalsKit") { return Sims4Expansions.IncheonArrivalsKit; }
+            if (expansion == "BloomingRoomsKit") { return Sims4Expansions.BloomingRoomsKit; }
+            if (expansion == "ModernMenswearKit") { return Sims4Expansions.ModernMenswearKit; }
+            if (expansion == "CarnavalStreetwearKit") { return Sims4Expansions.CarnavalStreetwearKit; }
+            if (expansion == "DécortotheMaxKit") { return Sims4Expansions.DécortotheMaxKit; }
+            if (expansion == "MoonlightChicKit") { return Sims4Expansions.MoonlightChicKit; }
+            if (expansion == "LittleCampersKit") { return Sims4Expansions.LittleCampersKit; }
+            if (expansion == "FirstFitsKit") { return Sims4Expansions.FirstFitsKit; }
+            if (expansion == "DesertLuxeKit") { return Sims4Expansions.DesertLuxeKit; }
+            if (expansion == "EverydayClutterKit") { return Sims4Expansions.EverydayClutterKit; }
+            if (expansion == "PastelPopKit") { return Sims4Expansions.PastelPopKit; }
+            if (expansion == "BathroomClutterKit") { return Sims4Expansions.BathroomClutterKit; }
+            if (expansion == "SimtimatesCollectionKit") { return Sims4Expansions.SimtimatesCollectionKit; }
+            if (expansion == "BasementTreasuresKit") { return Sims4Expansions.BasementTreasuresKit; }
+            if (expansion == "GreenhouseHavenKit") { return Sims4Expansions.GreenhouseHavenKit; }
+            if (expansion == "GrungeRevivalKit") { return Sims4Expansions.GrungeRevivalKit; }
+            if (expansion == "BookNookKit") { return Sims4Expansions.BookNookKit; }
+            if (expansion == "ModernLuxeKit") { return Sims4Expansions.ModernLuxeKit; }
+            if (expansion == "PoolsideSplashKit") { return Sims4Expansions.PoolsideSplashKit; }
+            if (expansion == "CastleEstateKit") { return Sims4Expansions.CastleEstateKit; }
+            if (expansion == "GothGaloreKit") { return Sims4Expansions.GothGaloreKit; }
+            if (expansion == "UrbanHomageKit") { return Sims4Expansions.UrbanHomageKit; }
+            if (expansion == "PartyEssentialsKit") { return Sims4Expansions.PartyEssentialsKit; }
+            if (expansion == "RivieraRetreatKit") { return Sims4Expansions.RivieraRetreatKit; }
+            if (expansion == "CozyBistroKit") { return Sims4Expansions.CozyBistroKit; }            
+           
+           return Sims4Expansions.SpaDay;
+        }
+
+
+
+
     }
+
+    
 
     public class SimsDownload : SimsFile {
         public override Guid Identifier{ 
@@ -521,752 +879,11 @@ namespace SimsCCManager.Packages.Containers
                 streamWriter.Write(sb);
             }
         }
-    }
+    }    
 
-    public class OldSimsPackage {
-        
-        public string PackageName {get; set;} = "";
-        public string Location {get; set;} = "";
-        public double FileSize {get; set;} = 0.0;
-        public string Creator {get; set;} = "";
-        public string Notes {get; set;} = "";
-        public Guid PackageReference {get; set;} = Guid.NewGuid();
-        public Games Game {get; set;} = 0;
-        public FileTypes FileType {get; set;} = FileTypes.Null;
-        public ScanData scanData {get; set;}
-        public DateTime DateAdded {get; set;} = DateTime.Today;
-        public DateTime DateUpdated {get; set;} = DateTime.Today;
-        public DateTime DateEnabled {get; set;} = DateTime.Today;
-        public bool Broken {get; set;} = false;
-        public bool Mesh {get; set;} = false;
-        public bool Recolor {get; set;} = false;
-        public bool Orphan {get; set;} = false;
-        public bool Duplicate {get; set;} = false;
-        public bool Override {get; set;} = false;
-        public bool RootMod {get; set;} = false;
-        public bool ScriptMod {get; set;} = false;
-        public bool Merged {get; set;} = false;
-        public bool OutOfDate {get; set;} = false;
-        public bool Fave {get; set;} = false;
-        public bool WrongGame {get; set;} = false;
-        public bool Folder {get; set;} = false;
-        public Texture2D Thumbnail {get; set;}
-        public List<string> Conflicts {get; set;}
-        public List<string> DuplicatePackages {get; set;}
-        public List<string> OverriddenPackages {get; set;}
-        public bool Selected {get; set;} = false;
-        public bool Enabled {get; set;} = false;
-        public bool Scanned {get; set;} = false;
-        Sims2ScanData Sims2ScanData {get; set;} = null;
-        Sims3ScanData Sims3ScanData {get; set;} = null;
-        Sims4ScanData Sims4ScanData {get; set;} = null;
-
-        public OldSimsPackage(){
-            Conflicts = new();
-            DuplicatePackages = new();            
-        }
-
-        public void WriteInfo(){
-            FileInfo fileinfo = new(Location);            
-            string file = fileinfo.FullName.Replace(fileinfo.Extension, ".info");
-            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Writing package info to {0}.", file));
-            StringBuilder sb = new();
-            sb.AppendLine(string.Format("{0}={1}", "PackageName", GetProperty("PackageName")));
-            sb.AppendLine(string.Format("{0}={1}", "Location", GetProperty("Location")));
-            sb.AppendLine(string.Format("{0}={1}", "FileSize", this.FileSize));
-            sb.AppendLine(string.Format("{0}={1}", "Creator", GetProperty("Creator")));
-            sb.AppendLine(string.Format("{0}={1}", "Notes", GetProperty("Notes")));
-            sb.AppendLine(string.Format("{0}={1}", "PackageReference", GetProperty("PackageReference")));
-            sb.AppendLine(string.Format("{0}={1}", "Game", GetProperty("Game")));
-            sb.AppendLine(string.Format("{0}={1}", "Scanned", GetProperty("Scanned")));
-            sb.AppendLine(string.Format("{0}={1}", "FileType", TypeToExtension(this.FileType)));
-            sb.AppendLine(string.Format("{0}={1}", "DateAdded", GetProperty("DateAdded")));
-            sb.AppendLine(string.Format("{0}={1}", "DateUpdated", GetProperty("DateUpdated")));
-            sb.AppendLine(string.Format("{0}={1}", "DateEnabled", GetProperty("DateEnabled")));
-            sb.AppendLine(string.Format("{0}={1}", "Broken", GetProperty("Broken")));
-            sb.AppendLine(string.Format("{0}={1}", "Mesh", GetProperty("Mesh")));
-            sb.AppendLine(string.Format("{0}={1}", "Recolor", GetProperty("Recolor")));
-            sb.AppendLine(string.Format("{0}={1}", "Orphan", GetProperty("Orphan")));
-            sb.AppendLine(string.Format("{0}={1}", "Duplicate", GetProperty("Duplicate")));
-            sb.AppendLine(string.Format("{0}={1}", "Override", GetProperty("Override")));
-            sb.AppendLine(string.Format("{0}={1}", "RootMod", GetProperty("RootMod")));
-            sb.AppendLine(string.Format("{0}={1}", "ScriptMod", GetProperty("ScriptMod")));
-            sb.AppendLine(string.Format("{0}={1}", "Merged", GetProperty("Merged")));
-            sb.AppendLine(string.Format("{0}={1}", "OutOfDate", GetProperty("OutOfDate")));
-            sb.AppendLine(string.Format("{0}={1}", "Fave", GetProperty("Fave")));
-            sb.AppendLine(string.Format("{0}={1}", "WrongGame", GetProperty("WrongGame")));
-            sb.AppendLine(string.Format("{0}={1}", "Folder", GetProperty("Folder")));
-            sb.AppendLine(string.Format("{0}={1}", "Thumbnail", GetProperty("Thumbnail")));
-            sb.AppendLine(string.Format("{0}={1}", "Conflicts", GetProperty("Conflicts")));
-            sb.AppendLine(string.Format("{0}={1}", "DuplicatePackages", GetProperty("DuplicatePackages")));
-            sb.AppendLine(string.Format("{0}={1}", "OverriddenPackages", GetProperty("OverriddenPackages")));
-            sb.AppendLine(string.Format("{0}={1}", "Enabled", GetProperty("Enabled")));
-            sb.AppendLine("[SCAN DATA]");
-            if (Sims2ScanData != null){
-                sb = Sims2ScanData.GetStringBuilder(sb);
-            } else if (Sims3ScanData != null){                
-                sb = Sims3ScanData.GetStringBuilder(sb);
-            } else if (Sims4ScanData != null){                
-                sb = Sims4ScanData.GetStringBuilder(sb);
-            }     
-            using (StreamWriter streamWriter = new(file)){                
-                streamWriter.Write(sb);
-            }
-        }
-
-        public void ChangeProperty(string property, string value){
-            SetProperty(property, value);
-            WriteInfo();
-        }
-        
-
-        public void GetInfo(string file){            
-            FileInfo fileinfo = new(file);
-			string infofile = fileinfo.FullName.Replace(fileinfo.Extension, ".info");
-			if (File.Exists(infofile)){
-                using (StreamReader streamReader = new StreamReader(infofile)){
-                    bool eos = false;                
-                    while (eos == false){
-                        if(!streamReader.EndOfStream){
-                            string setting = streamReader.ReadLine();
-                            if (setting.Contains('[')){
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, streamReader);                   
-                            } else {
-                                string[] line = setting.Split("=");
-                                //if (GetProperty(line[0]) != null){
-                                SetProperty(line[0], line[1]);
-                                //}
-                            }
-                        } else {
-                            eos = true;
-                        }
-                    }
-                    streamReader.Close();
-                }
-            } else {
-                this.PackageName = fileinfo.Name;
-				this.FileSize = fileinfo.Length;
-				this.Location = fileinfo.FullName;
-				this.PackageReference = Guid.NewGuid();
-				this.FileType = TypeFromExtension(fileinfo.Extension);
-                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Filetype: {0}", this.FileType));
-				this.DateAdded = DateTime.Today;
-				this.DateUpdated = DateTime.Today;
-				this.Enabled = false;
-                this.Scanned = false;
-                int game = GetGameVersion.CheckGame(fileinfo.FullName);
-                if (game == 0){
-                    this.Broken = true;
-                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} is broken.", fileinfo.Name));
-                } else {
-                    if (game == 1){
-                        this.Game = Games.Sims1;
-                    } else if (game == 2){
-                        this.Game = Games.Sims2;
-                    } else if (game == 3){
-                        this.Game = Games.Sims3;
-                    } else if (game == 4){
-                        this.Game = Games.Sims4;
-                    } else if (game == 11){
-                        this.Game = Games.Spore;
-                    } else if (game == 12){
-                        this.Game = Games.SimCity5;
-                    }   
-                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} is {1}.", fileinfo.Name, game)); 
-                }
-                WriteInfo();
-            }
-        }
-
-        public void NamedSetting(string name, StreamReader reader) {
-            bool eos = false;
-            while (eos == false){
-                if(!reader.EndOfStream){
-                    if (name == "SCAN DATA"){
-                        if (Game == Games.Sims2){
-                            Sims2ScanData sims2ScanData = new();
-                            ReadScanData(sims2ScanData, reader);   
-                        } else if (Game == Games.Sims3){
-                            Sims3ScanData sims3ScanData = new();
-                            ReadScanData(sims3ScanData, reader);   
-                        } else if (Game == Games.Sims3){
-                            Sims4ScanData sims4ScanData = new();
-                            ReadScanData(sims4ScanData, reader);   
-                        }                                         
-                    }
-                } else {
-                    eos = true;
-                }
-            }
-            return;
-        }
-        
-        public void ReadScanData(Sims2ScanData data, StreamReader reader){
-            bool eos = false;                
-            while (eos == false){
-                if(!reader.EndOfStream){
-                    string setting = reader.ReadLine();
-                    string[] line = setting.Split("=");
-                    if (data.GetProperty(line[0]) != null){
-                        data.SetProperty(line[0], line[1]);
-                    }
-                } else {
-                    eos = true;
-                }
-            }      
-            scanData = data;      
-            reader.Close();
-        }
-
-        public void ReadScanData(Sims3ScanData data, StreamReader reader){
-            bool eos = false;                
-            while (eos == false){
-                if(!reader.EndOfStream){
-                    string setting = reader.ReadLine();
-                    string[] line = setting.Split("=");
-                    if (data.GetProperty(line[0]) != null){
-                        data.SetProperty(line[0], line[1]);
-                    }
-                } else {
-                    eos = true;
-                }
-            }      
-            scanData = data;      
-            reader.Close();
-        }
-
-        public void ReadScanData(Sims4ScanData data, StreamReader reader){
-            bool eos = false;                
-            while (eos == false){
-                if(!reader.EndOfStream){
-                    string setting = reader.ReadLine();
-                    string[] line = setting.Split("=");
-                    if (data.GetProperty(line[0]) != null){
-                        data.SetProperty(line[0], line[1]);
-                    }
-                } else {
-                    eos = true;
-                }
-            }      
-            scanData = data;      
-            reader.Close();
-        }
-
-        public FileTypes TypeFromExtension(string extension){
-            if (string.Equals(extension, ".zip", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Zip;
-            } else if (string.Equals(extension, ".rar", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Rar;
-            } else if (string.Equals(extension, ".package", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Package;
-            } else if (string.Equals(extension, ".ts4script", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.TS4Script;
-            } else if (string.Equals(extension, ".sims3pack", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Sims3Pack;
-            } else if (string.Equals(extension, ".sims2pack", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Sims2Pack;
-            } else if (string.Equals(extension, ".7z", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.SevenZip;
-            } else if (string.Equals(extension, ".pkg", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.PKG;
-            } else if (string.Equals(extension, ".jpg", StringComparison.OrdinalIgnoreCase) || string.Equals(extension, ".jpeg", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.JPG;
-            } else if (string.Equals(extension, ".png", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.PNG;
-            } else if (string.Equals(extension, ".doc", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Doc;
-            } else if (string.Equals(extension, ".txt", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Txt;
-            } else {
-                return FileTypes.Other;
-            }
-        }
-
-        public FileTypes TypeFromString(string extension){
-            if (string.Equals(extension, "zip", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Zip;
-            } else if (string.Equals(extension, "rar", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Rar;
-            } else if (string.Equals(extension, "package", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Package;
-            } else if (string.Equals(extension, "ts4script", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.TS4Script;
-            } else if (string.Equals(extension, "sims3pack", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Sims3Pack;
-            } else if (string.Equals(extension, "sims2pack", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Sims2Pack;
-            } else if (string.Equals(extension, "7z", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.SevenZip;
-            } else if (string.Equals(extension, "pkg", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.PKG;
-            } else if (string.Equals(extension, "jpg", StringComparison.OrdinalIgnoreCase) || string.Equals(extension, ".jpeg", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.JPG;
-            } else if (string.Equals(extension, "png", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.PNG;
-            } else if (string.Equals(extension, "doc", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Doc;
-            } else if (string.Equals(extension, "txt", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Txt;
-            } else {
-                return FileTypes.Other;
-            }
-        }
-
-        
-        public string TypeToExtension(FileTypes type){
-            if (type == FileTypes.Zip){
-                return "Zip";
-            } else if (type == FileTypes.SevenZip){
-                return "7z";
-            } else if (type == FileTypes.Txt){
-                return "Txt";
-            } else if (type == FileTypes.PKG){
-                return "Pkg";
-            } else if (type == FileTypes.TS4Script){
-                return "Ts4Script";
-            } else if (type == FileTypes.Doc){
-                return "Doc";
-            } else if (type == FileTypes.JPG){
-                return "JPG";
-            } else if (type == FileTypes.PNG){
-                return "PNG";
-            } else if (type == FileTypes.Package){
-                return "Package";
-            } else if (type == FileTypes.Sims2Pack){
-                return "Sims2Pack";
-            } else if (type == FileTypes.Sims3Pack){
-                return "Sims3Pack";
-            } else if (type == FileTypes.Other){
-                return "Other";
-            } else {
-                return "Other";
-            }
-        }
-        
-
-        public void SetProperty(string propName, dynamic input){
-            var prop = this.ProcessProperty(propName);
-            PropertyInfo property = this.GetType().GetProperty(propName);
-            if (property != null){
-                if (property.PropertyType == typeof(Godot.Color)){
-                    Godot.Color newcolor = Godot.Color.FromHtml(input);
-                    property.SetValue(this, newcolor);
-                } else if (property.PropertyType == typeof(Guid)){
-                    if (input.GetType() == typeof(string)){
-                        string inp = input as string;
-                        property.SetValue(this, Guid.Parse(inp));
-                    } else if (input.GetType() == typeof(Guid)){
-                        property.SetValue(this, input);
-                    }
-                } else if (property.PropertyType == typeof(string)) {
-                    property.SetValue(this, input as string);
-                } else if (property.PropertyType == typeof(bool)) {
-                    if (input.GetType() == typeof(bool)) {
-                        property.SetValue(this, input);
-                    } else if (input.GetType() == typeof(string)){
-                        property.SetValue(this, bool.Parse(input));
-                    }                    
-                } else if (property.PropertyType == typeof(Games)){
-                    if (input.GetType() == typeof(Games)){
-                        property.SetValue(this, input);
-                    } else if (input.GetType() == typeof(string)) {
-                        string data = (string)input;
-                        if (data == "Sims 1") {
-                            property.SetValue(this, Games.Sims1);
-                        } else if (data == "Sims 2") {
-                            property.SetValue(this, Games.Sims2);
-                        } else if (data == "Sims 3") {
-                            property.SetValue(this, Games.Sims3);
-                        } else if (data == "Sims 4") {
-                            property.SetValue(this, Games.Sims4);
-                        } else if (data == "Sims Medieval" || data == "SimsMedieval") {
-                            property.SetValue(this, Games.SimsMedieval);
-                        } else if (data == "Simcity 5" || data == "SimCity 5" || data == "SimCity5") {
-                            property.SetValue(this, Games.SimCity5);
-                        } else if (data == "none" || data == "" || data == "null") {
-                            property.SetValue(this, Games.Null);
-                        } else {
-                            property.SetValue(this, Games.Null);
-                        }
-                    }             
-                } else if (propName == "FileSize"){
-                    property.SetValue(this, FileSizeFromString(input));
-                }
-            }            
-        }
-
-        public dynamic GetProperty(string propName){
-            if (this.ProcessProperty(propName) == null){
-                return null;
-            }
-            var prop = this.ProcessProperty(propName);
-            if (prop.GetType() == typeof(string)){
-                return prop.ToString();
-            } else if (prop.GetType() == typeof(DateTime)){
-                DateTime dt = (DateTime)prop;                
-                return dt.ToString("MM/dd/yyyy H:mm");
-            } else if (prop.GetType() == typeof(bool)){
-                return prop;
-            } else if (propName == "FileSize"){
-                double f = (double)prop;
-                return SizeSuffix((long)f, 2);
-            } if (prop.GetType() == typeof(Games)){
-                Games game = (Games)prop;
-                if (game == Games.Sims1){
-                    return "Sims 1";
-                } else if (game == Games.Sims2){
-                    return "Sims 2";
-                } else if (game == Games.Sims3){
-                    return "Sims 3";
-                } else if (game == Games.Sims4){
-                    return "Sims 4";
-                } else if (game == Games.SimCity5){
-                    return "SimCity 5";
-                } else if (game == Games.SimsMedieval){
-                    return "Sims Medieval";
-                } else {
-                    return "none";
-                }
-            } if (prop.GetType() == typeof(Guid)){ 
-                return prop.ToString();
-            } if (prop.GetType() == typeof(FileTypes)) {
-                return TypeToExtension(this.FileType);
-            } else {
-                return "";
-            }
-        }
-
-        public object ProcessProperty(string propName){
-            try {
-                return this.GetType().GetProperty(propName).GetValue (this, null);
-            } catch {
-                return null;
-            }       
-        }
-
-        
-        static double FileSizeFromString(string filesize){
-            string numberOnly = Regex.Replace(filesize, "[^0-9.]", "");
-            string suffixOnly = Regex.Replace(filesize, "[^A-Z]", "");
-            if (suffixOnly == "B"){
-                
-            }
-            return double.Parse(numberOnly);
-        }
-
-        static readonly string[] SizeSuffixes = 
-                   { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
-        static string SizeSuffix(Int64 value, int decimalPlaces = 1)
-        {
-            //From https://stackoverflow.com/a/14488941 
-            if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
-            if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); } 
-            if (value == 0) { return string.Format("{0:n" + decimalPlaces + "} bytes", 0); }
-
-            // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
-            int mag = (int)Math.Log(value, 1024);
-
-            // 1L << (mag * 10) == 2 ^ (10 * mag) 
-            // [i.e. the number of bytes in the unit corresponding to mag]
-            decimal adjustedSize = (decimal)value / (1L << (mag * 10));
-
-            // make adjustment when the value is large enough that
-            // it would round up to 1000 or more
-            if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
-            {
-                mag += 1;
-                adjustedSize /= 1024;
-            }
-
-            return string.Format("{0:n" + decimalPlaces + "} {1}", 
-                adjustedSize, 
-                SizeSuffixes[mag]);
-        }
-    }
-
-
-    public class OldSimsDownload{
-        public string FileName {get; set;} = "";
-        public string Location {get; set;} = "";
-        public double FileSize {get; set;} = 0.0;
-        public Guid FileReference {get; set;} = Guid.NewGuid();
-        public FileTypes FileType {get; set;} = FileTypes.Null; 
-        public DateTime DateAdded {get; set;} = DateTime.Today;
-        public DateTime DateUpdated {get; set;} = DateTime.Today;
-        public bool Installed {get; set;} = false;
-        public bool Selected {get; set;} = false;
-
-
-        public void GetInfo(string file){            
-            FileInfo fileinfo = new(file);
-			string infofile = fileinfo.FullName.Replace(fileinfo.Extension, ".info");
-			if (File.Exists(infofile)){
-                using (StreamReader streamReader = new StreamReader(infofile)){
-                    bool eos = false;                
-                    while (eos == false){
-                        if(!streamReader.EndOfStream){
-                            string setting = streamReader.ReadLine();
-                            if (setting.Contains('[')){
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                //NamedSetting(this, line, streamReader);                   
-                            } else {
-                                string[] line = setting.Split("=");
-                                if (GetProperty(line[0]) != null){
-                                    SetProperty(line[0], line[1]);
-                                }
-                            }
-                        } else {
-                            eos = true;
-                        }
-                    }
-                    streamReader.Close();
-                }
-            } else {
-                this.FileName = fileinfo.Name;
-				this.FileSize = fileinfo.Length;
-				this.Location = fileinfo.FullName;
-				this.FileReference = Guid.NewGuid();
-				this.FileType = TypeFromExtension(fileinfo.Extension);
-				this.DateAdded = DateTime.Today;
-				this.DateUpdated = DateTime.Today;
-				this.Installed = false;
-                WriteInfo();
-            }
-        }
-
-        public void WriteInfo(){
-            FileInfo fileinfo = new(Location);            
-            string file = fileinfo.FullName.Replace(fileinfo.Extension, ".info");
-            StringBuilder sb = new();
-            sb.AppendLine(string.Format("{0}={1}", "FileName", GetProperty("FileName")));
-            sb.AppendLine(string.Format("{0}={1}", "Location", GetProperty("Location")));
-            sb.AppendLine(string.Format("{0}={1}", "FileSize", GetProperty("FileSize")));
-            sb.AppendLine(string.Format("{0}={1}", "FileReference", GetProperty("FileReference")));
-            sb.AppendLine(string.Format("{0}={1}", "FileType", TypeToExtension(this.FileType)));
-            sb.AppendLine(string.Format("{0}={1}", "DateAdded", GetProperty("DateAdded")));
-            sb.AppendLine(string.Format("{0}={1}", "DateUpdated", GetProperty("DateUpdated")));
-            sb.AppendLine(string.Format("{0}={1}", "Installed", GetProperty("Installed")));
-            
-            using (StreamWriter streamWriter = new(file)){                
-                streamWriter.Write(sb);
-            }
-        }
-
-        public FileTypes TypeFromExtension(string extension){
-            if (string.Equals(extension, ".zip", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Zip;
-            } else if (string.Equals(extension, ".rar", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Rar;
-            } else if (string.Equals(extension, ".package", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Package;
-            } else if (string.Equals(extension, ".ts4script", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.TS4Script;
-            } else if (string.Equals(extension, ".sims3pack", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Sims3Pack;
-            } else if (string.Equals(extension, ".sims2pack", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Sims2Pack;
-            } else if (string.Equals(extension, ".7z", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.SevenZip;
-            } else if (string.Equals(extension, ".pkg", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.PKG;
-            } else if (string.Equals(extension, ".jpg", StringComparison.OrdinalIgnoreCase) || string.Equals(extension, ".jpeg", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.JPG;
-            } else if (string.Equals(extension, ".png", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.PNG;
-            } else if (string.Equals(extension, ".doc", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Doc;
-            } else if (string.Equals(extension, ".txt", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Txt;
-            } else {
-                return FileTypes.Other;
-            }
-        }
-        public FileTypes TypeFromString(string extension){
-            if (string.Equals(extension, "zip", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Zip;
-            } else if (string.Equals(extension, "rar", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Rar;
-            } else if (string.Equals(extension, "package", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Package;
-            } else if (string.Equals(extension, "ts4script", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.TS4Script;
-            } else if (string.Equals(extension, "sims3pack", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Sims3Pack;
-            } else if (string.Equals(extension, "sims2pack", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Sims2Pack;
-            } else if (string.Equals(extension, "7z", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.SevenZip;
-            } else if (string.Equals(extension, "pkg", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.PKG;
-            } else if (string.Equals(extension, "jpg", StringComparison.OrdinalIgnoreCase) || string.Equals(extension, ".jpeg", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.JPG;
-            } else if (string.Equals(extension, "png", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.PNG;
-            } else if (string.Equals(extension, "doc", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Doc;
-            } else if (string.Equals(extension, "txt", StringComparison.OrdinalIgnoreCase)){
-                return FileTypes.Txt;
-            } else {
-                return FileTypes.Other;
-            }
-        }
-
-        
-        public string TypeToExtension(FileTypes type){
-            if (type == FileTypes.Zip){
-                return "Zip";
-            } else if (type == FileTypes.SevenZip){
-                return "7z";
-            } else if (type == FileTypes.Txt){
-                return "Txt";
-            } else if (type == FileTypes.PKG){
-                return "Pkg";
-            } else if (type == FileTypes.TS4Script){
-                return "Ts4Script";
-            } else if (type == FileTypes.Doc){
-                return "Doc";
-            } else if (type == FileTypes.JPG){
-                return "JPG";
-            } else if (type == FileTypes.PNG){
-                return "PNG";
-            } else if (type == FileTypes.Package){
-                return "Package";
-            } else if (type == FileTypes.Sims2Pack){
-                return "Sims2Pack";
-            } else if (type == FileTypes.Sims3Pack){
-                return "Sims3Pack";
-            } else if (type == FileTypes.Other){
-                return "Other";
-            } else {
-                return "Other";
-            }
-        }
-
-        public void NamedSetting(SimsDownload simsDownload, string name, StreamReader reader) {
-            bool eos = false;
-            while (eos == false){
-                if(!reader.EndOfStream){
-                    if (name == "SCAN DATA"){
-                        bool instances = true;                
-                        while (instances == true){
-                            string setting = reader.ReadLine();
-                            if (setting.Contains('[')){
-                                instances = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(simsDownload, line, reader);
-                            } else {
-                                return;
-                            }
-                        }
-                    } else {
-                        return;
-                    }
-                } else {
-                    eos = true;
-                }
-            }
-            return;
-        }
-
-        
-        public void ChangeProperty(string property, string value){
-            SetProperty(property, value);
-            WriteInfo();
-        }
-
-        public dynamic GetProperty(string propName){
-            if (this.ProcessProperty(propName) == null){
-                return null;
-            }
-            var prop = this.ProcessProperty(propName);
-            if (prop.GetType() == typeof(string)){
-                return prop.ToString();
-            } else if (prop.GetType() == typeof(DateTime)){
-                DateTime dt = (DateTime)prop;                
-                return dt.ToString("MM/dd/yyyy H:mm");
-            } else if (prop.GetType() == typeof(bool)){
-                return prop;
-            } else if (propName == "FileSize"){
-                double f = (double)prop;
-                return SizeSuffix((long)f, 2);
-            } else if (prop.GetType() == typeof(FileTypes)){
-                return TypeToExtension((FileTypes)prop);
-            } else {
-                return "";
-            }
-        }
-
-        public void SetProperty(string propName, dynamic input){
-            var prop = this.ProcessProperty(propName);
-            PropertyInfo property = this.GetType().GetProperty(propName);
-            if (property != null){
-                if (property.PropertyType == typeof(Godot.Color)){
-                    Godot.Color newcolor = Godot.Color.FromHtml(input);
-                    property.SetValue(this, newcolor);
-                } else if (property.PropertyType == typeof(Guid)){
-                    if (input.GetType() == typeof(string)){
-                        string inp = input as string;
-                        property.SetValue(this, Guid.Parse(inp));
-                    } else if (input.GetType() == typeof(Guid)){
-                        property.SetValue(this, input);
-                    }
-                } else if (property.PropertyType == typeof(string)) {
-                    property.SetValue(this, input as string);
-                } else if (property.PropertyType == typeof(bool)) {
-                    if (input.GetType() == typeof(bool)) {
-                        property.SetValue(this, input);
-                    } else if (input.GetType() == typeof(string)){
-                        property.SetValue(this, bool.Parse(input));
-                    }                    
-                } else if (property.PropertyType == typeof(FileTypes)){
-                    property.SetValue(this, TypeFromString(input as string));
-                }
-            }            
-        }
-
-        public object ProcessProperty(string propName){
-            try {
-                return this.GetType().GetProperty(propName).GetValue (this, null);
-            } catch {
-                return null;
-            }       
-        }
-
-        static readonly string[] SizeSuffixes = 
-                   { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
-        static string SizeSuffix(Int64 value, int decimalPlaces = 1)
-        {
-            //From https://stackoverflow.com/a/14488941 
-            if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
-            if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); } 
-            if (value == 0) { return string.Format("{0:n" + decimalPlaces + "} bytes", 0); }
-
-            // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
-            int mag = (int)Math.Log(value, 1024);
-
-            // 1L << (mag * 10) == 2 ^ (10 * mag) 
-            // [i.e. the number of bytes in the unit corresponding to mag]
-            decimal adjustedSize = (decimal)value / (1L << (mag * 10));
-
-            // make adjustment when the value is large enough that
-            // it would round up to 1000 or more
-            if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
-            {
-                mag += 1;
-                adjustedSize /= 1024;
-            }
-
-            return string.Format("{0:n" + decimalPlaces + "} {1}", 
-                adjustedSize, 
-                SizeSuffixes[mag]);
-        }
-
-    }
-
+    [XmlInclude(typeof(Sims2ScanData))]
+    [XmlInclude(typeof(Sims3ScanData))]
+    [XmlInclude(typeof(Sims4ScanData))]
     public abstract class ScanData{
         protected string description;
         public abstract string Description {get; set;}
@@ -1301,6 +918,8 @@ namespace SimsCCManager.Packages.Containers
         protected List<string> parts;
         public abstract List<string> Parts {get; set;}
 
+        public abstract StringBuilder GetStringBuilder(StringBuilder sb);
+
         public dynamic GetProperty(string propName){
             if (this.ProcessProperty(propName) == null){
                 return null;
@@ -1385,6 +1004,7 @@ namespace SimsCCManager.Packages.Containers
         }
     }
 
+    [Serializable]
     public class Sims2ScanData : ScanData{
         public override string Description{
             get { return description; } set {description = value; } 
@@ -1420,50 +1040,80 @@ namespace SimsCCManager.Packages.Containers
             get { return parts; } set {parts = value; } 
         }
 
-
-        /*public string ModelName {get; set;}
-        public string Age {get; set;}
-        public string Gender {get; set;}
-        public string Function {get; set;}
-        public string FunctionSubcategory {get; set;}
-        public List<PackageInstance> InstanceIDs {get; set;}
-        public List<PackageThumbnail> ThumbnailImage {get; set;}
-        public List<PackageGUID> GUIDs {get; set;}
-        public List<PackageRequiredEPs> RequiredEPs {get; set;}
-        public List<TagsList> CatalogTags {get; set;}
-        public AgeGenderFlags AgeGenderFlags {get; set;}
-        public List<PackageEntries> FileHas {get; set;}
-        public List<PackageRoomSort> RoomSort {get; set;}
-        public List<PackageComponent> Components {get; set;}
-        public List<PackageTypeCounter> Entries         {get; set;}
-        public List<PackageFlag> Flags {get; set;}
-        public List<PackageMeshKeys> MeshKeys {get; set;}
-        public List<PackageCASPartKeys> CASPartKeys {get; set;}
-        public List<PackageOBJDKeys> OBJDPartKeys {get; set;}
-        public List<PackageMatchingRecolors> MatchingRecolors {get; set;}*/
-
-
-        public StringBuilder GetStringBuilder(StringBuilder sb){
-            sb = SBOverrides(sb);
-            
-            return sb;
-        }
-
-        public StringBuilder SBOverrides(StringBuilder sb){
-            sb.AppendLine(string.Format("{0}={1}", "Description", GetProperty("Description")));
-            sb.AppendLine(string.Format("{0}={1}", "Type", GetProperty("Type")));
-            sb.AppendLine(string.Format("{0}={1}", "Subtype", GetProperty("Subtype")));
-            sb.AppendLine(string.Format("{0}={1}", "Scanned", GetProperty("Scanned")));
-            sb.AppendLine(string.Format("{0}={1}", "ScriptMod", GetProperty("ScriptMod")));
-            sb.AppendLine(string.Format("{0}={1}", "Category", GetProperty("Category")));
-            sb.AppendLine(string.Format("{0}={1}", "TuningID", GetProperty("TuningID")));
-            sb.AppendLine(string.Format("{0}={1}", "AllowRandom", GetProperty("AllowRandom")));
-            sb.AppendLine(string.Format("{0}={1}", "Conflicts", GetProperty("Conflicts")));
-            sb.AppendLine(string.Format("{0}={1}", "Duplicates", GetProperty("Duplicates")));
-            return sb;
-        }
+        public List<S2CTSS> CTSSData {get; set;} = new();
+        public List<S2CPF> CPFData {get; set;} = new();
+        public List<S2STR> STRData {get; set;} = new();
+        public List<S2XML> XMLData {get; set;} = new();
+        public List<S2OBJD> OBJDData {get; set;} = new();
+        public List<S2SHPE> SHPEData {get; set;} = new();
+        public List<string> InstanceIDs {get; set;} = new();
+        public List<string> GUIDs {get; set;} = new();
+        public List<Sims2Expansions> RequiredEPs {get; set;} = new();   
         
+        
+        public string PackageType {get; set;} = "";
+
+
+
+
+
+
+
+
+
+        //public List<TagsList> CatalogTags {get; set;}
+        //public AgeGenderFlags AgeGenderFlags {get; set;}
+        //public List<PackageEntries> FileHas {get; set;}
+        //public List<PackageRoomSort> RoomSort {get; set;}
+        //public List<PackageComponent> Components {get; set;}
+        //public List<PackageTypeCounter> Entries         {get; set;}
+        //public List<PackageFlag> Flags {get; set;}
+        //public List<PackageMeshKeys> MeshKeys {get; set;}
+        //public List<PackageCASPartKeys> CASPartKeys {get; set;}
+        //public List<PackageOBJDKeys> OBJDPartKeys {get; set;}
+        //public List<PackageMatchingRecolors> MatchingRecolors {get; set;}*/
+
+        
+
+        public override StringBuilder GetStringBuilder(StringBuilder sb){
+            /*sb.AppendLine(string.Format("{0}={1}", "Title", GetProperty("Title")));
+            sb.AppendLine(string.Format("{0}={1}", "ModelName", GetProperty("Age")));
+            sb.AppendLine(string.Format("{0}={1}", "Gender", GetProperty("Gender")));
+            sb.AppendLine(string.Format("{0}={1}", "Function", GetProperty("Function")));
+            sb.AppendLine(string.Format("{0}={1}", "FunctionSubcategory", GetProperty("FunctionSubcategory")));
+            sb.AppendLine(string.Format("{0}={1}", "XMLType", GetProperty("XMLType")));
+            sb.AppendLine(string.Format("{0}={1}", "XMLSubtype", GetProperty("XMLSubtype")));
+            sb.AppendLine(string.Format("{0}={1}", "XMLCategory", GetProperty("XMLCategory")));
+            sb.AppendLine(string.Format("{0}={1}", "XMLModelName", GetProperty("XMLModelName")));
+            sb.AppendLine(string.Format("{0}={1}", "XMLCreator", GetProperty("XMLCreator")));
+            sb.AppendLine(string.Format("{0}={1}", "XMLAge", GetProperty("XMLAge")));
+            sb.AppendLine(string.Format("{0}={1}", "XMLGender", GetProperty("XMLGender")));
+            sb.AppendLine(string.Format("{0}={1}", "XMLFunction", GetProperty("XMLFunction")));
+            sb.AppendLine(string.Format("{0}={1}", "XMLFunctionSubsort", GetProperty("XMLFunctionSubsort")));
+            sb.AppendLine(string.Format("{0}={1}", "PackageType", GetProperty("PackageType")));
+                        
+            sb.AppendLine(string.Format("[INSTANCES]"));
+            foreach (string instance in InstanceIDs){
+                sb.AppendLine(string.Format(instance));
+            }
+            sb.AppendLine(string.Format("[GUIDS]"));
+            foreach (string guid in GUIDs){
+                sb.AppendLine(string.Format(guid));
+            }
+            sb.AppendLine(string.Format("[REQUIRED EPS]"));
+            foreach (Sims2Expansions ep in RequiredEPs){
+                sb.Append(string.Format(ep.ToString()));
+            }                        
+            sb.AppendLine(string.Format("[TAGS]"));
+            foreach (TagsList tag in CatalogTags){
+                sb.Append(string.Format(@"{0}\{1},", tag.Function, tag.Subfunction));
+            }
+*/
+            return sb;
+        }
     }
+
+    [Serializable]
     public class Sims3ScanData : ScanData{
         public override string Description{
             get { return description; } set {description = value; } 
@@ -1502,26 +1152,15 @@ namespace SimsCCManager.Packages.Containers
 
 
 
-        public StringBuilder GetStringBuilder(StringBuilder sb){
-            sb = SBOverrides(sb);
+        public override StringBuilder GetStringBuilder(StringBuilder sb){
+            //sb.AppendLine(string.Format("{0}={1}", "Description", GetProperty("Description")));
+            
             
             return sb;
         }
-
-        public StringBuilder SBOverrides(StringBuilder sb){
-            sb.AppendLine(string.Format("{0}={1}", "Description", GetProperty("Description")));
-            sb.AppendLine(string.Format("{0}={1}", "Type", GetProperty("Type")));
-            sb.AppendLine(string.Format("{0}={1}", "Subtype", GetProperty("Subtype")));
-            sb.AppendLine(string.Format("{0}={1}", "Scanned", GetProperty("Scanned")));
-            sb.AppendLine(string.Format("{0}={1}", "ScriptMod", GetProperty("ScriptMod")));
-            sb.AppendLine(string.Format("{0}={1}", "Category", GetProperty("Category")));
-            sb.AppendLine(string.Format("{0}={1}", "TuningID", GetProperty("TuningID")));
-            sb.AppendLine(string.Format("{0}={1}", "AllowRandom", GetProperty("AllowRandom")));
-            sb.AppendLine(string.Format("{0}={1}", "Conflicts", GetProperty("Conflicts")));
-            sb.AppendLine(string.Format("{0}={1}", "Duplicates", GetProperty("Duplicates")));
-            return sb;
-        }
     }
+
+    [Serializable]
     public class Sims4ScanData : ScanData{
         public override string Description{
             get { return description; } set {description = value; } 
@@ -1558,26 +1197,84 @@ namespace SimsCCManager.Packages.Containers
         }
 
 
-        public StringBuilder GetStringBuilder(StringBuilder sb){
-            sb = SBOverrides(sb);
+        public override StringBuilder GetStringBuilder(StringBuilder sb){
+            //sb.AppendLine(string.Format("{0}={1}", "Description", GetProperty("Description")));
+            
             
             return sb;
         }
-
-        public StringBuilder SBOverrides(StringBuilder sb){
-            sb.AppendLine(string.Format("{0}={1}", "Description", GetProperty("Description")));
-            sb.AppendLine(string.Format("{0}={1}", "Type", GetProperty("Type")));
-            sb.AppendLine(string.Format("{0}={1}", "Subtype", GetProperty("Subtype")));
-            sb.AppendLine(string.Format("{0}={1}", "Scanned", GetProperty("Scanned")));
-            sb.AppendLine(string.Format("{0}={1}", "ScriptMod", GetProperty("ScriptMod")));
-            sb.AppendLine(string.Format("{0}={1}", "Category", GetProperty("Category")));
-            sb.AppendLine(string.Format("{0}={1}", "TuningID", GetProperty("TuningID")));
-            sb.AppendLine(string.Format("{0}={1}", "AllowRandom", GetProperty("AllowRandom")));
-            sb.AppendLine(string.Format("{0}={1}", "Conflicts", GetProperty("Conflicts")));
-            sb.AppendLine(string.Format("{0}={1}", "Duplicates", GetProperty("Duplicates")));
-            return sb;
-        }
     }
+
+
+
+
+
+
+    public class TagsList {
+        /// <summary>
+        /// Used to get the tags from Sims 4 packages; catalog tags etc.
+        /// </summary>
+        public int Id {get; set;} = -1;
+        public string Description {get; set;} = "";
+        public string Function {get; set;} = "";
+        public string Subfunction {get; set;} = "";
+        public string TypeID {get; set;} = "";
+    }
+
+    public class FunctionSortList {
+        /// <summary>
+        /// Used for Sims 2 (I believe) function categorization. 
+        /// </summary>
+        public int flagnum {get; set;}
+        public int functionsubsortnum {get; set;}
+        public string Category {get; set;}
+        public string Subcategory {get; set;}
+    } 
+
+    public class S2CTSS {
+        public string Title {get; set;} = "";
+        public string Description {get; set;} = "";
+    }
+
+    public class S2CPF {
+        public string Title {get; set;} = "";
+        public string Description {get; set;} = "";
+        public string XMLType {get; set;} = "";
+        public string XMLSubtype {get; set;} = "";
+        public string XMLCategory {get; set;} = "";
+        public string XMLModelName {get; set;} = "";
+        public string XMLCreator {get; set;} = "";
+        public string XMLAge {get; set;} = "";
+        public string XMLGender {get; set;} = "";
+        public List<string> GUIDs {get; set;} = new();
+    }
+
+    public class S2STR {
+        public string Title {get; set;} = "";
+        public string Description {get; set;} = "";
+    }
+
+    public class S2XML {
+        public string Title {get; set;} = "";
+        public string Description {get; set;} = "";       
+        public string XMLType {get; set;} = "";    
+        public string XMLSubtype {get; set;} = "";
+        public string XMLCategory {get; set;} = "";
+        
+    }
+
+    public class S2OBJD {
+        public string XMLCategory {get; set;} = "";
+        public string Function {get; set;} = "";
+        public string FunctionSubcategory {get; set;} = "";
+        public List<string> GUIDs {get; set;} = new();
+    }
+
+    public class S2SHPE {
+        public string Type {get; set;} = "";
+        public List<TagsList> CatalogTags {get; set;} = new();
+    }
+
 }
 
 public enum Games {
@@ -1606,4 +1303,132 @@ public enum FileTypes {
     Txt,
     Other,
     Null
+}
+
+public enum Sims2Expansions{
+    BaseGame,
+    University,
+    Nightlife,
+    OpenforBusiness,
+    Pets,
+    Seasons,
+    BonVoyage,
+    FreeTime,
+    ApartmentLife,
+    FamilyFunStuff,
+    GlamourLifeStuff,
+    HappyHolidayStuff,
+    CelebrationStuff,
+    HMFashionStuff,
+    TeenStyleStuff,
+    KitchenBathInteriorDesignStuff,
+    IKEAHomeStuff,
+    MansionGardenStuff
+}
+
+public enum Sims3Expansions{
+    BaseGame,
+    WorldAdventures,
+    Ambitions,
+    LateNight,
+    Generations,
+    Pets,
+    Showtime,
+    Supernatural,
+    Seasons,
+    UniversityLife,
+    IslandParadise,
+    IntotheFuture,
+    HighEndLoftStuff,
+    FastLaneStuff,
+    OutdoorLivingStuff,
+    TownLifeStuff,
+    MasterSuiteStuff,
+    KatyPerrysSweetTreats,
+    DieselStuff,
+    DecadesStuff,
+    MovieStuff
+}
+
+public enum Sims4Expansions{
+    BaseGame,
+    GettoWork,
+    GetTogether,
+    CityLiving,
+    CatsDogs,
+    Seasons,
+    GetFamous,
+    IslandLiving,
+    DiscoverUniversity,
+    EcoLifestyle,
+    SnowyEscape,
+    CottageLiving,
+    HighSchoolYears,
+    GrowingTogether,
+    HorseRanch,
+    ForRent,
+    Lovestruck,
+    OutdoorRetreat,
+    SpaDay,
+    DineOut,
+    Vampires,
+    Parenthood,
+    JungleAdventure,
+    StrangerVille,
+    RealmofMagic,
+    JourneytoBatuu,
+    DreamHomeDecorator,
+    MyWeddingStories,
+    Werewolves,
+    LuxuryPartyStuff,
+    PerfectPatioStuff,
+    CoolKitchenStuff,
+    SpookyStuff,
+    MovieHangoutStuff,
+    RomanticGardenStuff,
+    KidsRoomStuff,
+    BackyardStuff,
+    VintageGlamourStuff,
+    BowlingNightStuff,
+    FitnessStuff,
+    ToddlerStuff,
+    LaundryDayStuff,
+    MyFirstPetStuff,
+    MoschinoStuff,
+    TinyLivingStuff,
+    NiftyKnittingStuff,
+    ParanormalStuff,
+    HomeChefHustleStuff,
+    CrystalCreationsStuff,
+    BusttheDustKit,
+    CountryKitchenKit,
+    ThrowbackFitKit,
+    CourtyardOasisKit,
+    IndustrialLoftKit,
+    FashionStreetKit,
+    IncheonArrivalsKit,
+    BloomingRoomsKit,
+    ModernMenswearKit,
+    CarnavalStreetwearKit,
+    DécortotheMaxKit,
+    MoonlightChicKit,
+    LittleCampersKit,
+    FirstFitsKit,
+    DesertLuxeKit,
+    EverydayClutterKit,
+    PastelPopKit,
+    BathroomClutterKit,
+    SimtimatesCollectionKit,
+    BasementTreasuresKit,
+    GreenhouseHavenKit,
+    GrungeRevivalKit,
+    BookNookKit,
+    ModernLuxeKit,
+    PoolsideSplashKit,
+    CastleEstateKit,
+    GothGaloreKit,
+    UrbanHomageKit,
+    PartyEssentialsKit,
+    RivieraRetreatKit,
+    CozyBistroKit
 }

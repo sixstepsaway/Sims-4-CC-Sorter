@@ -25,9 +25,15 @@ public partial class CustomDataGrid : MarginContainer
 	PackedScene row = GD.Load<PackedScene>("res://UI/CustomDataGrid/DataGridRow.tscn");
 	public List<Vector2> ColumnSizes = new();
 	VBoxContainer GridContainer;
+	DataGridHeaderRow HeaderRow;
+	ScrollContainer HeaderScroll;
+	ScrollContainer RowsScroll;
 	public override void _Ready()
 	{
-		GridContainer = GetNode<VBoxContainer>("ScrollContainer/DataGrid_Rows");
+		GridContainer = GetNode<VBoxContainer>("VBoxContainer/RowsScroll/DataGrid_Rows");
+		ScrollContainer HeaderContainer = GetNode<ScrollContainer>("VBoxContainer/HeaderScroll");
+		HeaderScroll = HeaderContainer;
+		RowsScroll = GetNode<ScrollContainer>("VBoxContainer/RowsScroll");
 		var headerrow = header.Instantiate() as DataGridHeaderRow;
 		foreach (HeaderInformation header in Headers){
 			var cellinst = headercell.Instantiate() as DataGridHeaderCell;
@@ -44,13 +50,15 @@ public partial class CustomDataGrid : MarginContainer
 			cellinst.Connect("HeaderResized", new Callable(this, MethodName.HeaderResized));
 			headerrow.GetNode<HBoxContainer>("Row").AddChild(cellinst);
 		}
-		GridContainer.AddChild(headerrow);		
+		HeaderContainer.AddChild(headerrow);
+		HeaderContainer.MoveChild(headerrow, 0);
+		HeaderRow = headerrow;
 	}
 
 	public void RowsFromData(){
 		if (Data.Count != 0){
 			if (GridContainer.GetChildCount() > 1){
-				for (int i = 1; i < GridContainer.GetChildCount(); i++){
+				for (int i = 0; i < GridContainer.GetChildCount(); i++){
 					GridContainer.GetChild(i).QueueFree();
 				}
 			}
@@ -92,7 +100,12 @@ public partial class CustomDataGrid : MarginContainer
 		}
 	}
 
-	private void ItemSelected(string Identifier, int idx){
+    public override void _Process(double delta)
+    {
+        HeaderScroll.ScrollHorizontal = RowsScroll.ScrollHorizontal;
+    }
+
+    private void ItemSelected(string Identifier, int idx){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected item {0}", Identifier));
 		EmitSignal("SelectedItem", Identifier, idx);
 	}
@@ -111,10 +124,10 @@ public partial class CustomDataGrid : MarginContainer
 
 	private void HeaderResized(int column){
 		//if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Column {0} was resized", column));
-		DataGridHeaderCell header = GridContainer.GetChild(0).GetChild(1).GetChild(column) as DataGridHeaderCell;
+		DataGridHeaderCell header = HeaderRow.GetChild(1).GetChild(column) as DataGridHeaderCell;
 		var size = header.Size;
 		int rows = GridContainer.GetChildCount();
-		for (int i = 1; i < rows; i++){
+		for (int i = 0; i < rows; i++){
 			SetSize(size, GridContainer.GetChild(i).GetChild(1).GetChild(column) as DataGridCell);
 		}
 	}

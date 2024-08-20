@@ -53,6 +53,7 @@ PackageEditorButtons=""
 LineEdits=""
 PanelsWBorders=""
 ButtonsWithBorders=""
+PlainBG=""
 
 [input]
 

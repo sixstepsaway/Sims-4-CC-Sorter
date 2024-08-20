@@ -77,11 +77,19 @@ public partial class PackageDisplay : MarginContainer
 
 	int amlastselected = -1;
 	int dllastselected = -1;
+
+	ApplicationStarter applicationStarter;
+
+	bool packagedisplayvisible = false;
+	PackageScanner scanner;
 	
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		scanner = GetNode<PackageScanner>("PackageScanner");
+		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container").Visible = packagedisplayvisible;
+		applicationStarter = GetNode<ApplicationStarter>("ApplicationStarter");
 		LoadedSettings.SetSettings.LastInstanceLoaded = LoadedSettings.SetSettings.CurrentInstance.InstanceLocation;
 		ExeChoiceControl = GetNode<Control>("MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control");
 		ExeChoicePanel = GetNode<ExeChoicePopupPanel>("MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control/ExeChoice_PopupPanel");
@@ -288,14 +296,18 @@ public partial class PackageDisplay : MarginContainer
 		if (packagefiles.Count != 0){
 			Parallel.ForEach(packagefiles, new ParallelOptions { MaxDegreeOfParallelism = 4 }, file => {
 				SimsPackage simsPackage = new();				
-				simsPackage.GetInfo(file);
+				bool infoexists = simsPackage.GetInfo(file);
 				if (simsPackage.Game != Game){
 					simsPackage.WrongGame = true;
 				}
+				if (infoexists){
+					simsPackage = Utilities.LoadPackageFile(simsPackage);
+				} else {
+					scanner.Scan(simsPackage);
+				}
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages in the bag.", packagesbag.Count));
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("This package is for Sims {0}.", simsPackage.Game));
-				packagesbag.Add(simsPackage);
-				
+				packagesbag.Add(simsPackage);				
 			});
 			packages = packagesbag.ToList();
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages in packages.", packages.Count));
@@ -313,8 +325,11 @@ public partial class PackageDisplay : MarginContainer
 		if (files.Count != 0){
 			Parallel.ForEach(files, new ParallelOptions { MaxDegreeOfParallelism = 4 }, file => {
 				SimsDownload simsDownload = new();
-				simsDownload.GetInfo(file);
-				downloadsbag.Add(simsDownload);
+				bool infoexists = simsDownload.GetInfo(file);
+				if (infoexists){
+					simsDownload = Utilities.LoadDownloadFile(simsDownload);
+				}
+				downloadsbag.Add(simsDownload);				
 			});
 			if (!downloadssortingorderchanged) downloads = downloadsbag.ToList().OrderBy(x => x.FileName).ToList();
 		}
@@ -338,7 +353,7 @@ public partial class PackageDisplay : MarginContainer
 
 		DataGridAllMods.AddChild(AllModsGrid);
 		AllModsGrid = DataGridAllMods.GetChild(0) as CustomDataGrid;
-		AllModsRows = AllModsGrid.GetChild(0).GetChild(0) as VBoxContainer;
+		AllModsRows = AllModsGrid.GetChild(0).GetChild(1).GetChild(0) as VBoxContainer;
 		
 		AllModsDisplayPackages();
 
@@ -351,7 +366,7 @@ public partial class PackageDisplay : MarginContainer
 
 		DataGridDownloads.AddChild(DownloadedModsGrid);
 		DownloadedModsGrid = DataGridDownloads.GetChild(0) as CustomDataGrid;
-		DownloadsRows = DownloadedModsGrid.GetChild(0).GetChild(0) as VBoxContainer;
+		DownloadsRows = DownloadedModsGrid.GetChild(0).GetChild(1).GetChild(0) as VBoxContainer;
 
 		DownloadsDisplayPackages();
 	}
@@ -363,10 +378,12 @@ public partial class PackageDisplay : MarginContainer
 			foreach (SimsPackage package in selected){
 				idx = packages.IndexOf(package);
 				packages[idx].Enabled = true;
-				(AllModsRows.GetChild(idx+1) as DataGridRow).ToggleEnabled(true);
+				packages[idx].WriteInfoFile();
+				(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(true);
 			}
 		} else {
-			packages[idx-1].Enabled = true;
+			packages[idx].Enabled = true;
+			packages[idx].WriteInfoFile();
 			(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(true);
 		}
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages enabled", packages.Where(x => x.Enabled == true).Count()));
@@ -381,10 +398,12 @@ public partial class PackageDisplay : MarginContainer
 			foreach (SimsPackage package in selected){
 				idx = packages.IndexOf(package);
 				packages[idx].Enabled = false;
-				(AllModsRows.GetChild(idx+1) as DataGridRow).ToggleEnabled(false);
+				packages[idx].WriteInfoFile();
+				(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(false);
 			}
 		} else {
-			packages[idx-1].Enabled = false;
+			packages[idx].Enabled = false;
+			packages[idx].WriteInfoFile();
 			(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(false);
 		}
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages enabled", packages.Where(x => x.Enabled == true).Count()));
@@ -404,15 +423,15 @@ public partial class PackageDisplay : MarginContainer
 				AMShiftSelection(item, idx);
 			}
 		} else {
-			for (int i = 1; i < AllModsRows.GetChildCount(); i++){
+			for (int i = 0; i < AllModsRows.GetChildCount(); i++){
 				DataGridRow row = AllModsRows.GetChild(i) as DataGridRow;
 				if (row.Selected){
-					packages[i-1].Selected = false;
+					packages[i].Selected = false;
 					row.Selected = false;
 				}
 			}
 			(AllModsRows.GetChild(idx) as DataGridRow).Selected = true;
-			packages[idx-1].Selected = true;
+			packages[idx].Selected = true;
 			amlastselected = idx;
 		}
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages selected", packages.Where(x => x.Selected == true).Count()));
@@ -425,29 +444,26 @@ public partial class PackageDisplay : MarginContainer
 	private void AllModsItemUnselected(string item, int idx){		
 		if (holdingctrl){		
 			(AllModsRows.GetChild(idx) as DataGridRow).Selected = false;		
-			packages[idx-1].Selected = false;
+			packages[idx].Selected = false;
 			amlastselected = idx;
 		} else if (holdingshift) {
 			AMShiftSelection(item, idx);
  		} else {
 			if (packages.Where(x => x.Selected).ToList().Count > 1){
-				for (int i = 1; i < AllModsRows.GetChildCount(); i++){
+				for (int i = 0; i < AllModsRows.GetChildCount(); i++){
 					DataGridRow row = AllModsRows.GetChild(i) as DataGridRow;
-					if (row.Selected){
-						packages[i-1].Selected = false;
-						row.Selected = false;
-					}
+					packages[i].Selected = false;
+					row.Selected = false;
 				}
 				(AllModsRows.GetChild(idx) as DataGridRow).Selected = true;		
-				packages[idx-1].Selected = true;
+				packages[idx].Selected = true;
 			} else {
-				for (int i = 1; i < AllModsRows.GetChildCount(); i++){
+				for (int i = 0; i < AllModsRows.GetChildCount(); i++){
 					DataGridRow row = AllModsRows.GetChild(i) as DataGridRow;
-					if (row.Selected){
-						row.Selected = false;
-					}
+					packages[i].Selected = false;
+					row.Selected = false;
 				}
-				packages[idx-1].Selected = false;
+				packages[idx].Selected = false;
 			}
 			amlastselected = idx;			
 		}
@@ -461,54 +477,52 @@ public partial class PackageDisplay : MarginContainer
 
 	private void AMShiftSelection(string item, int idx){
 		if (packages.Where(x => x.Selected == true).Any()){
-			int p_idx_last = packages.IndexOf(packages.Where(x => x.Selected).Last());
-			int p_idx_first = packages.IndexOf(packages.Where(x => x.Selected).First());
-			int r_idx_last = p_idx_last + 1;
-			int r_idx_first = p_idx_first + 1;
+			int r_idx_last = packages.IndexOf(packages.Where(x => x.Selected).Last());
+			int r_idx_first = packages.IndexOf(packages.Where(x => x.Selected).First());
 			for (int i = 0; i < packages.Count; i++){
 				packages[i].Selected = false;
-				(AllModsRows.GetChild(i+1) as DataGridRow).Selected = false;
+				(AllModsRows.GetChild(i) as DataGridRow).Selected = false;
 			}
 
 			if (r_idx_first == r_idx_last){
 				int both = r_idx_first;
 				if (both > idx){
 					for (int i = idx; i <= both; i++){
-						packages[i-1].Selected = true;
+						packages[i].Selected = true;
 						(AllModsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				} else if (idx > both){
 					for (int i = both; i <= idx; i++){
-						packages[i-1].Selected = true;
+						packages[i].Selected = true;
 						(AllModsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				}
 			} else if (amlastselected == r_idx_last){
 				if (idx > r_idx_last){
 					for (int i = r_idx_first; i <= idx; i++){
-						packages[i-1].Selected = true;
+						packages[i].Selected = true;
 						(AllModsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				} else if (idx < r_idx_last && idx > r_idx_first){
 					for (int i = r_idx_first; i <= idx; i++){
-						packages[i-1].Selected = true;
+						packages[i].Selected = true;
 						(AllModsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				} else if (idx < r_idx_last && idx < r_idx_first){
 					for (int i = idx; i <= r_idx_first; i++){
-						packages[i-1].Selected = true;
+						packages[i].Selected = true;
 						(AllModsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				}
 			} else if (amlastselected == r_idx_first){
 				if (idx > r_idx_first){
 					for (int i = r_idx_first; i <= idx; i++){
-						packages[i-1].Selected = true;
+						packages[i].Selected = true;
 						(AllModsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				} else if (idx < r_idx_first){
 					for (int i = idx; i <= r_idx_first; i++){
-						packages[i-1].Selected = true;
+						packages[i].Selected = true;
 						(AllModsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				}
@@ -527,7 +541,7 @@ public partial class PackageDisplay : MarginContainer
 			}*/
 		} else {
 			(AllModsRows.GetChild(idx) as DataGridRow).Selected = true;
-			packages.Where(x => x.Identifier == Guid.Parse(item)).First().Selected = true;				
+			packages[idx].Selected = true;				
 		}
 		amlastselected = idx;
 	}
@@ -540,54 +554,52 @@ public partial class PackageDisplay : MarginContainer
 
 	private void DLShiftSelection(string item, int idx){
 		if (downloads.Where(x => x.Selected == true).Any()){
-			int p_idx_last = downloads.IndexOf(downloads.Where(x => x.Selected).Last());
-			int p_idx_first = downloads.IndexOf(downloads.Where(x => x.Selected).First());
-			int r_idx_last = p_idx_last + 1;
-			int r_idx_first = p_idx_first + 1;
+			int r_idx_last = downloads.IndexOf(downloads.Where(x => x.Selected).Last());
+			int r_idx_first = downloads.IndexOf(downloads.Where(x => x.Selected).First());
 			for (int i = 0; i < downloads.Count; i++){
 				downloads[i].Selected = false;
-				(DownloadsRows.GetChild(i+1) as DataGridRow).Selected = false;
+				(DownloadsRows.GetChild(i) as DataGridRow).Selected = false;
 			}
 
 			if (r_idx_first == r_idx_last){
 				int both = r_idx_first;
 				if (both > idx){
 					for (int i = idx; i <= both; i++){
-						downloads[i-1].Selected = true;
+						downloads[i].Selected = true;
 						(DownloadsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				} else if (idx > both){
 					for (int i = both; i <= idx; i++){
-						downloads[i-1].Selected = true;
+						downloads[i].Selected = true;
 						(DownloadsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				}
 			} else if (amlastselected == r_idx_last){
 				if (idx > r_idx_last){
 					for (int i = r_idx_first; i <= idx; i++){
-						downloads[i-1].Selected = true;
+						downloads[i].Selected = true;
 						(DownloadsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				} else if (idx < r_idx_last && idx > r_idx_first){
 					for (int i = r_idx_first; i <= idx; i++){
-						downloads[i-1].Selected = true;
+						downloads[i].Selected = true;
 						(DownloadsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				} else if (idx < r_idx_last && idx < r_idx_first){
 					for (int i = idx; i <= r_idx_first; i++){
-						downloads[i-1].Selected = true;
+						downloads[i].Selected = true;
 						(DownloadsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				}
 			} else if (amlastselected == r_idx_first){
 				if (idx > r_idx_first){
 					for (int i = r_idx_first; i <= idx; i++){
-						downloads[i-1].Selected = true;
+						downloads[i].Selected = true;
 						(DownloadsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				} else if (idx < r_idx_first){
 					for (int i = idx; i <= r_idx_first; i++){
-						downloads[i-1].Selected = true;
+						downloads[i].Selected = true;
 						(DownloadsRows.GetChild(i) as DataGridRow).Selected = true;
 					}
 				}
@@ -606,7 +618,7 @@ public partial class PackageDisplay : MarginContainer
 			}*/
 		} else {
 			(DownloadsRows.GetChild(idx) as DataGridRow).Selected = true;
-			downloads.Where(x => x.Identifier == Guid.Parse(item)).First().Selected = true;				
+			downloads[idx].Selected = true;				
 		}
 		dllastselected = idx;
 	}
@@ -626,44 +638,44 @@ public partial class PackageDisplay : MarginContainer
 				DLShiftSelection(item, idx);
 			}
 		} else {
-			for (int i = 1; i < DownloadsRows.GetChildCount(); i++){
+			for (int i = 0; i < DownloadsRows.GetChildCount(); i++){
 				DataGridRow row = DownloadsRows.GetChild(i) as DataGridRow;
 				if (row.Selected){
-					downloads[i-1].Selected = false;
+					downloads[i].Selected = false;
 					row.Selected = false;
 				}
 			}
 			(DownloadsRows.GetChild(idx) as DataGridRow).Selected = true;
-			downloads[idx-1].Selected = true;
+			downloads[idx].Selected = true;
 			dllastselected = idx;
 		}
 	}
 	private void DownloadsItemUnselected(string item, int idx){
 		if (holdingctrl){		
 			(DownloadsRows.GetChild(idx) as DataGridRow).Selected = false;		
-			downloads[idx-1].Selected = false;
+			downloads[idx].Selected = false;
 			dllastselected = idx;
 		} else if (holdingshift) {
 			DLShiftSelection(item, idx);
  		} else {
 			if (downloads.Where(x => x.Selected).ToList().Count > 1){
-				for (int i = 1; i < DownloadsRows.GetChildCount(); i++){
+				for (int i = 0; i < DownloadsRows.GetChildCount(); i++){
 					DataGridRow row = DownloadsRows.GetChild(i) as DataGridRow;
 					if (row.Selected){
-						downloads[i-1].Selected = false;
+						downloads[i].Selected = false;
 						row.Selected = false;
 					}
 				}
 				(DownloadsRows.GetChild(idx) as DataGridRow).Selected = true;		
-				downloads[idx-1].Selected = true;
+				downloads[idx].Selected = true;
 			} else {
-				for (int i = 1; i < DownloadsRows.GetChildCount(); i++){
+				for (int i = 0; i < DownloadsRows.GetChildCount(); i++){
 					DataGridRow row = DownloadsRows.GetChild(i) as DataGridRow;
 					if (row.Selected){
 						row.Selected = false;
 					}
 				}
-				downloads[idx-1].Selected = false;
+				downloads[idx].Selected = false;
 			}
 			dllastselected = idx;			
 		}
@@ -800,10 +812,19 @@ public partial class PackageDisplay : MarginContainer
 		Executables[Executables.IndexOf(Executables.Where(x => x.Name == ExeID).First())].Selected = true;
 	}
 
-	private void _on_play_button_button_clicked(){
+	private void _on_play_button_button_clicked(){	
 		Executable selected = Executables.Where(x => x.Selected == true).First();
 		string path = Path.Combine(selected.Path, selected.Exe);
-		Utilities.RunProcess(path, selected.Arguments);
+		GetNode<MarginContainer>("GameRunning").Visible = true;
+		applicationStarter.Start(path, selected.Arguments);
+	}
+
+	private void _on_disconnect_button_pressed(){
+		GetNode<MarginContainer>("GameRunning").Visible = false;
+	}
+
+	private void _on_application_starter_application_closed(){
+		GetNode<MarginContainer>("GameRunning").Visible = false;
 	}
 
 	private void _on_swap_instances_settings_help_buttons_button_clicked(){
@@ -813,6 +834,12 @@ public partial class PackageDisplay : MarginContainer
 
 	private void _on_game_choice_dropdown_pressed(){
 		ExeChoiceControl.Visible = true;
+	}
+
+	private void _on_package_scanner_package_scanned(string identifier){
+		//SimsPackage package = packages.Where(x => x.Identifier == Guid.Parse(identifier)).First();
+		//package.GetInfo(package.InfoFile);
+		//ReadPackages();
 	}
 
 	private void _IncrementPbar(){
@@ -859,24 +886,6 @@ public partial class PackageDisplay : MarginContainer
 			}){IsBackground = true}.Start();
 		}
 
-		/*if (!populatingpackages){
-			new Thread(() => {
-				if (packages.Count != _packages.Count){
-					CallDeferred("AllModsDisplayPackages");
-					//_packages = packages;
-				}
-			}){IsBackground = true}.Start();
-		}*/
-		
-		/*if (!populatingdownloads){
-			new Thread(() => {				
-				if (downloads.Count != _downloads.Count){
-					CallDeferred("DownloadsDisplayPackages");
-					//_downloads = downloads;
-				}
-			}){IsBackground = true}.Start();
-		}*/
-		
 		if (!readingdownloads){
 			new Thread(() => {
 				if (Directory.GetFiles(downloadsfolder).ToList().Count != downloads.Count){
@@ -885,5 +894,27 @@ public partial class PackageDisplay : MarginContainer
 				
 			}){IsBackground = true}.Start();
 		}
+		new Thread(() => {
+			if (packagedisplayvisible){
+				
+				if (packages.Where(x => x.Selected).Count() != 1){
+					packagedisplayvisible = false;
+					CallDeferred("HidePackageDisplay");
+				}
+			} else if (!packagedisplayvisible){
+				if (packages.Where(x => x.Selected).Count() == 1){
+					packagedisplayvisible = true;
+					CallDeferred("ShowPackageDisplay");
+				}
+			}
+		}){IsBackground = true}.Start();
     }
+
+	private void HidePackageDisplay(){
+		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container").Visible = packagedisplayvisible;
+	}
+
+	private void ShowPackageDisplay(){
+		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container").Visible = packagedisplayvisible;
+	}
 }
