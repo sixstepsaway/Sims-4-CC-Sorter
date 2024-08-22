@@ -54,6 +54,7 @@ after that, you can decide which files you want enabled in your game and which y
 - Add root capabilities lmao
 - Add folder and file associations (some mods are folders not individual files)
 - Add "rename from internal name", specifically for Sims 2 files, which was the whole point of this app to begin with... 
+- Figure out how to edit packages so I can set up a "flag all for--" button. Example: flag all selected candles as off-grid.
 
 ## License 
 
