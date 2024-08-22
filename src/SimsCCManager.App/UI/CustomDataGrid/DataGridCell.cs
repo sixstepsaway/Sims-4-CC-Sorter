@@ -1,4 +1,6 @@
 using Godot;
+using SimsCCManager.Debugging;
+using SimsCCManager.Globals;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -10,7 +12,10 @@ public partial class DataGridCell : Control
 	[Signal]
 	public delegate void DataGridCellEnabledClickedEventHandler();
 	public bool Text {get; set;} = false;
+	public bool Int {get; set;} = false;
+	
 	public string TextContent = "";
+	public string IntContent = "";
 	public bool Editable {get; set;} = false;
 	public bool Enabled {get; set;} = false;
 	public bool IsEnabled {get; set;} = false;
@@ -51,8 +56,14 @@ public partial class DataGridCell : Control
 		GetNode<MarginContainer>("ColorOption").Visible = ColorOption;*/
 		Size = new Vector2(45, 25);
 		Set("custom_minimum_size", new Vector2(45, 25));
-		if (Enabled) Size = new Vector2(30, 25);
-		if (Enabled) Set("custom_minimum_size", new Vector2(30, 25));
+		if (Enabled) { 
+			Size = new Vector2(30, 25);
+			Set("custom_minimum_size", new Vector2(30, 25));
+		}
+		if (Int) { 
+			Size = new Vector2(30, 25);
+			Set("custom_minimum_size", new Vector2(30, 25));
+		}
 	}
 
 	private void _on_button_pressed(){		
@@ -108,6 +119,13 @@ public partial class DataGridCell : Control
 			GetNode<MarginContainer>("TextOption").Visible = Text;
 			GetNode<MarginContainer>("TextOption").GetNode<LineEdit>("LineEdit").Editable = Editable;
 			GetNode<MarginContainer>("TextOption").GetNode<LineEdit>("LineEdit").Text = TextContent;
+		}
+		if (Int){
+			GetNode<MarginContainer>("NumberOption").Visible = Int;
+			//if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting cell load order to {0}.", IntContent));
+			GetNode<MarginContainer>("NumberOption").GetNode<LineEdit>("LineEdit").Text = IntContent;
+			if (IntContent == "0") GetNode<MarginContainer>("NumberOption").GetNode<LineEdit>("LineEdit").Text = "";
+			if (IntContent == "-1") GetNode<MarginContainer>("NumberOption").GetNode<LineEdit>("LineEdit").Text = "";
 		}
 		if (Enabled){
 			GetNode<MarginContainer>("EnabledOption").Visible = Enabled;

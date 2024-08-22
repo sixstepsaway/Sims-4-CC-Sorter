@@ -39,7 +39,7 @@ public partial class MainWindow : MarginContainer
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Making footer visible."));
 		GetNode<MarginContainer>("Footer").Visible = true;
 		
-		if (LoadedSettings.SetSettings.InstanceLoaded){
+		if (LoadedSettings.SetSettings.InstanceLoaded && LoadedSettings.SetSettings.LoadLatestInstance){
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instantiating package manager."));
 			var pd = PackageDisplay.Instantiate();
 			pd.Connect("SetPbarMax", new Callable(this, "SetPbarMax"));

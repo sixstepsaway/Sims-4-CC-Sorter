@@ -35,7 +35,9 @@ namespace SimsCCManager.Packages.Containers
         public abstract DateTime DateAdded {get; set;}
         protected DateTime dateupdated;
         public abstract DateTime DateUpdated {get; set;}
+        [XmlIgnore]
         protected bool selected;
+        [XmlIgnore]
         public abstract bool Selected {get; set;}
 
         public void SetInfoFile(FileInfo file){
@@ -119,8 +121,6 @@ namespace SimsCCManager.Packages.Containers
         }
 
         public abstract void ContinueCreateInfo(FileInfo file);
-
-        public abstract void NamedSetting(string line, StreamReader reader);
 
         public void ChangeProperty(string property, string value){
             SetProperty(property, value);
@@ -216,8 +216,53 @@ namespace SimsCCManager.Packages.Containers
                 return prop.ToString();
             } if (prop.GetType() == typeof(FileTypes)) {
                 return TypeToExtension(this.FileType);
+            } else if (prop.GetType() == typeof(int)){
+                return prop.ToString();
             } else {
-                return "";
+                return prop;
+            }
+        }
+
+        public dynamic GetSortingProperty(string propName){
+            //ints return ints etc etc
+            if (this.ProcessProperty(propName) == null){
+                return null;
+            }
+            var prop = this.ProcessProperty(propName);
+            if (prop.GetType() == typeof(string)){
+                return prop.ToString();
+            } else if (prop.GetType() == typeof(DateTime)){
+                DateTime dt = (DateTime)prop;                
+                return dt.ToString("yyyy/MM/dd H:mm");
+            } else if (prop.GetType() == typeof(bool)){
+                return prop.ToString();
+            } else if (propName == "FileSize"){
+                return prop;
+            } if (prop.GetType() == typeof(Games)){
+                Games game = (Games)prop;
+                if (game == Games.Sims1){
+                    return "Sims 1";
+                } else if (game == Games.Sims2){
+                    return "Sims 2";
+                } else if (game == Games.Sims3){
+                    return "Sims 3";
+                } else if (game == Games.Sims4){
+                    return "Sims 4";
+                } else if (game == Games.SimCity5){
+                    return "SimCity 5";
+                } else if (game == Games.SimsMedieval){
+                    return "Sims Medieval";
+                } else {
+                    return "none";
+                }
+            } if (prop.GetType() == typeof(Guid)){ 
+                return prop.ToString();
+            } if (prop.GetType() == typeof(FileTypes)) {
+                return TypeToExtension(this.FileType);
+            } else if (prop.GetType() == typeof(int)){
+                return prop;
+            } else {
+                return prop;
             }
         }
 
@@ -351,10 +396,12 @@ namespace SimsCCManager.Packages.Containers
         public override DateTime DateUpdated {
             get { return dateupdated;} set {dateupdated = value;}
         }
+        [XmlIgnore]
         public override bool Selected {
             get { return selected;} set {selected = value;}
         }
-
+        public List<string> LinkedFiles {get; set;} = new();
+        public int LoadOrder {get; set;} = -1;
         public string Creator {get; set;} = "";
         public string Notes {get; set;} = "";
         public Games Game {get; set;} = 0;
@@ -375,7 +422,7 @@ namespace SimsCCManager.Packages.Containers
         public Texture2D Thumbnail {get; set;}
         public List<string> Conflicts {get; set;}
         public List<string> DuplicatePackages {get; set;}
-        public List<string> OverriddenPackages {get; set;}
+        public List<string> OverriddenPackages {get; set;}        
         public bool Enabled {get; set;} = false;
         public bool Scanned {get; set;} = false;
 
@@ -414,39 +461,7 @@ namespace SimsCCManager.Packages.Containers
         }
 
         public override void WriteInfoFile()
-        {
-            /*StringBuilder sb = new();
-            sb = WriteCoreInfo();
-            sb.AppendLine(string.Format("{0}={1}", "Creator", GetProperty("Creator")));
-            sb.AppendLine(string.Format("{0}={1}", "Notes", GetProperty("Notes")));
-            sb.AppendLine(string.Format("{0}={1}", "Game", GetProperty("Game")));
-            sb.AppendLine(string.Format("{0}={1}", "Scanned", GetProperty("Scanned")));
-            sb.AppendLine(string.Format("{0}={1}", "DateEnabled", this.DateEnabled));
-            sb.AppendLine(string.Format("{0}={1}", "Broken", GetProperty("Broken")));
-            sb.AppendLine(string.Format("{0}={1}", "Mesh", GetProperty("Mesh")));
-            sb.AppendLine(string.Format("{0}={1}", "Recolor", GetProperty("Recolor")));
-            sb.AppendLine(string.Format("{0}={1}", "Orphan", GetProperty("Orphan")));
-            sb.AppendLine(string.Format("{0}={1}", "Duplicate", GetProperty("Duplicate")));
-            sb.AppendLine(string.Format("{0}={1}", "Override", GetProperty("Override")));
-            sb.AppendLine(string.Format("{0}={1}", "RootMod", GetProperty("RootMod")));
-            sb.AppendLine(string.Format("{0}={1}", "ScriptMod", GetProperty("ScriptMod")));
-            sb.AppendLine(string.Format("{0}={1}", "Merged", GetProperty("Merged")));
-            sb.AppendLine(string.Format("{0}={1}", "OutOfDate", GetProperty("OutOfDate")));
-            sb.AppendLine(string.Format("{0}={1}", "Fave", GetProperty("Fave")));
-            sb.AppendLine(string.Format("{0}={1}", "WrongGame", GetProperty("WrongGame")));
-            sb.AppendLine(string.Format("{0}={1}", "Folder", GetProperty("Folder")));
-            sb.AppendLine(string.Format("{0}={1}", "Thumbnail", GetProperty("Thumbnail")));
-            sb.AppendLine(string.Format("{0}={1}", "Conflicts", GetProperty("Conflicts")));
-            sb.AppendLine(string.Format("{0}={1}", "DuplicatePackages", GetProperty("DuplicatePackages")));
-            sb.AppendLine(string.Format("{0}={1}", "OverriddenPackages", GetProperty("OverriddenPackages")));
-            sb.AppendLine(string.Format("{0}={1}", "Enabled", GetProperty("Enabled")));
-            sb.AppendLine("[SCAN DATA]");
-            if (ScanData != null){
-                sb = ScanData.GetStringBuilder(sb);
-            }
-            using (StreamWriter streamWriter = new(this.InfoFile)){                
-                streamWriter.Write(sb);
-            }*/
+        {            
             if (File.Exists(InfoFile)){
                 File.Delete(InfoFile);                
             }
@@ -455,109 +470,7 @@ namespace SimsCCManager.Packages.Containers
             {
                 packageSerializer.Serialize(writer, this);
             }
-        }        
-
-        public override void NamedSetting(string name, StreamReader reader)
-        {
-            bool eos = false;
-            while (eos == false){
-                if(!reader.EndOfStream){
-                    if (name == "SCAN DATA"){
-                        string setting = reader.ReadLine();
-                        string line = setting.Replace("[", "");
-                        line = line.Replace("]", "");
-                        if (Game == Games.Sims2){
-                            ScanData = new Sims2ScanData(); 
-                            S2ReadScanData(line, reader);
-                        } else if (Game == Games.Sims3){
-                            ScanData = new Sims3ScanData();
-                            //S3ReadScanData(line, reader);
-                        } else if (Game == Games.Sims3){
-                            ScanData = new Sims4ScanData();
-                            //S4ReadScanData(line, reader);
-                        }                                         
-                    }
-                } else {
-                    eos = true;
-                }
-            }
-            return;
         }
-
-
-        public void S2ReadScanData(string name, StreamReader reader){
-            /*bool eos = false;
-            while (eos == false){
-                if(!reader.EndOfStream){
-                    if (name == "INSTANCES") {
-                        bool inst = true;
-                        while (inst){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                S2ReadScanData(line, reader);                   
-                            } else {
-                                (ScanData as Sims2ScanData).InstanceIDs.Add(setting);
-                            }
-                        }
-                    } else if (name == "GUIDS") {
-                        bool guids = true;
-                        while (guids){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                S2ReadScanData(line, reader);                   
-                            } else {
-                                (ScanData as Sims2ScanData).GUIDs.Add(setting);
-                            }
-                        }
-                    } else if (name == "REQUIRED EPS") {
-                        bool eps = true;
-                        while (eps){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                S2ReadScanData(line, reader);                   
-                            } else {
-                                (ScanData as Sims2ScanData).RequiredEPs.Add(S2ExpansionFromString(setting));
-                            }
-                        }
-                    } else if (name == "TAGS") {
-                        bool tgs = true;
-                        while (tgs){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                S2ReadScanData(line, reader);                   
-                            } else {
-                                (ScanData as Sims2ScanData).CatalogTags.Add(new TagsList(){Description = setting});
-                            }
-                        }
-                    }                    
-                } else {
-                    eos = true;
-                }
-            }
-            return;*/
-        }
-
-        public void S3ReadScanData(StreamReader reader){
-
-        }
-
-        public void S4ReadScanData(StreamReader reader){
-
-        }
-
-
 
         public static string ExpansionToString(Sims2Expansions expansion){
             if (expansion == Sims2Expansions.BaseGame) { return "BaseGame"; }
@@ -853,6 +766,7 @@ namespace SimsCCManager.Packages.Containers
         public override DateTime DateUpdated {
             get { return dateupdated;} set {dateupdated = value;}
         }
+        [XmlIgnore]
         public override bool Selected {
             get { return selected;} set {selected = value;}
         }
@@ -863,12 +777,6 @@ namespace SimsCCManager.Packages.Containers
             this.Installed = false;
             WriteInfoFile();
         }
-
-        public override void NamedSetting(string name, StreamReader reader)
-        {
-            //should not have a named setting
-        }
-
         public override void WriteInfoFile()
         {
             StringBuilder sb = new();
@@ -881,6 +789,7 @@ namespace SimsCCManager.Packages.Containers
         }
     }    
 
+    [XmlInclude(typeof(ScanData))]
     [XmlInclude(typeof(Sims2ScanData))]
     [XmlInclude(typeof(Sims3ScanData))]
     [XmlInclude(typeof(Sims4ScanData))]
@@ -893,15 +802,6 @@ namespace SimsCCManager.Packages.Containers
 
         protected string subtype;
         public abstract string Subtype {get; set;}
-
-        protected bool scanned;
-        public abstract bool Scanned {get; set;}
-
-        protected bool scriptmod;
-        public abstract bool ScriptMod {get; set;}
-
-        protected bool category;
-        public abstract bool Category {get; set;}
 
         protected string tuningid;
         public abstract string TuningID {get; set;}
@@ -918,7 +818,12 @@ namespace SimsCCManager.Packages.Containers
         protected List<string> parts;
         public abstract List<string> Parts {get; set;}
 
+        protected string thumbnaillocation;        
+        public abstract string ThumbnailLocation {get; set;}
+
         public abstract StringBuilder GetStringBuilder(StringBuilder sb);
+
+        public abstract StringBuilder PackageInformationDump();
 
         public dynamic GetProperty(string propName){
             if (this.ProcessProperty(propName) == null){
@@ -1004,7 +909,6 @@ namespace SimsCCManager.Packages.Containers
         }
     }
 
-    [Serializable]
     public class Sims2ScanData : ScanData{
         public override string Description{
             get { return description; } set {description = value; } 
@@ -1014,15 +918,6 @@ namespace SimsCCManager.Packages.Containers
         }
         public override string Subtype{
             get { return subtype; } set {subtype = value; } 
-        }
-        public override bool Scanned{
-            get { return scanned; } set {scanned = value; } 
-        }
-        public override bool ScriptMod{
-            get { return scriptmod; } set {scriptmod = value; } 
-        }
-        public override bool Category{
-            get { return category; } set {category = value; } 
         }
         public override string TuningID{
             get { return tuningid; } set {tuningid = value; } 
@@ -1039,6 +934,9 @@ namespace SimsCCManager.Packages.Containers
         public override List<string> Parts{
             get { return parts; } set {parts = value; } 
         }
+        public override string ThumbnailLocation{
+            get { return thumbnaillocation; } set {thumbnaillocation = value; } 
+        }
 
         public List<S2CTSS> CTSSData {get; set;} = new();
         public List<S2CPF> CPFData {get; set;} = new();
@@ -1053,7 +951,52 @@ namespace SimsCCManager.Packages.Containers
         
         public string PackageType {get; set;} = "";
 
+        public override StringBuilder PackageInformationDump()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine(string.Format("Type: {0}", Type));
+            sb.AppendLine(string.Format("Subtype: {0}", Subtype));
+            List<string> titles = new();
+            List<string> ctsstit = CTSSData.Select(x => x.Title).ToList();
+            List<string> cpftit = CPFData.Select(x => x.Title).ToList();
+            List<string> strtit = STRData.Select(x => x.Title).ToList();
+            List<string> xmltit = XMLData.Select(x => x.Title).ToList();
+            List<string> descriptions = new();
+            List<string> ctssdes = CTSSData.Select(x => x.Description).ToList();
+            List<string> cpfdes = CPFData.Select(x => x.Description).ToList();
+            List<string> strdes = STRData.Select(x => x.Description).ToList();
+            List<string> xmldes = XMLData.Select(x => x.Description).ToList();
 
+            titles.AddRange(ctsstit);
+            titles.AddRange(cpftit);
+            titles.AddRange(strtit);
+            titles.AddRange(xmltit);
+            descriptions.AddRange(ctssdes);
+            descriptions.AddRange(cpfdes);
+            descriptions.AddRange(strdes);
+            descriptions.AddRange(xmldes);
+
+            titles = titles.Distinct().ToList();
+            descriptions = descriptions.Distinct().ToList();
+            
+            if (titles.Count > 1){
+                sb.AppendLine(string.Format("Internal Names:"));
+                foreach (string title in titles){
+                    sb.AppendLine(string.Format(title));
+                }
+            } else {
+                sb.AppendLine(string.Format("Internal Name: {0}", titles[0]));
+            }
+            if (descriptions.Count > 1){
+                sb.AppendLine(string.Format("Internal Descriptions:"));
+                foreach (string description in descriptions){
+                    sb.AppendLine(string.Format(description));
+                }
+            } else {
+                sb.AppendLine(string.Format("Internal Description: {0}", descriptions[0]));
+            }
+            return sb;
+        }
 
 
 
@@ -1073,7 +1016,7 @@ namespace SimsCCManager.Packages.Containers
         //public List<PackageOBJDKeys> OBJDPartKeys {get; set;}
         //public List<PackageMatchingRecolors> MatchingRecolors {get; set;}*/
 
-        
+
 
         public override StringBuilder GetStringBuilder(StringBuilder sb){
             /*sb.AppendLine(string.Format("{0}={1}", "Title", GetProperty("Title")));
@@ -1113,7 +1056,6 @@ namespace SimsCCManager.Packages.Containers
         }
     }
 
-    [Serializable]
     public class Sims3ScanData : ScanData{
         public override string Description{
             get { return description; } set {description = value; } 
@@ -1124,15 +1066,6 @@ namespace SimsCCManager.Packages.Containers
         public override string Subtype{
             get { return subtype; } set {subtype = value; } 
         }
-        public override bool Scanned{
-            get { return scanned; } set {scanned = value; } 
-        }
-        public override bool ScriptMod{
-            get { return scriptmod; } set {scriptmod = value; } 
-        }
-        public override bool Category{
-            get { return category; } set {category = value; } 
-        }
         public override string TuningID{
             get { return tuningid; } set {tuningid = value; } 
         }
@@ -1148,8 +1081,14 @@ namespace SimsCCManager.Packages.Containers
         public override List<string> Parts{
             get { return parts; } set {parts = value; } 
         }
+        public override string ThumbnailLocation{
+            get { return thumbnaillocation; } set {thumbnaillocation = value; } 
+        }
 
-
+        public override StringBuilder PackageInformationDump()
+        {
+            throw new NotImplementedException();
+        }
 
 
         public override StringBuilder GetStringBuilder(StringBuilder sb){
@@ -1160,7 +1099,6 @@ namespace SimsCCManager.Packages.Containers
         }
     }
 
-    [Serializable]
     public class Sims4ScanData : ScanData{
         public override string Description{
             get { return description; } set {description = value; } 
@@ -1170,15 +1108,6 @@ namespace SimsCCManager.Packages.Containers
         }
         public override string Subtype{
             get { return subtype; } set {subtype = value; } 
-        }
-        public override bool Scanned{
-            get { return scanned; } set {scanned = value; } 
-        }
-        public override bool ScriptMod{
-            get { return scriptmod; } set {scriptmod = value; } 
-        }
-        public override bool Category{
-            get { return category; } set {category = value; } 
         }
         public override string TuningID{
             get { return tuningid; } set {tuningid = value; } 
@@ -1195,7 +1124,14 @@ namespace SimsCCManager.Packages.Containers
         public override List<string> Parts{
             get { return parts; } set {parts = value; } 
         }
+        public override string ThumbnailLocation{
+            get { return thumbnaillocation; } set {thumbnaillocation = value; } 
+        }
 
+        public override StringBuilder PackageInformationDump()
+        {
+            throw new NotImplementedException();
+        }
 
         public override StringBuilder GetStringBuilder(StringBuilder sb){
             //sb.AppendLine(string.Format("{0}={1}", "Description", GetProperty("Description")));

@@ -25,6 +25,7 @@ public partial class DataGridRow : MarginContainer
 	public string Identifier = "";
 	public bool Selected = false;
 	public bool Enabled = false;
+	public int LoadOrder = -1;
 	PackedScene Cell = GD.Load<PackedScene>("res://UI/CustomDataGrid/DataGridCell.tscn");
 	
 	
@@ -57,11 +58,17 @@ public partial class DataGridRow : MarginContainer
 			if (content.ContentType == "Enabled"){
 				cell.Enabled = true;
 				cell.IsEnabled = bool.Parse(content.Content);
+				Enabled = cell.IsEnabled;
 			}
+		}
+		if (content.CellType == CellOptions.Int){
+			cell.Int = true;
+			cell.IntContent = content.Content;
 		}
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Cell size to add: {0}", columnsize));
 		cell.Size = columnsize;
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Cell size: {0}", cell.Size));
+		
 		cell.Connect("DataGridCellEnabledClicked", new Callable(this, "DetectedClickEnabled"));
 		cell.Connect("DataGridCellSelectedClicked", new Callable(this, "DetectedClickSelected"));
 		Row.AddChild(cell);
@@ -70,6 +77,8 @@ public partial class DataGridRow : MarginContainer
 	public void ToggleEnabled(bool enabled){
 		Enabled = enabled;
 		(Row.GetChild(0) as DataGridCell).IsEnabled = enabled;
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Row load order: {0}", LoadOrder));
+		(Row.GetChild(1) as DataGridCell).IntContent = LoadOrder.ToString();
 	}
 	
 	private void DetectedClickEnabled(){

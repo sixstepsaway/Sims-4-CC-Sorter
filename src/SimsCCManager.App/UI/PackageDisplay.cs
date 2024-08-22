@@ -18,6 +18,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net.Mime;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,6 +39,7 @@ public partial class PackageDisplay : MarginContainer
 	Control DataGridAllMods; 
 	Control DataGridDownloads;
 	PackedScene DataGrid = GD.Load<PackedScene>("res://UI/CustomDataGrid/CustomDataGrid.tscn");
+	PackedScene PackageInformation = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/package_viewer.tscn");
 	public Instance ThisInstance = new();
 	Games Game = Games.Null;
 	Sims2Instance sims2Instance = new();
@@ -82,6 +84,18 @@ public partial class PackageDisplay : MarginContainer
 
 	bool packagedisplayvisible = false;
 	PackageScanner scanner;
+	SortingOptions AMSortingRule = SortingOptions.NotSorted;
+	string AMSortBy = "";
+	SortingOptions DLSortingRule = SortingOptions.NotSorted;
+	string DLSortBy = "";
+	List<SimsPackage> unsortedpackages = new();
+	List<SimsDownload> unsorteddownloads = new();
+	List<DataGridHeaderCell> DLHeaders = new();
+	List<DataGridHeaderCell> AMHeaders = new();
+	int filesinpackagesfolder = 0;
+	int filesindownloadsfolder = 0;
+	PackageViewer CurrentPackageViewer;
+	int packagedisplayed = -1;
 	
 	
 	// Called when the node enters the scene tree for the first time.
@@ -163,6 +177,14 @@ public partial class PackageDisplay : MarginContainer
 				Blank = true,
 				Resizeable = false,
                 ColumnData = "Enabled"
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Load Order",
+                ContentType = DataGridContentType.Int,
+                ColumnData = "LoadOrder",
+				Resizeable = false,
+				Blank = true
             },
             new HeaderInformation()
             {
@@ -291,9 +313,12 @@ public partial class PackageDisplay : MarginContainer
 	public void ReadPackages(){
 		readingpackages = true;
 		ConcurrentBag<SimsPackage> packagesbag = new();
-		List<string> packagefiles = Directory.GetFiles(modsfolder, "*.package").ToList();
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} files to read", packagefiles.Count));
-		if (packagefiles.Count != 0){
+		List<string> files = Directory.GetFiles(modsfolder).ToList();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} files to read in Packages", files.Count));
+		List<string> infofiles = files.Where(x => x.EndsWith(".info", StringComparison.OrdinalIgnoreCase)).ToList();
+		List<string> packagefiles = files.Where(x => !infofiles.Contains(x)).ToList();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} files to read that are not Info Files", packagefiles.Count));
+		if (packagefiles.Count != 0){			
 			Parallel.ForEach(packagefiles, new ParallelOptions { MaxDegreeOfParallelism = 4 }, file => {
 				SimsPackage simsPackage = new();				
 				bool infoexists = simsPackage.GetInfo(file);
@@ -310,10 +335,14 @@ public partial class PackageDisplay : MarginContainer
 				packagesbag.Add(simsPackage);				
 			});
 			packages = packagesbag.ToList();
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages in packages.", packages.Count));
+			unsortedpackages = packages;
 			if (!packagessortingorderchanged) packages = packages.OrderBy(x => x.FileName).ToList();
+			
+			
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages in packages.", packages.Count));
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} ordered packages in packages.", packages.Count));
 		}
+		filesinpackagesfolder = Directory.GetFiles(modsfolder).Count();
 		if (firstrunpackages) AllModsDisplayPackages();
 		readingpackages = false;
 	}
@@ -331,9 +360,12 @@ public partial class PackageDisplay : MarginContainer
 				}
 				downloadsbag.Add(simsDownload);				
 			});
-			if (!downloadssortingorderchanged) downloads = downloadsbag.ToList().OrderBy(x => x.FileName).ToList();
+			downloads = downloadsbag.ToList();
+			unsorteddownloads = downloads;
+
 		}
 		readingdownloads = false;
+		filesindownloadsfolder = Directory.GetFiles(downloadsfolder).Count();
 		if (firstrundownloads) DownloadsDisplayPackages();
 	}
 
@@ -347,6 +379,7 @@ public partial class PackageDisplay : MarginContainer
 		AllModsGrid.Connect("UnselectedItem", new Callable(this, "AllModsItemUnselected"));
 		AllModsGrid.Connect("EnabledItem", new Callable(this, "AllModsItemEnabled"));
 		AllModsGrid.Connect("DisabledItem", new Callable(this, "AllModsItemDisabled"));
+		AllModsGrid.HeaderSortedSignal += (idx, sortingrule) => AMHeaderSorted(idx, sortingrule);
 		AllModsGrid.Headers = GetDefaultAMHeaders();
 
 		ReadPackages();
@@ -363,7 +396,7 @@ public partial class PackageDisplay : MarginContainer
 		DownloadedModsGrid.Connect("SelectedItem", new Callable(this, "DownloadsItemSelected"));
 		DownloadedModsGrid.Connect("UnselectedItem", new Callable(this, "DownloadsItemUnselected"));
 		DownloadedModsGrid.Headers = GetDefaultDownloadsHeaders();
-
+		DownloadedModsGrid.HeaderSortedSignal += (idx, sortingrule) => DLHeaderSorted(idx, sortingrule);
 		DataGridDownloads.AddChild(DownloadedModsGrid);
 		DownloadedModsGrid = DataGridDownloads.GetChild(0) as CustomDataGrid;
 		DownloadsRows = DownloadedModsGrid.GetChild(0).GetChild(1).GetChild(0) as VBoxContainer;
@@ -371,45 +404,165 @@ public partial class PackageDisplay : MarginContainer
 		DownloadsDisplayPackages();
 	}
 
-	
-	private void AllModsItemEnabled(string item, int idx){
-		if (packages.Where(x => x.Selected).Count() > 1){
-			List<SimsPackage> selected = packages.Where(x => x.Selected).ToList();
-			foreach (SimsPackage package in selected){
-				idx = packages.IndexOf(package);
-				packages[idx].Enabled = true;
-				packages[idx].WriteInfoFile();
-				(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(true);
+    private void DLHeaderSorted(int idx, SortingOptions sortingrule)
+    {
+        List<SimsDownload> sorted = new();
+		string data = DownloadedModsGrid.Headers[idx].ColumnData;
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Packages are being sorted by {0} and are {1}.", data, sortingrule));
+		if (DLSortBy == ""){
+			DLSortingRule = SortingOptions.Ascending;
+			DLSortBy = data;
+		} else if (DLSortBy == data){
+			if (DLSortingRule == SortingOptions.Ascending){
+				DLSortingRule = SortingOptions.Descending;
+			} else if (DLSortingRule == SortingOptions.Descending){
+				DLSortingRule = SortingOptions.NotSorted;
+			} else if (DLSortingRule == SortingOptions.NotSorted){
+				DLSortingRule = SortingOptions.Ascending;
 			}
 		} else {
-			packages[idx].Enabled = true;
-			packages[idx].WriteInfoFile();
-			(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(true);
+			DLSortingRule = SortingOptions.Ascending;
+			DLSortBy = data;
 		}
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages enabled", packages.Where(x => x.Enabled == true).Count()));
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Enabled packages:"));
-		foreach (SimsPackage package in packages.Where(x => x.Enabled == true)){
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(package.FileName);
+				
+		for (int i = 0; i < DLHeaders.Count; i++){
+			if (i != idx){
+				(DLHeaders[i] as DataGridHeaderCell).ResetSorting();
+			}
+		}
+		if (DLSortingRule == SortingOptions.Ascending){
+			sorted = downloads.OrderBy(x => x.GetSortingProperty(DLSortBy)).ToList();		
+		} else if (DLSortingRule == SortingOptions.Descending){			
+			sorted = downloads.OrderByDescending(x => x.GetSortingProperty(DLSortBy)).ToList();
+		} else if (DLSortingRule == SortingOptions.NotSorted){
+			sorted = unsorteddownloads;
+		}
+		downloads = sorted;
+		DownloadsDisplayPackages();
+    }
+
+
+    private void AMHeaderSorted(int idx, SortingOptions sortingrule)
+    {
+        List<SimsPackage> sorted = new();
+		string data = AllModsGrid.Headers[idx].ColumnData;
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Packages are being sorted by {0} and are {1}.", data, sortingrule));
+		if (AMSortBy == ""){
+			AMSortingRule = SortingOptions.Ascending;
+			AMSortBy = data;
+		} else if (AMSortBy == data){
+			if (AMSortingRule == SortingOptions.Ascending){
+				AMSortingRule = SortingOptions.Descending;
+			} else if (AMSortingRule == SortingOptions.Descending){
+				AMSortingRule = SortingOptions.NotSorted;
+			} else if (AMSortingRule == SortingOptions.NotSorted){
+				AMSortingRule = SortingOptions.Ascending;
+			}
+		} else {
+			AMSortingRule = SortingOptions.Ascending;
+			AMSortBy = data;
+		}		
+		for (int i = 0; i < AMHeaders.Count; i++){
+			if (i != idx){
+				(AMHeaders[i] as DataGridHeaderCell).ResetSorting();
+			}
+		}
+
+		if (AMSortingRule == SortingOptions.Ascending){
+			if (AMSortBy == "LoadOrder"){
+				List<SimsPackage> enabled = packages.Where(x => x.Enabled == true).ToList();
+				List<SimsPackage> disabled = packages.Where(x => x.Enabled == false).ToList();
+				enabled = enabled.OrderBy(x => x.LoadOrder).ToList();
+				sorted = new();
+				sorted.AddRange(enabled);
+				sorted.AddRange(disabled);
+			} else if (AMSortBy == "Enabled") {
+				sorted = packages.OrderByDescending(x => x.GetSortingProperty(AMSortBy)).ToList();
+			} else {
+				sorted = packages.OrderBy(x => x.GetSortingProperty(AMSortBy)).ToList();
+			}			
+		} else if (AMSortingRule == SortingOptions.Descending){
+			if (AMSortBy == "LoadOrder"){
+				List<SimsPackage> enabled = packages.Where(x => x.Enabled == true).ToList();
+				List<SimsPackage> disabled = packages.Where(x => x.Enabled == false).ToList();
+				enabled = enabled.OrderByDescending(x => x.LoadOrder).ToList();
+				sorted = new();
+				sorted.AddRange(enabled);
+				sorted.AddRange(disabled);
+			} else if (AMSortBy == "Enabled") {
+				sorted = packages.OrderBy(x => x.GetSortingProperty(AMSortBy)).ToList();
+			} else {
+				sorted = packages.OrderByDescending(x => x.GetSortingProperty(AMSortBy)).ToList();
+			}
+		} else if (AMSortingRule == SortingOptions.NotSorted){
+			sorted = unsortedpackages;
+		}
+		packages = sorted;
+		AllModsDisplayPackages();
+    }
+
+    private void AllModsItemEnabled(string item, int idx){
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Item {0} enabled at index {1}.", item, idx));
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Item is: {0}.", packages[idx].FileName));
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Item enabled... There are {0} items selected.", packages.Where(x => x.Selected).Count()));
+		if (packages.Where(x => x.Selected).Count() > 1){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Enabling {0} files.", packages.Where(x => x.Selected).Count()));
+			List<SimsPackage> selected = packages.Where(x => x.Selected).ToList();			
+			foreach (SimsPackage package in selected){
+				idx = packages.IndexOf(package);
+				int max = packages.Where(x => x.Enabled == true).Count();
+				if (max > 0){
+					package.LoadOrder = max+1;
+				} else {
+					package.LoadOrder = 1;
+				}
+				package.Enabled = true;
+				(AllModsRows.GetChild(idx) as DataGridRow).LoadOrder = package.LoadOrder;
+				(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(true);
+				package.WriteInfoFile();
+			}
+		} else {			
+			int max = packages.Where(x => x.Enabled == true).Count();
+			if (max > 0){
+				packages[idx].LoadOrder = max+1;
+			} else {
+				packages[idx].LoadOrder = 1;
+			}
+			packages[idx].Enabled = true;
+			(AllModsRows.GetChild(idx) as DataGridRow).LoadOrder = packages[idx].LoadOrder;
+			(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(true);
+			packages[idx].WriteInfoFile();
 		}
 	}
 	private void AllModsItemDisabled(string item, int idx){
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Item {0} disabled at index {1}.", item, idx));
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Item is: {0}.", packages[idx].FileName));
 		if (packages.Where(x => x.Selected).Count() > 1){
 			List<SimsPackage> selected = packages.Where(x => x.Selected).ToList();
 			foreach (SimsPackage package in selected){
 				idx = packages.IndexOf(package);
-				packages[idx].Enabled = false;
-				packages[idx].WriteInfoFile();
+				package.LoadOrder = -1;
+				(AllModsRows.GetChild(idx) as DataGridRow).LoadOrder = package.LoadOrder;
 				(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(false);
-			}
+				package.Enabled = false;
+				package.WriteInfoFile();
+			}			
 		} else {
+			packages[idx].LoadOrder = -1;
+			(AllModsRows.GetChild(idx) as DataGridRow).LoadOrder = packages[idx].LoadOrder;
+			(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(false);
 			packages[idx].Enabled = false;
 			packages[idx].WriteInfoFile();
-			(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(false);
 		}
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages enabled", packages.Where(x => x.Enabled == true).Count()));
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Enabled packages:"));
-		foreach (SimsPackage package in packages.Where(x => x.Enabled == true)){
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(package.FileName);
+		List<SimsPackage> enabled = packages.Where(x => x.Enabled).OrderBy(x => x.LoadOrder).ToList();
+		int lo = 1;
+		foreach (SimsPackage package in enabled){
+			idx = packages.IndexOf(package);
+			packages[idx].LoadOrder = lo;
+			(AllModsRows.GetChild(idx) as DataGridRow).LoadOrder = lo;
+			(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(true);
+			package.WriteInfoFile();
+			lo++;
 		}
 	}
 
@@ -417,8 +570,7 @@ public partial class PackageDisplay : MarginContainer
 		if (holdingctrl || holdingshift){
 			if (holdingctrl){
 				(AllModsRows.GetChild(idx) as DataGridRow).Selected = true;
-				packages.Where(x => x.Identifier == Guid.Parse(item)).First().Selected = true;				
-				amlastselected = idx;
+				packages.Where(x => x.Identifier == Guid.Parse(item)).First().Selected = true;								
 			} else if (holdingshift){
 				AMShiftSelection(item, idx);
 			}
@@ -432,24 +584,22 @@ public partial class PackageDisplay : MarginContainer
 			}
 			(AllModsRows.GetChild(idx) as DataGridRow).Selected = true;
 			packages[idx].Selected = true;
-			amlastselected = idx;
 		}
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages selected", packages.Where(x => x.Selected == true).Count()));
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected packages:"));
 		foreach (SimsPackage package in packages.Where(x => x.Selected == true)){
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(package.FileName);
 		}
-			
+		amlastselected = idx;
 	}
 	private void AllModsItemUnselected(string item, int idx){		
 		if (holdingctrl){		
 			(AllModsRows.GetChild(idx) as DataGridRow).Selected = false;		
-			packages[idx].Selected = false;
-			amlastselected = idx;
+			packages[idx].Selected = false;			
 		} else if (holdingshift) {
 			AMShiftSelection(item, idx);
  		} else {
-			if (packages.Where(x => x.Selected).ToList().Count > 1){
+			if (packages.Where(x => x.Selected).ToList().Count >= 1){
 				for (int i = 0; i < AllModsRows.GetChildCount(); i++){
 					DataGridRow row = AllModsRows.GetChild(i) as DataGridRow;
 					packages[i].Selected = false;
@@ -464,15 +614,14 @@ public partial class PackageDisplay : MarginContainer
 					row.Selected = false;
 				}
 				packages[idx].Selected = false;
-			}
-			amlastselected = idx;			
+			}			
 		}
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages selected", packages.Where(x => x.Selected == true).Count()));
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected packages:"));
 		foreach (SimsPackage package in packages.Where(x => x.Selected == true)){
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(package.FileName);
 		}
-		
+		amlastselected = idx;
 	}
 
 	private void AMShiftSelection(string item, int idx){
@@ -633,7 +782,6 @@ public partial class PackageDisplay : MarginContainer
 			if (holdingctrl){
 				(DownloadsRows.GetChild(idx) as DataGridRow).Selected = true;
 				downloads.Where(x => x.Identifier == Guid.Parse(item)).First().Selected = true;				
-				dllastselected = idx;
 			} else if (holdingshift){
 				DLShiftSelection(item, idx);
 			}
@@ -646,15 +794,14 @@ public partial class PackageDisplay : MarginContainer
 				}
 			}
 			(DownloadsRows.GetChild(idx) as DataGridRow).Selected = true;
-			downloads[idx].Selected = true;
-			dllastselected = idx;
+			downloads[idx].Selected = true;			
 		}
+		dllastselected = idx;
 	}
 	private void DownloadsItemUnselected(string item, int idx){
 		if (holdingctrl){		
 			(DownloadsRows.GetChild(idx) as DataGridRow).Selected = false;		
 			downloads[idx].Selected = false;
-			dllastselected = idx;
 		} else if (holdingshift) {
 			DLShiftSelection(item, idx);
  		} else {
@@ -676,9 +823,9 @@ public partial class PackageDisplay : MarginContainer
 					}
 				}
 				downloads[idx].Selected = false;
-			}
-			dllastselected = idx;			
+			}			
 		}
+		dllastselected = idx;
 	}
 
 
@@ -695,7 +842,24 @@ public partial class PackageDisplay : MarginContainer
 					CellContent content = new();
 					string data = "";
 					Type type = typeof(string);
-					if (inf.ContentType == DataGridContentType.Icons){
+					if (inf.ContentType == DataGridContentType.Int){
+						content = new CellContent(){
+							RowNum = rowitem,
+							ColumnNum = columnnumber,
+							RowIdentifier = package.Identifier.ToString()
+						};
+						if (package.GetProperty(inf.ColumnData) != "0"){
+							type = package.GetProperty(inf.ColumnData).GetType();
+							data = package.GetProperty(inf.ColumnData).ToString();
+						} else {
+							type = package.GetProperty(inf.ColumnData).GetType();
+							data = "";
+						}
+						content.CellType = CellOptions.Int;
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Row {0} has Load Order of: {1}", rowitem, data));
+						content.Content = data;
+						content.Selected = package.Selected;
+					} else if (inf.ContentType == DataGridContentType.Icons){
 						content = new CellContent(){
 							RowNum = rowitem,
 							ColumnNum = columnnumber,
@@ -753,6 +917,11 @@ public partial class PackageDisplay : MarginContainer
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("_packages count: {0}, packages count: {1}.", _packages.Count, packages.Count));
 		}
 		populatingpackages = false;
+		AMHeaders = new();
+		HBoxContainer headerrow = GetNode<HBoxContainer>("MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/AllMods_Container/GridContainer/CustomDataGrid/VBoxContainer/HeaderScroll/DataGrid_HeaderRow/Row");
+		foreach (DataGridHeaderCell cell in headerrow.GetChildren()){
+			AMHeaders.Add(cell);
+		}
 	}
 
 
@@ -798,7 +967,12 @@ public partial class PackageDisplay : MarginContainer
 			DownloadedModsGrid.RowsFromData();
 			_downloads = downloads;
 		}
-		populatingdownloads = false;
+		populatingdownloads = false;				
+		DLHeaders = new();
+		HBoxContainer headerrow = GetNode<HBoxContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/NewDL_Container/GridContainer/CustomDataGrid/VBoxContainer/HeaderScroll/DataGrid_HeaderRow/Row");
+		foreach (DataGridHeaderCell cell in headerrow.GetChildren()){
+			DLHeaders.Add(cell);
+		}
 	}
 
 	private void _on_exe_choice_popup_panel_picked_exe(string ExeID){
@@ -816,7 +990,7 @@ public partial class PackageDisplay : MarginContainer
 		Executable selected = Executables.Where(x => x.Selected == true).First();
 		string path = Path.Combine(selected.Path, selected.Exe);
 		GetNode<MarginContainer>("GameRunning").Visible = true;
-		applicationStarter.Start(path, selected.Arguments);
+		applicationStarter.Start(path, selected.Arguments, packages.Where(x => x.Enabled == true).ToList());
 	}
 
 	private void _on_disconnect_button_pressed(){
@@ -880,7 +1054,7 @@ public partial class PackageDisplay : MarginContainer
     {
 		if (!readingpackages){
 			new Thread(() => {
-				if (Directory.GetFiles(modsfolder, "*.package").ToList().Count != packages.Count){
+				if (Directory.GetFiles(modsfolder).ToList().Count != filesinpackagesfolder){
 					CallDeferred("ReadPackages");
 				}				
 			}){IsBackground = true}.Start();
@@ -888,22 +1062,22 @@ public partial class PackageDisplay : MarginContainer
 
 		if (!readingdownloads){
 			new Thread(() => {
-				if (Directory.GetFiles(downloadsfolder).ToList().Count != downloads.Count){
+				if (Directory.GetFiles(downloadsfolder).ToList().Count != filesindownloadsfolder){
 					CallDeferred("ReadDownloads");
 				}
 				
 			}){IsBackground = true}.Start();
 		}
 		new Thread(() => {
-			if (packagedisplayvisible){
-				
-				if (packages.Where(x => x.Selected).Count() != 1){
-					packagedisplayvisible = false;
+			if (packagedisplayvisible){				
+				if (packages.Where(x => x.Selected).Count() != 1){					
 					CallDeferred("HidePackageDisplay");
+				} else if (packages.IndexOf(packages.Where(x => x.Selected).First()) != packagedisplayed){
+					CallDeferred("HidePackageDisplay");
+					CallDeferred("ShowPackageDisplay");
 				}
 			} else if (!packagedisplayvisible){
-				if (packages.Where(x => x.Selected).Count() == 1){
-					packagedisplayvisible = true;
+				if (packages.Where(x => x.Selected).Count() == 1){					
 					CallDeferred("ShowPackageDisplay");
 				}
 			}
@@ -911,10 +1085,33 @@ public partial class PackageDisplay : MarginContainer
     }
 
 	private void HidePackageDisplay(){
+		packagedisplayvisible = false;
 		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container").Visible = packagedisplayvisible;
+		if (CurrentPackageViewer != null) CurrentPackageViewer.QueueFree();
 	}
 
 	private void ShowPackageDisplay(){
+		packagedisplayvisible = true;		
 		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container").Visible = packagedisplayvisible;
+		MakePackageInformation();
 	}
+
+	private void MakePackageInformation(){
+		CurrentPackageViewer = PackageInformation.Instantiate() as PackageViewer;
+		SimsPackage package = packages.Where(x => x.Selected).First();
+		packagedisplayed = packages.IndexOf(package);
+		ScanData packagedata = package.ScanData;
+		if (packagedata.ThumbnailLocation != null){
+			CurrentPackageViewer.hasthumbnail = true;
+			CurrentPackageViewer.thumbnail = GD.Load<Texture2D>(packagedata.ThumbnailLocation);
+		}
+		CurrentPackageViewer.PackageName = package.FileName;
+		StringBuilder sb = packagedata.PackageInformationDump();	
+		CurrentPackageViewer.packageinfo = sb.ToString();	
+		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container").AddChild(CurrentPackageViewer);
+	}
+
+
+
+
 }

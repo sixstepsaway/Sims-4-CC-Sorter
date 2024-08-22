@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 using SimsCCManager.Packages.Containers;
 using System.Xml;
 using SimsCCManager.Globals;
+using System.Drawing;
+using SimsCCManager.Settings.Loaded;
+using SimsCCManager.Debugging;
 
 namespace SimsCCManager.PackageReaders
 {
@@ -82,6 +85,7 @@ namespace SimsCCManager.PackageReaders
 
                 EntryType e = GlobalVariables.Sims2EntryTypes.Where(x => x.TypeID == iEntry.TypeID).First();
                 if (e != null){
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} has {1}.", package.FileName, e.Tag));
                     PackageEntries.Add(new IndexEntry() {Tag = e.Tag, Location = entrynum, TypeID = e.TypeID});
                 }
                 entrynum++;
@@ -336,71 +340,178 @@ namespace SimsCCManager.PackageReaders
                     }
                 }
             }
-            
+            /*
             if (PackageEntries.Exists(x => x.Tag == "IMG"))
             {
+				ImageConverter ic = new();
                 int cFileSize = -1;
                 string cTypeID = "";
                 List<int> imgnm = PackageEntries.Where(x => x.Tag == "IMG").Select(x => x.Location).ToList();
-                
+                int loccount = 0;
                 foreach (int loc in imgnm){
                     msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
                     cFileSize = readFile.ReadInt32();
                     cTypeID = readFile.ReadUInt16().ToString("X4");
-
-                    if (cTypeID == "FB10") 
+                    System.Drawing.Bitmap bm;;
+                    if (cTypeID == "FB10")
                     {
                         byte[] tempBytes = readFile.ReadBytes(3);
                         uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
 
-                        string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-                        if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
-                        {
-                            scanData = EntryReaders.ReadCPFChunk(readFile, scanData);
-                        } 
-                        else 
-                        {
-                            msPackage.Seek(chunkOffset + IndexData[loc].Offset + 9, SeekOrigin.Begin);
-                            DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
-                            if (cpfTypeID == "E750E0E2") 
-                            {
-
-                                cpfTypeID = decompressed.ReadUInt32().ToString("X8");
-
-                                if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
-                                {
-                                    scanData = EntryReaders.ReadCPFChunk(decompressed, scanData);
-                                }
-
-                            } 
-                            else 
-                            {
-                                scanData = EntryReaders.ReadXMLChunk(decompressed, scanData);
-                            }
-                        }
+						bm = (Bitmap)ic.ConvertFrom(decompressed);
+                        //scanData = EntryReaders.ReadSTRChunk(decompressed, scanData);                        
                     } 
                     else 
                     {
-                        msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-
-                        string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-                        if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
-                        {
-                            scanData = EntryReaders.ReadCPFChunk(readFile, scanData);
-                        }
-
-                        if  (cpfTypeID == "6D783F3C")
-                        {
-                            msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-
-                            string xmlData = Encoding.UTF8.GetString(readFile.ReadBytes((int)IndexData[loc].Filesize));
-                            scanData = EntryReaders.ReadXMLChunk(xmlData, scanData);
-
-                        }
+						byte[] imagebytes = readFile.ReadBytes(cFileSize);
+						bm = (Bitmap)ic.ConvertFrom(imagebytes);						
+                        //scanData = EntryReaders.ReadSTRChunk(readFile, scanData);                        
                     }
+					string imgname = "";
+					if (imgnm.Count > 1){
+						imgname = string.Format("{0}_Image_{1}.png", package.FileName, loccount);
+					} else {
+						imgname = string.Format("{0}_Image.png", package.FileName);
+					}
+					FileInfo packageinf = new(package.Location);
+					DirectoryInfo dir = packageinf.Directory;
+					string saveloc = Path.Combine(dir.FullName, imgname);
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving IMG to {0}", saveloc));
+					bm.Save(saveloc);
+					loccount++;
                 }
             }
+
+			if (PackageEntries.Exists(x => x.Tag == "THUM"))
+            {
+				ImageConverter ic = new();
+                int cFileSize = -1;
+                string cTypeID = "";
+                List<int> imgnm = PackageEntries.Where(x => x.Tag == "THUM").Select(x => x.Location).ToList();
+                int loccount = 0;
+                foreach (int loc in imgnm){
+                    msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
+                    cFileSize = readFile.ReadInt32();
+                    cTypeID = readFile.ReadUInt16().ToString("X4");
+                    System.Drawing.Bitmap bm;;
+                    if (cTypeID == "FB10")
+                    {
+                        byte[] tempBytes = readFile.ReadBytes(3);
+                        uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
+
+                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+
+						bm = (Bitmap)ic.ConvertFrom(decompressed);
+                        //scanData = EntryReaders.ReadSTRChunk(decompressed, scanData);                        
+                    } 
+                    else 
+                    {
+						byte[] imagebytes = readFile.ReadBytes(cFileSize);
+						bm = (Bitmap)ic.ConvertFrom(imagebytes);						
+                        //scanData = EntryReaders.ReadSTRChunk(readFile, scanData);                        
+                    }
+					string imgname = "";
+					if (imgnm.Count > 1){
+						imgname = string.Format("{0}_Image_{1}.png", package.FileName, loccount);
+					} else {
+						imgname = string.Format("{0}_Image.png", package.FileName);
+					}
+					FileInfo packageinf = new(package.Location);
+					DirectoryInfo dir = packageinf.Directory;
+					string saveloc = Path.Combine(dir.FullName, imgname);
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving THUMB to {0}", saveloc));
+					bm.Save(saveloc);
+					loccount++;
+                }
+            }
+
+			if (PackageEntries.Exists(x => x.Tag == "JPG"))
+            {
+				ImageConverter ic = new();
+                int cFileSize = -1;
+                string cTypeID = "";
+                List<int> imgnm = PackageEntries.Where(x => x.Tag == "JPG").Select(x => x.Location).ToList();
+                int loccount = 0;
+                foreach (int loc in imgnm){
+                    msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
+                    cFileSize = readFile.ReadInt32();
+                    cTypeID = readFile.ReadUInt16().ToString("X4");
+                    System.Drawing.Bitmap bm;;
+                    if (cTypeID == "FB10")
+                    {
+                        byte[] tempBytes = readFile.ReadBytes(3);
+                        uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
+
+                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+
+						bm = (Bitmap)ic.ConvertFrom(decompressed);
+                        //scanData = EntryReaders.ReadSTRChunk(decompressed, scanData);                        
+                    } 
+                    else 
+                    {
+						byte[] imagebytes = readFile.ReadBytes(cFileSize);
+						bm = (Bitmap)ic.ConvertFrom(imagebytes);						
+                        //scanData = EntryReaders.ReadSTRChunk(readFile, scanData);                        
+                    }
+					string imgname = "";
+					if (imgnm.Count > 1){
+						imgname = string.Format("{0}_Image_{1}.png", package.FileName, loccount);
+					} else {
+						imgname = string.Format("{0}_Image.png", package.FileName);
+					}
+					FileInfo packageinf = new(package.Location);
+					DirectoryInfo dir = packageinf.Directory;
+					string saveloc = Path.Combine(dir.FullName, imgname);
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving JPG to {0}", saveloc));
+					bm.Save(saveloc);
+					loccount++;
+                }
+            }
+
+			if (PackageEntries.Exists(x => x.Tag == "TXTR"))
+            {
+				ImageConverter ic = new();
+                int cFileSize = -1;
+                string cTypeID = "";
+                List<int> imgnm = PackageEntries.Where(x => x.Tag == "TXTR").Select(x => x.Location).ToList();
+                int loccount = 0;
+                foreach (int loc in imgnm){
+                    msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
+                    cFileSize = readFile.ReadInt32();
+                    cTypeID = readFile.ReadUInt16().ToString("X4");
+                    System.Drawing.Bitmap bm;;
+                    if (cTypeID == "FB10")
+                    {
+                        byte[] tempBytes = readFile.ReadBytes(3);
+                        uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
+
+                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+
+						bm = (Bitmap)ic.ConvertFrom(decompressed);
+                        //scanData = EntryReaders.ReadSTRChunk(decompressed, scanData);                        
+                    } 
+                    else 
+                    {
+						byte[] imagebytes = readFile.ReadBytes(cFileSize);
+						bm = (Bitmap)ic.ConvertFrom(imagebytes);						
+                        //scanData = EntryReaders.ReadSTRChunk(readFile, scanData);                        
+                    }
+					string imgname = "";
+					if (imgnm.Count > 1){
+						imgname = string.Format("{0}_Image_{1}.png", package.FileName, loccount);
+					} else {
+						imgname = string.Format("{0}_Image.png", package.FileName);
+					}
+					FileInfo packageinf = new(package.Location);
+					DirectoryInfo dir = packageinf.Directory;
+					string saveloc = Path.Combine(dir.FullName, imgname);
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving JPG to {0}", saveloc));
+					bm.Save(saveloc);
+					loccount++;
+                }
+            }*/
             
             msPackage.Close();
             readFile.Close();

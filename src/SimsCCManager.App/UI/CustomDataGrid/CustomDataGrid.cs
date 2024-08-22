@@ -17,6 +17,8 @@ public partial class CustomDataGrid : MarginContainer
 	public delegate void EnabledItemEventHandler();
 	[Signal]
 	public delegate void DisabledItemEventHandler();
+	public delegate void HeaderSortedEvent(int idx, SortingOptions sortingrule);
+	public event HeaderSortedEvent HeaderSortedSignal;
 	public List<HeaderInformation> Headers = new();
 	public List<CellContent> Data = new();
 	PackedScene divider = GD.Load<PackedScene>("res://UI/CustomDataGrid/DataGridHeaderResizer.tscn");
@@ -28,6 +30,7 @@ public partial class CustomDataGrid : MarginContainer
 	DataGridHeaderRow HeaderRow;
 	ScrollContainer HeaderScroll;
 	ScrollContainer RowsScroll;
+	public SortingOptions sortingRule = SortingOptions.NotSorted;
 	public override void _Ready()
 	{
 		GridContainer = GetNode<VBoxContainer>("VBoxContainer/RowsScroll/DataGrid_Rows");
@@ -47,7 +50,9 @@ public partial class CustomDataGrid : MarginContainer
 				cellinst.Size = new Vector2(30, 25);
 				ColumnSizes.Add(new Vector2(30, 25));
 			}
-			cellinst.Connect("HeaderResized", new Callable(this, MethodName.HeaderResized));
+			cellinst.HeaderResizedEvent += (idx) => HeaderResized(idx); 
+			cellinst.HeaderSortedEvent += (idx) => HeaderSorted(idx);
+			//.Connect("HeaderResized", new Callable(this, MethodName.HeaderResized));
 			headerrow.GetNode<HBoxContainer>("Row").AddChild(cellinst);
 		}
 		HeaderContainer.AddChild(headerrow);
@@ -55,7 +60,23 @@ public partial class CustomDataGrid : MarginContainer
 		HeaderRow = headerrow;
 	}
 
-	public void RowsFromData(){
+    private void HeaderSorted(int idx)
+    {
+		if (sortingRule == SortingOptions.NotSorted){
+			sortingRule = SortingOptions.Ascending;
+		} else if (sortingRule == SortingOptions.Ascending){
+			sortingRule = SortingOptions.Descending;
+		} else if (sortingRule == SortingOptions.Descending){
+			sortingRule = SortingOptions.NotSorted;
+		}
+		DataGridHeaderCell headercell = HeaderRow.GetNode<HBoxContainer>("Row").GetChild(idx) as DataGridHeaderCell;
+		headercell.ToggleSorting();		
+        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Sorting by header {0}: {1}", idx, Headers[idx].HeaderTitle));
+		HeaderSortedSignal.Invoke(idx, sortingRule);
+    }
+
+
+    public void RowsFromData(){
 		if (Data.Count != 0){
 			if (GridContainer.GetChildCount() > 1){
 				for (int i = 0; i < GridContainer.GetChildCount(); i++){
@@ -192,5 +213,7 @@ public class IconOptions {
 public enum CellOptions {
 	Text,
 	Icons,
-	TrueFalse
+	TrueFalse,
+	Int
+
 }

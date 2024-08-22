@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SimsCCManager.Globals;
@@ -81,6 +82,15 @@ namespace SimsCCManager.Debugging
                 {
                     locker.ReleaseWriterLock();
                 } 
+            }
+        }
+    
+        public static void WriteExceptionReport(StringBuilder statement){
+            string exceptionname = string.Format("LAST_EXCEPTION_{0}.log", DateTime.Now.ToString());
+            string exceptionfile = Path.Combine(GlobalVariables.logfolder, exceptionname);
+
+            using (StreamWriter streamWriter = new(exceptionfile)){                
+                streamWriter.Write(statement);
             }
         }
     }

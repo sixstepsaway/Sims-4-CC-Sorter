@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3 uid="uid://c4rjghpqcjk60"]
+[gd_scene load_steps=50 format=3 uid="uid://c4rjghpqcjk60"]
 
 [ext_resource type="Script" path="res://UI/PackageDisplay.cs" id="1_l1mrx"]
 [ext_resource type="Texture2D" uid="uid://cuhu3356ym5r7" path="res://assets/icons/materialicons/twotone_account_box_black_48dp.png" id="2_4xbwd"]
@@ -7,7 +7,6 @@
 [ext_resource type="Texture2D" uid="uid://d1216ob5rait5" path="res://assets/icons/materialicons/twotone_arrow_drop_down_black_48dp.png" id="4_bi1fu"]
 [ext_resource type="PackedScene" uid="uid://db2ljd672tk3d" path="res://UI/PackageDisplay_Elements/package_viewer.tscn" id="4_pioge"]
 [ext_resource type="Texture2D" uid="uid://cr0iyclc7hnb5" path="res://assets/icons/materialicons/twotone_add_box_black_48dp.png" id="5_6teur"]
-[ext_resource type="Script" path="res://UI/PackageDisplay_Elements/PackageViewer.cs" id="5_7a1qo"]
 [ext_resource type="Texture2D" uid="uid://dso4s7aqi8x4c" path="res://assets/icons/materialicons/twotone_library_add_black_48dp.png" id="6_ulswl"]
 [ext_resource type="Texture2D" uid="uid://dosqoo8wirnm8" path="res://assets/icons/materialicons/twotone_archive_black_48dp.png" id="7_j0y88"]
 [ext_resource type="PackedScene" uid="uid://ryrvwl0ec34b" path="res://UI/PackageDisplay_Elements/topbar_button.tscn" id="7_j6a54"]
@@ -308,7 +307,6 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_3p7jc")
 
 [node name="PackageViewer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container" instance=ExtResource("4_pioge")]
 layout_mode = 2
-script = ExtResource("5_7a1qo")
 
 [node name="NewDownloads_Frame_Container" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer"]
 layout_mode = 2

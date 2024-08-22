@@ -64,5 +64,6 @@ public enum DataGridContentType {
     Date,
     Enabled, 
     Text,
-    Bool
+    Bool,
+    Int
 }

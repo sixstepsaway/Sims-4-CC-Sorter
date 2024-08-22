@@ -404,7 +404,7 @@ namespace SimsCCManager.Globals
             icon.Save(saveloc, ImageFormat.Png);
             Godot.Image image = Godot.Image.LoadFromFile(saveloc);
             return ImageTexture.CreateFromImage(image);
-        }
+        }        
 
         public static string ExeIconName(Executable exe, string datafolder){
             string exeloc = Path.Combine(exe.Path, exe.Exe);

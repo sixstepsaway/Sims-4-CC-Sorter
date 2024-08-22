@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Text;
+using SimsCCManager.Debugging;
 
 namespace SSA.VirtualFileSystem
 {
@@ -45,7 +46,7 @@ namespace SSA.VirtualFileSystem
                 filesandfolders.AppendLine(string.Format("       File: {0}\n       Symlink: {1}", fileInfo.Name, fileInfo.Attributes.HasFlag(FileAttributes.ReparsePoint).ToString()));
             }
             sb.AppendLine(filesandfolders.ToString());
-            //Globals.MakeExceptionReport(sb);
+            Logging.WriteExceptionReport(sb);
         }
    
         

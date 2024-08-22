@@ -49,6 +49,26 @@ mouse_filter = 1
 theme = ExtResource("4_4mwj5")
 editable = false
 
+[node name="NumberOption" type="MarginContainer" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 53.875
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 3
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 3
+theme_override_constants/margin_bottom = 1
+
+[node name="LineEdit" type="LineEdit" parent="NumberOption"]
+layout_mode = 2
+mouse_filter = 1
+theme = ExtResource("4_4mwj5")
+editable = false
+
 [node name="IconsOption" type="MarginContainer" parent="."]
 visible = false
 clip_contents = true

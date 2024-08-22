@@ -1,6 +1,8 @@
 using Godot;
 using SimsCCManager.Globals;
+using SimsCCManager.Packages.Containers;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 public partial class ApplicationStarter : Control
@@ -12,9 +14,14 @@ public partial class ApplicationStarter : Control
 	{
 	}
 	
-	public void Start(string path, string arguments){
+	public void Start(string path, string arguments, List<SimsPackage> enabledpackages){
 		string output = "";
 		new Thread(() => {
+
+			
+
+
+
 			output = Utilities.RunProcess(path, arguments);
 			CallDeferred("EmitClosed");
 		}){IsBackground = true}.Start();
