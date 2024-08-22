@@ -29,6 +29,9 @@ after that, you can decide which files you want enabled in your game and which y
 - Your Sims 2 mods are named stupid things and you want to rename them all so you know what you're doing.
 - You want to organize all your CC according to time period or style.
 - You want to know which meshes don't have textures and vice versa and take those files out. 
+- You want to manage Sims 2, Sims 3 and Sims 4 all in the same place. 
+- You make CC or mods and need a clean environment to test your CC or mods out in, but don't want to lose your saves or usual set-up. 
+- You want to be able to track which mods you've updated and which you haven't. 
 
 ## Current Capabilities
 
