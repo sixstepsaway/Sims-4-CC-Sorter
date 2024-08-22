@@ -7,9 +7,6 @@ Now built in Godot 4.3.
 
 ![An image of the WIP app as it is right now.](https://64.media.tumblr.com/b122d4942504d2867a9957a2a833ab4b/a24a1a2064ec77fa-b0/s1280x1920/c0167e9431ee10027d236ca1ec39349cc50e0154.pnj)
 
-## Requirements
-
-[.net 5.0](https://dotnet.microsoft.com/en-us/download/dotnet/5.0) or [later](https://dotnet.microsoft.com/en-us/download/dotnet).
 
 ## Premise 
 
@@ -22,20 +19,30 @@ An app that searches through Sims .package files and gets some info:
 - Whether the item is an override.
 - If you have the mesh required by a recolor.
 
-after that, it organizes the files for you and saves a lot of trouble. 
+after that, you can decide which files you want enabled in your game and which you don't, and have separate profiles and instances for each.
 
-All of these things will be optional, and hopefully have customization options. For example, if you want to sort your CC by type (buy, clothing, accessories) and then creators therein (buy/littledica for example) you can set that up. 
+## Use Cases
+
+- You're a Sims youtuber. You play a private game sometimes too. Your YT profile will have Wonderful Whims and no adult content. Your private profile includes adult content and Wicked Whims.
+- You have a medieval challenge going and want to completely overhaul your game medieval style but want to keep your modern day Pleasantview saves intact. 
+- You and your sister both play Sims on the same computer. You can have an instance for your own mods and an instance for hers and keep both totally separate. You can even keep your settings separate.
+- Your Sims 2 mods are named stupid things and you want to rename them all so you know what you're doing.
+- You want to organize all your CC according to time period or style.
+- You want to know which meshes don't have textures and vice versa and take those files out. 
 
 ## Current Capabilities
 
 - Searches recursively through a folder given to it and outputs a list of which packages are *not* for the game you're trying to run them in. 
+- Displays that information so you can do something with it. 
+- Functioning UI shows packages in your instance folder.
+- Gets Sims 2 package information! 
 
 ## Roadmap
 
-- NEXT: a functioning UI so you can do it all through that, rather than the command line, and get output both in the form of a log and the form of a list.
--- Immediately after that? An option to automatically move incorrect packages to folders. So, for example, move all Sims 2 packages to "SCCS_Sims 2", all broken packages to "SCCS_Broken" and so on. 
-- After that: Get the name of the file from inside the package for Sims 2 packages that are named delightfully descriptive things like "23e73018f4f10e8c1f10b60a81eb19b90001.package", something which is my absolute nemesis.
-- Next up is identifying the type of file! Is it a bird, is it a plane? No! It's an override of the toaster oven! 
+- Add right-click menu so you can flag mods as root mods etc
+- Add root capabilities lmao
+- Add folder and file associations (some mods are folders not individual files)
+- Add "rename from internal name", specifically for Sims 2 files, which was the whole point of this app to begin with... 
 
 ## License 
 
