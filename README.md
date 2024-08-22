@@ -1,9 +1,11 @@
 ![enter image description here](https://img.shields.io/github/downloads/sixstepsaway/Sims-CC-Sorter/total?style=for-the-badge)        ![enter image description here](https://img.shields.io/github/issues/sixstepsaway/sims-cc-sorter?style=for-the-badge)  ![enter image description here](https://img.shields.io/github/watchers/sixstepsaway/sims-cc-sorter?style=for-the-badge)  ![enter image description here](https://img.shields.io/github/v/tag/sixstepsaway/sims-cc-sorter?style=for-the-badge) 
-# Sims-CC-Sorter
+# Sims CC Manager
 
 My first real C# project, at least the first one that's turned into something that works. 
 
-![An image of the WIP app as it is right now.](https://pbs.twimg.com/media/FuIOMMIXsAIiH4-?format=png&name=small)
+Now built in Godot 4.3.
+
+![An image of the WIP app as it is right now.](https://64.media.tumblr.com/b122d4942504d2867a9957a2a833ab4b/a24a1a2064ec77fa-b0/s1280x1920/c0167e9431ee10027d236ca1ec39349cc50e0154.pnj)
 
 ## Requirements
 
