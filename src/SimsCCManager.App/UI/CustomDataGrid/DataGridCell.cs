@@ -11,6 +11,8 @@ public partial class DataGridCell : Control
 	public delegate void DataGridCellSelectedClickedEventHandler();
 	[Signal]
 	public delegate void DataGridCellEnabledClickedEventHandler();
+	public delegate void CellMouseEvent(bool inside);
+	public CellMouseEvent MouseEvent;
 	public bool Text {get; set;} = false;
 	public bool Int {get; set;} = false;
 	
@@ -33,6 +35,7 @@ public partial class DataGridCell : Control
 	DataGridHeaderCell header;
 	int visibleicons = 0;
 	int iconswidth = 0;
+	
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -89,12 +92,14 @@ public partial class DataGridCell : Control
 	}
 
 	private void _on_button_mouse_entered(){
+		MouseEvent.Invoke(true);
 		GetNode<MarginContainer>("EnabledOption").GetNode<TextureRect>("Selected").Visible = false;
 		GetNode<MarginContainer>("EnabledOption").GetNode<TextureRect>("Unselected").Visible = false;
 		GetNode<MarginContainer>("EnabledOption").GetNode<TextureRect>("Hover").Visible = true;
 	}
 
 	private void _on_button_mouse_exited(){
+		MouseEvent.Invoke(false);
 		GetNode<MarginContainer>("EnabledOption").GetNode<TextureRect>("Selected").Visible = IsEnabled;
 		GetNode<MarginContainer>("EnabledOption").GetNode<TextureRect>("Unselected").Visible = !IsEnabled;
 		GetNode<MarginContainer>("EnabledOption").GetNode<TextureRect>("Hover").Visible = false;
@@ -114,6 +119,7 @@ public partial class DataGridCell : Control
 			GetNode<MarginContainer>("IconsOption").GetNode<HBoxContainer>("Icons").GetNode<TextureRect>("Group").Visible = iconOptions.Folder;		
 			visibleicons = iconOptions.GetCount();
 			iconswidth = (visibleicons * 15) + (visibleicons * 2);
+			GetNode<Button>("Button").TooltipText = iconOptions.GetIcons();
 		}
 		if (Text){
 			GetNode<MarginContainer>("TextOption").Visible = Text;

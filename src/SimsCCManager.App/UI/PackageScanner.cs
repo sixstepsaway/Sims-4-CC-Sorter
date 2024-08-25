@@ -6,8 +6,8 @@ using System.Threading;
 
 public partial class PackageScanner : Control
 {
-	[Signal]
-	public delegate void PackageScannedEventHandler();
+	public delegate void PackageScannedEvent(string id);
+	public PackageScannedEvent PackageScanned;
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -24,11 +24,12 @@ public partial class PackageScanner : Control
 			} else if (package.Game == Games.Sims4){
 
 			}
-			CallDeferred("EmitScanned", package.Identifier.ToString());
+			CallDeferred(nameof(EmitScanned), package.Identifier.ToString());
 		}){IsBackground = true}.Start();
 	}
 
 	private void EmitScanned(string identifier){
-		EmitSignal("PackageScanned", identifier);
+		PackageScanned.Invoke(identifier);
+		//EmitSignal("PackageScanned", identifier);
 	}
 }

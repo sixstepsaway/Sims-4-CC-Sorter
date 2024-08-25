@@ -11,22 +11,22 @@
 [ext_resource type="Texture2D" uid="uid://b7hf23rkhnbcp" path="res://assets/images/tumblricon_w.png" id="10_kata0"]
 [ext_resource type="Texture2D" uid="uid://bchdaw51l2qxm" path="res://assets/images/itch-io-icon-md-2372909491.png" id="11_6646j"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5kt08"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uic8o"]
 bg_color = Color(0.317116, 0.395759, 0.35931, 1)
 
-[sub_resource type="Gradient" id="Gradient_7aik0"]
+[sub_resource type="Gradient" id="Gradient_m4gro"]
 offsets = PackedFloat32Array(0, 0.272727, 0.493506, 0.805195, 0.974026)
 colors = PackedColorArray(0.506672, 0.646309, 0.474212, 1, 0.278417, 0.65, 0.195, 1, 0.2305, 0.5, 0.17, 1, 0.27301, 0.69, 0.1794, 1, 0.278417, 0.65, 0.195, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_c408c"]
-gradient = SubResource("Gradient_7aik0")
+gradient = SubResource("Gradient_m4gro")
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_gywvd"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_26dce"]
 texture = SubResource("GradientTexture2D_c408c")
 
 [sub_resource type="Theme" id="Theme_u5woe"]
-ProgressBar/styles/background = SubResource("StyleBoxFlat_5kt08")
-ProgressBar/styles/fill = SubResource("StyleBoxTexture_gywvd")
+ProgressBar/styles/background = SubResource("StyleBoxFlat_uic8o")
+ProgressBar/styles/fill = SubResource("StyleBoxTexture_26dce")
 
 [node name="MainWindow" type="MarginContainer"]
 anchors_preset = 15

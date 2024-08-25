@@ -33,6 +33,12 @@ namespace SimsCCManager.Globals
         public static string SettingsFile = Path.Combine(AppFolder, "Settings.ini");
         public static string tempfolder = Path.Combine(AppFolder, "temp");
         public static string logfolder = Path.Combine(AppFolder, "logs");
+        public static List<string> SimsFileExtensions = new(){
+            ".package",
+            ".sims3pack",
+            ".sims2pack",
+            "ts4script"
+        };
         
         public static List<EntryType> Sims2EntryTypes = new()
         {
@@ -339,8 +345,7 @@ namespace SimsCCManager.Globals
     public class Utilities {
 
         public static SimsPackage LoadPackageFile(SimsPackage package){
-            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Deserializing: {0}.", package.FileName));
-            string packagename = package.FileName;
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Deserializing: {0}.", package.InfoFile));
             XmlSerializer packageDeserializer = new XmlSerializer(typeof(SimsPackage));
             if (File.Exists(package.InfoFile)){
                 using (FileStream fileStream = new(package.InfoFile, FileMode.Open, System.IO.FileAccess.Read)){
@@ -356,7 +361,8 @@ namespace SimsCCManager.Globals
             return package;
         }
         public static SimsDownload LoadDownloadFile(SimsDownload download){
-            XmlSerializer packageDeserializer = new XmlSerializer(typeof(SimsFile));
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Deserializing: {0}.", download.InfoFile));
+            XmlSerializer packageDeserializer = new XmlSerializer(typeof(SimsDownload));
             if (File.Exists(download.InfoFile)){
                 using (FileStream fileStream = new(download.InfoFile, FileMode.Open, System.IO.FileAccess.Read)){
                     using (StreamReader streamReader = new(fileStream)){

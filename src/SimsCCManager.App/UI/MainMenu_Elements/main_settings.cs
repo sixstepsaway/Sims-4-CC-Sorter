@@ -1,6 +1,7 @@
 using Godot;
 using SimsCCManager.Settings.Loaded;
 using SimsCCManager.UI.Themes;
+using SimsCCManager.UI.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,10 +19,9 @@ public partial class main_settings : MarginContainer
 	CustomCheckButton RestrictCPU;
 	CustomCheckButton AutomaticallyLoad;
 	CustomCheckButton ShowTali;
-	MainWindow mw;
+	
 	public override void _Ready()
 	{
-		mw = GetTree().Root.GetNode<MarginContainer>("MainWindow") as MainWindow;
 		themes = GetNode<OptionButton>("MarginContainer/VBoxContainer/HBoxContainer2/OptionButton");
 		GD.Print(string.Format("There are {0} loaded themes", LoadedSettings.SetSettings.ThemeOptions.Count));
 		themes.AddItem(LoadedSettings.SetSettings.LoadedTheme.ThemeName);
@@ -41,14 +41,14 @@ public partial class main_settings : MarginContainer
 		AutomaticallyLoad.ButtonPressed(LoadedSettings.SetSettings.LoadLatestInstance);
 		ShowTali = GetNode<CustomCheckButton>("MarginContainer/VBoxContainer/ShowTali_Setting/ShowTali_Check");
 		ShowTali.ButtonPressed(LoadedSettings.SetSettings.ShowTali);
-		mw.UpdateTheme();
+		UIUtilities.UpdateTheme(GetTree());
 	}
 
 	private void _on_option_button_item_selected(int option){
 		ThemeColors prevtheme = LoadedSettings.SetSettings.LoadedTheme;
 		LoadedSettings.SetSettings.ChangeSetting("LoadedTheme", themesList[option]);	
 		if (LoadedSettings.SetSettings.LoadedTheme != prevtheme){						
-			mw.UpdateTheme();
+			UIUtilities.UpdateTheme(GetTree());
 		}
 	}
 

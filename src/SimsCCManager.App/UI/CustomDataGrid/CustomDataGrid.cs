@@ -3,22 +3,30 @@ using SimsCCManager.Debugging;
 using SimsCCManager.Globals;
 using SimsCCManager.Settings.Loaded;
 using SimsCCManager.UI.Containers;
+using SimsCCManager.UI.Themes;
+using SimsCCManager.UI.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 public partial class CustomDataGrid : MarginContainer
 {
-	[Signal]
-	public delegate void SelectedItemEventHandler();
-	[Signal]
-	public delegate void UnselectedItemEventHandler();
-	[Signal]
-	public delegate void EnabledItemEventHandler();
-	[Signal]
-	public delegate void DisabledItemEventHandler();
+	public delegate void SelectedItemEvent(string identifer, int idx);
+	public SelectedItemEvent SelectedItem;
+	public delegate void UnselectedItemEvent(string identifer, int idx);
+	public UnselectedItemEvent UnselectedItem;
+	public delegate void EnabledItemEvent(string identifer, int idx);
+	public EnabledItemEvent EnabledItem;
+	public delegate void DisabledItemEvent(string identifer, int idx);
+	public DisabledItemEvent DisabledItem;
 	public delegate void HeaderSortedEvent(int idx, SortingOptions sortingrule);
 	public event HeaderSortedEvent HeaderSortedSignal;
+
+	public delegate void MouseAffectingEvent(bool inside, int idx);
+	public MouseAffectingEvent MouseAffectingGrid;
+
+
 	public List<HeaderInformation> Headers = new();
 	public List<CellContent> Data = new();
 	PackedScene divider = GD.Load<PackedScene>("res://UI/CustomDataGrid/DataGridHeaderResizer.tscn");
@@ -31,6 +39,7 @@ public partial class CustomDataGrid : MarginContainer
 	ScrollContainer HeaderScroll;
 	ScrollContainer RowsScroll;
 	public SortingOptions sortingRule = SortingOptions.NotSorted;
+	List<DataGridRow> rows = new();
 	public override void _Ready()
 	{
 		GridContainer = GetNode<VBoxContainer>("VBoxContainer/RowsScroll/DataGrid_Rows");
@@ -60,6 +69,9 @@ public partial class CustomDataGrid : MarginContainer
 		HeaderRow = headerrow;
 	}
 
+	 
+
+
     private void HeaderSorted(int idx)
     {
 		if (sortingRule == SortingOptions.NotSorted){
@@ -76,15 +88,24 @@ public partial class CustomDataGrid : MarginContainer
     }
 
 
+
+	private void MouseAffectingRow(bool inside, int idx){		
+		MouseAffectingGrid.Invoke(inside, idx);
+	}
+
+	private void ClearChildren(){
+		if (GridContainer.GetChildCount() > 0){
+			for (int i = 0; i < GridContainer.GetChildCount(); i++){
+				GridContainer.GetChild(i).QueueFree();
+			}
+		}
+	}
+
     public void RowsFromData(){
 		if (Data.Count != 0){
-			if (GridContainer.GetChildCount() > 1){
-				for (int i = 0; i < GridContainer.GetChildCount(); i++){
-					GridContainer.GetChild(i).QueueFree();
-				}
-			}
-			
-			DataGridRow dataGridRow = row.Instantiate() as DataGridRow;
+			CallDeferred(nameof(ClearChildren));
+
+			DataGridRow dataGridRow = row.Instantiate() as DataGridRow;			
 			Color ColorA = LoadedSettings.SetSettings.LoadedTheme.DataGridA;
 			Color ColorB = LoadedSettings.SetSettings.LoadedTheme.DataGridB;
 			Color SelectedColor = LoadedSettings.SetSettings.LoadedTheme.DataGridSelected;		
@@ -92,12 +113,13 @@ public partial class CustomDataGrid : MarginContainer
 			foreach (CellContent item in Data){	
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}, column {1}: {2} as cell item.", item.RowNum, item.ColumnNum, item.Content));
 				if (currentrow != item.RowNum){
-					if (currentrow != -1) GridContainer.AddChild(dataGridRow);
+					if (currentrow != -1) rows.Add(dataGridRow);
 					dataGridRow = row.Instantiate() as DataGridRow;	
-					dataGridRow.Connect("ItemSelected", new Callable(this, MethodName.ItemSelected));
-					dataGridRow.Connect("ItemUnselected", new Callable(this, MethodName.ItemUnselected));
-					dataGridRow.Connect("ItemEnabled", new Callable(this, MethodName.ItemEnabled));
-					dataGridRow.Connect("ItemDisabled", new Callable(this, MethodName.ItemDisabled));
+					dataGridRow.MouseAffected += (inside, idx) => MouseAffectingRow(inside, idx);
+					dataGridRow.ItemSelected += (ident, idx) => ItemSelected(ident, idx);
+					dataGridRow.ItemDeselected += (ident, idx) => ItemUnselected(ident, idx);
+					dataGridRow.ItemEnabled += (ident, idx) => ItemEnabled(ident, idx);
+					dataGridRow.ItemDisabled += (ident, idx) => ItemDisabled(ident, idx);
 					dataGridRow.rowcolor = ColorA;
 					dataGridRow.selectedcolor = SelectedColor;
 					dataGridRow.Identifier = item.RowIdentifier;
@@ -111,13 +133,19 @@ public partial class CustomDataGrid : MarginContainer
 				}
 				dataGridRow.AddCell(item, ColumnSizes[item.ColumnNum]);	
 			}
-			GridContainer.AddChild(dataGridRow);
+			//dataGridRow.MouseAffected += (inside, idx) => MouseAffectingRow(inside, idx);			
+			rows.Add(dataGridRow);			
+			CallDeferred(nameof(PopulateRows));			
+		}
+	}
 
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Grid container children: {0}", GridContainer.GetChildCount()));
-			
-			for (int i = 0; i < ColumnSizes.Count; i++){
-				HeaderResized(i);
-			}
+	private void PopulateRows(){
+		foreach (DataGridRow row in rows){
+			GridContainer.AddChild(row);
+		}
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Grid container children: {0}", GridContainer.GetChildCount()));
+		for (int i = 0; i < ColumnSizes.Count; i++){
+			HeaderResized(i);
 		}
 	}
 
@@ -128,19 +156,19 @@ public partial class CustomDataGrid : MarginContainer
 
     private void ItemSelected(string Identifier, int idx){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected item {0}", Identifier));
-		EmitSignal("SelectedItem", Identifier, idx);
+		SelectedItem.Invoke(Identifier, idx);
 	}
 	private void ItemUnselected(string Identifier, int idx){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Unselected item {0}", Identifier));
-		EmitSignal("UnselectedItem", Identifier, idx);
+		UnselectedItem.Invoke(Identifier, idx);
 	}
 	private void ItemEnabled(string Identifier, int idx){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Enabled item {0}", Identifier));
-		EmitSignal("EnabledItem", Identifier, idx);
+		EnabledItem.Invoke(Identifier, idx);		
 	}
 	private void ItemDisabled(string Identifier, int idx){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Disabled item {0}", Identifier));
-		EmitSignal("DisabledItem", Identifier, idx);
+		DisabledItem.Invoke(Identifier, idx);
 	}
 
 	private void HeaderResized(int column){
@@ -178,6 +206,13 @@ public class CellContent {
 	public string RowIdentifier {get; set; } = "";
 	public bool Selected {get; set;} = false;
 	public string ContentType {get; set;} = "";
+	private Color _backgroundcolor;
+	public Color BackgroundColor {
+		get { return _backgroundcolor; }
+		set { _backgroundcolor = value; 
+		TextColor = UIUtilities.GetFGColor(value);}
+	}
+	public Color TextColor {get; set;}
 
 	public CellContent(){
 		IconOptions = new();
@@ -208,6 +243,20 @@ public class IconOptions {
 		if (Folder) count += 1;
 		return count;
 	}
+
+	public string GetIcons(){
+		StringBuilder sb = new();
+		if (Root) sb.AppendLine("Root");
+		if (OutOfDate) sb.AppendLine("Out of Date");
+		if (Broken) sb.AppendLine("Broken");
+		if (Conflicts) sb.AppendLine("Has Conflicts");
+		if (WrongGame) sb.AppendLine("Wrong Game");
+		if (Override) sb.AppendLine("Override");
+		if (Orphan) sb.AppendLine("Orphan");
+		if (Fave) sb.AppendLine("Favorite");
+		if (Folder) sb.AppendLine("Folder");
+		return sb.ToString();
+	}
 }
 
 public enum CellOptions {
@@ -215,5 +264,4 @@ public enum CellOptions {
 	Icons,
 	TrueFalse,
 	Int
-
 }

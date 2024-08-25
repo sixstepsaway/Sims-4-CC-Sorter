@@ -83,10 +83,10 @@ namespace SimsCCManager.PackageReaders
                         break;
                 }
 
-                EntryType e = GlobalVariables.Sims2EntryTypes.Where(x => x.TypeID == iEntry.TypeID).First();
-                if (e != null){
-					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} has {1}.", package.FileName, e.Tag));
-                    PackageEntries.Add(new IndexEntry() {Tag = e.Tag, Location = entrynum, TypeID = e.TypeID});
+                List<EntryType> e = GlobalVariables.Sims2EntryTypes.Where(x => x.TypeID == iEntry.TypeID).ToList();
+                if (e.Any()){					
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} has {1}.", package.FileName, e[0].Tag));
+                    PackageEntries.Add(new IndexEntry() {Tag = e[0].Tag, Location = entrynum, TypeID = e[0].TypeID});
                 }
                 entrynum++;
             }

@@ -1,4 +1,4 @@
-[gd_scene load_steps=50 format=3 uid="uid://c4rjghpqcjk60"]
+[gd_scene load_steps=59 format=3 uid="uid://c4rjghpqcjk60"]
 
 [ext_resource type="Script" path="res://UI/PackageDisplay.cs" id="1_l1mrx"]
 [ext_resource type="Texture2D" uid="uid://cuhu3356ym5r7" path="res://assets/icons/materialicons/twotone_account_box_black_48dp.png" id="2_4xbwd"]
@@ -22,9 +22,11 @@
 [ext_resource type="Texture2D" uid="uid://bp0j34pwjatb4" path="res://assets/icons/materialicons/twotone_help_black_48dp.png" id="18_yrn8a"]
 [ext_resource type="PackedScene" uid="uid://d2xe1vnmdo7ng" path="res://UI/PackageDisplay_Elements/view_errors_container.tscn" id="19_qbjob"]
 [ext_resource type="Theme" uid="uid://b4fe82i5mblf5" path="res://themes/packagedisplay_headers.tres" id="19_upvln"]
+[ext_resource type="Texture2D" uid="uid://c8mq228vanu3y" path="res://assets/icons/materialicons/twotone_error_black_48dp.png" id="22_bpi4a"]
 [ext_resource type="Script" path="res://UI/PackageScanner.cs" id="23_sydel"]
 [ext_resource type="Script" path="res://UI/ApplicationStarter.cs" id="23_wh1nx"]
 [ext_resource type="Theme" uid="uid://elq77dslte5a" path="res://themes/ManageCategories_buttons.tres" id="24_alsi8"]
+[ext_resource type="Texture2D" uid="uid://bfqqudt7sll4n" path="res://assets/icons/materialicons/twotone_refresh_black_48dp.png" id="26_16awj"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3p7jc"]
 
@@ -194,6 +196,53 @@ corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_tmp8c"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_u43vk"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.977937, 0.977937, 0.977937, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_atf2m"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.894922, 0.894922, 0.894922, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8s3fj"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+
+[sub_resource type="Theme" id="Theme_ejbk3"]
+Button/styles/hover = SubResource("StyleBoxFlat_u43vk")
+Button/styles/normal = SubResource("StyleBoxFlat_atf2m")
+Button/styles/pressed = SubResource("StyleBoxFlat_8s3fj")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x16ux"]
+content_margin_top = 15.0
+content_margin_bottom = 15.0
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l055a"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 3
+border_width_top = 4
+border_width_right = 5
+border_width_bottom = 4
+border_color = Color(0.450648, 0.450648, 0.450648, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="Theme" id="Theme_eke67"]
 
 [node name="PackageDisplay" type="MarginContainer"]
 anchors_preset = 15
@@ -589,6 +638,9 @@ layout_mode = 2
 tooltip_text = "Swap Instances"
 buttonImage = ExtResource("15_djphk")
 
+[node name="TextureRect" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/SwapInstances_SettingsHelpButtons" index="0"]
+texture = ExtResource("15_djphk")
+
 [node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/SwapInstances_SettingsHelpButtons" index="1"]
 tooltip_text = "Return to Main Menu"
 
@@ -598,12 +650,18 @@ layout_mode = 2
 tooltip_text = "Settings"
 buttonImage = ExtResource("16_bvsww")
 
+[node name="TextureRect" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/Settings_SettingsHelpButtons" index="0"]
+texture = ExtResource("16_bvsww")
+
 [node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/Settings_SettingsHelpButtons" index="1"]
 tooltip_text = "Settings"
 
 [node name="ViewErrors_Container" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer" instance=ExtResource("19_qbjob")]
 custom_minimum_size = Vector2(45, 45)
 layout_mode = 2
+
+[node name="TextureRect" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/ViewErrors_Container/View Errors_SettingsHelpButtons" index="0"]
+texture = ExtResource("22_bpi4a")
 
 [node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/ViewErrors_Container/View Errors_SettingsHelpButtons" index="1"]
 tooltip_text = "View Errors"
@@ -616,37 +674,6 @@ buttonImage = ExtResource("18_yrn8a")
 
 [node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/Help_SettingsHelpButtons" index="1"]
 tooltip_text = "Help"
-
-[node name="RightClickMenu" type="PopupMenu" parent="."]
-position = Vector2i(125, 195)
-size = Vector2i(192, 309)
-item_count = 12
-item_0/text = "Add to Category"
-item_1/text = "Edit Details"
-item_1/id = 1
-item_2/text = "Scan"
-item_2/checkable = 1
-item_2/id = 2
-item_3/text = "Toggle Root"
-item_3/checkable = 1
-item_3/id = 3
-item_4/text = "Toggle Out of Date"
-item_4/checkable = 1
-item_4/id = 4
-item_5/text = "Add Creator"
-item_5/id = 5
-item_6/text = "Add Source Link"
-item_6/id = 6
-item_7/text = "Rename from Title"
-item_7/id = 7
-item_8/id = 8
-item_8/separator = true
-item_9/text = "Move Mod"
-item_9/id = 9
-item_10/text = "Delete Files"
-item_10/id = 10
-item_11/text = "Add Note"
-item_11/id = 11
 
 [node name="ApplicationStarter" type="Control" parent="."]
 layout_mode = 2
@@ -662,10 +689,6 @@ script = ExtResource("23_sydel")
 
 [node name="GameRunning" type="MarginContainer" parent="."]
 visible = false
-layout_mode = 2
-
-[node name="ColorRect" type="ColorRect" parent="GameRunning" groups=["PlainBG"]]
-modulate = Color(1, 1, 1, 0.505882)
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="GameRunning"]
@@ -691,14 +714,459 @@ layout_mode = 2
 theme = ExtResource("24_alsi8")
 text = "Disconnect"
 
+[node name="FloatingItemsContainer" type="Control" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="RightClickCatcher" type="MarginContainer" parent="FloatingItemsContainer"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RenameItemsBox" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="RenameItemsBox" groups=["PlainBG"]]
+modulate = Color(1, 1, 1, 0.505882)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="RenameItemsBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 125
+
+[node name="ColorRect" type="ColorRect" parent="RenameItemsBox/MarginContainer" groups=["PlainBG"]]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RenameItemsBox/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="AllMods_Label" type="Label" parent="RenameItemsBox/MarginContainer/VBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Rename Mods or Press Button to Get Internal Name"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="RenameItemsBox/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="AllMods_Label" type="Label" parent="RenameItemsBox/MarginContainer/VBoxContainer/HBoxContainer2" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Get All Names"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GetAllNamesBox" type="MarginContainer" parent="RenameItemsBox/MarginContainer/VBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+
+[node name="ButtonSpin" type="Node2D" parent="RenameItemsBox/MarginContainer/VBoxContainer/HBoxContainer2/GetAllNamesBox"]
+position = Vector2(15, 15)
+
+[node name="TextureRect" type="TextureRect" parent="RenameItemsBox/MarginContainer/VBoxContainer/HBoxContainer2/GetAllNamesBox/ButtonSpin"]
+clip_children = 1
+offset_left = -15.0
+offset_top = -15.0
+offset_right = 15.0
+offset_bottom = 15.0
+texture = ExtResource("26_16awj")
+expand_mode = 3
+metadata/_edit_use_anchors_ = true
+
+[node name="ColorRect" type="ColorRect" parent="RenameItemsBox/MarginContainer/VBoxContainer/HBoxContainer2/GetAllNamesBox/ButtonSpin/TextureRect" groups=["AccentColorBox"]]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Button" type="Button" parent="RenameItemsBox/MarginContainer/VBoxContainer/HBoxContainer2/GetAllNamesBox"]
+layout_mode = 2
+theme = SubResource("Theme_ejbk3")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="RenameItemsBox/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 350)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_x16ux")
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RenameItemsBox/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="RenameItemsBox/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Rename_Button" type="Button" parent="RenameItemsBox/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Rename"
+
+[node name="Cancel_Button" type="Button" parent="RenameItemsBox/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Cancel"
+
+[node name="DeleteItemsBox" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="DeleteItemsBox" groups=["PlainBG"]]
+modulate = Color(1, 1, 1, 0.505882)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="DeleteItemsBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 125
+
+[node name="ColorRect" type="ColorRect" parent="DeleteItemsBox/MarginContainer" groups=["PlainBG"]]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DeleteItemsBox/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="AllMods_Label" type="Label" parent="DeleteItemsBox/MarginContainer/VBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Are you sure you want to delete these files? 
+This action CANNOT be undone!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="DeleteItemsBox/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 350)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_x16ux")
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DeleteItemsBox/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="LineEdit" type="LineEdit" parent="DeleteItemsBox/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer" groups=["LineEdits"]]
+custom_minimum_size = Vector2(450, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="DeleteItemsBox/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Delete_Button" type="Button" parent="DeleteItemsBox/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Delete"
+
+[node name="Cancel_Button" type="Button" parent="DeleteItemsBox/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Cancel"
+
+[node name="MoveWrongGameFiles" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="MoveWrongGameFiles" groups=["PlainBG"]]
+modulate = Color(1, 1, 1, 0.505882)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MoveWrongGameFiles"]
+layout_mode = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 125
+
+[node name="ColorRect" type="ColorRect" parent="MoveWrongGameFiles/MarginContainer" groups=["PlainBG"]]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MoveWrongGameFiles/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="AllMods_Label" type="Label" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Detected files from the wrong game in this instance. 
+Do you want to move them elsewhere?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 350)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_x16ux")
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Sims2Wrong_Location" type="HBoxContainer" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="Sims2Wrong_Location_Label" type="Label" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/Sims2Wrong_Location" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Sims 2 Files"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Sims2Wrong_Location_LineEdit" type="LineEdit" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/Sims2Wrong_Location" groups=["LineEdits"]]
+custom_minimum_size = Vector2(450, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+
+[node name="Sims3Wrong_Location" type="HBoxContainer" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="Sims3Wrong_Location_Label" type="Label" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/Sims3Wrong_Location" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Sims 3 Files"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Sims3Wrong_Location_LineEdit" type="LineEdit" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/Sims3Wrong_Location" groups=["LineEdits"]]
+custom_minimum_size = Vector2(450, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+
+[node name="Sims4Wrong_Location" type="HBoxContainer" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="Sims4Wrong_Location_Label" type="Label" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/Sims4Wrong_Location" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Sims 4 Files"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Sims4Wrong_Location_LineEdit" type="LineEdit" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/Sims4Wrong_Location" groups=["LineEdits"]]
+custom_minimum_size = Vector2(450, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+
+[node name="OtherWrong_Location" type="HBoxContainer" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="OtherWrong_Location_Label" type="Label" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/OtherWrong_Location" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Other Games"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OtherWrong_Location_LineEdit" type="LineEdit" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/OtherWrong_Location" groups=["LineEdits"]]
+custom_minimum_size = Vector2(450, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+
+[node name="AllMods_Label" type="Label" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Detected files from the wrong game in this instance. 
+Do you want to move them elsewhere?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Move_Button" type="Button" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Move"
+
+[node name="Cancel_Button" type="Button" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Cancel"
+
+[node name="BrokenFiles" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="BrokenFiles" groups=["PlainBG"]]
+modulate = Color(1, 1, 1, 0.505882)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="BrokenFiles"]
+layout_mode = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 125
+
+[node name="ColorRect" type="ColorRect" parent="BrokenFiles/MarginContainer" groups=["PlainBG"]]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="BrokenFiles/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="AllMods_Label" type="Label" parent="BrokenFiles/MarginContainer/VBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Detected broken package files.
+Move them to \"Broken\" folder?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="BrokenFiles/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Move_Button" type="Button" parent="BrokenFiles/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Move"
+
+[node name="Cancel_Button" type="Button" parent="BrokenFiles/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Cancel"
+
+[node name="ViewErrors" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="ViewErrors" groups=["PlainBG"]]
+modulate = Color(1, 1, 1, 0.505882)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="ViewErrors"]
+layout_mode = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 125
+
+[node name="ColorRect" type="ColorRect" parent="ViewErrors/MarginContainer" groups=["PlainBG"]]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ViewErrors/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="BrokenFiles_Label" type="Label" parent="ViewErrors/MarginContainer/VBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "There are broken files in Packages folder."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WrongGame_Label" type="Label" parent="ViewErrors/MarginContainer/VBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "There are files for the wrong game in Packages folder."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ViewErrors/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 350)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_x16ux")
+horizontal_scroll_mode = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="ViewErrors/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 150
+theme_override_constants/margin_right = 150
+
+[node name="Panel" type="Panel" parent="ViewErrors/MarginContainer/VBoxContainer/ScrollContainer/MarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_l055a")
+
+[node name="Errors_Label" type="Label" parent="ViewErrors/MarginContainer/VBoxContainer/ScrollContainer/MarginContainer" groups=["SimpleContrastLabel"]]
+custom_minimum_size = Vector2(500, 250)
+layout_mode = 2
+size_flags_vertical = 1
+theme = SubResource("Theme_eke67")
+text = "There are files for the wrong game in Packages folder."
+autowrap_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ViewErrors/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="FixBroken_Button" type="Button" parent="ViewErrors/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Fix Broken"
+
+[node name="FixIncorrect_Button" type="Button" parent="ViewErrors/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Fix Incorrect"
+
+[node name="Cancel_Button" type="Button" parent="ViewErrors/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Cancel"
+
 [connection signal="pressed" from="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer/MarginContainer3/GameChoice_Dropdown" to="." method="_on_game_choice_dropdown_pressed"]
 [connection signal="ButtonClicked" from="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/PlayButton_Container/Play_Button" to="." method="_on_play_button_button_clicked"]
 [connection signal="pressed" from="MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control/HidePopup_Button" to="." method="_on_hide_popup_button_pressed"]
-[connection signal="PickedExe" from="MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control/ExeChoice_PopupPanel" to="." method="_on_exe_choice_popup_panel_picked_exe"]
 [connection signal="ButtonClicked" from="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/SwapInstances_SettingsHelpButtons" to="." method="_on_swap_instances_settings_help_buttons_button_clicked"]
 [connection signal="ApplicationClosed" from="ApplicationStarter" to="." method="_on_application_starter_application_closed"]
-[connection signal="PackageScanned" from="PackageScanner" to="." method="_on_package_scanner_package_scanned"]
 [connection signal="pressed" from="GameRunning/MarginContainer/VBoxContainer/Disconnect_Button" to="." method="_on_disconnect_button_pressed"]
+[connection signal="gui_input" from="FloatingItemsContainer/RightClickCatcher" to="." method="_on_right_click_catcher_gui_input"]
 
 [editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFiles_Topbar_Button"]
 [editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFolder_Topbar_Button"]

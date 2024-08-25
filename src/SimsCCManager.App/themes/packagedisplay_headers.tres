@@ -1,7 +1,11 @@
-[gd_resource type="Theme" load_steps=5 format=3 uid="uid://b4fe82i5mblf5"]
+[gd_resource type="Theme" load_steps=6 format=3 uid="uid://b4fe82i5mblf5"]
 
 [ext_resource type="FontFile" uid="uid://bob4v2pndpu0q" path="res://assets/fonts/Convergence/Convergence-Regular.ttf" id="1_7tl0v"]
 [ext_resource type="FontFile" uid="uid://biq6mub1golgk" path="res://assets/fonts/Dongle/Dongle-Regular.ttf" id="2_4dkju"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8ejxn"]
+content_margin_left = 5.0
+content_margin_right = 5.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1ydx4"]
 content_margin_left = 5.0
@@ -31,6 +35,7 @@ border_color = Color(0.996078, 0.996078, 0.996078, 1)
 Label/colors/font_color = Color(0.8, 0.670588, 0.847059, 1)
 Label/font_sizes/font_size = 18
 Label/fonts/font = ExtResource("1_7tl0v")
+LineEdit/styles/normal = SubResource("StyleBoxFlat_8ejxn")
 TextEdit/colors/font_color = Color(0.196078, 0.196078, 0.196078, 1)
 TextEdit/colors/font_placeholder_color = Color(0.498039, 0.498039, 0.498039, 1)
 TextEdit/constants/line_spacing = -6

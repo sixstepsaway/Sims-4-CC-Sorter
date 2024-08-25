@@ -13,6 +13,7 @@ using SimsCCManager.Containers;
 using SimsCCManager.Debugging;
 using SimsCCManager.Globals;
 using SimsCCManager.Packages.Initial;
+using SimsCCManager.Settings.Loaded;
 
 namespace SimsCCManager.Packages.Containers
 {
@@ -42,6 +43,9 @@ namespace SimsCCManager.Packages.Containers
 
         public void SetInfoFile(FileInfo file){
             this.InfoFile = file.FullName.Replace(file.Extension, ".info");
+        }
+        public void SetInfoFile(DirectoryInfo file){
+            this.InfoFile = string.Format("{0}.info", file.FullName);
         }
 
         public StringBuilder WriteCoreInfo(){
@@ -78,7 +82,44 @@ namespace SimsCCManager.Packages.Containers
             }
         }
 
-        public bool GetInfo(string file){
+        public static long DirSize(DirectoryInfo d) 
+        {    
+            long size = 0;    
+            // Add file sizes.
+            FileInfo[] fis = d.GetFiles();
+            foreach (FileInfo fi in fis) 
+            {      
+                size += fi.Length;    
+            }
+            // Add subdirectory sizes.
+            DirectoryInfo[] dis = d.GetDirectories();
+            foreach (DirectoryInfo di in dis) 
+            {
+                size += DirSize(di);   
+            }
+            return size;  
+        }
+
+        public bool GetInfo(string file, bool folder = false){
+            if (folder){
+                DirectoryInfo directoryInfo = new(file);
+                if (string.IsNullOrEmpty(this.InfoFile)){
+                    SetInfoFile(directoryInfo);
+                }
+                if (File.Exists(this.InfoFile)){
+                    return true;
+                } else {
+                    this.FileName = directoryInfo.Name;
+                    this.FileSize = DirSize(directoryInfo);
+                    this.Location = directoryInfo.FullName;
+                    this.Identifier = Guid.NewGuid();
+                    this.FileType = TypeFromExtension("folder");
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Filetype: {0}", this.FileType));
+                    this.DateAdded = DateTime.Today;
+                    this.DateUpdated = DateTime.Today;
+                    return false;
+                }
+            }
             FileInfo fileinfo = new(file);
             if (string.IsNullOrEmpty(this.InfoFile)){
                 SetInfoFile(fileinfo);
@@ -300,6 +341,8 @@ namespace SimsCCManager.Packages.Containers
                 return FileTypes.Doc;
             } else if (string.Equals(extension, "txt", StringComparison.OrdinalIgnoreCase)){
                 return FileTypes.Txt;
+            } else if (string.Equals(extension, "folder", StringComparison.OrdinalIgnoreCase)){
+                return FileTypes.Folder;
             } else {
                 return FileTypes.Other;
             }
@@ -330,6 +373,8 @@ namespace SimsCCManager.Packages.Containers
                 return "Sims3Pack";
             } else if (type == FileTypes.Other){
                 return "Other";
+            } else if (type == FileTypes.Folder){
+                return "Folder";
             } else {
                 return "Other";
             }
@@ -401,6 +446,8 @@ namespace SimsCCManager.Packages.Containers
             get { return selected;} set {selected = value;}
         }
         public List<string> LinkedFiles {get; set;} = new();
+        public List<SimsPackageSubfolder> LinkedFolders {get; set;} = new();
+        public Category Category {get; set;}
         public int LoadOrder {get; set;} = -1;
         public string Creator {get; set;} = "";
         public string Notes {get; set;} = "";
@@ -431,7 +478,7 @@ namespace SimsCCManager.Packages.Containers
         public SimsPackage(){
             Conflicts = new();
             DuplicatePackages = new();
-            OverriddenPackages = new();
+            OverriddenPackages = new();            
         }
 
         public override void ContinueCreateInfo(FileInfo file){
@@ -779,12 +826,13 @@ namespace SimsCCManager.Packages.Containers
         }
         public override void WriteInfoFile()
         {
-            StringBuilder sb = new();
-            sb = WriteCoreInfo();
-            sb.AppendLine(string.Format("{0}={1}", "Installed", GetProperty("Installed")));
-            
-            using (StreamWriter streamWriter = new(this.InfoFile)){                
-                streamWriter.Write(sb);
+            if (File.Exists(InfoFile)){
+                File.Delete(InfoFile);                
+            }
+            XmlSerializer packageSerializer = new XmlSerializer(this.GetType());
+            using (var writer = new StreamWriter(InfoFile))
+            {
+                packageSerializer.Serialize(writer, this);
             }
         }
     }    
@@ -1144,7 +1192,11 @@ namespace SimsCCManager.Packages.Containers
 
 
 
-
+    public class SimsPackageSubfolder{
+        public string Folder {get; set;}
+        public List<string> Subfiles {get; set;} = new();
+        public List<SimsPackageSubfolder> Subfolders {get; set;} = new();
+    }
 
     public class TagsList {
         /// <summary>
@@ -1238,6 +1290,7 @@ public enum FileTypes {
     Doc,
     Txt,
     Other,
+    Folder,
     Null
 }
 

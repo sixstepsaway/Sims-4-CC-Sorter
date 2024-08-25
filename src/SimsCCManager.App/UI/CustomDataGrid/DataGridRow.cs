@@ -1,22 +1,22 @@
 using Godot;
 using SimsCCManager.Debugging;
 using SimsCCManager.Globals;
+using SimsCCManager.UI.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 public partial class DataGridRow : MarginContainer
 {
-	[Signal]
-	public delegate void ItemSelectedEventHandler();
-	[Signal]
-	public delegate void ItemUnselectedEventHandler();
-	[Signal]
-	public delegate void ItemEnabledEventHandler();
-	[Signal]
-	public delegate void ItemDisabledEventHandler();
+	public delegate void ItemSelectedEvent(string identifier, int idx);
+	public ItemSelectedEvent ItemSelected;
+	public ItemSelectedEvent ItemDeselected;
+	public ItemSelectedEvent ItemEnabled;
+	public ItemSelectedEvent ItemDisabled;	
 	[Signal]
 	public delegate void TextEditedEventHandler();
+	public delegate void MouseAffectingEvent(bool inside, int idx);
+	public MouseAffectingEvent MouseAffected;
 	HBoxContainer Row;
 	ColorRect BackgroundColor;
 	ColorRect SelectedColor;
@@ -32,7 +32,11 @@ public partial class DataGridRow : MarginContainer
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-					
+		
+	}
+
+	private void MouseAffecting(bool inside){
+		MouseAffected.Invoke(inside, GetIndex());		
 	}
 
 	public void AddCell(CellContent content, Vector2 columnsize){
@@ -71,6 +75,7 @@ public partial class DataGridRow : MarginContainer
 		
 		cell.Connect("DataGridCellEnabledClicked", new Callable(this, "DetectedClickEnabled"));
 		cell.Connect("DataGridCellSelectedClicked", new Callable(this, "DetectedClickSelected"));
+		cell.MouseEvent += (inside) => MouseAffecting(inside);
 		Row.AddChild(cell);
 	}
 
@@ -83,16 +88,18 @@ public partial class DataGridRow : MarginContainer
 	
 	private void DetectedClickEnabled(){
 		if (!Enabled){
-			EmitSignal("ItemEnabled", GetMeta("Identifier"), GetIndex());
+			ItemEnabled.Invoke(Identifier, GetIndex());
 		} else {
-			EmitSignal("ItemDisabled", GetMeta("Identifier"), GetIndex());
+			ItemDisabled.Invoke(Identifier, GetIndex());
 		}
 	}
 	private void DetectedClickSelected(){
 		if (!Selected){
-			EmitSignal("ItemSelected", GetMeta("Identifier"), GetIndex());
+			ItemSelected.Invoke(Identifier, GetIndex());
+			//EmitSignal("ItemSelected", GetMeta("Identifier"), GetIndex());
 		} else {
-			EmitSignal("ItemUnselected", GetMeta("Identifier"), GetIndex());
+			ItemDeselected.Invoke(Identifier, GetIndex());
+			//EmitSignal("ItemUnselected", GetMeta("Identifier"), GetIndex());
 		}
 	}
 	private void DetectedTextEdited(string text, int idx){

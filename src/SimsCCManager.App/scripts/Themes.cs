@@ -185,27 +185,7 @@ namespace SimsCCManager.UI.Themes
                     streamWriter.Write(stringBuilder);
                 }
             }
-        }
-
-        private static string GetContrastColor(string hexinput){
-            System.Drawing.Color color = ColorTranslator.FromHtml(hexinput);
-            RgbColor rgb = new(color.R, color.G, color.B);
-            double newcolor = 0;
-            double luminance = (0.299 * rgb.R + 0.587 * rgb.G + 0.114 * rgb.B)/255;
-            if (luminance > 0.5){
-                newcolor = 0; // bright colors - black font
-            } else {
-                newcolor = 255; // dark colors - white font
-            }
-            RgbColor newc = new()
-            {
-                Red = (byte)newcolor,
-                Blue = (byte)newcolor,
-                Green = (byte)newcolor
-            };
-
-            return newc.ToHex();
-        }
+        }        
     }
 
     public class ThemeColors {
@@ -260,6 +240,6 @@ namespace SimsCCManager.UI.Themes
 
         public object ProcessProperty(string propName){
             return this.GetType().GetProperty(propName).GetValue (this, null);
-        }
+        }        
     }
 }
