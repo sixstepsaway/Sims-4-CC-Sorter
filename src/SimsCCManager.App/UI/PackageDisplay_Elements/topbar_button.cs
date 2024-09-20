@@ -9,6 +9,8 @@ public partial class topbar_button : MarginContainer
 	Texture2D buttonImage =new();	
 	[Signal]
 	public delegate void ButtonClickedEventHandler();
+	[Export]
+	public string Tooltip = "";
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
@@ -18,6 +20,8 @@ public partial class topbar_button : MarginContainer
 		GetNode<ColorRect>("TextureRect/Color_Main").Visible = true;
 		GetNode<ColorRect>("TextureRect/Color_Hover").Visible = false;
 		GetNode<ColorRect>("TextureRect/Color_Click").Visible = false;
+		GetNode<Button>("TopbarButton_Button").TooltipText = Tooltip;
+		TooltipText = Tooltip;
 	}
 	
 	public void SetColors(){

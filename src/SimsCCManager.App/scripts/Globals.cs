@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Godot;
 using Microsoft.Win32;
+using SimsCCManager.Containers;
 using SimsCCManager.Debugging;
 using SimsCCManager.PackageReaders;
 using SimsCCManager.Packages.Containers;
@@ -38,6 +39,19 @@ namespace SimsCCManager.Globals
             ".sims3pack",
             ".sims2pack",
             "ts4script"
+        };
+
+        public static List<string> Sims2Exes = new(){
+            "Sims2EP9",
+            "Sims2EP9RPC"
+        };
+        public static List<string> Sims3Exes = new(){
+            "TS3W",
+            "TS3"
+        };
+        public static List<string> Sims4Exes = new(){
+            "TS4_DX9_x64",
+            "TS4_x64"
         };
         
         public static List<EntryType> Sims2EntryTypes = new()
@@ -344,6 +358,53 @@ namespace SimsCCManager.Globals
 
     public class Utilities {
 
+
+        public static Sims2Instance LoadS2Instance(string xmlfile){
+            Sims2Instance s2 = new();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Loading instance from {0}.", xmlfile));
+            XmlSerializer instanceDeserializer = new XmlSerializer(typeof(Sims2Instance));
+            if (File.Exists(xmlfile)){
+                using (FileStream fileStream = new(xmlfile, FileMode.Open, System.IO.FileAccess.Read)){
+                    using (StreamReader streamReader = new(fileStream)){
+                        s2 = (Sims2Instance)instanceDeserializer.Deserialize(streamReader);
+                        streamReader.Close();
+                    }
+                    fileStream.Close();
+                }
+            }
+            return s2;
+        }
+        public static Sims3Instance LoadS3Instance(string xmlfile){
+            Sims3Instance s3 = new();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Loading instance from {0}.", xmlfile));
+            XmlSerializer instanceDeserializer = new XmlSerializer(typeof(Sims3Instance));
+            if (File.Exists(xmlfile)){
+                using (FileStream fileStream = new(xmlfile, FileMode.Open, System.IO.FileAccess.Read)){
+                    using (StreamReader streamReader = new(fileStream)){
+                        s3 = (Sims3Instance)instanceDeserializer.Deserialize(streamReader);
+                        streamReader.Close();
+                    }
+                    fileStream.Close();
+                }
+            }
+            return s3;
+        }
+        public static Sims4Instance LoadS4Instance(string xmlfile){
+            Sims4Instance s4 = new();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Loading instance from {0}.", xmlfile));
+            XmlSerializer instanceDeserializer = new XmlSerializer(typeof(Sims4Instance));
+            if (File.Exists(xmlfile)){
+                using (FileStream fileStream = new(xmlfile, FileMode.Open, System.IO.FileAccess.Read)){
+                    using (StreamReader streamReader = new(fileStream)){
+                        s4 = (Sims4Instance)instanceDeserializer.Deserialize(streamReader);
+                        streamReader.Close();
+                    }
+                    fileStream.Close();
+                }
+            }
+            return s4;
+        }
+
         public static SimsPackage LoadPackageFile(SimsPackage package){
             if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Deserializing: {0}.", package.InfoFile));
             XmlSerializer packageDeserializer = new XmlSerializer(typeof(SimsPackage));
@@ -356,8 +417,6 @@ namespace SimsCCManager.Globals
                     fileStream.Close();
                 }
             }
-
-
             return package;
         }
         public static SimsDownload LoadDownloadFile(SimsDownload download){
@@ -422,9 +481,11 @@ namespace SimsCCManager.Globals
             return Path.Combine(exedir, iconname);
         }
 
-        public static string RunProcess(string process, string parameters)
+        public static string RunProcess(string process, string parameters, Games game)
         {
             string result = String.Empty;
+            FileInfo exe = new(process);
+            string exename = exe.Name;
 
             if (!File.Exists(process)){
                 //Logging.WriteDebugLog("Process was not found.");
@@ -452,7 +513,76 @@ namespace SimsCCManager.Globals
                     result = p.StandardOutput.ReadToEnd();
                 }
             }
-            return result;
+            while (!CheckForProcess(game)){
+                //
+            }
+            while (CheckForProcess(game)){
+                //
+            }
+
+            
+
+            //if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims no longer running!");
+            return result;            
+            //return result;
+        }
+
+        private static bool CheckForProcess(Games game){
+            bool anything = false;
+            if (game == Games.Sims2){
+                foreach (string exe in GlobalVariables.Sims2Exes){
+                    if (Process.GetProcessesByName(exe).Length == 0){
+                        anything = false;
+                    } else {
+                        anything = true;
+                    }
+                }
+
+            } else if (game == Games.Sims3){
+                foreach (string exe in GlobalVariables.Sims3Exes){
+                    if (Process.GetProcessesByName(exe).Length == 0){
+                        anything = false;
+                    } else {
+                        anything = true;
+                    }
+                }
+
+            } else if (game == Games.Sims4){
+                foreach (string exe in GlobalVariables.Sims4Exes){
+                    if (Process.GetProcessesByName(exe).Length == 0){
+                        anything = false;
+                    } else {
+                        anything = true;
+                    }
+                }
+            }
+            
+            return anything;            
+        }
+
+        private static void StartProcess(string processname){
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Process started!");
+            Process[] runninggame = Process.GetProcessesByName(processname);
+            if (runninggame.Length == 0){
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog("No game... Waiting!");
+                StartProcess(processname);
+            } else {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Found the game!");
+                return;
+            }
+        }
+
+        private static string WaitProcess(string processname, string result){
+            Process[] runninggame = Process.GetProcessesByName(processname);
+            if (runninggame.Length != 0){
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Game is running!");
+                return WaitProcess(processname, result);
+            } else {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Looks like the game closed!");
+                return result;
+            }
         }
     }
+
+    
 }

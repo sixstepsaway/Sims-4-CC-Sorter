@@ -5,22 +5,30 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Godot;
 using SimsCCManager.Debugging;
 using SimsCCManager.Globals;
+using SimsCCManager.Packages.Containers;
 using SimsCCManager.Settings.Loaded;
 using SimsCCManager.Settings.SettingsSystem;
 
 namespace SimsCCManager.Containers
 {
+    [XmlInclude(typeof(Sims2Instance))]
+    [XmlInclude(typeof(Sims3Instance))]
+    [XmlInclude(typeof(Sims4Instance))]
     public abstract class GameInstanceBase
     {
         protected Guid identifier;
         public abstract Guid Identifier {get; set;}
         protected Games gamechoice;
         public abstract Games GameChoice {get; set;}
+        protected string gameversion;
+        public abstract string GameVersion {get; set;}
         protected string gameinstallfolder;
         public abstract string GameInstallFolder {get; set;}
         protected string gameexe;
@@ -58,8 +66,8 @@ namespace SimsCCManager.Containers
             profiles = new List<string>();
         }
 
-        public string Inifile(){
-            return Path.Combine(InstanceFolder, "Instance.ini");
+        public string XMLfile(){
+            return Path.Combine(InstanceFolder, "Instance.xml");
         }
 
         public abstract void TestInstance();
@@ -72,7 +80,6 @@ namespace SimsCCManager.Containers
             InstanceProfilesFolder = Path.Combine(InstanceFolder, "Profiles");
             InstanceSharedGameDataFolder = Path.Combine(InstanceFolder, "SharedGameData");            
         }
-
 
         public void BuildInstanceCore(){
             if (Directory.Exists(InstanceFolder)){
@@ -131,9 +138,8 @@ namespace SimsCCManager.Containers
 
         public abstract void MakeFolderTree();
         public abstract void CreateFromCurrent();
-        public abstract void Load(string inifile);
 
-        public abstract StringBuilder WriteIni();
+        public abstract void WriteXML();
 
         public static string RenameExistingFolder(string folder){
             if (Directory.Exists(folder)){
@@ -240,6 +246,9 @@ namespace SimsCCManager.Containers
         public override Games GameChoice{ 
             get { return gamechoice; } set { gamechoice = value; }
         }
+        public override string GameVersion{ 
+            get { return gameversion; } set { gameversion = value; }
+        }
         public override string GameInstallFolder{
             get { return gameinstallfolder; } set { gameinstallfolder = value; } 
         }
@@ -322,7 +331,7 @@ namespace SimsCCManager.Containers
             } else {
                 BuildInstanceCore();
             }            
-            WriteIni();
+            WriteXML();
         }
 
         public override void CreateFromCurrent()
@@ -409,192 +418,18 @@ namespace SimsCCManager.Containers
             ThumbnailsFiles.Add(Path.Combine(GameDocumentsFolder, @"Thumbnails\ObjectThumbnails.package"));
         }
 
-        public override void Load(string inifile)
-        {
-            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Loading instance from {0}.", inifile));
-            using (StreamReader streamReader = new StreamReader(inifile)){
-                bool eos = false;                
-                while (eos == false){
-                    if(!streamReader.EndOfStream){
-                        string setting = streamReader.ReadLine();
-                        if (setting == null) return;
-                        if (setting.Contains('[')){
-                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                            string line = setting.Replace("[", "");
-                            line = line.Replace("]", "");
-                            NamedSetting(line, streamReader);                   
-                        } else {
-                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving setting: {0}.", setting));
-                            string[] line = setting.Split("=");
-                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting line length: {0}.", line.Length));
-                            if (line.Length != 1){
-                                //if (this.GetProperty(line[0]) != null && line[1] != null){
-                                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Property setting: {0}.", setting));
-                                    this.SetProperty(line[0], line[1]);
-                                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting set as: {0}.", GetProperty(line[0])));
-                                //}
-                            }
-                            
-                        }
-                    } else {
-                        eos = true;
-                    }
-                }
-                streamReader.Close();
-            }
-        }
-
-        private void NamedSetting(string name, StreamReader reader){
-            bool eos = false;
-            while (eos == false){
-                if(!reader.EndOfStream){
-                    if (name == "CACHE FILES"){
-                        bool caches = true;                
-                        while (caches == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                caches = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {             
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding cache file: {0}", setting));                   
-                                this.CacheFiles.Add(setting);
-                            }   
-                        }
-                    } else if (name == "THUMBNAIL FILES"){
-                        bool thumbnails = true;                
-                        while (thumbnails == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                thumbnails = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding thumbnail file: {0}", setting));
-                                this.ThumbnailsFiles.Add(setting);
-                            }   
-                        }
-                    } else if (name == "EXECUTABLES"){
-                        bool exes = true;                
-                        while (exes == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                exes = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                Executable exe = new();
-                                string[] line = setting.Split("="); 
-                                exe.Exe = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Path = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Name = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Arguments = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Selected = bool.Parse(line[1]);
-                                if (exe.Arguments == "None") exe.Arguments = "";
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding exe: {0}", setting));
-                                this.Executables.Add(exe);
-                            }   
-                        }
-                    } else if (name == "PROFILES"){
-                        bool profiles = true;                
-                        while (profiles == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                profiles = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding profile: {0}", setting));
-                                this.Profiles.Add(setting);
-                            }   
-                        }
-                    } else if (name == "CATEGORIES"){
-                        bool categories = true;                
-                        while (categories == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                categories = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding Category: {0}", setting));
-                                Category category = new();
-                                string[] line = setting.Split("="); 
-                                category.Name = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    categories = false;
-                                }
-                                line = setting.Split("=");
-                                category.Description = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    categories = false;
-                                }
-                                line = setting.Split("=");
-                                category.Background = Color.FromHtml(line[1]);
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    categories = false;
-                                }
-                                line = setting.Split("=");
-                                category.TextColor = Color.FromHtml(line[1]);
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding Category"));
-                                this.Categories.Add(category);
-                            }   
-                        }
-                    }
-                } else {
-                    eos = true;
-                }
-            }
-        }
-
-        public override StringBuilder WriteIni(){
+        public override void WriteXML(){
             
-            StringBuilder sb = new();
+            if (File.Exists(this.XMLfile())){
+                File.Delete(this.XMLfile());                
+            }
+            XmlSerializer InstanceSerializer = new XmlSerializer(this.GetType());
+            using (var writer = new StreamWriter(this.XMLfile()))
+            {
+                InstanceSerializer.Serialize(writer, this);
+            }
+
+            /*StringBuilder sb = new();
             sb.AppendLine(string.Format("{0}={1}", "InstanceName", GetProperty("InstanceName")));
             sb.AppendLine(string.Format("{0}={1}", "GameChoice", GetProperty("GameChoice")));
             sb.AppendLine(string.Format("{0}={1}", "Identifier", GetProperty("Identifier")));
@@ -655,7 +490,7 @@ namespace SimsCCManager.Containers
             foreach (string profile in profiles){
                 sb.AppendLine(profile);
             }
-            return sb;
+            return sb;*/
         }
     }
     public class Sims3Instance : GameInstanceBase {
@@ -664,6 +499,9 @@ namespace SimsCCManager.Containers
         }
         public override Games GameChoice{ 
             get { return gamechoice; } set { gamechoice = value; }
+        }
+        public override string GameVersion{ 
+            get { return gameversion; } set { gameversion = value; }
         }
         public override string GameInstallFolder{
             get { return gameinstallfolder; } set { gameinstallfolder = value; } 
@@ -840,196 +678,21 @@ namespace SimsCCManager.Containers
             } else {
                 BuildInstanceCore();
             }            
-            WriteIni();
+            WriteXML();
         }
 
-        public override void Load(string inifile)
-        {
-            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Loading instance from {0}.", inifile));
-            using (StreamReader streamReader = new StreamReader(inifile)){
-                bool eos = false;                
-                while (eos == false){
-                    if(!streamReader.EndOfStream){
-                        string setting = streamReader.ReadLine();
-                        if (setting == null) return;
-                        if (setting.Contains('[')){
-                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                            string line = setting.Replace("[", "");
-                            line = line.Replace("]", "");
-                            NamedSetting(line, streamReader);                   
-                        } else {
-                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving setting: {0}.", setting));
-                            string[] line = setting.Split("=");
-                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting line length: {0}.", line.Length));
-                            if (line.Length != 1){
-                                //if (this.GetProperty(line[0]) != null && line[1] != null){
-                                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Property setting: {0}.", setting));
-                                    this.SetProperty(line[0], line[1]);
-                                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting set as: {0}.", GetProperty(line[0])));
-                                //}
-                            }
-                            
-                        }
-                    } else {
-                        eos = true;
-                    }
-                }
-                streamReader.Close();
+                
+        public override void WriteXML(){            
+
+            if (File.Exists(this.XMLfile())){
+                File.Delete(this.XMLfile());                
             }
-        }
-
-        private void NamedSetting(string name, StreamReader reader){
-            bool eos = false;
-            while (eos == false){
-                if(!reader.EndOfStream){
-                    if (name == "CACHE FILES"){
-                        bool caches = true;                
-                        while (caches == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                caches = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {             
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding cache file: {0}", setting));                   
-                                this.CacheFiles.Add(setting);
-                            }   
-                        }
-                    } else if (name == "THUMBNAIL FILES"){
-                        bool thumbnails = true;                
-                        while (thumbnails == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                thumbnails = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding thumbnail file: {0}", setting));
-                                this.ThumbnailsFiles.Add(setting);
-                            }   
-                        }
-                    } else if (name == "EXECUTABLES"){
-                        bool exes = true;                
-                        while (exes == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                exes = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                Executable exe = new();
-                                string[] line = setting.Split("="); 
-                                exe.Exe = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Path = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Name = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Arguments = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Selected = bool.Parse(line[1]);
-                                if (exe.Arguments == "None") exe.Arguments = "";
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding exe: {0}", setting));
-                                this.Executables.Add(exe);
-                            }   
-                        }
-                    } else if (name == "PROFILES"){
-                        bool profiles = true;                
-                        while (profiles == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                profiles = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding profile: {0}", setting));
-                                this.Profiles.Add(setting);
-                            }   
-                        }
-                    } else if (name == "CATEGORIES"){
-                        bool categories = true;                
-                        while (categories == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                categories = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding Category: {0}", setting));
-                                Category category = new();
-                                string[] line = setting.Split("="); 
-                                category.Name = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    categories = false;
-                                }
-                                line = setting.Split("=");
-                                category.Description = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    categories = false;
-                                }
-                                line = setting.Split("=");
-                                category.Background = Color.FromHtml(line[1]);
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    categories = false;
-                                }
-                                line = setting.Split("=");
-                                category.TextColor = Color.FromHtml(line[1]);
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding Category"));
-                                this.Categories.Add(category);
-                            }   
-                        }
-                    }
-                } else {
-                    eos = true;
-                }
+            XmlSerializer InstanceSerializer = new XmlSerializer(this.GetType());
+            using (var writer = new StreamWriter(this.XMLfile()))
+            {
+                InstanceSerializer.Serialize(writer, this);
             }
-        }
-
-        
-        public override StringBuilder WriteIni(){
-            
-            StringBuilder sb = new();
+            /*StringBuilder sb = new();
             sb.AppendLine(string.Format("{0}={1}", "InstanceName", GetProperty("InstanceName")));
             sb.AppendLine(string.Format("{0}={1}", "GameChoice", GetProperty("GameChoice")));
             sb.AppendLine(string.Format("{0}={1}", "Identifier", GetProperty("Identifier")));
@@ -1092,7 +755,7 @@ namespace SimsCCManager.Containers
             foreach (string profile in profiles){
                 sb.AppendLine(profile);
             }
-            return sb;
+            return sb;*/
         }
     }
     public class Sims4Instance : GameInstanceBase {
@@ -1101,6 +764,9 @@ namespace SimsCCManager.Containers
         }
         public override Games GameChoice{ 
             get { return gamechoice; } set { gamechoice = value; }
+        }
+        public override string GameVersion{ 
+            get { return gameversion; } set { gameversion = value; }
         }
         public override string GameInstallFolder{
             get { return gameinstallfolder; } set { gameinstallfolder = value; } 
@@ -1193,7 +859,7 @@ namespace SimsCCManager.Containers
             } else {
                 BuildInstanceCore();
             }            
-            WriteIni();
+            WriteXML();
         }
 
         public override void TestInstance()
@@ -1243,194 +909,18 @@ namespace SimsCCManager.Containers
                 if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to move folder {0}: {1}", ContentFolder, e.Message));
             }
         }
-
-        public override void Load(string inifile)
-        {
-            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Loading instance from {0}.", inifile));
-            using (StreamReader streamReader = new StreamReader(inifile)){
-                bool eos = false;                
-                while (eos == false){
-                    if(!streamReader.EndOfStream){
-                        string setting = streamReader.ReadLine();
-                        if (setting == null) return;
-                        if (setting.Contains('[')){
-                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                            string line = setting.Replace("[", "");
-                            line = line.Replace("]", "");
-                            NamedSetting(line, streamReader);                   
-                        } else {
-                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving setting: {0}.", setting));
-                            string[] line = setting.Split("=");
-                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting line length: {0}.", line.Length));
-                            if (line.Length != 1){
-                                //if (this.GetProperty(line[0]) != null && line[1] != null){
-                                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Property setting: {0}.", setting));
-                                    this.SetProperty(line[0], line[1]);
-                                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting set as: {0}.", GetProperty(line[0])));
-                                //}
-                            }
-                            
-                        }
-                    } else {
-                        eos = true;
-                    }
-                }
-                streamReader.Close();
-            }
-        }
-
-        private void NamedSetting(string name, StreamReader reader){
-            bool eos = false;
-            while (eos == false){
-                if(!reader.EndOfStream){
-                    if (name == "CACHE FILES"){
-                        bool caches = true;                
-                        while (caches == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                caches = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {             
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding cache file: {0}", setting));                   
-                                this.CacheFiles.Add(setting);
-                            }   
-                        }
-                    } else if (name == "THUMBNAIL FILES"){
-                        bool thumbnails = true;                
-                        while (thumbnails == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                thumbnails = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding thumbnail file: {0}", setting));
-                                this.ThumbnailsFiles.Add(setting);
-                            }   
-                        }
-                    } else if (name == "EXECUTABLES"){
-                        bool exes = true;                
-                        while (exes == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                exes = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                Executable exe = new();
-                                string[] line = setting.Split("="); 
-                                exe.Exe = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Path = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Name = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Arguments = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    exes = false;
-                                }
-                                line = setting.Split("=");
-                                exe.Selected = bool.Parse(line[1]);
-                                if (exe.Arguments == "None") exe.Arguments = "";
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding exe: {0}", setting));
-                                this.Executables.Add(exe);
-                            }   
-                        }
-                    } else if (name == "PROFILES"){
-                        bool profiles = true;                
-                        while (profiles == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                profiles = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding profile: {0}", setting));
-                                this.Profiles.Add(setting);
-                            }   
-                        }
-                    } else if (name == "CATEGORIES"){
-                        bool categories = true;                
-                        while (categories == true){
-                            string setting = reader.ReadLine();
-                            if (setting == null) return;
-                            if (setting.Contains('[')){
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting ({0}) contains '['.", setting));
-                                categories = false;
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, reader);
-                            } else {
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding Category: {0}", setting));
-                                Category category = new();
-                                string[] line = setting.Split("="); 
-                                category.Name = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    categories = false;
-                                }
-                                line = setting.Split("=");
-                                category.Description = line[1];
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    categories = false;
-                                }
-                                line = setting.Split("=");
-                                category.Background = Color.FromHtml(line[1]);
-                                setting = reader.ReadLine();
-                                if (reader.EndOfStream) { 
-                                    eos = true; 
-                                    categories = false;
-                                }
-                                line = setting.Split("=");
-                                category.TextColor = Color.FromHtml(line[1]);
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding Category"));
-                                this.Categories.Add(category);
-                            }   
-                        }
-                    }
-                } else {
-                    eos = true;
-                }
-            }
-        }
-
         
-        public override StringBuilder WriteIni(){
+        public override void WriteXML(){
             
-            StringBuilder sb = new();
+            if (File.Exists(this.XMLfile())){
+                File.Delete(this.XMLfile());                
+            }
+            XmlSerializer InstanceSerializer = new XmlSerializer(this.GetType());
+            using (var writer = new StreamWriter(this.XMLfile()))
+            {
+                InstanceSerializer.Serialize(writer, this);
+            }
+            /*StringBuilder sb = new();
             sb.AppendLine(string.Format("{0}={1}", "InstanceName", GetProperty("InstanceName")));
             sb.AppendLine(string.Format("{0}={1}", "GameChoice", GetProperty("GameChoice")));
             sb.AppendLine(string.Format("{0}={1}", "Identifier", GetProperty("Identifier")));
@@ -1486,7 +976,7 @@ namespace SimsCCManager.Containers
             foreach (string profile in profiles){
                 sb.AppendLine(profile);
             }
-            return sb;
+            return sb;*/
         }        
     }
 
@@ -1496,11 +986,23 @@ namespace SimsCCManager.Containers
     }
 
     public class ProfileInfo {
-        public string ProfileName {get; set;}
-        public string SavesFolder {get; set;}
-        public string ScreenshotsFolder {get; set;}
-        public string VideosFolder {get; set;}
-        public string TrayFolder {get; set;}
-        //public string 
+        public string ProfileName {get; set;} = "";
+        public string InfoLocation {get; set;} = "";
+        public string ScreenshotsFolder {get; set;} = "";
+        public string VideosFolder {get; set;} = "";
+        public string TrayFolder {get; set;} = "";
+        public List<ProfilePackage> Packages {get; set;} = new();
+
+        public void MakeInfoLocation(){
+            if (ProfileName != ""){
+                //LoadedSettings.SetSettings.Instances.Where(x => x.)
+            }
+        }
+    }
+
+    public class ProfilePackage {
+        public string PackageFile {get; set;} = "";
+        public int LoadOrder {get; set;} = -1;
+        public Guid Identifier {get; set;}
     }
 }

@@ -8,9 +8,11 @@ using SimsCCManager.Settings.Loaded;
 using SimsCCManager.Settings.SettingsSystem;
 using SimsCCManager.UI.Containers;
 using SimsCCManager.UI.Utilities;
+using SSA.VirtualFileSystem;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Text;
@@ -24,127 +26,142 @@ using System.Threading.Tasks;
 
 public partial class PackageDisplay : MarginContainer
 {
-	public delegate void SetPbarMaxEvent(int value);
-	public SetPbarMaxEvent SetPbarMax;
-	
-	public delegate void IncrementPbarEvent();
-	public IncrementPbarEvent IncrementPbar;
-	
-	public delegate void ResetPbarValueEvent();
-	public ResetPbarValueEvent ResetPbarValue;
-	public delegate void ShowPbarEvent();
-	public ShowPbarEvent ShowPbar;
-	public delegate void HidePbarEvent();
-	public HidePbarEvent HidePbar;
-	private ExeChoicePopupPanel ExeChoicePanel;
-
-	public delegate void DoneLoadingEvent();
-	public DoneLoadingEvent DoneLoading;
-	//PackedScene DataGridRow = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/data_grid_row.tscn");
-	Control DataGridAllMods; 
-	Control DataGridDownloads;
-	PackedScene DataGrid = GD.Load<PackedScene>("res://UI/CustomDataGrid/CustomDataGrid.tscn");
-	PackedScene PackageInformation = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/package_viewer.tscn");
-	PackedScene RightClickMenu = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/right_click_menu.tscn");
-	PackedScene PackageListItem = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/package_list_item.tscn");
-	public Instance ThisInstance = new();
-	Games Game = Games.Null;
-	Sims2Instance sims2Instance = new();
-	Sims3Instance sims3Instance = new();
-	Sims4Instance sims4Instance = new();
-	List<Executable> Executables = new();
-	List<string> Cachefiles = new();
-	List<string> Thumbs = new();
-	List<Category> Categories = new();
-	List<string> Profiles = new();
-	string instancedatafolder = "";
-	string instancefolder = "";
+	//nodes
 	Control ExeChoiceControl;
-	List<SimsPackage> packages = new();
-	List<SimsPackage> _packages = new();
-	List<SimsDownload> downloads = new();
-	List<SimsDownload> _downloads = new();
-	CustomDataGrid AllModsGrid = new();
-	CustomDataGrid DownloadedModsGrid = new();
-	string downloadsfolder = "";
-	string modsfolder = "";
-	bool readingpackages = false;
-	bool readingdownloads = false;
-	bool populatingpackages = false;
-	bool populatingdownloads = false;
-	bool packagessortingorderchanged = false;
-	bool downloadssortingorderchanged = false;
-	string packagessortingorder = "";
-	string downloadssortingorder = "";
-	bool firstrunpackages = false;
-	bool firstrundownloads = false;
-
-	bool holdingshift = false;
-	bool holdingctrl = false;
-
-	VBoxContainer AllModsRows;
-	VBoxContainer DownloadsRows;
-
-	int amlastselected = -1;
-	int dllastselected = -1;
-
-	ApplicationStarter applicationStarter;
-
-	bool packagedisplayvisible = false;
-	PackageScanner scanner;
-	SortingOptions AMSortingRule = SortingOptions.NotSorted;
-	string AMSortBy = "";
-	SortingOptions DLSortingRule = SortingOptions.NotSorted;
-	string DLSortBy = "";
-	List<SimsPackage> unsortedpackages = new();
-	List<SimsDownload> unsorteddownloads = new();
-	List<DataGridHeaderCell> DLHeaders = new();
-	List<DataGridHeaderCell> AMHeaders = new();
-	int filesinpackagesfolder = 0;
-	int filesindownloadsfolder = 0;
-	PackageViewer CurrentPackageViewer;
-	int packagedisplayed = -1;
 	Control FloatingItemsContainer;
-	RightClickMenu rightclickmenu;
-	MarginContainer rightclickcatcher;
-	bool mouseinAM = false;
-	bool mouseinDL = false;
-	int rcpackage = -1;
-	int rcdownload = -1;
-	MarginContainer renamefileswindow;
-	VBoxContainer packagelist;
-	MarginContainer deletefiles;
-	bool canstart = false;
-	ExeChoicePopupPanel exeChoicePopupPanel;
-	int paralellism = 0;
-	LineEdit AMSearch;
-	LineEdit DLSearch;
-	List<string> ScannedPackages = new();
-	MarginContainer brokenfiles;
-	MarginContainer wronggamefiles;
 	HBoxContainer wronggame_sims2;
 	HBoxContainer wronggame_sims3;
 	HBoxContainer wronggame_sims4;
+	LineEdit AMSearch;
+	LineEdit DLSearch;
+	MarginContainer DataGridAllMods;
+	MarginContainer DataGridDownloads;
+	MarginContainer ErrorsListing;
+	MarginContainer brokenfiles;
+	MarginContainer deletefiles;
+	MarginContainer renamefileswindow;
+	MarginContainer rightclickcatcher;
+	MarginContainer wronggamefiles;
+	VBoxContainer AllModsRows;
+	VBoxContainer DownloadsRows;
+	VBoxContainer packagelist;
+	
 
+	//Custom nodes
+	ApplicationStarter applicationStarter;
+	CustomDataGrid AllModsGrid = new();
+	CustomDataGrid DownloadedModsGrid = new();
+	ExeChoicePopupPanel exeChoicePopupPanel;
+	PackageScanner scanner;
+	PackageViewer CurrentPackageViewer;
+	RightClickMenu rightclickmenu;
+	ViewErrors_Container viewerrorscontainer;
+	ExeChoicePopupPanel ExeChoicePanel;
+
+	//packed scenes
+	PackedScene DataGrid = GD.Load<PackedScene>("res://UI/CustomDataGrid/CustomDataGrid.tscn");
+	PackedScene PackageInformation = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/package_viewer.tscn");
+	PackedScene PackageListItem = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/package_list_item.tscn");
+	PackedScene RightClickMenu = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/right_click_menu.tscn");
+	
+
+	//lists
+	List<Category> Categories = new();
+	List<DataGridHeaderCell> AMHeaders = new();
+	List<DataGridHeaderCell> DLHeaders = new();
+	List<Executable> Executables = new();
+	List<SimsDownload> _downloads = new();
+	public List<SimsDownload> downloads = new();
+	List<SimsDownload> unsorteddownloads = new();
+	List<SimsPackage> _packages = new();
+	public List<SimsPackage> packages = new();
+	List<SimsPackage> unsortedpackages = new();
+	List<string> Cachefiles = new();
+	List<string> Profiles = new();
+	List<string> ScannedPackages = new();
+	List<string> Thumbs = new();
+
+	//instance information
+	Sims2Instance sims2Instance = new();
+	Sims3Instance sims3Instance = new();
+	Sims4Instance sims4Instance = new();
+	public Instance ThisInstance = new();
+	ProfileInfo Profile = new();
+	Games Game = Games.Null;	
+	SortingOptions AMSortingRule = SortingOptions.NotSorted;
+	SortingOptions DLSortingRule = SortingOptions.NotSorted;
+	StringBuilder errorslist;
+	
+	//bools
+	bool brokenmodsvisible = false;
+	bool canstart = false;
+	bool dontmovemybrokenfiles = false;
+	bool dontmovemywrongfiles = false;
+	bool downloadssortingorderchanged = false;
+	bool firstrundownloads = false;
+	bool firstrunpackages = false;
+	bool holdingctrl = false;
+	bool holdingshift = false;
+	bool mouseinAM = false;
+	bool mouseinDL = false;
+	bool packagedisplayvisible = false;
+	bool packagessortingorderchanged = false;
+	bool populatingdownloads = false;
+	bool populatingpackages = false;
+	bool readingdownloads = false;
+	bool readingpackages = false;
+	bool wronggamefilesvisible = false;
+
+	//ints
+	int NumErrors = 0;
+	int _numerrors = 0;
+	int amlastselected = -1;
+	int dllastselected = -1;
+	int filesindownloadsfolder = 0;
+	int filesinpackagesfolder = 0;
+	int packagedisplayed = -1;
+	int paralellism = 0;
+	int rcdownload = -1;
+	int rcpackage = -1;
+
+	//strings
+	string AMSortBy = "";
+	string DLSortBy = "";
+	string brokenmodsfolder = "";
+	string downloadsfolder = "";
+	string downloadssortingorder = "";
+	string instancedatafolder = "";
+	string instancefolder = "";
+	string modsfolder = "";
+	string othergamesmoveloc = "";
+	string packagessortingorder = "";
 	string s2moveloc = "";
 	string s3moveloc = "";
 	string s4moveloc = "";
-	string othergamesmoveloc = "";
-	string brokenmodsfolder = "";
 	string wronggamefolder = "";
+	string gamemodsfolder = "";
 
-	bool wronggamefilesvisible = false;
-	bool brokenmodsvisible = false;
+	//events
+	public delegate void DoneLoadingEvent();
+	public delegate void HidePbarEvent();
+	public delegate void IncrementPbarEvent();
+	public delegate void PropertyChangedEvent();
+	public delegate void ResetPbarValueEvent();
+	public delegate void SetPbarMaxEvent(int value);
+	public delegate void ShowPbarEvent();
+	private event PropertyChangedEvent DownloadsChanged;
+	private event PropertyChangedEvent PackagesChanged;
+	public DoneLoadingEvent DoneLoading;
+	public HidePbarEvent HidePbar;
+	public IncrementPbarEvent IncrementPbar;
+	public ResetPbarValueEvent ResetPbarValue;
+	public SetPbarMaxEvent SetPbarMax;
+	public ShowPbarEvent ShowPbar;
+	RightClickMenu CurrentRightClickMenu;
+	Category defaultcat = new();
 
-	bool dontmovemywrongfiles = false;
-	bool dontmovemybrokenfiles = false;
-	ViewErrors_Container viewerrorscontainer;
-	StringBuilder errorslist;
-	int NumErrors = 0;
-	int _numerrors = 0;
-	
-	
-	// Called when the node enters the scene tree for the first time.
+
+
 	public override void _Ready()
 	{
 		ThreadPool.GetMaxThreads(out int workerThreadsCount, out int ioThreadsCount);
@@ -153,9 +170,69 @@ public partial class PackageDisplay : MarginContainer
 		} else {
 			paralellism = ioThreadsCount - 2;
 		}
+
+		ConnectThings();
+
+		
+		
+		new Thread (() => {
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Starting Package Display.");
+			if (ThisInstance.Game == "Sims2") {
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims 2!");
+				Game = Games.Sims2;
+				string path = Path.Combine(ThisInstance.InstanceLocation, "Instance.xml");
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Loading from path {0}.", path));
+				sims2Instance = Utilities.LoadS2Instance(path);
+				Executables = sims2Instance.Executables;
+				Thumbs = sims2Instance.ThumbnailsFiles;
+				Categories = sims2Instance.Categories;
+				Profiles = sims2Instance.Profiles;
+				instancedatafolder = sims2Instance.InstanceDataFolder;
+				modsfolder = sims2Instance.InstancePackagesFolder;
+				downloadsfolder = sims2Instance.InstanceDownloadsFolder;
+				instancefolder = sims2Instance.InstanceFolder;
+			} else if (ThisInstance.Game == "Sims3"){
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims 3!");
+				Game = Games.Sims3;
+				sims3Instance = Utilities.LoadS3Instance(Path.Combine(ThisInstance.InstanceLocation, "Instance.xml"));
+				Executables = sims3Instance.Executables;
+				Thumbs = sims3Instance.ThumbnailsFiles;
+				Categories = sims3Instance.Categories;
+				Profiles = sims3Instance.Profiles;
+				instancedatafolder = sims3Instance.InstanceDataFolder;
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instance folder: {0}", instancedatafolder));
+				modsfolder = sims3Instance.InstancePackagesFolder;
+				downloadsfolder = sims3Instance.InstanceDownloadsFolder;		
+				instancefolder = sims3Instance.InstanceFolder;
+			} else if (ThisInstance.Game == "Sims4"){
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims 4!");
+				Game = Games.Sims4;
+				sims4Instance = Utilities.LoadS4Instance(Path.Combine(ThisInstance.InstanceLocation, "Instance.xml"));
+				Executables = sims4Instance.Executables;
+				Thumbs = sims4Instance.ThumbnailsFiles;
+				Categories = sims4Instance.Categories;
+				Profiles = sims4Instance.Profiles;
+				instancedatafolder = sims4Instance.InstanceDataFolder;
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instance folder: {0}", instancedatafolder));
+				modsfolder = sims4Instance.InstancePackagesFolder;
+				downloadsfolder = sims4Instance.InstanceDownloadsFolder;	
+				instancefolder = sims4Instance.InstanceFolder;	
+			}
+			brokenmodsfolder = Path.Combine(instancefolder, "Broken Packages");
+			wronggamefolder = Path.Combine(instancefolder, "Incorrect Game Files");
+			SetupDisplay();
+			UpdateExecutableList();
+			var x = WaitLoad();
+		}){IsBackground = true}.Start();		
+	}
+
+	private void ConnectThings(){
+		PackagesChanged += () => OnPackagesListChanged();
+		DownloadsChanged += () => OnDownloadsListChanged();
+
 		viewerrorscontainer = GetNode<ViewErrors_Container>("MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/ViewErrors_Container");
 		viewerrorscontainer.GetNode<topbar_button>("View Errors_SettingsHelpButtons").ButtonClicked += () => ViewErrors();
-
+		ErrorsListing = GetNode<MarginContainer>("ViewErrors");
 		//GetNode<Button>("").Pressed += () => ConfirmMoveIncorrectFiles();
 		GetNode<Button>("ViewErrors/MarginContainer/VBoxContainer/HBoxContainer/FixIncorrect_Button").Pressed += () => WrongGameDetected();
 		GetNode<Button>("ViewErrors/MarginContainer/VBoxContainer/HBoxContainer/FixBroken_Button").Pressed += () => BrokenPackagesDetected();
@@ -202,223 +279,214 @@ public partial class PackageDisplay : MarginContainer
 		ExeChoiceControl = GetNode<Control>("MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control");
 		ExeChoicePanel = GetNode<ExeChoicePopupPanel>("MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control/ExeChoice_PopupPanel");
 		ExeChoiceControl.Visible = false;
-		DataGridAllMods = GetNode<Control>("MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/AllMods_Container/GridContainer");
-		DataGridDownloads = GetNode<Control>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/NewDL_Container/GridContainer");
-		
-		new Thread (() => {
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Starting Package Display.");
-			if (ThisInstance.Game == "Sims2") {
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims 2!");
-				Game = Games.Sims2;
-				string path = Path.Combine(ThisInstance.InstanceLocation, "Instance.ini");
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Loading from path {0}.", path));
-				sims2Instance.Load(path);
-				Executables = sims2Instance.Executables;
-				Thumbs = sims2Instance.ThumbnailsFiles;
-				Categories = sims2Instance.Categories;
-				Profiles = sims2Instance.Profiles;
-				instancedatafolder = sims2Instance.InstanceDataFolder;
-				modsfolder = sims2Instance.InstancePackagesFolder;
-				downloadsfolder = sims2Instance.InstanceDownloadsFolder;
-				instancefolder = sims2Instance.InstanceFolder;
-			} else if (ThisInstance.Game == "Sims3"){
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims 3!");
-				Game = Games.Sims3;
-				sims3Instance.Load(Path.Combine(ThisInstance.InstanceLocation, "Instance.ini"));
-				Executables = sims3Instance.Executables;
-				Thumbs = sims3Instance.ThumbnailsFiles;
-				Categories = sims3Instance.Categories;
-				Profiles = sims3Instance.Profiles;
-				instancedatafolder = sims3Instance.InstanceDataFolder;
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instance folder: {0}", instancedatafolder));
-				modsfolder = sims3Instance.InstancePackagesFolder;
-				downloadsfolder = sims3Instance.InstanceDownloadsFolder;		
-				instancefolder = sims3Instance.InstanceFolder;
-			} else if (ThisInstance.Game == "Sims4"){
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims 4!");
-				Game = Games.Sims4;
-				sims4Instance.Load(Path.Combine(ThisInstance.InstanceLocation, "Instance.ini"));
-				Executables = sims4Instance.Executables;
-				Thumbs = sims4Instance.ThumbnailsFiles;
-				Categories = sims4Instance.Categories;
-				Profiles = sims4Instance.Profiles;
-				instancedatafolder = sims4Instance.InstanceDataFolder;
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instance folder: {0}", instancedatafolder));
-				modsfolder = sims4Instance.InstancePackagesFolder;
-				downloadsfolder = sims4Instance.InstanceDownloadsFolder;	
-				instancefolder = sims4Instance.InstanceFolder;	
-			}
-			brokenmodsfolder = Path.Combine(instancefolder, "Broken Packages");
-			wronggamefolder = Path.Combine(instancefolder, "Incorrect Game Files");
-			SetupDisplay();
-			UpdateExecutableList();			
-		}){IsBackground = true}.Start();
+		DataGridAllMods = GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/AllMods_Container/GridContainer");
+		DataGridDownloads = GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/NewDL_Container/GridContainer");
+
+
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/Profiles/HBoxContainer/Profiles_Button").ButtonClicked += () => ProfilesButtonClicked();
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFiles_Topbar_Button").ButtonClicked += () => AddFilesButtonClicked();
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFolder_Topbar_Button").ButtonClicked += () => AddFolderButtonClicked();
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/Refresh_Topbar_Button").ButtonClicked += () => RefreshPackagesButtonClicked();
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/SortSubfolders_Topbar_Button").ButtonClicked += () => SortIntoSubfoldersButtonClicked();
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/ScanAll_Topbar_Button").ButtonClicked += () => ScanAllButtonClicked();
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/ManageCats_Topbar_Button").ButtonClicked += () => ManageCategoriesClicked();
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/EditExes_Topbar_Button").ButtonClicked += () => EditExesClicked();
+
 		
 	}
 
-
-    private void ExeIconEvent(Texture2D texture, string exename, string exe)
+	public override void _Process(double delta)
     {
-        GetNode<TextureRect>("MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer/MarginContainer/ExeIcon_Image").Texture = texture;
-		GetNode<Label>("MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/Name_Container/VBoxContainer/ExeName_Label").Text = exename;
-		GetNode<Label>("MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/Name_Container/VBoxContainer/ExeExe_Label").Text = exe;
+		if (canstart){
+			if (!readingpackages){
+				new Thread(() => {
+					if ((Directory.GetFiles(modsfolder).Count() + Directory.GetDirectories(modsfolder).Count()) != filesinpackagesfolder){
+						CallDeferred("ReadPackages");
+					}				
+				}){IsBackground = true}.Start();
+
+				new Thread(() => {
+					if (!dontmovemybrokenfiles){
+						if (!wronggamefilesvisible && !brokenmodsvisible){
+							if (packages.Where(x => x.Broken).Any()){
+								CallDeferred(nameof(BrokenPackagesDetected));
+							}
+						}
+					}														
+				}){IsBackground = true}.Start();
+
+				new Thread(() => {
+					if (!dontmovemywrongfiles){
+						if (!wronggamefilesvisible && !brokenmodsvisible){
+							if (packages.Where(x => x.WrongGame).Any()){
+								CallDeferred(nameof(WrongGameDetected));
+							}
+						}
+					}
+				}){IsBackground = true}.Start();
+			}
+
+			if (!readingdownloads){
+				new Thread(() => {
+					if (Directory.GetFiles(downloadsfolder).ToList().Count != filesindownloadsfolder){
+						CallDeferred("ReadDownloads");
+					}
+					
+				}){IsBackground = true}.Start();
+			}
+			new Thread(() => {
+				if (packagedisplayvisible){				
+					if (packages.Where(x => x.Selected).Count() != 1){					
+						CallDeferred("HidePackageDisplay");
+					} else if (packages.IndexOf(packages.Where(x => x.Selected).First()) != packagedisplayed){
+						CallDeferred("HidePackageDisplay");
+						CallDeferred("ShowPackageDisplay");
+					}
+				} else if (!packagedisplayvisible){
+					if (packages.Where(x => x.Selected).Count() == 1){					
+						CallDeferred("ShowPackageDisplay");
+					}
+				}
+			}){IsBackground = true}.Start();
+
+			new Thread(() => {
+				int broken = packages.Where(x => x.Broken == true).Count();
+				int wronggame = packages.Where(x => x.WrongGame == true).Count();
+				NumErrors = broken + wronggame;
+				if (NumErrors != _numerrors && NumErrors != 0){
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} errors", NumErrors));
+					_numerrors = NumErrors;
+					errorslist = new();
+					List<SimsPackage> brokenpackages = packages.Where(x => x.Broken == true).ToList();
+					List<SimsPackage> wronggamepackages = packages.Where(x => x.WrongGame == true && x.Broken == false).ToList();
+					foreach (SimsPackage package in brokenpackages){
+						errorslist.AppendLine(string.Format("{0} is broken.", package.FileName));
+					}
+					foreach (SimsPackage package in wronggamepackages){
+						string gm = "an unknown game.";
+						if (package.Game == Games.Sims1) gm = "Sims 1";
+						if (package.Game == Games.Sims2) gm = "Sims 2";
+						if (package.Game == Games.Sims3) gm = "Sims 3";
+						if (package.Game == Games.Sims4) gm = "Sims 4";
+						if (package.Game == Games.SimsMedieval) gm = "Sims Medieval";
+						if (package.Game == Games.Spore) gm = "Spore";
+						if (package.Game == Games.SimCity5) gm = "SimCity 5";
+						errorslist.AppendLine(string.Format("{0} is for {1}.", package.FileName, gm));
+					}
+					viewerrorscontainer.HasNotifications = true;
+					viewerrorscontainer.Errors = errorslist.ToString();
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Updating error display to {0}", errorslist.ToString()));
+				} else if (NumErrors != _numerrors && NumErrors == 0) {
+					_numerrors = NumErrors;
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("No errors! What a life!"));
+					viewerrorscontainer.HasNotifications = false;
+					viewerrorscontainer.Errors = "";
+				}
+			}){IsBackground = true}.Start();
+		}
+		
     }
 
-    private void UpdateExecutableList(){
+	private async Task WaitLoad(){
+    	await ToSignal(RenderingServer.Singleton, RenderingServerInstance.SignalName.FramePostDraw);
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package display size: {0}.", DataGridAllMods.Size.Y));
+	}
+
+
+
+
+	//data handlers
+
+	private void UpdateExecutableList(){
 		ExeChoicePanel.instancedatafolder = instancedatafolder;
 		ExeChoicePanel.Executables = Executables;
 		CallDeferred(nameof(UpdateExes));
 	}
-
-	private void UpdateExes(){
-		ExeChoicePanel.UpdateExes();
-	}
-
-	private List<HeaderInformation> GetDefaultAMHeaders(){
-		List<HeaderInformation> allmodsheaders = new()
-        {
-            new HeaderInformation()
-            {
-                HeaderTitle = "Enabled",
-                ContentType = DataGridContentType.Enabled,
-				Blank = true,
-				Resizeable = false,
-                ColumnData = "Enabled"
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Load Order",
-                ContentType = DataGridContentType.Int,
-                ColumnData = "LoadOrder",
-				Resizeable = false,
-				Blank = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Name",
-                ContentType = DataGridContentType.Text,
-                ColumnData = "FileName",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Icons",
-                ContentType = DataGridContentType.Icons,
-                ColumnData = "Icons",
-				Blank = true,
-				Resizeable = false
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Creator",
-                ContentType = DataGridContentType.Text,
-                ColumnData = "Creator",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Added",
-                ContentType = DataGridContentType.Date,
-                ColumnData = "DateAdded",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Size",
-                ContentType = DataGridContentType.Text,
-                ColumnData = "FileSize",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Updated",
-                ContentType = DataGridContentType.Date,
-                ColumnData = "DateUpdated",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Game",
-                ContentType = DataGridContentType.Text,
-                ColumnData = "Game",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Scanned",
-                ContentType = DataGridContentType.Bool,
-                ColumnData = "Scanned",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "ScriptMod",
-                ContentType = DataGridContentType.Bool,
-                ColumnData = "ScriptMod",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "File Type",
-                ContentType = DataGridContentType.Text,
-                ColumnData = "FileType",
-				Resizeable = true
-            }
-        };
-		return allmodsheaders;
-	}
 	
-	private List<HeaderInformation> GetDefaultDownloadsHeaders(){
-		List<HeaderInformation> downloadheaders = new()
-        {
-            new HeaderInformation()
-            {
-                HeaderTitle = "File Name",
-                ContentType = DataGridContentType.Text,
-                ColumnData = "FileName",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Location",
-                ContentType = DataGridContentType.Text,
-                ColumnData = "Location",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Added",
-                ContentType = DataGridContentType.Date,
-                ColumnData = "DateAdded",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Size",
-                ContentType = DataGridContentType.Text,
-                ColumnData = "FileSize",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Updated",
-                ContentType = DataGridContentType.Date,
-                ColumnData = "DateUpdated",
-				Resizeable = true
-            },
-            new HeaderInformation()
-            {
-                HeaderTitle = "Installed",
-                ContentType = DataGridContentType.Bool,
-                ColumnData = "Installed",
-				Resizeable = true
-            }
-        };
-		return downloadheaders;
-	}
-
 	private void PackageScanned(string package){
 		ScannedPackages.Add(package);
+	}
+	
+
+
+
+	//package handlers
+
+	public bool ReadPackages(){
+		defaultcat = Categories.Where(x => x.Name == "Default").First();
+		readingpackages = true;
+		ConcurrentBag<SimsPackage> packagesbag = new();
+		List<string> files = Directory.GetFiles(modsfolder).ToList();
+		List<string> directories = Directory.GetDirectories(modsfolder).ToList();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} files to read in Packages", files.Count));
+		List<string> infofiles = files.Where(x => x.EndsWith(".info", StringComparison.OrdinalIgnoreCase)).ToList();
+		List<string> packagefiles = files.Where(x => !infofiles.Contains(x)).ToList();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} files to read that are not Info Files", packagefiles.Count));
+
+		if (directories.Count != 0){
+			Parallel.ForEach(directories, new ParallelOptions { MaxDegreeOfParallelism = paralellism }, file => {
+				SimsPackage simsPackage = new();				
+				bool infoexists = simsPackage.GetInfo(file, true);
+				if (infoexists){
+					simsPackage = Utilities.LoadPackageFile(simsPackage);
+				} else {
+					simsPackage.Folder = true;
+					simsPackage.Category = defaultcat;
+					simsPackage.MakeInfo(file, true);
+					List<string> filesinfolder = Directory.GetFiles(simsPackage.Location).ToList();
+					simsPackage.LinkedFiles.AddRange(filesinfolder);
+					List<string> foldersinfolder = Directory.GetDirectories(simsPackage.Location).ToList();
+					if (foldersinfolder.Count != 0){
+						foreach (string folder in foldersinfolder){
+							simsPackage.LinkedFolders.Add(GetFolderInfo(folder));						
+						}
+					}
+				}				
+				packagesbag.Add(simsPackage);
+			});
+		}
+
+		if (packagefiles.Count != 0){			
+			Parallel.ForEach(packagefiles, new ParallelOptions { MaxDegreeOfParallelism = paralellism }, file => {
+				SimsPackage simsPackage = new();				
+				bool infoexists = simsPackage.GetInfo(file);				
+				if (infoexists){
+					simsPackage = Utilities.LoadPackageFile(simsPackage);
+				} else {
+					simsPackage.MakeInfo(file);
+					DateTime now = DateTime.Now;
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Going to scan {0}.", simsPackage.Location));					
+					scanner.Scan(simsPackage);
+					while (!ScannedPackages.Contains(simsPackage.Identifier.ToString())){
+						//wait.
+					}
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Looks like {0} finished! \n             Started: {1}\n             Finished: {2}.", simsPackage.Location, now, DateTime.Now));
+					if (infoexists){
+						simsPackage = Utilities.LoadPackageFile(simsPackage);
+					}
+				}
+				if (simsPackage.Game != Game && !simsPackage.Misc && simsPackage.Game != Games.Null){
+					simsPackage.WrongGame = true;
+				}
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages in the bag.", packagesbag.Count));
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("This package ({0}) is for Sims {1}.", simsPackage.FileName, simsPackage.Game));
+
+				packagesbag.Add(simsPackage);				
+			});			
+			packages = packagesbag.ToList();
+			unsortedpackages = packages;
+			if (!packagessortingorderchanged) packages = packages.OrderBy(x => x.FileName).ToList();
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages in packages.", packages.Count));
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} ordered packages in packages.", packages.Count));
+					
+		}
+		filesinpackagesfolder = Directory.GetFiles(modsfolder).Count() + Directory.GetDirectories(modsfolder).Count();
+		
+		
+		if (firstrunpackages) PackagesChanged.Invoke();
+		
+		readingpackages = false;
+		return true;
 	}
 
 	private SimsPackageSubfolder GetFolderInfo(string folder){
@@ -435,70 +503,27 @@ public partial class PackageDisplay : MarginContainer
 		return subfolder;
 	}
 
-	public bool ReadPackages(){
-		readingpackages = true;
-		ConcurrentBag<SimsPackage> packagesbag = new();
-		List<string> files = Directory.GetFiles(modsfolder).ToList();
-		List<string> directories = Directory.GetDirectories(modsfolder).ToList();
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} files to read in Packages", files.Count));
-		List<string> infofiles = files.Where(x => x.EndsWith(".info", StringComparison.OrdinalIgnoreCase)).ToList();
-		List<string> packagefiles = files.Where(x => !infofiles.Contains(x)).ToList();
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} files to read that are not Info Files", packagefiles.Count));
-
-		if (directories.Count != 0){
-			Parallel.ForEach(directories, new ParallelOptions { MaxDegreeOfParallelism = paralellism }, file => {
-				SimsPackage simsPackage = new();				
-				bool infoexists = simsPackage.GetInfo(file, true);	
-				simsPackage.Folder = true;
-				List<string> filesinfolder = Directory.GetFiles(simsPackage.Location).ToList();
-				simsPackage.LinkedFiles.AddRange(filesinfolder);
-				List<string> foldersinfolder = Directory.GetDirectories(simsPackage.Location).ToList();
-				if (foldersinfolder.Count != 0){
-					foreach (string folder in foldersinfolder){
-						simsPackage.LinkedFolders.Add(GetFolderInfo(folder));						
-					}
-				}
-			});
+	private void MakePackageInformation(){
+		CurrentPackageViewer = PackageInformation.Instantiate() as PackageViewer;
+		SimsPackage package = packages.Where(x => x.Selected).First();
+		packagedisplayed = packages.IndexOf(package);
+		ScanData packagedata = package.ScanData;
+		if (packagedata != null) {
+			if (packagedata.ThumbnailLocation != null){
+				CurrentPackageViewer.hasthumbnail = true;
+				CurrentPackageViewer.thumbnail = GD.Load<Texture2D>(packagedata.ThumbnailLocation);
+			}
+			CurrentPackageViewer.PackageName = package.FileName;
+			StringBuilder sb = packagedata.PackageInformationDump();	
+			CurrentPackageViewer.packageinfo = sb.ToString();	
 		}
-
-		if (packagefiles.Count != 0){			
-			Parallel.ForEach(packagefiles, new ParallelOptions { MaxDegreeOfParallelism = paralellism }, file => {
-				SimsPackage simsPackage = new();				
-				bool infoexists = simsPackage.GetInfo(file);				
-				if (infoexists){
-					simsPackage = Utilities.LoadPackageFile(simsPackage);
-				} else {
-					DateTime now = DateTime.Now;
-					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Going to scan {0}.", simsPackage.Location));					
-					scanner.Scan(simsPackage);
-					while (!ScannedPackages.Contains(simsPackage.Identifier.ToString())){
-						//wait.
-					}
-					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Looks like {0} finished! \n             Started: {1}\n             Finished: {2}.", simsPackage.Location, now, DateTime.Now));
-					if (infoexists){
-						simsPackage = Utilities.LoadPackageFile(simsPackage);
-					}
-				}
-				simsPackage.Category ??= Categories.Where(x => x.Name == "Default").First();
-				if (simsPackage.Game != Game){
-					simsPackage.WrongGame = true;
-				}
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages in the bag.", packagesbag.Count));
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("This package ({0}) is for Sims {1}.", simsPackage.FileName, simsPackage.Game));
-
-				packagesbag.Add(simsPackage);				
-			});
-			packages = packagesbag.ToList();
-			unsortedpackages = packages;
-			if (!packagessortingorderchanged) packages = packages.OrderBy(x => x.FileName).ToList();
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages in packages.", packages.Count));
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} ordered packages in packages.", packages.Count));
-		}
-		filesinpackagesfolder = Directory.GetFiles(modsfolder).Count() + Directory.GetDirectories(modsfolder).Count();
-		if (firstrunpackages) AllModsDisplayPackages();
-		readingpackages = false;
-		return true;
+		
+		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container").AddChild(CurrentPackageViewer);
 	}
+
+	
+
+	//downloads handlers
 
 	public bool ReadDownloads(){
 		readingdownloads = true;
@@ -527,18 +552,19 @@ public partial class PackageDisplay : MarginContainer
 		}
 		readingdownloads = false;
 		filesindownloadsfolder = Directory.GetFiles(downloadsfolder).Count();
-		if (firstrundownloads) DownloadsDisplayPackages();
+		if (firstrundownloads) DownloadsChanged.Invoke();
 		return true;
 	}
 
-	private void _on_hide_popup_button_pressed(){
-		ExeChoiceControl.Visible = false;
-	}
+
+
+	//data grids
 
 	private void SetupDisplay(){		
 		new Thread (() => {
 			AllModsGrid = DataGrid.Instantiate() as CustomDataGrid;	
 			AllModsGrid.Headers = GetDefaultAMHeaders();
+			//AllModsGrid.TreeEntered += () => EmitDoneLoading();
 			DownloadedModsGrid = DataGrid.Instantiate() as CustomDataGrid;	
 			DownloadedModsGrid.Headers = GetDefaultDownloadsHeaders();
 			bool agh = (bool)CallDeferred(nameof(AddGrid), DataGridAllMods, AllModsGrid);
@@ -549,14 +575,28 @@ public partial class PackageDisplay : MarginContainer
 			AllModsGrid.EnabledItem += (item, idx) => AllModsItemEnabled(item, idx);
 			AllModsGrid.DisabledItem += (item, idx) => AllModsItemDisabled(item, idx);		
 			AllModsGrid.HeaderSortedSignal += (idx, sortingrule) => AMHeaderSorted(idx, sortingrule);
+			AllModsGrid.LoadOrderHasChanged += (ident, val) => LoadOrderItemChanged(ident, val);
 			//AllModsGrid = DataGridAllMods.GetChild(0) as CustomDataGrid;
 			AllModsRows = AllModsGrid.FindChild("DataGrid_Rows") as VBoxContainer;
 			AllModsGrid.MouseAffectingGrid += (inside, idx) => AMMouseEvent(inside, idx);
 			DownloadedModsGrid.SelectedItem += (item, idx) => DownloadsItemSelected(item, idx);
 			DownloadedModsGrid.UnselectedItem += (item, idx) => DownloadsItemUnselected(item, idx);
 			DownloadedModsGrid.HeaderSortedSignal += (idx, sortingrule) => DLHeaderSorted(idx, sortingrule);
-			DownloadsRows = DownloadedModsGrid.GetNode<VBoxContainer>("VBoxContainer/RowsScroll/DataGrid_Rows");
+			DownloadsRows = DownloadedModsGrid.FindChild("DataGrid_Rows") as VBoxContainer;
 			DownloadedModsGrid.MouseAffectingGrid += (inside, idx) => DLMouseEvent(inside, idx);					
+			new Thread(() => {
+				readingpackages = true;
+				ReadPackages();
+			}){IsBackground = true}.Start();
+			new Thread(() => {
+				readingdownloads = true;
+				ReadDownloads();
+			}){IsBackground = true}.Start();
+	
+			while (readingpackages || readingdownloads){
+				//Thread.Sleep(1);
+			}
+			
 			new Thread(() => {
 				readingpackages = true;
 				ReadPackages();
@@ -580,41 +620,186 @@ public partial class PackageDisplay : MarginContainer
 		}){IsBackground = true}.Start();
 	}
 
-	private void FinishSetupDisplay(){
+    
+
+    private void FinishSetupDisplay(){
 		//DataGridAllMods.AddChild(AllModsGrid);
 		//DataGridDownloads.AddChild(DownloadedModsGrid);
 		DLGetHeaders();
 		AMGetHeaders();
 		canstart = true;
-		DoneLoading.Invoke();
+		EmitDoneLoading();
 		UIUtilities.UpdateTheme(GetTree());
+		firstrundownloads = true;
+		firstrunpackages = true;
 	}
 
-	private bool AddGrid(Control box, CustomDataGrid grid){
-		box.AddChild(grid);
-		return true;
-	}
+	private void AllModsDisplayPackages(){
+		populatingpackages = true;	
 
-	private void AMMouseEvent(bool inside, int idx){
-		if (inside){
-			mouseinAM = true;
-			rcpackage = idx;
-		} else {
-			mouseinAM = false;
-			rcpackage = -1;
+		List<List<string>> linkedfiles = packages.Where(x => x.LinkedFiles.Any()).Select(x => x.LinkedFiles).ToList();
+
+		if (linkedfiles.Any()){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are linked files to remove."));
+			foreach (List<string> l in linkedfiles){
+				foreach (string s in l){
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Removing {0}.", s));
+					if (packages.Where(x => x.Location == s).Any()){
+						int package = packages.IndexOf(packages.Where(x => x.Location == s).First());
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Found the package to remove: {0}.", package));
+						packages.RemoveAt(package);
+					}
+				}
+				
+			}
 		}
-	}
-	private void DLMouseEvent(bool inside, int idx){
-		if (inside){
-			mouseinDL = true;
-			rcdownload = idx;
-		} else {
-			mouseinDL = false;
-			rcdownload = -1;
-		}
+
+
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages.", packages.Count));
+		if (packages.Count != 0){				
+			List<CellContent> griddata = new();
+			int rowitem = 0;
+			foreach (SimsPackage package in packages){
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}: {1}", rowitem, package.FileName));
+				int columnnumber = 0;
+				foreach (HeaderInformation inf in AllModsGrid.Headers){
+					CellContent content = new();
+					string data = "";
+					Type type = typeof(string);
+					if (inf.ContentType == DataGridContentType.Int){
+						content = new CellContent(){
+							RowNum = rowitem,
+							ColumnNum = columnnumber,
+							RowIdentifier = package.Identifier.ToString()
+						};
+						if (package.GetProperty(inf.ColumnData) != "0"){
+							type = package.GetProperty(inf.ColumnData).GetType();
+							data = package.GetProperty(inf.ColumnData).ToString();
+						} else {
+							type = package.GetProperty(inf.ColumnData).GetType();
+							data = "";
+						}
+						content.CellType = CellOptions.Int;
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Row {0} has Load Order of: {1}", rowitem, data));
+						content.Content = data;
+						content.Selected = package.Selected;
+					} else if (inf.ContentType == DataGridContentType.Icons){
+						content = new CellContent(){
+							RowNum = rowitem,
+							ColumnNum = columnnumber,
+							RowIdentifier = package.Identifier.ToString()
+						};
+						bool linked = false;
+						if (package.LinkedFiles.Any()) linked = true;
+						IconOptions icons = new()
+						{
+							Root = package.RootMod,
+							OutOfDate = package.OutOfDate,
+							Fave = package.Fave,
+							WrongGame = package.WrongGame,
+							Orphan = package.Orphan,
+							Broken = package.Broken,
+							Conflicts = package.Conflicts.Any(),
+							Override = package.Override,
+							Folder = package.Folder,
+							LoadAsFolder = package.LoadAsFolder,
+							LinkedFiles = linked,
+							MiscFile = package.Misc
+						};
+						if (package.GetProperty(inf.ColumnData) != null){
+							type = package.GetProperty(inf.ColumnData).GetType();
+							data = package.GetProperty(inf.ColumnData).ToString();
+						}
+						content.Icons = true;
+						content.IconOptions = icons;
+						content.CellType = CellOptions.Icons;
+						content.Content = data;
+						content.Selected = package.Selected;
+					} else {					
+						if (package.GetProperty(inf.ColumnData) != null){
+							type = package.GetProperty(inf.ColumnData).GetType();
+							data = package.GetProperty(inf.ColumnData).ToString();
+						}
+						content = new CellContent(){
+							RowNum = rowitem,
+							ColumnNum = columnnumber,
+							Content = data,
+							RowIdentifier = package.Identifier.ToString()
+						};
+						if (type == typeof(string)){
+							content.CellType = CellOptions.Text;
+						} else if (type == typeof(bool)){
+							content.CellType = CellOptions.TrueFalse;						
+						} else {
+							content.CellType = CellOptions.Text;
+						}
+						content.ContentType = inf.ColumnData;
+					}
+					if (package.Category == null){
+						package.Category = defaultcat;
+					}
+					if (package.Category.Name != "Default"){
+						content.BackgroundColor = package.Category.Background;
+					}
+					griddata.Add(content);
+					columnnumber++;
+				}
+				rowitem++;
+			}
+			AllModsGrid.Data = griddata;
+			AllModsGrid.RowsFromData();			
+			_packages = packages;
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("_packages count: {0}, packages count: {1}.", _packages.Count, packages.Count));
+		}		
+		populatingpackages = false;
 	}
 
-    private void DLHeaderSorted(int idx, SortingOptions sortingrule)
+	private void DownloadsDisplayPackages(){
+		populatingdownloads = true;
+		if (downloads.Count != 0){				
+			List<CellContent> griddata = new();
+			int rowitem = 0;
+			foreach (SimsDownload download in downloads){
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}: {1}", rowitem, download.FileName));
+				int columnnumber = 0;
+				foreach (HeaderInformation inf in DownloadedModsGrid.Headers){
+					CellContent content = new();
+					string data = "";
+					Type type = typeof(string);
+										
+					if (download.GetProperty(inf.ColumnData) != null){
+						type = download.GetProperty(inf.ColumnData).GetType();
+						data = download.GetProperty(inf.ColumnData).ToString();
+					}
+					content = new CellContent(){
+						RowNum = rowitem,
+						ColumnNum = columnnumber,
+						Content = data,
+						RowIdentifier = download.Identifier.ToString()
+					};
+					if (type == typeof(string)){
+						content.CellType = CellOptions.Text;
+					} else if (type == typeof(bool)){
+						content.CellType = CellOptions.TrueFalse;						
+					} else {
+						content.CellType = CellOptions.Text;
+					}
+					content.ContentType = inf.ColumnData;
+					content.Selected = download.Selected;
+					
+					griddata.Add(content);
+					columnnumber++;
+				}
+				rowitem++;
+			}
+			DownloadedModsGrid.Data = griddata;
+			DownloadedModsGrid.RowsFromData();
+			_downloads = downloads;
+		}
+		populatingdownloads = false;
+	}
+
+	private void DLHeaderSorted(int idx, SortingOptions sortingrule)
     {
         List<SimsDownload> sorted = new();
 		string data = DownloadedModsGrid.Headers[idx].ColumnData;
@@ -648,7 +833,7 @@ public partial class PackageDisplay : MarginContainer
 			sorted = unsorteddownloads;
 		}
 		downloads = sorted;
-		DownloadsDisplayPackages();
+		DownloadsChanged.Invoke();
     }
 
 
@@ -708,7 +893,23 @@ public partial class PackageDisplay : MarginContainer
 			sorted = unsortedpackages;
 		}
 		packages = sorted;
-		AllModsDisplayPackages();
+		PackagesChanged.Invoke();
+    }
+
+	private void LoadOrderItemChanged(string ident, int val)
+    {
+		Guid identifier = Guid.Parse(ident);
+		List<SimsPackage> enabled = packages.Where(x => x.Enabled).OrderBy(x => x.LoadOrder).ToList();
+		int idx = packages.IndexOf(packages.Where(x => x.Identifier == identifier).First());
+		if (enabled.Where(x => x.LoadOrder == val).Any()){
+			int dupe = packages.IndexOf(enabled.Where(x => x.LoadOrder == val).First());
+			packages[dupe].LoadOrder = packages[idx].LoadOrder;
+			packages[dupe].WriteInfoFile();
+			AllModsGrid.UpdateLoadOrder(dupe, packages[dupe].LoadOrder);
+		}
+		packages[idx].LoadOrder = val;
+		packages[idx].WriteInfoFile();
+		AllModsGrid.UpdateLoadOrder(idx, packages[idx].LoadOrder);
     }
 
     private void AllModsItemEnabled(string item, int idx){
@@ -905,12 +1106,6 @@ public partial class PackageDisplay : MarginContainer
 		amlastselected = idx;
 	}
 
-
-
-
-
-
-
 	private void DLShiftSelection(string item, int idx){
 		if (downloads.Where(x => x.Selected == true).Any()){
 			int r_idx_last = downloads.IndexOf(downloads.Where(x => x.Selected).Last());
@@ -982,11 +1177,6 @@ public partial class PackageDisplay : MarginContainer
 		dllastselected = idx;
 	}
 
-
-
-
-
-
 	private void DownloadsItemSelected(string item, int idx){
 		if (holdingctrl || holdingshift){
 			if (holdingctrl){
@@ -1038,108 +1228,6 @@ public partial class PackageDisplay : MarginContainer
 		dllastselected = idx;
 	}
 
-
-	private void AllModsDisplayPackages(){
-		populatingpackages = true;		
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages.", packages.Count));
-		if (packages.Count != 0){				
-			List<CellContent> griddata = new();
-			int rowitem = 0;
-			foreach (SimsPackage package in packages){
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}: {1}", rowitem, package.FileName));
-				int columnnumber = 0;
-				foreach (HeaderInformation inf in AllModsGrid.Headers){
-					CellContent content = new();
-					string data = "";
-					Type type = typeof(string);
-					if (inf.ContentType == DataGridContentType.Int){
-						content = new CellContent(){
-							RowNum = rowitem,
-							ColumnNum = columnnumber,
-							RowIdentifier = package.Identifier.ToString()
-						};
-						if (package.GetProperty(inf.ColumnData) != "0"){
-							type = package.GetProperty(inf.ColumnData).GetType();
-							data = package.GetProperty(inf.ColumnData).ToString();
-						} else {
-							type = package.GetProperty(inf.ColumnData).GetType();
-							data = "";
-						}
-						content.CellType = CellOptions.Int;
-						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Row {0} has Load Order of: {1}", rowitem, data));
-						content.Content = data;
-						content.Selected = package.Selected;
-					} else if (inf.ContentType == DataGridContentType.Icons){
-						content = new CellContent(){
-							RowNum = rowitem,
-							ColumnNum = columnnumber,
-							RowIdentifier = package.Identifier.ToString()
-						};
-						IconOptions icons = new()
-						{
-							Root = package.RootMod,
-							OutOfDate = package.OutOfDate,
-							Fave = package.Fave,
-							WrongGame = package.WrongGame,
-							Orphan = package.Orphan,
-							Broken = package.Broken,
-							Conflicts = package.Conflicts.Any(),
-							Override = package.Override,
-							Folder = package.Folder
-						};
-						if (package.GetProperty(inf.ColumnData) != null){
-							type = package.GetProperty(inf.ColumnData).GetType();
-							data = package.GetProperty(inf.ColumnData).ToString();
-						}
-						content.Icons = true;
-						content.IconOptions = icons;
-						content.CellType = CellOptions.Icons;
-						content.Content = data;
-						content.Selected = package.Selected;
-					} else {					
-						if (package.GetProperty(inf.ColumnData) != null){
-							type = package.GetProperty(inf.ColumnData).GetType();
-							data = package.GetProperty(inf.ColumnData).ToString();
-						}
-						content = new CellContent(){
-							RowNum = rowitem,
-							ColumnNum = columnnumber,
-							Content = data,
-							RowIdentifier = package.Identifier.ToString()
-						};
-						if (type == typeof(string)){
-							content.CellType = CellOptions.Text;
-						} else if (type == typeof(bool)){
-							content.CellType = CellOptions.TrueFalse;						
-						} else {
-							content.CellType = CellOptions.Text;
-						}
-						content.ContentType = inf.ColumnData;
-					}
-					if (package.Category.Name != "Default"){
-						content.BackgroundColor = package.Category.Background;
-					}
-					griddata.Add(content);
-					columnnumber++;
-				}
-				rowitem++;
-			}
-			AllModsGrid.Data = griddata;
-			AllModsGrid.RowsFromData();			
-			_packages = packages;
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("_packages count: {0}, packages count: {1}.", _packages.Count, packages.Count));
-		}		
-		populatingpackages = false;
-	}
-
-	private void AMGetHeaders(){
-		AMHeaders = new();
-		HBoxContainer headerrow = AllModsGrid.GetNode<HBoxContainer>("VBoxContainer/HeaderScroll/DataGrid_HeaderRow/Row");
-		foreach (DataGridHeaderCell cell in headerrow.GetChildren()){
-			AMHeaders.Add(cell);
-		}
-	}
-
 	private void AMPackagesSearched(string search){
 		List<SimsPackage> searchresults = new();
 		List<Node> rows = AllModsRows.GetChildren().ToList();
@@ -1161,60 +1249,291 @@ public partial class PackageDisplay : MarginContainer
 					(rows[i] as DataGridRow).Visible = false;
 				}
 			}
-		});		
-	}
-
-
-	private void DownloadsDisplayPackages(){
-		populatingdownloads = true;
-		if (downloads.Count != 0){				
-			List<CellContent> griddata = new();
-			int rowitem = 0;
-			foreach (SimsDownload download in downloads){
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}: {1}", rowitem, download.FileName));
-				int columnnumber = 0;
-				foreach (HeaderInformation inf in DownloadedModsGrid.Headers){
-					CellContent content = new();
-					string data = "";
-					Type type = typeof(string);
-										
-					if (download.GetProperty(inf.ColumnData) != null){
-						type = download.GetProperty(inf.ColumnData).GetType();
-						data = download.GetProperty(inf.ColumnData).ToString();
+		}){IsBackground = true}.Start();
+	}	
+	
+    private void AMCategorySelected(string catname, bool selected)
+    {
+		new Thread(() => {
+			List<int> packageindexes = new();
+			if (selected){
+				if (!packages.Where(x => x.Selected == true).Any()){
+					packages[rcpackage].Category = Categories.Where(x => x.Name == catname).First();
+					packageindexes.Add(rcpackage);
+				} else {
+					List<SimsPackage> selecteditems = packages.Where(x => x.Selected == true).ToList();
+					foreach (SimsPackage package in selecteditems){
+						int idx = packages.IndexOf(package);
+						packages[idx].Category = Categories.Where(x => x.Name == catname).First();
+						packageindexes.Add(idx);
 					}
-					content = new CellContent(){
-						RowNum = rowitem,
-						ColumnNum = columnnumber,
-						Content = data,
-						RowIdentifier = download.Identifier.ToString()
-					};
-					if (type == typeof(string)){
-						content.CellType = CellOptions.Text;
-					} else if (type == typeof(bool)){
-						content.CellType = CellOptions.TrueFalse;						
-					} else {
-						content.CellType = CellOptions.Text;
-					}
-					content.ContentType = inf.ColumnData;
-					content.Selected = download.Selected;
-					
-					griddata.Add(content);
-					columnnumber++;
 				}
-				rowitem++;
-			}
-			DownloadedModsGrid.Data = griddata;
-			DownloadedModsGrid.RowsFromData();
-			_downloads = downloads;
-		}
-		populatingdownloads = false;
+			} else {
+				if (!packages.Where(x => x.Selected == true).Any()){
+					packages[rcpackage].Category = Categories.Where(x => x.Name == "Default").First();
+					packageindexes.Add(rcpackage);
+				} else {
+					List<SimsPackage> selecteditems = packages.Where(x => x.Selected == true).ToList();
+					foreach (SimsPackage package in selecteditems){
+						int idx = packages.IndexOf(package);
+						packages[idx].Category = Categories.Where(x => x.Name == "Default").First();
+						packageindexes.Add(idx);
+					}
+				}
+			}	
+		PackagesChanged.Invoke();
+		}){IsBackground = true}.Start();		
+    }
+
+	private List<HeaderInformation> GetDefaultAMHeaders(){
+		List<HeaderInformation> allmodsheaders = new()
+        {
+            new HeaderInformation()
+            {
+                HeaderTitle = "Enabled",
+                ContentType = DataGridContentType.Enabled,
+				Blank = true,
+				Resizeable = false,
+                ColumnData = "Enabled"
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Load Order",
+                ContentType = DataGridContentType.Int,
+                ColumnData = "LoadOrder",
+				Resizeable = false,
+				Blank = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Name",
+                ContentType = DataGridContentType.Text,
+                ColumnData = "FileName",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Icons",
+                ContentType = DataGridContentType.Icons,
+                ColumnData = "Icons",
+				Blank = true,
+				Resizeable = false
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Creator",
+                ContentType = DataGridContentType.Text,
+                ColumnData = "Creator",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Added",
+                ContentType = DataGridContentType.Date,
+                ColumnData = "DateAdded",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Size",
+                ContentType = DataGridContentType.Text,
+                ColumnData = "FileSize",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Updated",
+                ContentType = DataGridContentType.Date,
+                ColumnData = "DateUpdated",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Game",
+                ContentType = DataGridContentType.Text,
+                ColumnData = "Game",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Scanned",
+                ContentType = DataGridContentType.Bool,
+                ColumnData = "Scanned",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "ScriptMod",
+                ContentType = DataGridContentType.Bool,
+                ColumnData = "ScriptMod",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "File Type",
+                ContentType = DataGridContentType.Text,
+                ColumnData = "FileType",
+				Resizeable = true
+            }
+        };
+		return allmodsheaders;
+	}
+	
+	private List<HeaderInformation> GetDefaultDownloadsHeaders(){
+		List<HeaderInformation> downloadheaders = new()
+        {
+            new HeaderInformation()
+            {
+                HeaderTitle = "File Name",
+                ContentType = DataGridContentType.Text,
+                ColumnData = "FileName",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Location",
+                ContentType = DataGridContentType.Text,
+                ColumnData = "Location",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Added",
+                ContentType = DataGridContentType.Date,
+                ColumnData = "DateAdded",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Size",
+                ContentType = DataGridContentType.Text,
+                ColumnData = "FileSize",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Updated",
+                ContentType = DataGridContentType.Date,
+                ColumnData = "DateUpdated",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Installed",
+                ContentType = DataGridContentType.Bool,
+                ColumnData = "Installed",
+				Resizeable = true
+            }
+        };
+		return downloadheaders;
 	}
 
 	private void DLGetHeaders(){
-		DLHeaders = new();
-		HBoxContainer headerrow = DownloadedModsGrid.GetNode<HBoxContainer>("VBoxContainer/HeaderScroll/DataGrid_HeaderRow/Row");
-		foreach (DataGridHeaderCell cell in headerrow.GetChildren()){
-			DLHeaders.Add(cell);
+		if (DownloadedModsGrid.headersready){
+			DLHeaders = new();
+			HBoxContainer headerrow = DownloadedModsGrid.GetNode<HBoxContainer>("MarginContainer/GridContainer/VBoxContainer/DataGrid_HeaderRow/DataGrid_HeaderRow/Row");
+			foreach (DataGridHeaderCell cell in headerrow.GetChildren()){
+				DLHeaders.Add(cell);
+			}
+		} else {
+			DLGetHeaders();
+		}	
+	}
+
+	private void AMGetHeaders(){
+		if (AllModsGrid.headersready){
+			AMHeaders = new();
+			HBoxContainer headerrow = AllModsGrid.GetNode<HBoxContainer>("MarginContainer/GridContainer/VBoxContainer/DataGrid_HeaderRow/DataGrid_HeaderRow/Row");
+			foreach (DataGridHeaderCell cell in headerrow.GetChildren()){
+				AMHeaders.Add(cell);
+			}
+		} else {
+			AMGetHeaders();
+		}		
+	}
+
+
+	//event listeners
+
+	private void ExeIconEvent(Texture2D texture, string exename, string exe)
+    {
+        GetNode<TextureRect>("MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer/MarginContainer/ExeIcon_Image").Texture = texture;
+		GetNode<Label>("MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/Name_Container/VBoxContainer/ExeName_Label").Text = exename;
+		GetNode<Label>("MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/Name_Container/VBoxContainer/ExeExe_Label").Text = exe;
+    }
+
+	private void OnPackagesListChanged(){
+		if (firstrunpackages) AllModsDisplayPackages();
+		new Thread(() => {
+			Profile.Packages.Clear();
+			List<SimsPackage> EnabledPackages = packages.Where(x => x.Enabled).ToList();
+			foreach (SimsPackage package in EnabledPackages){
+				Profile.Packages.Add(new(){ PackageFile = package.Location, LoadOrder = package.LoadOrder, Identifier = package.Identifier});
+			}
+		}){IsBackground = true}.Start();
+	}
+
+	private void OnDownloadsListChanged(){
+		if (firstrunpackages) DownloadsDisplayPackages();
+	}
+
+
+
+
+
+	//event callers
+
+	private void EmitDoneLoading(){
+		DoneLoading.Invoke();
+	}
+
+
+
+
+
+	//ui handlers
+
+	private void HidePackageDisplay(){
+		packagedisplayvisible = false;
+		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container").Visible = packagedisplayvisible;
+		if (CurrentPackageViewer != null) CurrentPackageViewer.QueueFree();
+	}
+
+	private void ShowPackageDisplay(){
+		packagedisplayvisible = true;		
+		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container").Visible = packagedisplayvisible;
+		MakePackageInformation();
+	}
+
+	private void _on_hide_popup_button_pressed(){
+		ExeChoiceControl.Visible = false;
+	}
+
+	private void UpdateExes(){
+		ExeChoicePanel.UpdateExes();
+	}
+
+	private bool AddGrid(Control box, CustomDataGrid grid){
+		box.AddChild(grid);
+		return true;
+	}
+
+	private void AMMouseEvent(bool inside, int idx){
+		if (inside){
+			mouseinAM = true;
+			rcpackage = idx;
+		} else {
+			mouseinAM = false;
+			rcpackage = -1;
+		}
+	}
+	private void DLMouseEvent(bool inside, int idx){
+		if (inside){
+			mouseinDL = true;
+			rcdownload = idx;
+		} else {
+			mouseinDL = false;
+			rcdownload = -1;
 		}
 	}
 
@@ -1229,19 +1548,26 @@ public partial class PackageDisplay : MarginContainer
 		Executables[Executables.IndexOf(Executables.Where(x => x.Name == ExeID).First())].Selected = true;
 	}
 
-	private void _on_play_button_button_clicked(){	
+	
+
+	private void _on_play_button_button_clicked(){
+		InstantiateVirtualFiles();
+
 		Executable selected = Executables.Where(x => x.Selected == true).First();
 		string path = Path.Combine(selected.Path, selected.Exe);
 		GetNode<MarginContainer>("GameRunning").Visible = true;
-		applicationStarter.Start(path, selected.Arguments, packages.Where(x => x.Enabled == true).ToList());
+		string args = string.Format("{0} {1}", selected.Arguments, "-noOrigin");
+		applicationStarter.Start(path, selected.Arguments, packages.Where(x => x.Enabled == true).ToList(), Game);
 	}
 
 	private void _on_disconnect_button_pressed(){
 		GetNode<MarginContainer>("GameRunning").Visible = false;
+		PurgeSymlinks();
 	}
 
 	private void _on_application_starter_application_closed(){
 		GetNode<MarginContainer>("GameRunning").Visible = false;
+		PurgeSymlinks();
 	}
 
 	private void _on_swap_instances_settings_help_buttons_button_clicked(){
@@ -1303,16 +1629,20 @@ public partial class PackageDisplay : MarginContainer
 		}
     }
 
+
+
+	//right click menu controls
+
 	private void AddAMRightClickMenu(){		
-		if (FloatingItemsContainer.GetChildCount() > 1) FloatingItemsContainer.GetChild(1).QueueFree();
-		var rcm = RightClickMenu.Instantiate() as RightClickMenu;
-		rcm.Position = GetViewport().GetMousePosition();	
-		rcm.RightClickMenuClicked += (item) => AMRCMenuPressed(item);
+		if (FloatingItemsContainer.GetChildCount() > 1) CurrentRightClickMenu.QueueFree();
+		CurrentRightClickMenu = RightClickMenu.Instantiate() as RightClickMenu;
+		CurrentRightClickMenu.Position = GetViewport().GetMousePosition();	
+		CurrentRightClickMenu.RightClickMenuClicked += (item) => AMRCMenuPressed(item);
 		if (packages.Where(x => x.Selected == true).Where(x => x.OutOfDate).Any()){
-			rcm.someoutofdate = true;
+			CurrentRightClickMenu.someoutofdate = true;
 		}
 		if (packages.Where(x => x.Selected).Count() > 0){
-			rcm.multiplefiles = true;
+			CurrentRightClickMenu.multiplefiles = true;
 		}
 		//rcm.GetNode<Button>("MarginContainer/VBoxContainer/Linked/AddLinked_Button").Pressed += () => AMRCMenuPressed(0);			
 		//rcm.GetNode<Button>("MarginContainer/VBoxContainer/MoveFile/MoveFile_Button").Pressed += () => AMRCMenuPressed(1);			
@@ -1326,58 +1656,23 @@ public partial class PackageDisplay : MarginContainer
 			cats = cats.Distinct().ToList();
 			if (cats.Count > 1){
 				//more than one category								
-				rcm.OpenCats.AddRange(cats.Select(x => x.Name));
+				CurrentRightClickMenu.OpenCats.AddRange(cats.Select(x => x.Name));
 			} else if (cats.Count == 1){
 				if (selected.Where(x => x.Category == cats[0]).Count() != selected.Count){
-					rcm.OpenCats.Add(cats[0].Name);
+					CurrentRightClickMenu.OpenCats.Add(cats[0].Name);
 				} else if (selected.Where(x => x.Category == cats[0]).Count() == selected.Count){
-					rcm.TickedCat = cats[0].Name;
+					CurrentRightClickMenu.TickedCat = cats[0].Name;
 				}
 			}			
 		}
-		rcm.CategorySelectedMenu += (catname, selected) => AMCategorySelected(catname, selected);
+		CurrentRightClickMenu.CategorySelectedMenu += (catname, selected) => AMCategorySelected(catname, selected);
 		
-		rcm.Categories = Categories;
-		FloatingItemsContainer.AddChild(rcm);
+		CurrentRightClickMenu.Categories = Categories;
+		FloatingItemsContainer.AddChild(CurrentRightClickMenu);
 		rightclickcatcher.Visible = true;
 	}
 
-    private void AMCategorySelected(string catname, bool selected)
-    {
-		new Thread(() => {
-			List<int> packageindexes = new();
-			if (selected){
-				if (!packages.Where(x => x.Selected == true).Any()){
-					packages[rcpackage].Category = Categories.Where(x => x.Name == catname).First();
-					packageindexes.Add(rcpackage);
-				} else {
-					List<SimsPackage> selecteditems = packages.Where(x => x.Selected == true).ToList();
-					foreach (SimsPackage package in selecteditems){
-						int idx = packages.IndexOf(package);
-						packages[idx].Category = Categories.Where(x => x.Name == catname).First();
-						packageindexes.Add(idx);
-					}
-				}
-			} else {
-				if (!packages.Where(x => x.Selected == true).Any()){
-					packages[rcpackage].Category = Categories.Where(x => x.Name == "Default").First();
-					packageindexes.Add(rcpackage);
-				} else {
-					List<SimsPackage> selecteditems = packages.Where(x => x.Selected == true).ToList();
-					foreach (SimsPackage package in selecteditems){
-						int idx = packages.IndexOf(package);
-						packages[idx].Category = Categories.Where(x => x.Name == "Default").First();
-						packageindexes.Add(idx);
-					}
-				}
-			}	
-		CallDeferred("AllModsDisplayPackages");
-		}){IsBackground = true}.Start();		
-    }
-
-
-
-    private void AMRCMenuPressed(int button)
+	private void AMRCMenuPressed(int button)
     {
 		switch (button){
 			case 0: 
@@ -1414,6 +1709,12 @@ public partial class PackageDisplay : MarginContainer
 				//delete file
 				RemoveRightClickMenu();
 				DeleteFilesPressed();
+				break;
+			case 10:
+				//load as folder
+				break;
+			case 11: 
+				//correct game
 				break;
 		}
     }
@@ -1515,7 +1816,7 @@ public partial class PackageDisplay : MarginContainer
 			packages[packages.IndexOf(package.package)].Location = newpackloc;
 			packages[packages.IndexOf(package.package)].InfoFile = newinfoloc;			
 		}
-		AllModsDisplayPackages();
+		//AllModsDisplayPackages();
 		
 		renamefileswindow.Visible = false;
 	}
@@ -1538,18 +1839,23 @@ public partial class PackageDisplay : MarginContainer
 	}
 
 	private void RemoveRightClickMenu(){
-		rightclickmenu.RightClickMenuClicked -= AMRCMenuPressed;
-		FloatingItemsContainer.GetChild(1).QueueFree();
+		CurrentRightClickMenu.RightClickMenuClicked -= AMRCMenuPressed;
+		CurrentRightClickMenu.QueueFree();
 		rightclickcatcher.Visible = false;
 	}
 
+
+
+
+	//package error handlers
+
 	private void BrokenPackagesDetected(){
-		viewerrorscontainer.Visible = false;
+		ErrorsListing.Visible = false;
 		brokenmodsvisible = true;
 		brokenfiles.Visible = true;		
 	}
 	private void WrongGameDetected(){
-		viewerrorscontainer.Visible = false;
+		ErrorsListing.Visible = false;
 		wronggamefilesvisible = true;
 		if (LoadedSettings.SetSettings.Instances.Where(x => x.Game == "Sims2").Any()){
 			wronggame_sims2.GetNode<LineEdit>("Sims2Wrong_Location_LineEdit").Text = LoadedSettings.SetSettings.Instances.Where(x => x.Game == "Sims2").First().InstanceLocation;
@@ -1644,131 +1950,123 @@ public partial class PackageDisplay : MarginContainer
     }
 
 	private void ViewErrors(){
-		viewerrorscontainer.Visible = true;
+		ErrorsListing.Visible = true;
 		Label errorslabel = GetNode<Label>("ViewErrors/MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/Errors_Label");
 		errorslabel.Text = errorslist.ToString();
 	}
 
 	private void CancelViewErrors(){
-		viewerrorscontainer.Visible = false;
+		ErrorsListing.Visible = false;
 		GetNode<Label>("ViewErrors/MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/Errors_Label").Text = "";
 	}
 
-    public override void _Process(double delta)
-    {
-		if (canstart){
-			if (!readingpackages){
-				new Thread(() => {
-					if ((Directory.GetFiles(modsfolder).Count() + Directory.GetDirectories(modsfolder).Count()) != filesinpackagesfolder){
-						CallDeferred("ReadPackages");
-					}				
-				}){IsBackground = true}.Start();
 
-				new Thread(() => {
-					if (!dontmovemybrokenfiles){
-						if (!wronggamefilesvisible && !brokenmodsvisible){
-							if (packages.Where(x => x.Broken).Any()){
-								CallDeferred(nameof(BrokenPackagesDetected));
-							}
-						}
-					}														
-				}){IsBackground = true}.Start();
 
-				new Thread(() => {
-					if (!dontmovemywrongfiles){
-						if (!wronggamefilesvisible && !brokenmodsvisible){
-							if (packages.Where(x => x.WrongGame).Any()){
-								CallDeferred(nameof(WrongGameDetected));
-							}
-						}
-					}
-				}){IsBackground = true}.Start();
-			}
+	//button handlers
 
-			if (!readingdownloads){
-				new Thread(() => {
-					if (Directory.GetFiles(downloadsfolder).ToList().Count != filesindownloadsfolder){
-						CallDeferred("ReadDownloads");
-					}
-					
-				}){IsBackground = true}.Start();
-			}
-			new Thread(() => {
-				if (packagedisplayvisible){				
-					if (packages.Where(x => x.Selected).Count() != 1){					
-						CallDeferred("HidePackageDisplay");
-					} else if (packages.IndexOf(packages.Where(x => x.Selected).First()) != packagedisplayed){
-						CallDeferred("HidePackageDisplay");
-						CallDeferred("ShowPackageDisplay");
-					}
-				} else if (!packagedisplayvisible){
-					if (packages.Where(x => x.Selected).Count() == 1){					
-						CallDeferred("ShowPackageDisplay");
-					}
+	private void ProfilesButtonClicked(){
+
+	}
+
+	private void AddFilesButtonClicked(){
+
+	}
+
+	private void AddFolderButtonClicked(){
+
+	}
+	private void RefreshPackagesButtonClicked(){
+
+	}
+
+	private void SortIntoSubfoldersButtonClicked(){
+
+	}
+	private void ScanAllButtonClicked(){
+
+	}
+	private void ManageCategoriesClicked(){
+
+	}
+	private void EditExesClicked(){
+
+	}
+	
+
+	//game running handling
+
+	private void InstantiateVirtualFiles(){
+		if (Game == Games.Sims2) gamemodsfolder = sims2Instance.DownloadsFolder;
+		if (Game == Games.Sims3) gamemodsfolder = sims3Instance.ModsFolder;
+		if (Game == Games.Sims4) gamemodsfolder = sims4Instance.ModsFolder;
+		List<SimsPackage> enabled = packages.Where(x => x.Enabled).ToList();
+		foreach (SimsPackage package in enabled){
+			if (package.LinkedFiles.Any()){
+				foreach (string file in package.LinkedFiles){
+					VF_LinkFile(new FileInfo(file));
 				}
-			}){IsBackground = true}.Start();
-
-			new Thread(() => {
-				int broken = packages.Where(x => x.Broken == true).Count();
-				int wronggame = packages.Where(x => x.WrongGame == true).Count();
-				NumErrors = broken + wronggame;
-				if (NumErrors != _numerrors && NumErrors != 0){
-					_numerrors = NumErrors;
-					errorslist = new();
-					List<SimsPackage> brokenpackages = packages.Where(x => x.Broken == true).ToList();
-					List<SimsPackage> wronggamepackages = packages.Where(x => x.WrongGame == true && x.Broken == false).ToList();
-					foreach (SimsPackage package in brokenpackages){
-						errorslist.AppendLine(string.Format("{0} is broken.", package.FileName));
-					}
-					foreach (SimsPackage package in wronggamepackages){
-						string gm = "an unknown game.";
-						if (package.Game == Games.Sims1) gm = "Sims 1";
-						if (package.Game == Games.Sims2) gm = "Sims 2";
-						if (package.Game == Games.Sims3) gm = "Sims 3";
-						if (package.Game == Games.Sims4) gm = "Sims 4";
-						if (package.Game == Games.SimsMedieval) gm = "Sims Medieval";
-						if (package.Game == Games.Spore) gm = "Spore";
-						if (package.Game == Games.SimCity5) gm = "SimCity 5";
-						errorslist.AppendLine(string.Format("{0} is for {1}.", package.FileName, gm));
-					}
-					viewerrorscontainer.HasNotifications = true;
-					viewerrorscontainer.Errors = errorslist.ToString();
-				} else {
-					_numerrors = NumErrors;
-					viewerrorscontainer.HasNotifications = false;
-					viewerrorscontainer.Errors = "";
+			}
+			if (package.LinkedFolders.Any()){
+				foreach (SimsPackageSubfolder folder in package.LinkedFolders){
+					VF_ProcessFolder(package.LoadOrder, folder);
 				}
-			}){IsBackground = true}.Start();
+			}
+			VF_ProcessPackage(package);			
 		}
-		
-    }
-
-	private void HidePackageDisplay(){
-		packagedisplayvisible = false;
-		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container").Visible = packagedisplayvisible;
-		if (CurrentPackageViewer != null) CurrentPackageViewer.QueueFree();
 	}
 
-	private void ShowPackageDisplay(){
-		packagedisplayvisible = true;		
-		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container").Visible = packagedisplayvisible;
-		MakePackageInformation();
-	}
-
-	private void MakePackageInformation(){
-		CurrentPackageViewer = PackageInformation.Instantiate() as PackageViewer;
-		SimsPackage package = packages.Where(x => x.Selected).First();
-		packagedisplayed = packages.IndexOf(package);
-		ScanData packagedata = package.ScanData;
-		if (packagedata.ThumbnailLocation != null){
-			CurrentPackageViewer.hasthumbnail = true;
-			CurrentPackageViewer.thumbnail = GD.Load<Texture2D>(packagedata.ThumbnailLocation);
+	private void VF_ProcessFolder(int loadorder, SimsPackageSubfolder folder){
+		if (folder.Subfiles.Any()){
+			foreach (string file in folder.Subfiles){
+				VF_LinkFile(loadorder, new FileInfo(file));
+			}
 		}
-		CurrentPackageViewer.PackageName = package.FileName;
-		StringBuilder sb = packagedata.PackageInformationDump();	
-		CurrentPackageViewer.packageinfo = sb.ToString();	
-		GetNode<MarginContainer>("MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/PackageViewer_Frame_Container/PackageViewer_Container").AddChild(CurrentPackageViewer);
+		if (folder.Subfolders.Any()){
+			foreach (SimsPackageSubfolder f in folder.Subfolders){
+				VF_ProcessFolder(loadorder, f);
+			}			
+		}
 	}
+
+	private void VF_ProcessPackage(SimsPackage package){
+		if (!package.Folder) {
+			VF_LinkFile(package);
+		}
+	}
+
+	private void VF_LinkFile(SimsPackage package){
+		string leader = "000000";
+		string newname = string.Format("{0}{1}_{2}", leader, package.LoadOrder, package.FileName);
+		VFileSystem.MakeSymbolicLink(package.Location, gamemodsfolder, newname);
+	}
+
+	private void VF_LinkFile(int loadorder, FileInfo file){
+		string leader = "000000";
+		string newname = string.Format("{0}{1}_{2}", leader, loadorder, file.Name);
+		VFileSystem.MakeSymbolicLink(file.FullName, gamemodsfolder, newname);
+	}
+
+	private void VF_LinkFile(FileInfo file){
+		VFileSystem.MakeSymbolicLink(file.FullName, gamemodsfolder);
+	}
+
+	private void PurgeSymlinks(){
+		List<string> ModFiles = Directory.GetFiles(gamemodsfolder).ToList();
+		foreach (string file in ModFiles){
+			FileInfo fileInfo = new(file);
+			FileAttributes attr = fileInfo.Attributes;
+			if(attr.HasFlag(FileAttributes.ReparsePoint)){
+				VFileSystem.RemoveSymbolicLink(file);
+			} else if (fileInfo.Extension == ".disabled"){
+				string ren = file.Replace(".disabled", "");
+				File.Copy(file, ren);
+			}
+		}		
+	}
+
+
+
+
 
 
 

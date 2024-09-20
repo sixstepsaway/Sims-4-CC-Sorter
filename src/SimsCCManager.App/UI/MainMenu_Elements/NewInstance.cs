@@ -360,8 +360,7 @@ public partial class NewInstance : MarginContainer
 				instance.BuildInstance(true);
 			} else {
 				instance.BuildInstance(false);
-			}			
-			sb = instance.WriteIni();
+			}
 			game = "Sims2";
 		} else if (GameChoice == Games.Sims3){
 			Sims3Instance instance = gameinstance as Sims3Instance;
@@ -369,33 +368,17 @@ public partial class NewInstance : MarginContainer
 				instance.BuildInstance(true);
 			} else {
 				instance.BuildInstance(false);
-			}	
-			sb = instance.WriteIni();
-			game = "Sims3";
-			if (createfromcurrent){
-
 			}
+			game = "Sims3";
 		} else if (GameChoice == Games.Sims4){
 			Sims4Instance instance = gameinstance as Sims4Instance;
 			if (createfromcurrent){
 				instance.BuildInstance(true);
 			} else {
 				instance.BuildInstance(false);
-			}	
-			sb = instance.WriteIni();
-			game = "Sims4";
-			if (createfromcurrent){
-				
 			}
-		}		
-		string inifile = Path.Combine(gameinstance.InstanceFolder, "Instance.ini");
-		if (File.Exists(inifile)){
-			string ren = inifile.Replace("Instance.ini", "Instance.ini.bk");
-			File.Move(inifile, ren);
+			game = "Sims4";
 		}
-		using (StreamWriter streamWriter = new(inifile)){
-			streamWriter.Write(sb);
-		}  
 
 		
 

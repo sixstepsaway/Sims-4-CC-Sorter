@@ -33,7 +33,6 @@ custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 8
-tooltip_text = "In memory of my beloved Tali. My blanket will always have an empty space where you used to curl up while we coded this app."
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_bottom = 70
 
@@ -115,13 +114,14 @@ buttonImage = ExtResource("11_45wje")
 [node name="Label" parent="Menu/MarginContainer/VBoxContainer/MMButton_DevTest/Node2D/MMContainer/PanelContainer/MarginContainer" index="0"]
 text = "DevTest"
 
+[connection signal="mouse_entered" from="Tali" to="." method="_on_tali_mouse_entered"]
 [connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_NewInstance" to="." method="_on_mm_button_new_instance_button_clicked"]
 [connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_LoadInstance" to="." method="_on_mm_button_load_instance_button_clicked"]
 [connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_Settings" to="." method="_on_mm_button_settings_button_clicked"]
 [connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_Help" to="." method="_on_mm_button_help_button_clicked"]
 [connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_Quit" to="." method="_on_mm_button_quit_button_clicked"]
-[connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_DevTest" to="." method="_on_mm_button_dev_test_button_clicked"]
 [connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_DevTest" to="." method="_on_mm_button_quit_button_clicked"]
+[connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_DevTest" to="." method="_on_mm_button_dev_test_button_clicked"]
 
 [editable path="Menu/MarginContainer/VBoxContainer/MMButton_NewInstance"]
 [editable path="Menu/MarginContainer/VBoxContainer/MMButton_LoadInstance"]

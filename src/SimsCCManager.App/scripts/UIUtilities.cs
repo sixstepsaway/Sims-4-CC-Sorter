@@ -127,9 +127,9 @@ namespace SimsCCManager.UI.Utilities
                 rect.Color = bg;
             }
             List<Node> scrollbar_button_bg = tree.GetNodesInGroup("ScrollBar_ButtonBG").ToList();
-            foreach (Panel panel in scrollbar_button_bg ){
+            foreach (Button panel in scrollbar_button_bg ){
                 StyleBoxFlat sb = panel.GetThemeStylebox("panel") as StyleBoxFlat;                
-                sb.BgColor = theme.BackgroundColor;
+                sb.BgColor = theme.DataGridSelected;
                 panel.AddThemeStyleboxOverride("panel", sb);
             }
         }
@@ -153,6 +153,15 @@ namespace SimsCCManager.UI.Utilities
             Godot.Color newcolor = Godot.Color.FromHsv(h, s, newv);
             if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Output color: {0}.", newcolor.ToHtml()));
             return newcolor;
+        }
+
+        public static ToolTip CustomTooltip(string text, Vector2 Position){
+            Position = new(Position.X + 10, Position.Y);
+            //GD.Print("Instantiating tooltip!");
+            ToolTip tooltip = GD.Load<PackedScene>("res://UI/ToolTip.tscn").Instantiate() as ToolTip;
+            tooltip.Text = text;    
+            tooltip.WindowPosition = (Vector2I)Position;        
+            return tooltip;
         }
     }
 }

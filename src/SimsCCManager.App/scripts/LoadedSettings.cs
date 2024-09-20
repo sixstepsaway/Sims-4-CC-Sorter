@@ -27,8 +27,8 @@ namespace SimsCCManager.Settings.Loaded
         public string Game {get; set;} = "";
         public Guid Identifier {get; set;} = Guid.Empty;      
 
-        public string Inifile(){
-            return Path.Combine(InstanceLocation, "Instance.ini");
+        public string XMLfile(){
+            return Path.Combine(InstanceLocation, "Instance.xml");
         }
 
         public dynamic GetProperty(string propName){

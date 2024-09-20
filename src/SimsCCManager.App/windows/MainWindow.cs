@@ -36,7 +36,7 @@ public partial class MainWindow : MarginContainer
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Loaded splash."));
 	}
 
-	private void FinishedLoading(){
+    private void FinishedLoading(){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(LoadedSettings.SetSettings.LoadedTheme.ThemeName);
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(LoadedSettings.SetSettings.LoadedTheme.Identifier.ToString());
 		var sc = GetChild((GetChildren().Count) - 1);
@@ -89,7 +89,6 @@ public partial class MainWindow : MarginContainer
 		AddChild(ls);
 		MoveChild(ls, 0);
 		var pd = PackageDisplay.Instantiate() as PackageDisplay;
-		pd.Visible = false;
 		pd.SetPbarMax += (value) => SetPbarMax(value);
 		//pd.Connect("SetPbarMax", new Callable(this, "SetPbarMax"));
 		pd.IncrementPbar += () => IncrementPbar();
@@ -117,8 +116,10 @@ public partial class MainWindow : MarginContainer
 
     private void PDDoneLoading()
     {
-        GetNode<LoadingInstance>("LoadingInstance").QueueFree();
-		GetNode<PackageDisplay>("PackageDisplay").Visible = true;
+        var loading = GetNodeOrNull<LoadingInstance>("LoadingInstance");
+		if (loading != null) loading.QueueFree();
+		//GetNode<PackageDisplay>("PackageDisplay").Visible = true;
+		UIUtilities.UpdateTheme(GetTree());
     }
 
     private void _on_twitter_socials_button_clicked(){

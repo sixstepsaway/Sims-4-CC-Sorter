@@ -1,7 +1,8 @@
-[gd_scene load_steps=11 format=3 uid="uid://bow5a0csv78x4"]
+[gd_scene load_steps=12 format=3 uid="uid://bow5a0csv78x4"]
 
 [ext_resource type="FontFile" uid="uid://2m7ci2r6uwu2" path="res://assets/fonts/Anek_Gurmukhi/AnekGurmukhi-VariableFont_wdth,wght.ttf" id="1_3i2qg"]
 [ext_resource type="Script" path="res://UI/PackageDisplay_Elements/RightClickMenu.cs" id="1_8wbcu"]
+[ext_resource type="PackedScene" uid="uid://b6nokbd163hyy" path="res://UI/Elements/CustomSquareCheckbox.tscn" id="3_jknsc"]
 
 [sub_resource type="Theme" id="Theme_5c6e1"]
 Label/colors/font_color = Color(0.099986, 0.099986, 0.099986, 1)
@@ -36,9 +37,10 @@ anchors_preset = 0
 script = ExtResource("1_8wbcu")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
+custom_minimum_size = Vector2(130, 0)
 layout_mode = 0
-offset_right = 100.0
-offset_bottom = 100.0
+offset_right = 130.0
+offset_bottom = 227.0
 
 [node name="ColorRect" type="ColorRect" parent="MarginContainer" groups=["PlainBG"]]
 layout_mode = 2
@@ -58,7 +60,7 @@ theme_override_constants/margin_bottom = 2
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
-text = "Add Linked Files"
+text = "Link Files"
 vertical_alignment = 1
 
 [node name="AddLinked_Button" type="Button" parent="MarginContainer/VBoxContainer/Linked"]
@@ -82,14 +84,54 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="MakeRoot_Label" type="Label" parent="MarginContainer/VBoxContainer/MakeRoot" groups=["Labels", "RCM_Labels"]]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/MakeRoot"]
+layout_mode = 2
+
+[node name="CheckBox" parent="MarginContainer/VBoxContainer/MakeRoot/HBoxContainer" instance=ExtResource("3_jknsc")]
+layout_mode = 2
+
+[node name="MakeRoot_Label" type="Label" parent="MarginContainer/VBoxContainer/MakeRoot/HBoxContainer" groups=["Labels", "RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
-text = "Make Root"
+text = "Root"
 vertical_alignment = 1
 
 [node name="MakeRoot_Button" type="Button" parent="MarginContainer/VBoxContainer/MakeRoot"]
+layout_mode = 2
+theme_override_styles/focus = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/disabled_mirrored = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/hover_mirrored = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/hover = SubResource("StyleBoxFlat_dx0t6")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxEmpty_0dert")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_ciava")
+theme_override_styles/normal_mirrored = SubResource("StyleBoxEmpty_sn0so")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_dytdo")
+
+[node name="LoadasFolder" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/LoadasFolder"]
+layout_mode = 2
+
+[node name="CheckBox" parent="MarginContainer/VBoxContainer/LoadasFolder/HBoxContainer" instance=ExtResource("3_jknsc")]
+layout_mode = 2
+
+[node name="LoadasFolder_Label" type="Label" parent="MarginContainer/VBoxContainer/LoadasFolder/HBoxContainer" groups=["Labels", "RCM_Labels"]]
+layout_mode = 2
+theme = SubResource("Theme_5c6e1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
+text = "Load As Folder"
+vertical_alignment = 1
+
+[node name="LoadasFolder_Button" type="Button" parent="MarginContainer/VBoxContainer/LoadasFolder"]
 layout_mode = 2
 theme_override_styles/focus = SubResource("StyleBoxEmpty_fmkrp")
 theme_override_styles/disabled_mirrored = SubResource("StyleBoxEmpty_fmkrp")
@@ -110,14 +152,48 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="MakeFave_Label" type="Label" parent="MarginContainer/VBoxContainer/MakeFave" groups=["Labels", "RCM_Labels"]]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/MakeFave"]
+layout_mode = 2
+
+[node name="CheckBox" parent="MarginContainer/VBoxContainer/MakeFave/HBoxContainer" instance=ExtResource("3_jknsc")]
+layout_mode = 2
+
+[node name="MakeFave_Label" type="Label" parent="MarginContainer/VBoxContainer/MakeFave/HBoxContainer" groups=["Labels", "RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
-text = "Mark Favorite"
+text = "Favorite"
 vertical_alignment = 1
 
 [node name="MakeFave_Button" type="Button" parent="MarginContainer/VBoxContainer/MakeFave"]
+layout_mode = 2
+theme_override_styles/focus = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/disabled_mirrored = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/hover_mirrored = SubResource("StyleBoxEmpty_fmkrp")
+theme_override_styles/hover = SubResource("StyleBoxFlat_dx0t6")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxEmpty_0dert")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_ciava")
+theme_override_styles/normal_mirrored = SubResource("StyleBoxEmpty_sn0so")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_dytdo")
+
+[node name="MarkAsCorrectGame" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="MarkAsCorrectGame_Label" type="Label" parent="MarginContainer/VBoxContainer/MarkAsCorrectGame" groups=["Labels", "RCM_Labels"]]
+layout_mode = 2
+theme = SubResource("Theme_5c6e1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
+text = "Correct Game"
+vertical_alignment = 1
+
+[node name="MarkAsCorrectGame_Button" type="Button" parent="MarginContainer/VBoxContainer/MarkAsCorrectGame"]
 layout_mode = 2
 theme_override_styles/focus = SubResource("StyleBoxEmpty_fmkrp")
 theme_override_styles/disabled_mirrored = SubResource("StyleBoxEmpty_fmkrp")
@@ -246,10 +322,10 @@ theme_override_styles/normal = SubResource("StyleBoxEmpty_dytdo")
 
 [node name="CategoryOptions" type="MarginContainer" parent="."]
 visible = false
+custom_minimum_size = Vector2(130, 0)
 layout_mode = 0
-offset_left = 125.0
 offset_top = 130.0
-offset_right = 225.0
+offset_right = 130.0
 offset_bottom = 230.0
 
 [node name="ColorRect" type="ColorRect" parent="CategoryOptions" groups=["PlainBG"]]
@@ -260,10 +336,12 @@ color = Color(0.277528, 0.277528, 0.277528, 1)
 layout_mode = 2
 
 [node name="EditDetails_Options" type="MarginContainer" parent="."]
-offset_left = 125.0
+visible = false
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 0
 offset_top = 128.0
-offset_right = 225.0
-offset_bottom = 228.0
+offset_right = 140.0
+offset_bottom = 289.0
 
 [node name="ColorRect" type="ColorRect" parent="EditDetails_Options" groups=["PlainBG"]]
 layout_mode = 2

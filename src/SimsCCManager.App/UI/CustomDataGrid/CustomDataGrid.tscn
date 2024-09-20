@@ -1,28 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://cddt6kmqajy7f"]
+[gd_scene load_steps=4 format=3 uid="uid://cddt6kmqajy7f"]
 
 [ext_resource type="Script" path="res://UI/CustomDataGrid/CustomDataGrid.cs" id="1_5pfxg"]
-[ext_resource type="Texture2D" uid="uid://bnxbjpi7s6pm8" path="res://assets/icons/materialicons/twotone_keyboard_arrow_up_black_48dp.png" id="2_sinr1"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qbe6i"]
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="Theme" id="Theme_du10o"]
-Panel/styles/panel = SubResource("StyleBoxFlat_qbe6i")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dbdy3"]
-content_margin_left = 2.0
-content_margin_top = 2.0
-content_margin_right = 2.0
-content_margin_bottom = 2.0
-bg_color = Color(0.723913, 0.513585, 0.743611, 1)
-corner_radius_top_left = 15
-corner_radius_top_right = 15
-corner_radius_bottom_right = 15
-corner_radius_bottom_left = 15
-
-[sub_resource type="Theme" id="Theme_w6qq0"]
-Panel/styles/panel = SubResource("StyleBoxFlat_dbdy3")
+[ext_resource type="Texture2D" uid="uid://b4dl6jrmvbxa3" path="res://assets/icons/materialicons/twotone_arrow_drop_up_black_48dp.png" id="2_ltknh"]
+[ext_resource type="Texture2D" uid="uid://d1216ob5rait5" path="res://assets/icons/materialicons/twotone_arrow_drop_down_black_48dp.png" id="3_fcejh"]
 
 [node name="CustomDataGrid" type="MarginContainer"]
 anchors_preset = 15
@@ -31,92 +11,91 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
 script = ExtResource("1_5pfxg")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="Panel" type="ColorRect" parent="." groups=["PlainBG"]]
 layout_mode = 2
-theme_override_constants/separation = 0
 
-[node name="HeaderScroll" type="ScrollContainer" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 25)
+[node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 2
-horizontal_scroll_mode = 3
+theme_override_constants/margin_right = 15
+
+[node name="GridContainer" type="ScrollContainer" parent="MarginContainer"]
+layout_mode = 2
+mouse_filter = 2
 vertical_scroll_mode = 0
 
-[node name="RowsScroll" type="ScrollContainer" parent="VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="DataGrid_Rows" type="VBoxContainer" parent="VBoxContainer/RowsScroll"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/GridContainer"]
+clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="DataGrid_HeaderRow" type="VBoxContainer" parent="MarginContainer/GridContainer/VBoxContainer"]
+clip_contents = true
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 0
+
+[node name="DataGrid_Rows" type="VBoxContainer" parent="MarginContainer/GridContainer/VBoxContainer"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="VScroller" type="VBoxContainer" parent="."]
 layout_mode = 2
 size_flags_horizontal = 8
 
-[node name="ColorRect" type="ColorRect" parent="MarginContainer" groups=["Scrollbar_BG"]]
+[node name="ScrollUp" type="MarginContainer" parent="VScroller"]
+custom_minimum_size = Vector2(15, 15)
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="VScroller/ScrollUp"]
+clip_children = 1
+layout_mode = 2
+texture = ExtResource("2_ltknh")
+expand_mode = 5
+
+[node name="ColorRect" type="ColorRect" parent="VScroller/ScrollUp/TextureRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollUp_Button" type="Button" parent="VScroller/ScrollUp"]
+layout_mode = 2
+
+[node name="VScrollBar" type="VScrollBar" parent="VScroller"]
 custom_minimum_size = Vector2(15, 0)
 layout_mode = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
-layout_mode = 2
-
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(15, 15)
-layout_mode = 2
-
-[node name="Panel" type="Panel" parent="MarginContainer/VBoxContainer/MarginContainer" groups=["ScrollBar_ButtonBG"]]
-layout_mode = 2
-theme = SubResource("Theme_du10o")
-
-[node name="TextureRect" type="TextureRect" parent="MarginContainer/VBoxContainer/MarginContainer"]
-clip_children = 1
-layout_mode = 2
-texture = ExtResource("2_sinr1")
-expand_mode = 5
-
-[node name="ColorRect" type="ColorRect" parent="MarginContainer/VBoxContainer/MarginContainer/TextureRect" groups=["AccentColorBox"]]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(1, 0.05, 0.05, 1)
-
-[node name="Control" type="Control" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
 size_flags_vertical = 3
+step = 1.0
 
-[node name="Panel" type="Panel" parent="MarginContainer/VBoxContainer/Control" groups=["Scrollbar_Bar"]]
-layout_mode = 0
-offset_right = 15.0
-offset_bottom = 25.0
-theme = SubResource("Theme_w6qq0")
-
-[node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ScrollDown" type="MarginContainer" parent="VScroller"]
 custom_minimum_size = Vector2(15, 15)
 layout_mode = 2
-size_flags_vertical = 8
 
-[node name="Panel" type="Panel" parent="MarginContainer/VBoxContainer/MarginContainer2" groups=["ScrollBar_ButtonBG"]]
-layout_mode = 2
-theme = SubResource("Theme_du10o")
-
-[node name="TextureRect" type="TextureRect" parent="MarginContainer/VBoxContainer/MarginContainer2"]
+[node name="TextureRect" type="TextureRect" parent="VScroller/ScrollDown"]
 clip_children = 1
 layout_mode = 2
-texture = ExtResource("2_sinr1")
+texture = ExtResource("3_fcejh")
 expand_mode = 5
 
-[node name="ColorRect" type="ColorRect" parent="MarginContainer/VBoxContainer/MarginContainer2/TextureRect" groups=["AccentColorBox"]]
+[node name="ColorRect" type="ColorRect" parent="VScroller/ScrollDown/TextureRect"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(1, 0.05, 0.05, 1)
+
+[node name="ScrollDown_Button" type="Button" parent="VScroller/ScrollDown"]
+layout_mode = 2

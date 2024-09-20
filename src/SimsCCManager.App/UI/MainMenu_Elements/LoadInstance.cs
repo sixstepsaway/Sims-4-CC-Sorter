@@ -1,6 +1,7 @@
 using Godot;
 using SimsCCManager.Settings.Loaded;
 using System;
+using System.IO;
 
 public partial class LoadInstance : MarginContainer
 {
@@ -13,24 +14,27 @@ public partial class LoadInstance : MarginContainer
 	{
 		VBoxContainer instancepicker = GetNode<VBoxContainer>("VBoxContainer/MarginContainer/ScrollContainer/GamePicker");
 		foreach (Instance instance in LoadedSettings.SetSettings.Instances){
-			var ipb = instancepickerbox.Instantiate() as InstancePicker;
-			if (instance.Game == "Sims1"){
-				ipb.game = Games.Sims1;
-			} else if (instance.Game == "Sims2"){
-				ipb.game = Games.Sims2;
-			} else if (instance.Game == "Sims3"){
-				ipb.game = Games.Sims3;
-			} else if (instance.Game == "Sims4"){
-				ipb.game = Games.Sims4;
-			} else if (instance.Game == "Sims Medieval" || instance.Game == "SimsMedieval"){
-				ipb.game = Games.SimsMedieval;
-			} else if (instance.Game == "SimCity5" || instance.Game == "SimCity 5"){
-				ipb.game = Games.SimCity5;
-			} 
-			ipb.instancename = instance.Name;
-			ipb.instanceidentifier = instance.Identifier.ToString();
-			ipb.Connect("PickedInstance", new Callable(this, "PickedInstance"));
-			instancepicker.AddChild(ipb);			
+			if (File.Exists(instance.XMLfile())){
+				var ipb = instancepickerbox.Instantiate() as InstancePicker;
+				if (instance.Game == "Sims1"){
+					ipb.game = Games.Sims1;
+				} else if (instance.Game == "Sims2"){
+					ipb.game = Games.Sims2;
+				} else if (instance.Game == "Sims3"){
+					ipb.game = Games.Sims3;
+				} else if (instance.Game == "Sims4"){
+					ipb.game = Games.Sims4;
+				} else if (instance.Game == "Sims Medieval" || instance.Game == "SimsMedieval"){
+					ipb.game = Games.SimsMedieval;
+				} else if (instance.Game == "SimCity5" || instance.Game == "SimCity 5"){
+					ipb.game = Games.SimCity5;
+				} 
+				ipb.instancename = instance.Name;
+				ipb.instanceidentifier = instance.Identifier.ToString();
+				ipb.Connect("PickedInstance", new Callable(this, "PickedInstance"));
+				instancepicker.AddChild(ipb);	
+			}
+					
 		}
 	}	
 

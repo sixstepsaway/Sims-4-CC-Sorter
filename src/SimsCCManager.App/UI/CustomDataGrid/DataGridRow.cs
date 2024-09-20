@@ -13,6 +13,8 @@ public partial class DataGridRow : MarginContainer
 	public ItemSelectedEvent ItemDeselected;
 	public ItemSelectedEvent ItemEnabled;
 	public ItemSelectedEvent ItemDisabled;	
+	public delegate void IntChangedEvent(string identifier, int newvalue);
+	public IntChangedEvent IntChanged;
 	[Signal]
 	public delegate void TextEditedEventHandler();
 	public delegate void MouseAffectingEvent(bool inside, int idx);
@@ -26,17 +28,20 @@ public partial class DataGridRow : MarginContainer
 	public bool Selected = false;
 	public bool Enabled = false;
 	public int LoadOrder = -1;
+	public int Index = -1;
 	PackedScene Cell = GD.Load<PackedScene>("res://UI/CustomDataGrid/DataGridCell.tscn");
+
+	public float rowheight = 25f;
 	
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		
+		//if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("This row size y is: {0}.", Size.Y));
 	}
 
 	private void MouseAffecting(bool inside){
-		MouseAffected.Invoke(inside, GetIndex());		
+		MouseAffected.Invoke(inside, Index);		
 	}
 
 	public void AddCell(CellContent content, Vector2 columnsize){
@@ -48,6 +53,9 @@ public partial class DataGridRow : MarginContainer
 		Selected = content.Selected;
 		Row = GetNode<HBoxContainer>("Row");
 		DataGridCell cell = Cell.Instantiate() as DataGridCell;		
+		cell.SizeY = rowheight;
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Cell size to add: {0}", columnsize));
+		cell.SizeX = columnsize.X;
 		if (content.Icons == true){
 			cell.Icons = true;
 			cell.iconOptions = content.IconOptions;
@@ -69,14 +77,30 @@ public partial class DataGridRow : MarginContainer
 			cell.Int = true;
 			cell.IntContent = content.Content;
 		}
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Cell size to add: {0}", columnsize));
-		cell.Size = columnsize;
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Cell size: {0}", cell.Size));
 		
 		cell.Connect("DataGridCellEnabledClicked", new Callable(this, "DetectedClickEnabled"));
 		cell.Connect("DataGridCellSelectedClicked", new Callable(this, "DetectedClickSelected"));
+		cell.ClickedCell += () => ClickedCell();
 		cell.MouseEvent += (inside) => MouseAffecting(inside);
+		cell.CellChangeInt += (val) => CellIntChanged(val);
 		Row.AddChild(cell);
+	}
+
+	private void ClickedCell(){
+		foreach (DataGridCell cell in Row.GetChildren()){
+			cell.HideEditors();
+		}
+	}
+
+	private void CellIntChanged(int val){
+		LoadOrder = val;
+		IntChanged.Invoke(Identifier, val);
+	}
+
+	public void ChangeLoadOrder(int loadorder){
+		LoadOrder = loadorder;
+		(Row.GetChild(1) as DataGridCell).IntContent = LoadOrder.ToString();
 	}
 
 	public void ToggleEnabled(bool enabled){

@@ -3,6 +3,7 @@ using SimsCCManager.Containers;
 using SimsCCManager.Debugging;
 using SimsCCManager.Globals;
 using SimsCCManager.Settings.Loaded;
+using SimsCCManager.UI.Utilities;
 using System;
 using System.Linq;
 
@@ -26,6 +27,12 @@ public partial class MainMenu : MarginContainer
 		if (LoadedSettings.SetSettings.Instances.Count != 0) GetNode<MarginContainer>("Menu/MarginContainer/VBoxContainer/MMButton_LoadInstance").Visible = true;
 	}
 
+	private void _on_tali_mouse_entered(){
+		string text = "In memory of my beloved Tali. My blanket will always have an empty space where you used to curl up while we coded this app.";
+		ToolTip tooltip = UIUtilities.CustomTooltip(text, GetGlobalMousePosition());
+		GetWindow().AddChild(tooltip);
+	}
+	
 	private void _on_mm_button_new_instance_button_clicked(){
 		var newinstance = newinstancemenu.Instantiate();
 		newinstance.Connect("tree_exited", Callable.From(CancelledInstance));
@@ -59,13 +66,7 @@ public partial class MainMenu : MarginContainer
 	}
 
 	private void _on_mm_button_dev_test_button_clicked(){
-		Sims2Instance instance = new();
-		instance.Load(@"E:\Documents\Sims CC Manager\Instances\The Sims 2\Instance.ini");
-		instance.TestInstance();
-		instance.InstanceDataFolder = "testing";
-		instance.TestInstance();
-		instance.SetProperty("InstanceDataFolder", "this is my second test");
-		instance.TestInstance();
+		
 	}
 
 	private void TaliEmitted(){

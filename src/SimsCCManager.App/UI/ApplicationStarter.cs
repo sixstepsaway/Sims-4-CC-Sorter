@@ -14,7 +14,7 @@ public partial class ApplicationStarter : Control
 	{
 	}
 	
-	public void Start(string path, string arguments, List<SimsPackage> enabledpackages){
+	public void Start(string path, string arguments, List<SimsPackage> enabledpackages, Games game){
 		string output = "";
 		new Thread(() => {
 
@@ -22,7 +22,7 @@ public partial class ApplicationStarter : Control
 
 
 
-			output = Utilities.RunProcess(path, arguments);
+			output = Utilities.RunProcess(path, arguments, game);
 			CallDeferred("EmitClosed");
 		}){IsBackground = true}.Start();
 	}

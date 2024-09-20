@@ -15,9 +15,9 @@ namespace SSA.VirtualFileSystem
         //https://stackoverflow.com/questions/1199571/how-to-hide-file-in-c
         //https://learn.microsoft.com/en-us/dotnet/api/system.io.file.createsymboliclink?view=net-7.0
         //https://stackoverflow.com/questions/3387690/how-to-create-a-hardlink-in-c
-        //https://github.com/usdAG/SharpLink   
+        //https://github.com/usdAG/SharpLink  
 
-        public void GetException(Exception e, string info, DirectoryInfo location){
+        public static void GetException(Exception e, string info, DirectoryInfo location){
             StringBuilder sb = new();
             sb.AppendLine(info);
             string str = string.Format("Exception Message: {0}", e.Message);
@@ -50,7 +50,7 @@ namespace SSA.VirtualFileSystem
         }
    
         
-        public void MakeSymbolicLink(string Original, string Destination){
+        public static void MakeSymbolicLink(string Original, string Destination){
             FileInfo fileInfo = new(Original);
             FileInfo destinfo = new(Destination);
             Destination = Path.Combine(Destination, fileInfo.Name);
@@ -64,7 +64,7 @@ namespace SSA.VirtualFileSystem
                 }
             }
             try {
-                File.CreateSymbolicLink(Destination, Original);
+                File.CreateSymbolicLink(Destination, Original);                
             } catch (Exception e) {
                 string exceptionstring = string.Format("Caught exception making symbolic link: {0}\nException: {1}", fileInfo.Name, e.Message);
                 //System.Windows.Forms.MessageBox.Show(exceptionstring);
@@ -72,7 +72,7 @@ namespace SSA.VirtualFileSystem
             }            
         }
 
-        public void MakeSymbolicLink(string Original, string Destination, string AsName){
+        public static void MakeSymbolicLink(string Original, string Destination, string AsName){
             FileInfo destinfo = new(Destination);
             FileInfo fileInfo = new(Original);
             Destination = Path.Combine(Destination, AsName);
@@ -86,7 +86,7 @@ namespace SSA.VirtualFileSystem
                 }
             }
             try {
-                File.CreateSymbolicLink(Destination, Original);
+                File.CreateSymbolicLink(Destination, Original);          
             } catch (Exception e) {
                 string exceptionstring = string.Format("Caught exception making symbolic link: {0}\nException: {1}", fileInfo.Name, e.Message);
                 //System.Windows.Forms.MessageBox.Show(exceptionstring);
@@ -95,7 +95,7 @@ namespace SSA.VirtualFileSystem
             
         }
 
-        public void RemoveSymbolicLink(string Item){
+        public static void RemoveSymbolicLink(string Item){
             if (File.Exists(Item)){
                 try { 
                     File.Delete(Item); 
@@ -104,8 +104,8 @@ namespace SSA.VirtualFileSystem
                     //System.Windows.Forms.MessageBox.Show(exceptionstring);
                     GetException(e, exceptionstring, new FileInfo(Item).Directory);
                 }
-            }            
-            if (File.Exists(string.Format("{0}.disabled", Item))){
+            }
+            /*if (File.Exists(string.Format("{0}.disabled", Item))){
                 string og = string.Format("{0}.disabled", Item);
                 string ren = og.Replace(".disabled", "");
                 try {
@@ -115,10 +115,10 @@ namespace SSA.VirtualFileSystem
                     //System.Windows.Forms.MessageBox.Show(exceptionstring);
                     GetException(e, exceptionstring, new FileInfo(Item).Directory);
                 }
-            }
+            }*/
         }
 
-        public void MakeJunction(string Original, string Destination){            
+        public static void MakeJunction(string Original, string Destination){            
             DirectoryInfo destinfo = new(Destination);
             DirectoryInfo directoryInfo = new(Original);
             Destination = Path.Combine(Destination, directoryInfo.Name);
@@ -140,7 +140,7 @@ namespace SSA.VirtualFileSystem
             }
         }
 
-        public void RemoveJunction(string Item){
+        public static void RemoveJunction(string Item){
             if (Directory.Exists(Item)){
                 try {
                     Directory.Delete(Item);

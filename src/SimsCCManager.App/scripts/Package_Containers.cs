@@ -42,7 +42,7 @@ namespace SimsCCManager.Packages.Containers
         public abstract bool Selected {get; set;}
 
         public void SetInfoFile(FileInfo file){
-            this.InfoFile = file.FullName.Replace(file.Extension, ".info");
+            this.InfoFile = string.Format("{0}.info", file.FullName);
         }
         public void SetInfoFile(DirectoryInfo file){
             this.InfoFile = string.Format("{0}.info", file.FullName);
@@ -69,7 +69,7 @@ namespace SimsCCManager.Packages.Containers
                 string extension = fileInfo.Extension;
                 string newnamefile = string.Format("{0}{1}", rename, extension);
                 string outputfile = Path.Combine(directory, newnamefile);
-                string newnameinfofile = string.Format("{0}{1}", rename, ".info");
+                string newnameinfofile = string.Format("{0}{1}", outputfile, ".info");
                 string outputinfofile = Path.Combine(directory, newnameinfofile);
                 File.Move(Location, outputfile);
                 File.Move(InfoFile, outputinfofile);
@@ -108,15 +108,7 @@ namespace SimsCCManager.Packages.Containers
                 }
                 if (File.Exists(this.InfoFile)){
                     return true;
-                } else {
-                    this.FileName = directoryInfo.Name;
-                    this.FileSize = DirSize(directoryInfo);
-                    this.Location = directoryInfo.FullName;
-                    this.Identifier = Guid.NewGuid();
-                    this.FileType = TypeFromExtension("folder");
-                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Filetype: {0}", this.FileType));
-                    this.DateAdded = DateTime.Today;
-                    this.DateUpdated = DateTime.Today;
+                } else {                    
                     return false;
                 }
             }
@@ -124,44 +116,46 @@ namespace SimsCCManager.Packages.Containers
             if (string.IsNullOrEmpty(this.InfoFile)){
                 SetInfoFile(fileinfo);
             }
-            if (File.Exists(this.InfoFile)){
-                /*using (StreamReader streamReader = new StreamReader(infofile)){
-                    bool eos = false;                
-                    while (eos == false){
-                        if(!streamReader.EndOfStream){
-                            string setting = streamReader.ReadLine();
-                            if (setting.Contains('[')){
-                                string line = setting.Replace("[", "");
-                                line = line.Replace("]", "");
-                                NamedSetting(line, streamReader);                   
-                            } else {
-                                string[] line = setting.Split("=");
-                                //if (GetProperty(line[0]) != null){
-                                SetProperty(line[0], line[1]);
-                                //}
-                            }
-                        } else {
-                            eos = true;
-                        }
-                    }
-                    streamReader.Close();
-                }*/
+            if (File.Exists(this.InfoFile)){                
                 return true;                
-            } else {
-                this.FileName = fileinfo.Name;
-				this.FileSize = fileinfo.Length;
-				this.Location = fileinfo.FullName;
-				this.Identifier = Guid.NewGuid();
-				this.FileType = TypeFromExtension(fileinfo.Extension);
-                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Filetype: {0}", this.FileType));
-				this.DateAdded = DateTime.Today;
-				this.DateUpdated = DateTime.Today;
-				ContinueCreateInfo(fileinfo);
+            } else {                
                 return false;
             }
         }
 
-        public abstract void ContinueCreateInfo(FileInfo file);
+        public void MakeInfo(string file, bool folder = false){
+            if (folder){
+                DirectoryInfo directoryInfo = new(file);
+                if (string.IsNullOrEmpty(this.InfoFile)){
+                    SetInfoFile(directoryInfo);
+                }                
+                this.FileName = directoryInfo.Name;
+                this.FileSize = DirSize(directoryInfo);
+                this.Location = directoryInfo.FullName;
+                this.Identifier = Guid.NewGuid();
+                this.FileType = TypeFromExtension("folder");
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Filetype: {0}", this.FileType));
+                this.DateAdded = DateTime.Today;
+                this.DateUpdated = DateTime.Today;
+            } else {
+                FileInfo fileinfo = new(file);
+                if (string.IsNullOrEmpty(this.InfoFile)){
+                    SetInfoFile(fileinfo);
+                }
+                this.FileName = fileinfo.Name;
+                this.FileSize = fileinfo.Length;
+                this.Location = fileinfo.FullName;
+                this.Identifier = Guid.NewGuid();
+                this.FileType = TypeFromExtension(fileinfo.Extension);                
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Filetype: {0}", this.FileType));
+                this.DateAdded = DateTime.Today;
+                this.DateUpdated = DateTime.Today;
+            }
+            ContinueCreateInfo(file);
+            //WriteInfoFile();
+        }
+
+        public abstract void ContinueCreateInfo(string file);
 
         public void ChangeProperty(string property, string value){
             SetProperty(property, value);
@@ -466,6 +460,8 @@ namespace SimsCCManager.Packages.Containers
         public bool Fave {get; set;} = false;
         public bool WrongGame {get; set;} = false;
         public bool Folder {get; set;} = false;
+        public bool LoadAsFolder {get; set;} = false;
+        public bool Misc {get; set;} = false;
         public Texture2D Thumbnail {get; set;}
         public List<string> Conflicts {get; set;}
         public List<string> DuplicatePackages {get; set;}
@@ -481,41 +477,82 @@ namespace SimsCCManager.Packages.Containers
             OverriddenPackages = new();            
         }
 
-        public override void ContinueCreateInfo(FileInfo file){
+        public override void ContinueCreateInfo(string file){
+            FileInfo fileinfo = new(file);
             this.Enabled = false;
             this.Scanned = false;
-            int game = GetGameVersion.CheckGame(file.FullName);
-            if (game == 0){
-                this.Broken = true;
-                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} is broken.", file.Name));
-            } else {
-                if (game == 1){
-                    this.Game = Games.Sims1;
-                } else if (game == 2){
-                    this.Game = Games.Sims2;
-                } else if (game == 3){
-                    this.Game = Games.Sims3;
-                } else if (game == 4){
-                    this.Game = Games.Sims4;
-                } else if (game == 11){
-                    this.Game = Games.Spore;
-                } else if (game == 12){
-                    this.Game = Games.SimCity5;
-                }   
-                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} is {1}.", file.Name, game)); 
+            if (this.FileType == FileTypes.TS4Script){
+                if (File.Exists(file.Replace(fileinfo.Extension, ".package"))){
+                    return;
+                }
+            } else if (this.FileType == FileTypes.Package){
+                if (File.Exists(file.Replace(fileinfo.Extension, ".ts4script"))){
+                    this.LinkedFiles.Add(file.Replace(fileinfo.Extension, ".ts4script"));
+                }
             }
+            if (this.FileType == FileTypes.Package){
+                int game = GetGameVersion.CheckGame(file);
+                if (game == 0){
+                    this.Broken = true;
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} is broken.", file));
+                } else {
+                    if (game == 1){
+                        this.Game = Games.Sims1;
+                    } else if (game == 2){
+                        this.Game = Games.Sims2;
+                    } else if (game == 3){
+                        this.Game = Games.Sims3;
+                    } else if (game == 4){
+                        this.Game = Games.Sims4;
+                    } else if (game == 11){
+                        this.Game = Games.Spore;
+                    } else if (game == 12){
+                        this.Game = Games.SimCity5;
+                    }   
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} is {1}.", file, game)); 
+                }
+            } else if (this.FileType == FileTypes.TS4Script){
+                this.Game = Games.Sims4;
+            } else if (this.FileType == FileTypes.Sims3Pack){
+                this.Game = Games.Sims3;
+            } else if (this.FileType == FileTypes.Sims2Pack){
+                this.Game = Games.Sims2;
+            } else if (this.FileType == FileTypes.Other) { 
+                this.Misc = true;
+                this.Game = Games.Null;
+                this.WrongGame = false;
+            } else if (this.FileType == FileTypes.Zip || this.FileType == FileTypes.PNG || this.FileType == FileTypes.Txt || this.FileType == FileTypes.JPG || this.FileType == FileTypes.Doc || this.FileType == FileTypes.SevenZip || this.FileType == FileTypes.Rar) { 
+                this.Misc = true;
+                this.Game = Games.Null;
+                this.WrongGame = false;
+            } else if (this.Folder){
+                this.FileType = FileTypes.Folder;
+                if (LoadedSettings.SetSettings.CurrentInstance.Game == "Sims2"){
+                    this.Game = Games.Sims2;
+                } else if (LoadedSettings.SetSettings.CurrentInstance.Game == "Sims3"){
+                    this.Game = Games.Sims3;
+                } else if (LoadedSettings.SetSettings.CurrentInstance.Game == "Sims4"){
+                    this.Game = Games.Sims4;
+                }                
+            }        
             WriteInfoFile();
         }
 
         public override void WriteInfoFile()
-        {            
+        {
             if (File.Exists(InfoFile)){
                 File.Delete(InfoFile);                
             }
             XmlSerializer packageSerializer = new XmlSerializer(this.GetType());
-            using (var writer = new StreamWriter(InfoFile))
-            {
-                packageSerializer.Serialize(writer, this);
+            try { 
+                using (var writer = new StreamWriter(InfoFile))
+                {
+                    
+                        packageSerializer.Serialize(writer, this); 
+                    
+                }
+            } catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Writing info file for {0} failed: {1}\n{2}\n{3}\n.", this.FileName, e.Message, e.StackTrace, e.Source));
             }
         }
 
@@ -820,7 +857,7 @@ namespace SimsCCManager.Packages.Containers
 
         public bool Installed {get; set;} = false;
 
-        public override void ContinueCreateInfo(FileInfo file){
+        public override void ContinueCreateInfo(string file){
             this.Installed = false;
             WriteInfoFile();
         }
@@ -830,9 +867,15 @@ namespace SimsCCManager.Packages.Containers
                 File.Delete(InfoFile);                
             }
             XmlSerializer packageSerializer = new XmlSerializer(this.GetType());
-            using (var writer = new StreamWriter(InfoFile))
-            {
-                packageSerializer.Serialize(writer, this);
+            try { 
+                using (var writer = new StreamWriter(InfoFile))
+                {
+                    
+                        packageSerializer.Serialize(writer, this); 
+                    
+                }
+            } catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Writing info file for {0} failed: {1}\n{2}\n{3}\n.", this.FileName, e.Message, e.StackTrace, e.Source));
             }
         }
     }    
@@ -1262,7 +1305,6 @@ namespace SimsCCManager.Packages.Containers
         public string Type {get; set;} = "";
         public List<TagsList> CatalogTags {get; set;} = new();
     }
-
 }
 
 public enum Games {

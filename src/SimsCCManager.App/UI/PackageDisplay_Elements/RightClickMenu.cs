@@ -21,6 +21,7 @@ public partial class RightClickMenu : Control
 	public bool nocats = false;
 	public bool someoutofdate = false;
 	public bool multiplefiles = false;
+	MarginContainer EditDetailsBox;
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
@@ -35,6 +36,19 @@ public partial class RightClickMenu : Control
 		catoptions.MouseExited += () => MouseLeftCategoryList();
 		catoptions.MouseEntered += () => MouseEnteredCategoryList();
 		if (!someoutofdate) oodstr = "Make Updated";
+		EditDetailsBox = GetNode<MarginContainer>("EditDetails_Options");
+
+		float x = GetNode<MarginContainer>("MarginContainer").Size.X;
+		
+		catoptions.Position = new(x, catoptions.Position.Y); 
+		EditDetailsBox.Position = new(x, EditDetailsBox.Position.Y);
+		
+		
+		
+		
+		
+		
+		
 		GetNode<Label>("MarginContainer/VBoxContainer/MarkAsUpdated/MarkAsUpdated_Label").Text = oodstr;
 		SetButtons();
 
@@ -82,6 +96,8 @@ public partial class RightClickMenu : Control
 		GetNode<Button>("EditDetails_Options/VBoxContainer/AddSourceLink/AddSourceLink_Button").Pressed += () => OptionClicked(7);
 		GetNode<Button>("EditDetails_Options/VBoxContainer/MoveFile/MoveFile_Button").Pressed += () => OptionClicked(8);
 		GetNode<Button>("EditDetails_Options/VBoxContainer/Delete/DeleteFile_Button").Pressed += () => OptionClicked(9);
+		GetNode<Button>("MarginContainer/VBoxContainer/LoadasFolder/LoadasFolder_Button").Pressed += () => OptionClicked(10);
+		GetNode<Button>("MarginContainer/VBoxContainer/MarkAsCorrectGame/MarkAsCorrectGame_Button").Pressed += () => OptionClicked(11);
 
 
 		GetNode<Button>("MarginContainer/VBoxContainer/EditDetails/EditDetails_Button").MouseEntered += () => EditDetails(true);

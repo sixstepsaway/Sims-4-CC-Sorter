@@ -225,8 +225,8 @@ namespace SimsCCManager.Settings.SettingsSystem
                                 }
                                 line = setting.Split("=");
                                 instance.Identifier = Guid.Parse(line[1]);
-                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Looking for inifile at {0}", instance.Inifile()));
-                                if (File.Exists(instance.Inifile())){
+                                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Looking for inifile at {0}", instance.XMLfile()));
+                                if (File.Exists(instance.XMLfile())){
                                     LoadedSettings.SetSettings.Instances.Add(instance);
                                 }
                             }
