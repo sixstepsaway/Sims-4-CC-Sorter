@@ -22,6 +22,7 @@ public partial class RightClickMenu : Control
 	public bool someoutofdate = false;
 	public bool multiplefiles = false;
 	MarginContainer EditDetailsBox;
+	bool editdetailshover = false;
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
@@ -35,10 +36,12 @@ public partial class RightClickMenu : Control
 		GetNode<Button>("MarginContainer/VBoxContainer/Category/Category_Button").MouseExited += () => MouseExitedCategoryButton();
 		catoptions.MouseExited += () => MouseLeftCategoryList();
 		catoptions.MouseEntered += () => MouseEnteredCategoryList();
-		if (!someoutofdate) oodstr = "Make Updated";
+		oodstr = "Toggle Out of Date";
+		if (someoutofdate) oodstr = "Toggle Updated";
 		EditDetailsBox = GetNode<MarginContainer>("EditDetails_Options");
 
 		float x = GetNode<MarginContainer>("MarginContainer").Size.X;
+		x -= 15;
 		
 		catoptions.Position = new(x, catoptions.Position.Y); 
 		EditDetailsBox.Position = new(x, EditDetailsBox.Position.Y);
@@ -99,14 +102,22 @@ public partial class RightClickMenu : Control
 		GetNode<Button>("MarginContainer/VBoxContainer/LoadasFolder/LoadasFolder_Button").Pressed += () => OptionClicked(10);
 		GetNode<Button>("MarginContainer/VBoxContainer/MarkAsCorrectGame/MarkAsCorrectGame_Button").Pressed += () => OptionClicked(11);
 
+		
+		GetNode<Button>("EditDetails_Options/VBoxContainer/MoveFile/MoveFile_Button").MouseEntered += () => EditDetails(true);
+		GetNode<Button>("EditDetails_Options/VBoxContainer/Delete/DeleteFile_Button").MouseEntered += () => EditDetails(true);
+		GetNode<Button>("EditDetails_Options/VBoxContainer/Rename/RenameFile_Button").MouseEntered += () => EditDetails(true);
+		GetNode<Button>("EditDetails_Options/VBoxContainer/AddCreator/AddCreator_Button").MouseEntered += () => EditDetails(true);
+		GetNode<Button>("EditDetails_Options/VBoxContainer/AddSourceLink/AddSourceLink_Button").MouseEntered += () => EditDetails(true);
+
 
 		GetNode<Button>("MarginContainer/VBoxContainer/EditDetails/EditDetails_Button").MouseEntered += () => EditDetails(true);
 		GetNode<MarginContainer>("EditDetails_Options").MouseEntered += () => EditDetails(true);
 		GetNode<MarginContainer>("EditDetails_Options").MouseExited += () => EditDetails(false);
+		GetNode<Button>("MarginContainer/VBoxContainer/EditDetails/EditDetails_Button").MouseExited += () => EditDetails(false);
 	}
 
 	private void EditDetails(bool show){
-		GetNode<MarginContainer>("EditDetails_Options").Visible = show;
+		editdetailshover = show;
 	}
 
 	private void OptionClicked(int option){
@@ -121,6 +132,7 @@ public partial class RightClickMenu : Control
     {
 		if (!nocats) catoptions.Visible = true;
     }
+
 
     private void MouseExitedCategoryButton()
     {
@@ -140,5 +152,6 @@ public partial class RightClickMenu : Control
     // Called every frame. 'delta' is the elapsed time since the previous frame.
     public override void _Process(double delta)
 	{
+		GetNode<MarginContainer>("EditDetails_Options").Visible = editdetailshover;
 	}
 }

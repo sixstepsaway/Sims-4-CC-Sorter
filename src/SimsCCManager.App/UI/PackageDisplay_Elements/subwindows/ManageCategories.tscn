@@ -86,19 +86,6 @@ layout_mode = 2
 theme = ExtResource("1_h6qaj")
 text = "Name"
 
-[node name="DataGridRowItem" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/NameColumn"]
-_import_path = NodePath("")
-unique_name_in_owner = false
-process_mode = 0
-process_priority = 0
-process_physics_priority = 0
-process_thread_group = 0
-physics_interpolation_mode = 0
-auto_translate_mode = 0
-editor_description = ""
-layout_mode = 2
-script = null
-
 [node name="ColorColumn" type="VBoxContainer" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 0
@@ -123,19 +110,6 @@ theme_override_constants/margin_right = 10
 layout_mode = 2
 theme = ExtResource("1_h6qaj")
 text = "Color"
-
-[node name="DataGridRowItem" parent="MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/ColorColumn"]
-_import_path = NodePath("")
-unique_name_in_owner = false
-process_mode = 0
-process_priority = 0
-process_physics_priority = 0
-process_thread_group = 0
-physics_interpolation_mode = 0
-auto_translate_mode = 0
-editor_description = ""
-layout_mode = 2
-script = null
 
 [node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/HBoxContainer"]
 layout_mode = 2

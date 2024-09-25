@@ -5,8 +5,8 @@ using System.IO;
 
 public partial class LoadInstance : MarginContainer
 {
-	[Signal]
-	public delegate void LoadInstanceStartPackageManagerEventHandler();
+	public delegate void LoadInstanceStartPackageManagerEvent(Guid instance);
+	public LoadInstanceStartPackageManagerEvent LoadInstanceStartPackageManager;
 	PackedScene instancepickerbox = GD.Load<PackedScene>("res://UI/MainMenu_Elements/InstancePicker.tscn");
 	string instancechosen = "";
 	// Called when the node enters the scene tree for the first time.
@@ -31,10 +31,10 @@ public partial class LoadInstance : MarginContainer
 				} 
 				ipb.instancename = instance.Name;
 				ipb.instanceidentifier = instance.Identifier.ToString();
-				ipb.Connect("PickedInstance", new Callable(this, "PickedInstance"));
+				ipb.PickedInstance += (instance) => PickedInstance(instance);
+				//ipb.Connect("PickedInstance", new Callable(this, "PickedInstance"));
 				instancepicker.AddChild(ipb);	
-			}
-					
+			}					
 		}
 	}	
 
@@ -47,6 +47,6 @@ public partial class LoadInstance : MarginContainer
 	}
 
 	private void _on_confirm_button_button_clicked(){
-		if (instancechosen != "") EmitSignal("LoadInstanceStartPackageManager", instancechosen);
+		if (instancechosen != "") LoadInstanceStartPackageManager.Invoke(Guid.Parse(instancechosen));
 	}
 }

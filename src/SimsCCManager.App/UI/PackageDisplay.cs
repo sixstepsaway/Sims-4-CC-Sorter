@@ -20,6 +20,8 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net.Mime;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -82,6 +84,10 @@ public partial class PackageDisplay : MarginContainer
 	List<string> Thumbs = new();
 
 	//instance information
+	GameInstanceBase simsInstance {
+		get { return ReturnInstance(); }
+		set {}
+	}
 	Sims2Instance sims2Instance = new();
 	Sims3Instance sims3Instance = new();
 	Sims4Instance sims4Instance = new();
@@ -159,11 +165,17 @@ public partial class PackageDisplay : MarginContainer
 	public ShowPbarEvent ShowPbar;
 	RightClickMenu CurrentRightClickMenu;
 	Category defaultcat = new();
-
+	ConcurrentBag<string> linked = new();
+	bool dlready = false;
+	bool amready = false;
+	FileDialog AddFolderDiag;
+	FileDialog AddFilesDiag;
+	string gameversion = "";
 
 
 	public override void _Ready()
 	{
+		
 		ThreadPool.GetMaxThreads(out int workerThreadsCount, out int ioThreadsCount);
 		if (LoadedSettings.SetSettings.LimitCPU){
 			paralellism = (ioThreadsCount - 2) / 2;
@@ -191,6 +203,13 @@ public partial class PackageDisplay : MarginContainer
 				modsfolder = sims2Instance.InstancePackagesFolder;
 				downloadsfolder = sims2Instance.InstanceDownloadsFolder;
 				instancefolder = sims2Instance.InstanceFolder;
+				string ver = Utilities.GetGameVersion(Game, sims2Instance.GameDocumentsFolder);
+				if (ver != sims2Instance.GameVersion) {
+					sims2Instance.GameVersion = ver;
+					sims2Instance.WriteXML();
+				}
+				gameversion = ver;
+				GlobalVariables.thisinstance = sims2Instance;
 			} else if (ThisInstance.Game == "Sims3"){
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims 3!");
 				Game = Games.Sims3;
@@ -204,6 +223,13 @@ public partial class PackageDisplay : MarginContainer
 				modsfolder = sims3Instance.InstancePackagesFolder;
 				downloadsfolder = sims3Instance.InstanceDownloadsFolder;		
 				instancefolder = sims3Instance.InstanceFolder;
+				string ver = Utilities.GetGameVersion(Game, sims3Instance.GameDocumentsFolder);
+				if (ver != sims3Instance.GameVersion) {
+					sims3Instance.GameVersion = ver;
+					sims3Instance.WriteXML();
+				}
+				gameversion = ver;
+				GlobalVariables.thisinstance = sims3Instance;				
 			} else if (ThisInstance.Game == "Sims4"){
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims 4!");
 				Game = Games.Sims4;
@@ -217,18 +243,38 @@ public partial class PackageDisplay : MarginContainer
 				modsfolder = sims4Instance.InstancePackagesFolder;
 				downloadsfolder = sims4Instance.InstanceDownloadsFolder;	
 				instancefolder = sims4Instance.InstanceFolder;	
+				string ver = Utilities.GetGameVersion(Game, sims4Instance.GameDocumentsFolder);
+				if (ver != sims4Instance.GameVersion) {
+					sims4Instance.GameVersion = ver;
+					sims4Instance.WriteXML();
+				}
+				gameversion = ver;
+				GlobalVariables.thisinstance = sims4Instance;
 			}
 			brokenmodsfolder = Path.Combine(instancefolder, "Broken Packages");
 			wronggamefolder = Path.Combine(instancefolder, "Incorrect Game Files");
+			GlobalVariables.CurrentInstance = ThisInstance;
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Game version: {0}", gameversion));
 			SetupDisplay();
-			UpdateExecutableList();
-			var x = WaitLoad();
+			UpdateExecutableList();			
+			//var x = WaitLoad();			
 		}){IsBackground = true}.Start();		
+	}
+
+	private GameInstanceBase ReturnInstance(){
+		if (Game == Games.Sims2) return sims2Instance;
+		if (Game == Games.Sims3) return sims3Instance;
+		return sims4Instance;
 	}
 
 	private void ConnectThings(){
 		PackagesChanged += () => OnPackagesListChanged();
 		DownloadsChanged += () => OnDownloadsListChanged();
+		AddFilesDiag = GetNode<FileDialog>("AddFileDialog");
+		AddFolderDiag = GetNode<FileDialog>("AddFolderDialog");
+
+		AddFilesDiag.FilesSelected += (files) => AddFilesSelected(files);
+		AddFolderDiag.DirSelected += (dir) => AddFolderSelected(dir);
 
 		viewerrorscontainer = GetNode<ViewErrors_Container>("MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/ViewErrors_Container");
 		viewerrorscontainer.GetNode<topbar_button>("View Errors_SettingsHelpButtons").ButtonClicked += () => ViewErrors();
@@ -299,10 +345,14 @@ public partial class PackageDisplay : MarginContainer
     {
 		if (canstart){
 			if (!readingpackages){
+				readingpackages = true;
 				new Thread(() => {
 					if ((Directory.GetFiles(modsfolder).Count() + Directory.GetDirectories(modsfolder).Count()) != filesinpackagesfolder){
-						CallDeferred("ReadPackages");
-					}				
+						ReadPackages();
+					} else {
+						readingpackages = false;
+					}
+								
 				}){IsBackground = true}.Start();
 
 				new Thread(() => {
@@ -328,8 +378,11 @@ public partial class PackageDisplay : MarginContainer
 
 			if (!readingdownloads){
 				new Thread(() => {
+					readingdownloads = true;
 					if (Directory.GetFiles(downloadsfolder).ToList().Count != filesindownloadsfolder){
-						CallDeferred("ReadDownloads");
+						ReadDownloads();
+					} else {
+						readingdownloads = false;
 					}
 					
 				}){IsBackground = true}.Start();
@@ -337,14 +390,14 @@ public partial class PackageDisplay : MarginContainer
 			new Thread(() => {
 				if (packagedisplayvisible){				
 					if (packages.Where(x => x.Selected).Count() != 1){					
-						CallDeferred("HidePackageDisplay");
+						CallDeferred(nameof(HidePackageDisplay));
 					} else if (packages.IndexOf(packages.Where(x => x.Selected).First()) != packagedisplayed){
-						CallDeferred("HidePackageDisplay");
-						CallDeferred("ShowPackageDisplay");
+						CallDeferred(nameof(HidePackageDisplay));
+						CallDeferred(nameof(ShowPackageDisplay));
 					}
 				} else if (!packagedisplayvisible){
-					if (packages.Where(x => x.Selected).Count() == 1){					
-						CallDeferred("ShowPackageDisplay");
+					if (packages.Where(x => x.Selected).Count() == 1){
+						CallDeferred(nameof(ShowPackageDisplay));
 					}
 				}
 			}){IsBackground = true}.Start();
@@ -388,8 +441,9 @@ public partial class PackageDisplay : MarginContainer
     }
 
 	private async Task WaitLoad(){
-    	await ToSignal(RenderingServer.Singleton, RenderingServerInstance.SignalName.FramePostDraw);
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package display size: {0}.", DataGridAllMods.Size.Y));
+		
+    	//await ToSignal(RenderingServer.Singleton, RenderingServerInstance.SignalName.FramePostDraw);
+		//if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package display size: {0}.", DataGridAllMods.Size.Y));
 	}
 
 
@@ -414,7 +468,6 @@ public partial class PackageDisplay : MarginContainer
 
 	public bool ReadPackages(){
 		defaultcat = Categories.Where(x => x.Name == "Default").First();
-		readingpackages = true;
 		ConcurrentBag<SimsPackage> packagesbag = new();
 		List<string> files = Directory.GetFiles(modsfolder).ToList();
 		List<string> directories = Directory.GetDirectories(modsfolder).ToList();
@@ -423,56 +476,145 @@ public partial class PackageDisplay : MarginContainer
 		List<string> packagefiles = files.Where(x => !infofiles.Contains(x)).ToList();
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} files to read that are not Info Files", packagefiles.Count));
 
+		int pbar = packagefiles.Count + directories.Count;
+		pbar -= packages.Count;
+
 		if (directories.Count != 0){
+			CallDeferred(nameof(_ShowPbar));
+			CallDeferred(nameof(_SetPbarMax), pbar);
+			CallDeferred(nameof(_ResetPbarValue));
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Found {0} directories", directories.Count));
 			Parallel.ForEach(directories, new ParallelOptions { MaxDegreeOfParallelism = paralellism }, file => {
 				SimsPackage simsPackage = new();				
 				bool infoexists = simsPackage.GetInfo(file, true);
 				if (infoexists){
 					simsPackage = Utilities.LoadPackageFile(simsPackage);
+					if (simsPackage.InstalledForVersion != gameversion){
+						simsPackage.OutOfDate = true;
+					} else {
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} installed for version {1}, current version is {2}", simsPackage.FileName, simsPackage.InstalledForVersion, gameversion));
+					}
+					DateTime creationtime = File.GetCreationTime(simsPackage.Location);
+					DateTime modified = File.GetLastWriteTime(simsPackage.Location);
+					if (simsPackage.DateUpdated < creationtime){
+						simsPackage.DateUpdated = creationtime;
+						simsPackage.OutOfDate = false;
+					} else if (simsPackage.DateUpdated < modified){
+						simsPackage.DateUpdated = modified;
+						simsPackage.OutOfDate = false;
+					}					
 				} else {
+					simsPackage.InstalledForVersion = simsInstance.GameVersion;
 					simsPackage.Folder = true;
 					simsPackage.Category = defaultcat;
 					simsPackage.MakeInfo(file, true);
 					List<string> filesinfolder = Directory.GetFiles(simsPackage.Location).ToList();
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Found {0} files in directory {1}", filesinfolder.Count, file));
 					simsPackage.LinkedFiles.AddRange(filesinfolder);
+					foreach (string f in filesinfolder){
+						linked.Add(f);
+					}
 					List<string> foldersinfolder = Directory.GetDirectories(simsPackage.Location).ToList();
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Found {0} folders in directory {1}", foldersinfolder.Count, file));
 					if (foldersinfolder.Count != 0){
 						foreach (string folder in foldersinfolder){
+							if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Processing {0} in directory {1}", folder, file));
+							linked.Add(folder);
 							simsPackage.LinkedFolders.Add(GetFolderInfo(folder));						
 						}
 					}
-				}				
-				packagesbag.Add(simsPackage);
+				}
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Checking if this file ({0}) is actually a linked file.", simsPackage.Location));
+				if (simsPackage.LinkedFiles.Any()){
+					foreach (string ff in simsPackage.LinkedFiles){
+						linked.Add(ff);
+					}
+				}
+				if (linked.Where(x => x.Equals(simsPackage.Location)).Any()) {					
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Looks like {0} exists in the linked bag.", simsPackage.Location));
+					/*if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Currently in linked bag:"));
+					foreach (string s in linked){
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format(s));
+					}*/
+				}  else {
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Can't find {0} in the linked bag.", simsPackage.Location));
+					/*if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Currently in linked bag:"));
+					foreach (string s in linked){
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format(s));
+					}*/
+					simsPackage.WriteInfoFile();
+					simsPackage.PackageChanged += () => PackagesChanged.Invoke();
+					packagesbag.Add(simsPackage);
+					CallDeferred(nameof(_IncrementPbar));
+				}
 			});
 		}
 
-		if (packagefiles.Count != 0){			
+		if (packagefiles.Count != 0){	
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Found {0} files", packagefiles.Count));		
 			Parallel.ForEach(packagefiles, new ParallelOptions { MaxDegreeOfParallelism = paralellism }, file => {
 				SimsPackage simsPackage = new();				
 				bool infoexists = simsPackage.GetInfo(file);				
 				if (infoexists){
 					simsPackage = Utilities.LoadPackageFile(simsPackage);
+					if (simsPackage.InstalledForVersion != gameversion){
+						simsPackage.OutOfDate = true;
+					} else {
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} installed for version {1}, current version is {2}", simsPackage.FileName, simsPackage.InstalledForVersion, gameversion));
+					}
+					DateTime creationtime = File.GetCreationTime(simsPackage.Location);
+					DateTime modified = File.GetLastWriteTime(simsPackage.Location);
+					if (simsPackage.DateUpdated < creationtime){
+						simsPackage.DateUpdated = creationtime;
+						simsPackage.OutOfDate = false;
+					} else if (simsPackage.DateUpdated < modified){
+						simsPackage.DateUpdated = modified;
+						simsPackage.OutOfDate = false;
+					}
 				} else {
 					simsPackage.MakeInfo(file);
+					simsPackage.InstalledForVersion = simsInstance.GameVersion;
 					DateTime now = DateTime.Now;
-					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Going to scan {0}.", simsPackage.Location));					
-					scanner.Scan(simsPackage);
-					while (!ScannedPackages.Contains(simsPackage.Identifier.ToString())){
-						//wait.
+					if (simsPackage.FileType == FileTypes.Package) {
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Going to scan {0}.", simsPackage.Location));					
+						scanner.Scan(simsPackage);
+						while (!ScannedPackages.Contains(simsPackage.Identifier.ToString())){
+							//wait.
+						}
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Looks like {0} finished! \n             Started: {1}\n             Finished: {2}.", simsPackage.Location, now, DateTime.Now));
 					}
-					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Looks like {0} finished! \n             Started: {1}\n             Finished: {2}.", simsPackage.Location, now, DateTime.Now));
-					if (infoexists){
+					/*if (infoexists){
 						simsPackage = Utilities.LoadPackageFile(simsPackage);
-					}
+					}*/
 				}
 				if (simsPackage.Game != Game && !simsPackage.Misc && simsPackage.Game != Games.Null){
 					simsPackage.WrongGame = true;
 				}
+				if (simsPackage.LinkedFiles.Any()){
+					foreach (string ff in simsPackage.LinkedFiles){
+						linked.Add(ff);
+					}
+				}
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} packages in the bag.", packagesbag.Count));
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("This package ({0}) is for Sims {1}.", simsPackage.FileName, simsPackage.Game));
-
-				packagesbag.Add(simsPackage);				
-			});			
+				if (linked.Where(x => x.Equals(simsPackage.Location)).Any()) {					
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Looks like {0} exists in the linked bag.", simsPackage.Location));
+					/*if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Currently in linked bag:"));
+					foreach (string s in linked){
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format(s));
+					}*/
+				}  else {
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Can't find {0} in the linked bag.", simsPackage.Location));
+					/*if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Currently in linked bag:"));
+					foreach (string s in linked){
+						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format(s));
+					}*/
+					simsPackage.WriteInfoFile();
+					simsPackage.PackageChanged += () => PackagesChanged.Invoke();
+					packagesbag.Add(simsPackage);
+					CallDeferred(nameof(_IncrementPbar));
+				} 			
+			});	
 			packages = packagesbag.ToList();
 			unsortedpackages = packages;
 			if (!packagessortingorderchanged) packages = packages.OrderBy(x => x.FileName).ToList();
@@ -493,11 +635,15 @@ public partial class PackageDisplay : MarginContainer
 		SimsPackageSubfolder subfolder = new();
 		DirectoryInfo f = new(folder);
 		List<string> files = Directory.GetFiles(folder).ToList();
+		foreach (string fl in files){
+			linked.Add(fl);
+		}
 		subfolder.Subfiles.AddRange(files);
 		List<string> folders = Directory.GetDirectories(folder).ToList();
 		if (folders.Count != 0){
 			foreach (string fold in folders){
 				subfolder.Subfolders.Add(GetFolderInfo(fold));
+				linked.Add(fold);
 			}
 		}
 		return subfolder;
@@ -526,7 +672,6 @@ public partial class PackageDisplay : MarginContainer
 	//downloads handlers
 
 	public bool ReadDownloads(){
-		readingdownloads = true;
 		ConcurrentBag<SimsDownload> downloadsbag = new();
 		List<string> files = Directory.GetFiles(downloadsfolder).ToList();
 		if (files.Count != 0){
@@ -560,16 +705,7 @@ public partial class PackageDisplay : MarginContainer
 
 	//data grids
 
-	private void SetupDisplay(){		
-		new Thread (() => {
-			AllModsGrid = DataGrid.Instantiate() as CustomDataGrid;	
-			AllModsGrid.Headers = GetDefaultAMHeaders();
-			//AllModsGrid.TreeEntered += () => EmitDoneLoading();
-			DownloadedModsGrid = DataGrid.Instantiate() as CustomDataGrid;	
-			DownloadedModsGrid.Headers = GetDefaultDownloadsHeaders();
-			bool agh = (bool)CallDeferred(nameof(AddGrid), DataGridAllMods, AllModsGrid);
-			agh = (bool)CallDeferred(nameof(AddGrid), DataGridDownloads, DownloadedModsGrid);
-		
+	private void GridConnections(){
 			AllModsGrid.SelectedItem += (item, idx) => AllModsItemSelected(item, idx);
 			AllModsGrid.UnselectedItem += (item, idx) => AllModsItemUnselected(item, idx);
 			AllModsGrid.EnabledItem += (item, idx) => AllModsItemEnabled(item, idx);
@@ -584,35 +720,87 @@ public partial class PackageDisplay : MarginContainer
 			DownloadedModsGrid.HeaderSortedSignal += (idx, sortingrule) => DLHeaderSorted(idx, sortingrule);
 			DownloadsRows = DownloadedModsGrid.FindChild("DataGrid_Rows") as VBoxContainer;
 			DownloadedModsGrid.MouseAffectingGrid += (inside, idx) => DLMouseEvent(inside, idx);					
-			new Thread(() => {
-				readingpackages = true;
-				ReadPackages();
-			}){IsBackground = true}.Start();
-			new Thread(() => {
-				readingdownloads = true;
-				ReadDownloads();
-			}){IsBackground = true}.Start();
+			AllModsGrid.GridReady += () => AMReady();
+			DownloadedModsGrid.GridReady += () => DLReady();
+	}
+
+	private void AMReady(){
+		amready = true;
+		if (amready && dlready){
+			SetupDisplayPt2();
+		}
+	}
+
+	private void DLReady(){
+		dlready = true;
+		if (amready && dlready){
+			SetupDisplayPt2();
+		}
+	}
+
+	private void SetupDisplay(){		
+		new Thread (() => {
+			AllModsGrid = DataGrid.Instantiate() as CustomDataGrid;	
+			AllModsGrid.Headers = GetDefaultAMHeaders();
+			//AllModsGrid.TreeEntered += () => EmitDoneLoading();
+			DownloadedModsGrid = DataGrid.Instantiate() as CustomDataGrid;	
+			DownloadedModsGrid.Headers = GetDefaultDownloadsHeaders();
+			GridConnections();
+			CallDeferred(nameof(AddGrid), DataGridAllMods, AllModsGrid);
+			CallDeferred(nameof(AddGrid), DataGridDownloads, DownloadedModsGrid);			
+		}){IsBackground = true}.Start();
+	}
+
+	private void SetupDisplayPt2(){
+		new Thread (() => {						
+			if (Directory.GetFiles(modsfolder).Count() != 0){
+				new Thread(() => {
+					readingpackages = true;
+					ReadPackages();
+				}){IsBackground = true}.Start();
+			}
+			if (Directory.GetFiles(downloadsfolder).Count() != 0){
+				new Thread(() => {
+					readingdownloads = true;
+					ReadDownloads();
+				}){IsBackground = true}.Start();
+			}
+			
+			
+			
 	
 			while (readingpackages || readingdownloads){
 				//Thread.Sleep(1);
 			}
 			
-			new Thread(() => {
-				readingpackages = true;
-				ReadPackages();
-			}){IsBackground = true}.Start();
-			new Thread(() => {
-				readingdownloads = true;
-				ReadDownloads();
-			}){IsBackground = true}.Start();
+			if (Directory.GetFiles(modsfolder).Count() != 0){
+				new Thread(() => {
+					readingpackages = true;
+					ReadPackages();
+				}){IsBackground = true}.Start();
+			}
+			if (Directory.GetFiles(downloadsfolder).Count() != 0){
+				new Thread(() => {
+					readingdownloads = true;
+					ReadDownloads();
+				}){IsBackground = true}.Start();
+			}
 	
 			while (readingpackages || readingdownloads){
 				//Thread.Sleep(1);
 			}
-			populatingpackages = true;
-			populatingdownloads = true;
-			AllModsDisplayPackages();
-			DownloadsDisplayPackages();
+
+			if (packages.Count != 0){
+				populatingpackages = true;
+				AllModsDisplayPackages();
+			}
+
+			if (downloads.Count != 0){
+				populatingdownloads = true;			
+				DownloadsDisplayPackages();
+			}
+			
+			
 			while (populatingpackages || populatingdownloads){
 				//Thread.Sleep(1);
 			}
@@ -628,10 +816,10 @@ public partial class PackageDisplay : MarginContainer
 		DLGetHeaders();
 		AMGetHeaders();
 		canstart = true;
-		EmitDoneLoading();
-		UIUtilities.UpdateTheme(GetTree());
+		//UIUtilities.UpdateTheme(GetTree());
 		firstrundownloads = true;
 		firstrunpackages = true;
+		EmitDoneLoading();
 	}
 
 	private void AllModsDisplayPackages(){
@@ -659,6 +847,12 @@ public partial class PackageDisplay : MarginContainer
 		if (packages.Count != 0){				
 			List<CellContent> griddata = new();
 			int rowitem = 0;
+			if (packages.Where(x => x.Selected).Count() != 0){
+				List<SimsPackage> selected = packages.Where(x => x.Selected).ToList();
+				foreach (SimsPackage p in selected){
+					packages[packages.IndexOf(p)].Selected = false;
+				}
+			}			
 			foreach (SimsPackage package in packages){
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}: {1}", rowitem, package.FileName));
 				int columnnumber = 0;
@@ -747,11 +941,12 @@ public partial class PackageDisplay : MarginContainer
 				rowitem++;
 			}
 			AllModsGrid.Data = griddata;
-			AllModsGrid.RowsFromData();			
+			AllModsGrid.RowsFromData();
 			_packages = packages;
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("_packages count: {0}, packages count: {1}.", _packages.Count, packages.Count));
 		}		
 		populatingpackages = false;
+		_HidePbar();
 	}
 
 	private void DownloadsDisplayPackages(){
@@ -1431,7 +1626,7 @@ public partial class PackageDisplay : MarginContainer
 	private void DLGetHeaders(){
 		if (DownloadedModsGrid.headersready){
 			DLHeaders = new();
-			HBoxContainer headerrow = DownloadedModsGrid.GetNode<HBoxContainer>("MarginContainer/GridContainer/VBoxContainer/DataGrid_HeaderRow/DataGrid_HeaderRow/Row");
+			HBoxContainer headerrow = DownloadedModsGrid.GetNode<HBoxContainer>("VBoxContainer/HBoxContainer/MarginContainer/GridContainer/VBoxContainer/DataGrid_HeaderRow/DataGrid_HeaderRow/Row");
 			foreach (DataGridHeaderCell cell in headerrow.GetChildren()){
 				DLHeaders.Add(cell);
 			}
@@ -1443,7 +1638,7 @@ public partial class PackageDisplay : MarginContainer
 	private void AMGetHeaders(){
 		if (AllModsGrid.headersready){
 			AMHeaders = new();
-			HBoxContainer headerrow = AllModsGrid.GetNode<HBoxContainer>("MarginContainer/GridContainer/VBoxContainer/DataGrid_HeaderRow/DataGrid_HeaderRow/Row");
+			HBoxContainer headerrow = AllModsGrid.GetNode<HBoxContainer>("VBoxContainer/HBoxContainer/MarginContainer/GridContainer/VBoxContainer/DataGrid_HeaderRow/DataGrid_HeaderRow/Row");
 			foreach (DataGridHeaderCell cell in headerrow.GetChildren()){
 				AMHeaders.Add(cell);
 			}
@@ -1680,20 +1875,19 @@ public partial class PackageDisplay : MarginContainer
 				GD.Print("Adding linked.");
 				break;
 			case 1:
-				//make root
+				RCM_FlipProperty("RootMod");
 				break;
 			case 2:
-				//fave
+				RCM_FlipProperty("Fave");
 				break;
 			case 3:
-				ToggleUpdated();
+				RCM_FlipProperty("OutOfDate");
 				break;
 			case 4:
 				//files from folder
 				break;
 			case 5: 
 				//rename
-				RemoveRightClickMenu();
 				RenameFiles();
 				break;
 			case 6: 
@@ -1711,13 +1905,136 @@ public partial class PackageDisplay : MarginContainer
 				DeleteFilesPressed();
 				break;
 			case 10:
-				//load as folder
+				RCM_FlipProperty("LoadAsFolder");
 				break;
 			case 11: 
-				//correct game
+				RCM_FlipProperty("WrongGame");
 				break;
 		}
+		RemoveRightClickMenu();
     }
+
+	private void RCM_FlipProperty(string property){
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Flipping property {0}.", property));
+		bool flip = false;	
+		Type t = typeof(SimsPackage);         
+    	PropertyInfo prop = t.GetProperty(property);
+		List<SimsPackage> selected = packages.Where(x => x.Selected == true).ToList();		
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("{0} packages selected.", selected.Count()));
+		if (selected.Count == 0){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Flipping last selected."));
+			packages[rcpackage].Fave = !packages[rcpackage].Fave;
+		} else {
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Multiple selected to flip!"));
+			int tr = selected.Where(x => (bool)prop.GetValue(x) == true).Count();
+			int fls = selected.Where(x => (bool)prop.GetValue(x) == false).Count();
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("{0} trues and {1} falses for property {2}", tr, fls, property));
+			if (tr > fls){
+				flip = false;
+			} else if (tr < fls){
+				flip = true;
+			} else if (tr == fls){
+				flip = false;
+			}
+			foreach (SimsPackage package in selected){
+				packages[packages.IndexOf(package)].FlipBool(property, flip);
+			}
+		}
+	}
+
+	
+	private void MakeFave(){
+		bool Fave = false;
+		if (packages.Where(x => x.Selected == true).Count() == 0){
+			packages[rcpackage].Fave = !packages[rcpackage].Fave;
+		} else {
+			List<SimsPackage> selected = packages.Where(x => x.Selected == true).ToList();
+			List<SimsPackage> selectedFave = selected.Where(x => x.Fave).ToList();
+			if (selectedFave.Count() != selected.Count()){
+				if (selectedFave.Count > selected.Count()){
+					Fave = !selectedFave[0].Fave;
+				} else {
+					Fave = selectedFave[0].Fave;
+				}
+			} else {
+				Fave = !selectedFave[0].Fave;
+			}
+			foreach (SimsPackage package in selected){
+				packages[packages.IndexOf(package)].Fave = Fave;
+			}
+		}
+		PackagesChanged.Invoke();
+	}
+
+	
+	private void MakeLoadAsFolder(){
+		bool laf = false;
+		if (packages.Where(x => x.Selected == true).Count() == 0){
+			packages[rcpackage].LoadAsFolder = !packages[rcpackage].LoadAsFolder;
+		} else {
+			List<SimsPackage> selected = packages.Where(x => x.Selected == true).ToList();
+			List<SimsPackage> selectedlaf = selected.Where(x => x.LoadAsFolder).ToList();
+			if (selectedlaf.Count() != selected.Count()){
+				if (selectedlaf.Count > selected.Count()){
+					laf = !selectedlaf[0].LoadAsFolder;
+				} else {
+					laf = selectedlaf[0].LoadAsFolder;
+				}
+			} else {
+				laf = !selectedlaf[0].LoadAsFolder;
+			}
+			foreach (SimsPackage package in selected){
+				packages[packages.IndexOf(package)].LoadAsFolder = laf;
+			}
+		}
+		PackagesChanged.Invoke();
+	}
+
+	private void MakeRoot(){
+		bool root = false;
+		if (packages.Where(x => x.Selected == true).Count() == 0){
+			packages[rcpackage].RootMod = !packages[rcpackage].RootMod;
+		} else {
+			List<SimsPackage> selected = packages.Where(x => x.Selected == true).ToList();
+			List<SimsPackage> selectedroot = selected.Where(x => x.RootMod).ToList();
+			if (selectedroot.Count() != selected.Count()){
+				if (selectedroot.Count > selected.Count()){
+					root = !selectedroot[0].RootMod;
+				} else {
+					root = selectedroot[0].RootMod;
+				}
+			} else {
+				root = !selectedroot[0].RootMod;
+			}
+			foreach (SimsPackage package in selected){
+				packages[packages.IndexOf(package)].RootMod = root;
+			}			
+		}
+		PackagesChanged.Invoke();
+	}
+	
+	private void MakeCorrectGame(){
+		bool CorrectGame = false;
+		if (packages.Where(x => x.Selected == true).Count() == 0){
+			packages[rcpackage].WrongGame = !packages[rcpackage].WrongGame;
+		} else {
+			List<SimsPackage> selected = packages.Where(x => x.Selected == true).ToList();
+			List<SimsPackage> selectedCorrectGame = selected.Where(x => x.WrongGame).ToList();
+			if (selectedCorrectGame.Count() != selected.Count()){
+				if (selectedCorrectGame.Count > selected.Count()){
+					CorrectGame = !selectedCorrectGame[0].WrongGame;
+				} else {
+					CorrectGame = selectedCorrectGame[0].WrongGame;
+				}
+			} else {
+				CorrectGame = !selectedCorrectGame[0].WrongGame;
+			}
+			foreach (SimsPackage package in selected){
+				packages[packages.IndexOf(package)].WrongGame = CorrectGame;
+			}
+			PackagesChanged.Invoke();
+		}
+	}
 
 	private void ToggleUpdated(){
 		bool ood = false;
@@ -1726,6 +2043,8 @@ public partial class PackageDisplay : MarginContainer
 		} else {
 			List<SimsPackage> selected = packages.Where(x => x.Selected == true).ToList();
 			List<SimsPackage> selectedood = selected.Where(x => x.OutOfDate).ToList();
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Toggling out of date change.\n --- Selected items: {0}\n --- Selected Items which are out of date: {1}", selected.Count, selectedood.Count));
+			
 			if (selectedood.Count() != selected.Count()){
 				if (selectedood.Count > selected.Count()){
 					ood = !selectedood[0].OutOfDate;
@@ -1738,6 +2057,7 @@ public partial class PackageDisplay : MarginContainer
 			foreach (SimsPackage package in selected){
 				packages[packages.IndexOf(package)].OutOfDate = ood;
 			}
+			PackagesChanged.Invoke();
 		}
 	}
 	
@@ -1844,6 +2164,12 @@ public partial class PackageDisplay : MarginContainer
 		rightclickcatcher.Visible = false;
 	}
 
+
+	//profile handlers
+
+	private void OnProfileChanged(){
+
+	}
 
 
 
@@ -1969,11 +2295,38 @@ public partial class PackageDisplay : MarginContainer
 	}
 
 	private void AddFilesButtonClicked(){
-
+		AddFilesDiag.Visible = true;
+	}
+	private void AddFilesSelected(string[] files){
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("{0} files selected to move.", files.Count()));
+		Parallel.ForEach (files, new ParallelOptions { MaxDegreeOfParallelism = paralellism }, file => {
+			FileInfo fileInfo = new(file);
+			string name = fileInfo.Name;
+			string newloc = Path.Combine(modsfolder, name);
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Moving {0} to {1}", file, newloc));
+			if (File.Exists(newloc)){
+				string move = Path.Combine(instancefolder, "Old Packages");
+				Directory.CreateDirectory(move);
+				move = Path.Combine(move, name);
+				File.Move(newloc, move);
+			}		
+			File.Move(file, newloc);	
+		});
+	}
+	private void AddFolderSelected(string dir){
+		DirectoryInfo directoryInfo = new(dir);
+		string newloc = Path.Combine(modsfolder, directoryInfo.Name);
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Moving {0} to {1}", dir, newloc));
+		if (File.Exists(newloc)){
+			string move = Path.Combine(instancefolder, "Old Packages");
+			move = Path.Combine(move, directoryInfo.Name);
+			File.Move(newloc, move);
+		}
+		Directory.Move(dir, newloc);
 	}
 
 	private void AddFolderButtonClicked(){
-
+		AddFolderDiag.Visible = true;
 	}
 	private void RefreshPackagesButtonClicked(){
 
@@ -1992,6 +2345,7 @@ public partial class PackageDisplay : MarginContainer
 
 	}
 	
+	
 
 	//game running handling
 
@@ -2001,17 +2355,22 @@ public partial class PackageDisplay : MarginContainer
 		if (Game == Games.Sims4) gamemodsfolder = sims4Instance.ModsFolder;
 		List<SimsPackage> enabled = packages.Where(x => x.Enabled).ToList();
 		foreach (SimsPackage package in enabled){
-			if (package.LinkedFiles.Any()){
-				foreach (string file in package.LinkedFiles){
-					VF_LinkFile(new FileInfo(file));
+			if (package.Folder && package.LoadAsFolder){
+				VFileSystem.MakeJunction(package.Location, gamemodsfolder);
+			} else
+			{
+				if (package.LinkedFiles.Any()){
+					foreach (string file in package.LinkedFiles){
+						VF_LinkFile(new FileInfo(file));
+					}
 				}
-			}
-			if (package.LinkedFolders.Any()){
-				foreach (SimsPackageSubfolder folder in package.LinkedFolders){
-					VF_ProcessFolder(package.LoadOrder, folder);
+				if (package.LinkedFolders.Any()){
+					foreach (SimsPackageSubfolder folder in package.LinkedFolders){
+						VF_ProcessFolder(package.LoadOrder, folder);
+					}
 				}
-			}
-			VF_ProcessPackage(package);			
+				VF_ProcessPackage(package);	
+			} 		
 		}
 	}
 

@@ -9,6 +9,7 @@ using SimsCCManager.UI.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -35,6 +36,7 @@ public partial class CustomDataGrid : MarginContainer
 
 	public delegate void DoneLoadingEvent();
 	public DoneLoadingEvent DoneLoading;
+	public DoneLoadingEvent GridReady;
 
 
 	public List<HeaderInformation> Headers = new();
@@ -47,7 +49,14 @@ public partial class CustomDataGrid : MarginContainer
 	VBoxContainer GridContainer;
 	DataGridHeaderRow HeaderRow;
 	public SortingOptions sortingRule = SortingOptions.NotSorted;
-	public List<DataGridRow> rows = new();
+	private List<DataGridRow> _rows;
+	public List<DataGridRow> rows {
+		get { return _rows; }
+		set { _rows = value; 
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows set. Count: {0}", value.Count));
+		CallDeferred(nameof(PopulateRows));}
+	}
+	List<DataGridRow> rowsholder = new();
 
 	Button ScrollUp; 
 	Button ScrollDown;
@@ -68,20 +77,22 @@ public partial class CustomDataGrid : MarginContainer
 	bool mouseingrid = false;
 	bool canscroll = true;
 	bool scrollbarheld = false;
+	bool onceloaded = false;
+	bool makingrows = false;
 	public bool headersready = false;
 	float rowheight = 0f;
 	public delegate void PropertyChangedEvent();
 	public event PropertyChangedEvent ScrollBarPositionChanged;
 	public event PropertyChangedEvent MousePositionChanged;
 	public event PropertyChangedEvent ScrollChanged;
-	private double _scrollbarposition;
+	/*private double _scrollbarposition;
 	public double ScrollBarPosition {
 		get {return _scrollbarposition; }
 		set {
 			_scrollbarposition = value;
 			ScrollBarPositionChanged.Invoke();
 		}
-	}
+	}*/
 
 	double ScrollBarTemp = 0;
 	private Vector2 _mouseposition;
@@ -98,6 +109,7 @@ public partial class CustomDataGrid : MarginContainer
 		get {return _scrollposition; }
 		set {
 			_scrollposition = value;
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scroll position: {0}.", value));
 			ScrollChanged.Invoke();
 		}
 	}
@@ -108,10 +120,16 @@ public partial class CustomDataGrid : MarginContainer
 
 	VBoxContainer HeaderRowContainer;
 	VBoxContainer RowsContainer;
+	Control SizeContainer;
 
 	double vScrollBarPosition;
 
 	List<int> VisibleRows = new();
+	HScrollBar hScrollBar;
+	HScrollBar GridHScroll;
+
+	double hscrollstep = 0;
+	List<Task> UpdateRows = new();
 
 
 	public override void _Ready()	
@@ -127,7 +145,7 @@ public partial class CustomDataGrid : MarginContainer
     {		
         if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scrollbar position has changed!"));
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scrollbar value: {0}", vScrollBar.Value));
-		ScrollBarPosition = vScrollBar.Value;
+		ScrollPosition = (int)Math.Ceiling(vScrollBar.Value);
     }
 
     private async Task WaitLoad(){
@@ -137,31 +155,42 @@ public partial class CustomDataGrid : MarginContainer
 	}
 
 	private void GetRowsScreen(){
-		panesize = GridContainer.Size.Y;
+		panesize = SizeContainer.Size.Y;
+		panesize -= 25;
 		rowsonscreen = (int)Math.Floor(panesize / 25);
 		rowheight = (float)Math.Ceiling(panesize / rowsonscreen);
 	}
 
 	private void ScreenSizeChanged(){
-		GetRowsScreen();
-		SetScrollBar();
-		Scroll();
+		if (onceloaded) {
+			GetRowsScreen();
+			SetScrollBar();
+			Scroll();
+		}
 	}
 
 	private void ContinueReady(){
-		GridContainer = GetNode<VBoxContainer>("MarginContainer/GridContainer/VBoxContainer/DataGrid_Rows");
-		panesize = GridContainer.Size.Y;
-		rowsonscreen = (int)Math.Floor(panesize / 25);
-		rowheight = (float)Math.Ceiling(panesize / rowsonscreen);
-		GridContainer.Resized += () => ScreenSizeChanged();
+		GridContainer = GetNode<VBoxContainer>("VBoxContainer/HBoxContainer/MarginContainer/GridContainer/VBoxContainer/DataGrid_Rows");
+		SizeContainer = GetNode<Control>("VBoxContainer/HBoxContainer/MarginContainer");
+		GetRowsScreen();
+		//panesize = SizeContainer.Size.Y;
+		//panesize -= 25;
+		//rowsonscreen = (int)Math.Floor(panesize / 25);
+		//rowheight = (float)Math.Ceiling(panesize  / rowsonscreen);
+		GetViewport().SizeChanged += () => ScreenSizeChanged();
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Data grid size: {0}.", panesize));
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Data grid will have {0} rows on screen and the window size is {1}.", rowsonscreen, panesize));
-		HeaderRowContainer = GetNode<VBoxContainer>("MarginContainer/GridContainer/VBoxContainer/DataGrid_HeaderRow");
-		RowsContainer = GetNode<VBoxContainer>("MarginContainer/GridContainer/VBoxContainer/DataGrid_Rows");
-		vScrollBar = GetNode<VScrollBar>("VScroller/VScrollBar");
+		HeaderRowContainer = GetNode<VBoxContainer>("VBoxContainer/HBoxContainer/MarginContainer/GridContainer/VBoxContainer/DataGrid_HeaderRow");
+		RowsContainer = GetNode<VBoxContainer>("VBoxContainer/HBoxContainer/MarginContainer/GridContainer/VBoxContainer/DataGrid_Rows");
+		vScrollBar = GetNode<VScrollBar>("VBoxContainer/HBoxContainer/VScroller/VScrollBar");
+		hScrollBar = GetNode<HScrollBar>("VBoxContainer/MarginContainer/HScroller/HScrollBar");
+		GridHScroll = GetNode<ScrollContainer>("VBoxContainer/HBoxContainer/MarginContainer/GridContainer").GetHScrollBar();
+		GetNode<Button>("VBoxContainer/MarginContainer/HScroller/ScrollLeft/ScrollLeft_Button").Pressed += () => HScroll(false);
+		GetNode<Button>("VBoxContainer/MarginContainer/HScroller/ScrollRight/ScrollRight_Button").Pressed += () => HScroll(true);
+		
 		vScrollBar.Scrolling += () => ScrollbarMoved();
 		vScrollBarPosition = vScrollBar.Value;
-		MainScrollContainer = GetNode<ScrollContainer>("MarginContainer/GridContainer");
+		MainScrollContainer = GetNode<ScrollContainer>("VBoxContainer/HBoxContainer/MarginContainer/GridContainer");
 		GetScrollBarStuff();
 		var headerrow = header.Instantiate() as DataGridHeaderRow;
 		foreach (HeaderInformation header in Headers){
@@ -185,11 +214,12 @@ public partial class CustomDataGrid : MarginContainer
 		HeaderRowContainer.MoveChild(headerrow, 0);
 		HeaderRow = headerrow;
 		headersready = true;
+		GridReady.Invoke();
 	}
 
 	private void GetScrollBarStuff(){
-		ScrollUp = GetNode<Button>("VScroller/ScrollUp/ScrollUp_Button");
-		ScrollDown = GetNode<Button>("VScroller/ScrollDown/ScrollDown_Button");
+		ScrollUp = GetNode<Button>("VBoxContainer/HBoxContainer/VScroller/ScrollUp/ScrollUp_Button");
+		ScrollDown = GetNode<Button>("VBoxContainer/HBoxContainer/VScroller/ScrollDown/ScrollDown_Button");
 		ScrollUp.Pressed += () => ScrollUpButtonClick();
 		ScrollDown.Pressed += () => ScrollDownButtonClick();
 	}
@@ -207,58 +237,76 @@ public partial class CustomDataGrid : MarginContainer
 	private void ChangeScroll(){
 		int prevstartindex = (int)vScrollBarPosition;
 		int prevendindex = prevstartindex + rowsonscreen;
-		int startindex = (int)ScrollBarPosition;
+		int startindex = ScrollPosition;
 		int endindex = startindex + rowsonscreen;
-		vScrollBarPosition = ScrollBarPosition;
+		vScrollBarPosition = ScrollPosition;
 		for (int i = prevstartindex; i < prevendindex; i++){
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting row {0} to hidden.", i));
+			//if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting row {0} to hidden.", i));
 			rows[i].Visible = false;
 		}
 		for (int i = startindex; i < endindex; i++){
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting row {0} to visible.", i));
+			//if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting row {0} to visible.", i));
 			rows[i].Visible = true;
 		}
+	}
+
+	private void HScroll(bool scrollright){
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("HScrollValue: {0}.", hScrollBar.Value));
+		//int v = (int)Math.Ceiling(hScrollBar.Value);
+		//if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("HScrollValue as int: {0}.", v));
+		if (scrollright){
+			hScrollBar.Value += hscrollstep;
+		} else {
+			hScrollBar.Value -= hscrollstep;
+		}
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("HScrollValue now: {0}.", hScrollBar.Value));
+		Math.Clamp(hScrollBar.Value, hScrollBar.MinValue, hScrollBar.MaxValue);
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("HScrollValue clamped: {0}.", hScrollBar.Value));
+		
 	}
     
     private void ScrollUpButtonClick(){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scroll up clicked."));
-		vScrollBar.Value -= vScrollBar.Step;
+		//vScrollBar.Value--;
 		ScrollUpClick();
 	}
 	private void ScrollDownButtonClick(){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scroll down clicked."));
-		vScrollBar.Value += vScrollBar.Step;
+		//vScrollBar.Value++;
 		ScrollDownClick();
 	}
 
-	private void ScrollUpClick(int scrollby = 1){
+	private void ScrollUpClick(){
 		if (ScrollPosition != 0){			
-			ScrollPosition -= scrollby;
+			vScrollBar.Value--;
+			ScrollPosition--;
 		} 
 		//canscroll = true;	
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scroll position: {0}.", ScrollPosition));	
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Visible rows: {0}.", rows.Where(x => x.Visible).Count()));
 	}
 
-	private void ScrollDownClick(int scrollby = 1){
+	private void ScrollDownClick(){
 		if (ScrollPosition != MaxScroll){
-			ScrollPosition += scrollby;
+			int idx = rows.IndexOf(rows.Where(x => x.Visible).Last());
+			if (idx < rows.Count){
+				vScrollBar.Value++;
+				ScrollPosition++;
+			}
 		}
 		//canscroll = true;
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scroll position: {0}.", ScrollPosition));
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Visible rows: {0}.", rows.Where(x => x.Visible).Count()));
 	}
 
-	private void Scroll(){
-		//if (canscroll){		
+	private void Scroll(){		
 		foreach (DataGridRow row in rows.Where(x => x.Visible).ToList()){
 			rows[rows.IndexOf(row)].Visible = false;
 		}
 		for (int i = ScrollPosition; i < (ScrollPosition + rowsonscreen); i++){
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting row {0} to visible.", i));
+			//if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting row {0} to visible.", i));
 			rows[i].Visible = true;
 		}
-		//}		
 	}
 
 	private void SetScrollBar(){
@@ -275,8 +323,7 @@ public partial class CustomDataGrid : MarginContainer
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scrollbar Max Value: {0}", MaxScroll));
 			vScrollBar.MaxValue = MaxScroll;
 			vScrollBar.MinValue = 0;
-			vScrollBar.Page = 0;
-			vScrollBar.Value = 0;
+			vScrollBar.Page = 0.1;
 		}
 	}
 
@@ -309,9 +356,18 @@ public partial class CustomDataGrid : MarginContainer
 	}
 
     public void RowsFromData(){
+		Task t = new Task(() => {
+			if (onceloaded) ClearChildren();
+			MakeRows();
+		});
+		UpdateRows.Add(t);		
+	}
+
+	private void MakeRows(){
+		makingrows = true;
+		rowsholder.Clear();
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting rows from data!"));
 		if (Data.Count != 0){
-			CallDeferred(nameof(ClearChildren));
 			DataGridRow dataGridRow = row.Instantiate() as DataGridRow;			
 			Color ColorA = LoadedSettings.SetSettings.LoadedTheme.DataGridA;
 			Color ColorB = LoadedSettings.SetSettings.LoadedTheme.DataGridB;
@@ -321,7 +377,8 @@ public partial class CustomDataGrid : MarginContainer
 			foreach (CellContent item in Data){					
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}, column {1}: {2} as cell item.", item.RowNum, item.ColumnNum, item.Content));
 				if (currentrow != item.RowNum){
-					if (currentrow != -1) rows.Add(dataGridRow);
+					if (currentrow != -1) rowsholder.Add(dataGridRow);
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows count: {0}", rowsholder.Count));		
 					dataGridRow = row.Instantiate() as DataGridRow;	
 					dataGridRow.MouseAffected += (inside, idx) => MouseAffectingRow(inside, idx);
 					dataGridRow.ItemSelected += (ident, idx) => ItemSelected(ident, idx);
@@ -345,44 +402,57 @@ public partial class CustomDataGrid : MarginContainer
 				dataGridRow.AddCell(item, ColumnSizes[item.ColumnNum]);	
 			}
 			//dataGridRow.MouseAffected += (inside, idx) => MouseAffectingRow(inside, idx);			
-			rows.Add(dataGridRow);			
-			CallDeferred(nameof(PopulateRows));			
-			CallDeferred(nameof(SetScrollBar));	
+			dataGridRow.Visible = false;
+			rowsholder.Add(dataGridRow);	
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows count: {0}", rowsholder.Count));		
+			
 		} else {
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Oops! No data."));
 		}
+		rows = rowsholder;
+		//CallDeferred(nameof(PopulateRows));		
 	}
 
-	private void PopulateRows(){
+	private void PopulateRows(){		
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows to populate: {0}", rows.Count));
+		SetScrollBar();	
 		for (int i = 0; i < rows.Count; i++){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}", i));
+			if (i >= ScrollPosition && i < ScrollPosition + rowsonscreen){
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("{0} should be visible. Making it so, number one!", i));
+				rows[i].Visible = true;
+			}
 			GridContainer.AddChild(rows[i]);			
 		}
-		bool scroller = false;
-		for (int i = 0; i < rows.Count; i++){
-			if (i == ScrollPosition){
-				scroller = true;
-			} else if (i == ScrollPosition + rowsonscreen){
-				scroller = false;
-			}
-			if (scroller){
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Making row {0} visible.", i));
-				rows[i].Visible = true;
-			} else {
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Making row {0} hidden.", i));
-				rows[i].Visible = false;
-			}
-		}
-		
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Grid container children: {0}", GridContainer.GetChildCount()));
 		for (int i = 0; i < ColumnSizes.Count; i++){
 			HeaderResized(i);
 		}
+		onceloaded = true;
+		makingrows = false;	
 	}
 
     public override void _Process(double delta)
     {
         //if (HeaderScroll != null) HeaderScroll.ScrollHorizontal = RowsScroll.ScrollHorizontal;
 		//if (scrollbarheld) MousePosition = GetLocalMousePosition();
+
+		if (headersready) {	
+			hScrollBar.MaxValue = GridHScroll.MaxValue;
+			hScrollBar.Step = GridHScroll.Step;
+			hScrollBar.MinValue = GridHScroll.MinValue;
+			hScrollBar.Page = GridHScroll.Page;
+			GridHScroll.Value = hScrollBar.Value;
+			hscrollstep = hScrollBar.MaxValue / Headers.Count;		
+		}
+
+		if (UpdateRows.Count != 0){
+			if (!makingrows){
+				UpdateRows[0].Start();
+				UpdateRows.RemoveAt(0);
+			}
+		}
+	
 		
 		//if (headersready) sby = ScrollBar.GlobalPosition.Y;
 		/*new Thread( () => {

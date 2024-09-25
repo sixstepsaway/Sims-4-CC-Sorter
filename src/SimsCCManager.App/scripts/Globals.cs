@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Godot;
@@ -34,6 +35,9 @@ namespace SimsCCManager.Globals
         public static string SettingsFile = Path.Combine(AppFolder, "Settings.ini");
         public static string tempfolder = Path.Combine(AppFolder, "temp");
         public static string logfolder = Path.Combine(AppFolder, "logs");
+
+        public static Instance CurrentInstance = new();
+        public static GameInstanceBase thisinstance;
         public static List<string> SimsFileExtensions = new(){
             ".package",
             ".sims3pack",
@@ -357,6 +361,53 @@ namespace SimsCCManager.Globals
     }
 
     public class Utilities {
+        public static string GetGameVersion(Games game, string folder){
+            string ver = "";
+            if (game == Games.Sims2) ver = GetSims2Version(folder);
+            if (game == Games.Sims3) ver = GetSims3Version(folder);
+            if (game == Games.Sims4) ver = GetSims4Version(folder);
+            if (ver != "") {
+                ver = Regex.Replace(ver, @"[\p{C}-[\t\r\n]]+", "");
+            } 
+            
+            return ver;
+        }
+        public static string GetSims4Version(string docfolder){
+            string version = "";
+            string versionfile = Path.Combine(docfolder, "GameVersion.txt");
+            if (File.Exists(versionfile)){
+                using (FileStream fileStream = new(versionfile, FileMode.Open, System.IO.FileAccess.Read)){
+                    using (StreamReader streamReader = new(versionfile)){
+                        version = streamReader.ReadLine();
+                        streamReader.Close();
+                    }
+                    fileStream.Close();
+                }
+            }
+            return version;
+        }
+        public static string GetSims3Version(string docfolder){
+            string version = "";
+            string versionfile = Path.Combine(docfolder, "Version.tag");
+            if (File.Exists(versionfile)){
+                using (FileStream fileStream = new(versionfile, FileMode.Open, System.IO.FileAccess.Read)){
+                    using (StreamReader streamReader = new(versionfile)){
+                        if (streamReader.ReadLine() == "[Version]") {
+                            version = streamReader.ReadLine();
+                            version = version.Replace("LatestBase = ", "");
+                        };                        
+                        streamReader.Close();
+                    }
+                    fileStream.Close();
+                }
+            }
+            return version;
+        }
+
+        public static string GetSims2Version(string docfolder){
+            return "LatestVersion";
+        }
+
 
 
         public static Sims2Instance LoadS2Instance(string xmlfile){

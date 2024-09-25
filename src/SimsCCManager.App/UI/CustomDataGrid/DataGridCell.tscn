@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://8ehokx0ve045"]
+[gd_scene load_steps=24 format=3 uid="uid://8ehokx0ve045"]
 
 [ext_resource type="Texture2D" uid="uid://yuufcdn3ljue" path="res://assets/icons/materialicons/twotone_radio_button_unchecked_black_48dp.png" id="1_lchwg"]
 [ext_resource type="Script" path="res://UI/CustomDataGrid/DataGridCell.cs" id="1_pa2uk"]
@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://c87s64opm801o" path="res://assets/icons/materialicons/twotone_access_alarms_black_48dp.png" id="6_tak6g"]
 [ext_resource type="Texture2D" uid="uid://c8mq228vanu3y" path="res://assets/icons/materialicons/twotone_error_black_48dp.png" id="7_x577i"]
 [ext_resource type="Texture2D" uid="uid://bp0j34pwjatb4" path="res://assets/icons/materialicons/twotone_help_black_48dp.png" id="8_t0202"]
+[ext_resource type="Texture2D" uid="uid://ba371ji5ta626" path="res://assets/icons/materialicons/twotone_timer_off_black_48dp.png" id="9_gj1p1"]
 [ext_resource type="Texture2D" uid="uid://r7qsrf3ixrvw" path="res://assets/icons/materialicons/twotone_info_black_48dp.png" id="9_ob840"]
 [ext_resource type="Texture2D" uid="uid://dtsgde3k1mw2f" path="res://assets/icons/materialicons/twotone_extension_off_black_48dp.png" id="10_avlkr"]
 [ext_resource type="Texture2D" uid="uid://dcv4ywu85velm" path="res://assets/icons/materialicons/twotone_cancel_black_48dp.png" id="10_dvf6p"]
@@ -220,6 +221,26 @@ texture = ExtResource("7_x577i")
 expand_mode = 2
 
 [node name="ColorRect" type="ColorRect" parent="IconsOption/Icons/Conflicts"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+color = Color(0.12549, 0.184314, 0.207843, 1)
+
+[node name="OutOfDate" type="TextureRect" parent="IconsOption/Icons"]
+visible = false
+clip_children = 1
+custom_minimum_size = Vector2(15, 15)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("9_gj1p1")
+expand_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="IconsOption/Icons/OutOfDate"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

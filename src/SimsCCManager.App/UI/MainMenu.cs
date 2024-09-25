@@ -12,8 +12,8 @@ public partial class MainMenu : MarginContainer
 	PackedScene settingswindow = GD.Load<PackedScene>("res://UI/MainMenu_Elements/main_settings.tscn");
 	MarginContainer NewInstanceMenu;
 	MarginContainer MainMenuContainer;
-	[Signal]
-	public delegate void MainMenuStartInstanceEventHandler();
+	public delegate void MainMenuStartInstanceEvent(Guid instance);
+	public MainMenuStartInstanceEvent MainMenuStartInstance;
 	// Called when the node enters the scene tree for the first time.
 	PackedScene newinstancemenu = GD.Load<PackedScene>("res://UI/MainMenu_Elements/new_instance.tscn");
 	PackedScene loadinstancemenu = GD.Load<PackedScene>("res://UI/MainMenu_Elements/load_instance.tscn");
@@ -34,23 +34,28 @@ public partial class MainMenu : MarginContainer
 	}
 	
 	private void _on_mm_button_new_instance_button_clicked(){
-		var newinstance = newinstancemenu.Instantiate();
-		newinstance.Connect("tree_exited", Callable.From(CancelledInstance));
-		newinstance.Connect("NewInstanceStartPackageManager", new Callable(this, "LoadInstance"));
+		var newinstance = newinstancemenu.Instantiate() as NewInstance;
+		//newinstance.Connect("tree_exited", Callable.From(CancelledInstance));
+		newinstance.TreeExited += () => CancelledInstance();
+
+		//newinstance.Connect("NewInstanceStartPackageManager", new Callable(this, "LoadInstance"));
+		newinstance.NewInstanceStart += (instance) => LoadInstance(instance);
 		MainMenuContainer.Visible = false;		
 		AddChild(newinstance);
 	}
 	private void _on_mm_button_load_instance_button_clicked(){
 		MainMenuContainer.Visible = false;
-		var loadinstance = loadinstancemenu.Instantiate();
-		loadinstance.Connect("tree_exited", Callable.From(CancelledInstance));
-		loadinstance.Connect("LoadInstanceStartPackageManager", new Callable(this, "LoadInstance"));
+		var loadinstance = loadinstancemenu.Instantiate() as LoadInstance;
+		loadinstance.TreeExited += () => CancelledInstance();
+		loadinstance.LoadInstanceStartPackageManager += (instance) => LoadInstance(instance);
+		//loadinstance.Connect("tree_exited", Callable.From(CancelledInstance));
+		//loadinstance.Connect("LoadInstanceStartPackageManager", new Callable(this, "LoadInstance"));
 		AddChild(loadinstance);
 	}
 
-	private void LoadInstance(string instance){
+	private void LoadInstance(Guid instance){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Heard the signal to load instance on Main Menu!"));
-		EmitSignal("MainMenuStartInstance", instance);
+		MainMenuStartInstance.Invoke(instance);
 	}
 	private void _on_mm_button_settings_button_clicked(){
 		var swindow = settingswindow.Instantiate();

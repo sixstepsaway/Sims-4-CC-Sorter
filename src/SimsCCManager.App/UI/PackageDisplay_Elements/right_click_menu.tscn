@@ -1,8 +1,7 @@
-[gd_scene load_steps=12 format=3 uid="uid://bow5a0csv78x4"]
+[gd_scene load_steps=11 format=3 uid="uid://bow5a0csv78x4"]
 
 [ext_resource type="FontFile" uid="uid://2m7ci2r6uwu2" path="res://assets/fonts/Anek_Gurmukhi/AnekGurmukhi-VariableFont_wdth,wght.ttf" id="1_3i2qg"]
 [ext_resource type="Script" path="res://UI/PackageDisplay_Elements/RightClickMenu.cs" id="1_8wbcu"]
-[ext_resource type="PackedScene" uid="uid://b6nokbd163hyy" path="res://UI/Elements/CustomSquareCheckbox.tscn" id="3_jknsc"]
 
 [sub_resource type="Theme" id="Theme_5c6e1"]
 Label/colors/font_color = Color(0.099986, 0.099986, 0.099986, 1)
@@ -42,7 +41,18 @@ layout_mode = 0
 offset_right = 130.0
 offset_bottom = 227.0
 
-[node name="ColorRect" type="ColorRect" parent="MarginContainer" groups=["PlainBG"]]
+[node name="ColorRect2" type="ColorRect" parent="MarginContainer" groups=["AccentColorBox"]]
+layout_mode = 2
+color = Color(0.716296, 0.716296, 0.716296, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 1
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 1
+theme_override_constants/margin_bottom = 1
+
+[node name="ColorRect" type="ColorRect" parent="MarginContainer/MarginContainer" groups=["PlainBG"]]
 layout_mode = 2
 color = Color(0.277528, 0.277528, 0.277528, 1)
 
@@ -56,7 +66,7 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="AddLinked_Label" type="Label" parent="MarginContainer/VBoxContainer/Linked" groups=["Labels", "RCM_Labels"]]
+[node name="AddLinked_Label" type="Label" parent="MarginContainer/VBoxContainer/Linked" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -87,10 +97,7 @@ theme_override_constants/margin_bottom = 2
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/MakeRoot"]
 layout_mode = 2
 
-[node name="CheckBox" parent="MarginContainer/VBoxContainer/MakeRoot/HBoxContainer" instance=ExtResource("3_jknsc")]
-layout_mode = 2
-
-[node name="MakeRoot_Label" type="Label" parent="MarginContainer/VBoxContainer/MakeRoot/HBoxContainer" groups=["Labels", "RCM_Labels"]]
+[node name="MakeRoot_Label" type="Label" parent="MarginContainer/VBoxContainer/MakeRoot/HBoxContainer" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -121,10 +128,7 @@ theme_override_constants/margin_bottom = 2
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/LoadasFolder"]
 layout_mode = 2
 
-[node name="CheckBox" parent="MarginContainer/VBoxContainer/LoadasFolder/HBoxContainer" instance=ExtResource("3_jknsc")]
-layout_mode = 2
-
-[node name="LoadasFolder_Label" type="Label" parent="MarginContainer/VBoxContainer/LoadasFolder/HBoxContainer" groups=["Labels", "RCM_Labels"]]
+[node name="LoadasFolder_Label" type="Label" parent="MarginContainer/VBoxContainer/LoadasFolder/HBoxContainer" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -155,10 +159,7 @@ theme_override_constants/margin_bottom = 2
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/MakeFave"]
 layout_mode = 2
 
-[node name="CheckBox" parent="MarginContainer/VBoxContainer/MakeFave/HBoxContainer" instance=ExtResource("3_jknsc")]
-layout_mode = 2
-
-[node name="MakeFave_Label" type="Label" parent="MarginContainer/VBoxContainer/MakeFave/HBoxContainer" groups=["Labels", "RCM_Labels"]]
+[node name="MakeFave_Label" type="Label" parent="MarginContainer/VBoxContainer/MakeFave/HBoxContainer" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -186,11 +187,11 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="MarkAsCorrectGame_Label" type="Label" parent="MarginContainer/VBoxContainer/MarkAsCorrectGame" groups=["Labels", "RCM_Labels"]]
+[node name="MarkAsCorrectGame_Label" type="Label" parent="MarginContainer/VBoxContainer/MarkAsCorrectGame" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
-text = "Correct Game"
+text = "Toggle Wrong Game"
 vertical_alignment = 1
 
 [node name="MarkAsCorrectGame_Button" type="Button" parent="MarginContainer/VBoxContainer/MarkAsCorrectGame"]
@@ -214,7 +215,7 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="MarkAsUpdated_Label" type="Label" parent="MarginContainer/VBoxContainer/MarkAsUpdated" groups=["Labels", "RCM_Labels"]]
+[node name="MarkAsUpdated_Label" type="Label" parent="MarginContainer/VBoxContainer/MarkAsUpdated" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -242,7 +243,7 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="EditDetails_Label" type="Label" parent="MarginContainer/VBoxContainer/EditDetails" groups=["Labels", "RCM_Labels"]]
+[node name="EditDetails_Label" type="Label" parent="MarginContainer/VBoxContainer/EditDetails" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -271,7 +272,7 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="FilesFromFolder_Label" type="Label" parent="MarginContainer/VBoxContainer/FilesFromFolder" groups=["Labels", "RCM_Labels"]]
+[node name="FilesFromFolder_Label" type="Label" parent="MarginContainer/VBoxContainer/FilesFromFolder" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -299,7 +300,7 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="Category_Label" type="Label" parent="MarginContainer/VBoxContainer/Category" groups=["Labels", "RCM_Labels"]]
+[node name="Category_Label" type="Label" parent="MarginContainer/VBoxContainer/Category" groups=["Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -328,7 +329,18 @@ offset_top = 130.0
 offset_right = 130.0
 offset_bottom = 230.0
 
-[node name="ColorRect" type="ColorRect" parent="CategoryOptions" groups=["PlainBG"]]
+[node name="ColorRect2" type="ColorRect" parent="CategoryOptions" groups=["AccentColorBox"]]
+layout_mode = 2
+color = Color(0.716296, 0.716296, 0.716296, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="CategoryOptions"]
+layout_mode = 2
+theme_override_constants/margin_left = 1
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 1
+theme_override_constants/margin_bottom = 1
+
+[node name="ColorRect" type="ColorRect" parent="CategoryOptions/MarginContainer" groups=["PlainBG"]]
 layout_mode = 2
 color = Color(0.277528, 0.277528, 0.277528, 1)
 
@@ -343,7 +355,18 @@ offset_top = 128.0
 offset_right = 140.0
 offset_bottom = 289.0
 
-[node name="ColorRect" type="ColorRect" parent="EditDetails_Options" groups=["PlainBG"]]
+[node name="ColorRect2" type="ColorRect" parent="EditDetails_Options" groups=["AccentColorBox"]]
+layout_mode = 2
+color = Color(0.716296, 0.716296, 0.716296, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="EditDetails_Options"]
+layout_mode = 2
+theme_override_constants/margin_left = 1
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 1
+theme_override_constants/margin_bottom = 1
+
+[node name="ColorRect" type="ColorRect" parent="EditDetails_Options/MarginContainer" groups=["PlainBG"]]
 layout_mode = 2
 color = Color(0.277528, 0.277528, 0.277528, 1)
 
@@ -357,7 +380,7 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="RenameFile_Label" type="Label" parent="EditDetails_Options/VBoxContainer/Rename" groups=["Labels", "RCM_Labels"]]
+[node name="RenameFile_Label" type="Label" parent="EditDetails_Options/VBoxContainer/Rename" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -385,7 +408,7 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="AddCreator_Label" type="Label" parent="EditDetails_Options/VBoxContainer/AddCreator" groups=["Labels", "RCM_Labels"]]
+[node name="AddCreator_Label" type="Label" parent="EditDetails_Options/VBoxContainer/AddCreator" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -413,7 +436,7 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="AddSourceLink_Label" type="Label" parent="EditDetails_Options/VBoxContainer/AddSourceLink" groups=["Labels", "RCM_Labels"]]
+[node name="AddSourceLink_Label" type="Label" parent="EditDetails_Options/VBoxContainer/AddSourceLink" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -441,7 +464,7 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="MoveFile_Label" type="Label" parent="EditDetails_Options/VBoxContainer/MoveFile" groups=["Labels", "RCM_Labels"]]
+[node name="MoveFile_Label" type="Label" parent="EditDetails_Options/VBoxContainer/MoveFile" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")
@@ -469,7 +492,7 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="DeleteFile_Label" type="Label" parent="EditDetails_Options/VBoxContainer/Delete" groups=["Labels", "RCM_Labels"]]
+[node name="DeleteFile_Label" type="Label" parent="EditDetails_Options/VBoxContainer/Delete" groups=["RCM_Labels"]]
 layout_mode = 2
 theme = SubResource("Theme_5c6e1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_xoeka")

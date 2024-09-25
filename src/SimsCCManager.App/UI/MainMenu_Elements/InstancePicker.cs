@@ -10,9 +10,8 @@ public partial class InstancePicker : MarginContainer
 	public string instancename = "";
 
 	public Games game = Games.Null;
-
-	[Signal]
-	public delegate void PickedInstanceEventHandler();
+	public delegate void PickedInstanceEvent(string instance);
+	public PickedInstanceEvent PickedInstance;
 	public string instanceidentifier = "";
 	bool picked = false;
 	
@@ -36,11 +35,11 @@ public partial class InstancePicker : MarginContainer
 	private void _on_button_pressed(){
 		if (picked){
 			picked = !picked;
-			EmitSignal("PickedInstance", "");
+			PickedInstance.Invoke("");
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Picked Game: {0}", "Unpicked"));
 		} else {
 			picked = !picked;
-			EmitSignal("PickedInstance", instanceidentifier);
+			PickedInstance.Invoke(instanceidentifier);
 		}
 		int mypos = GetIndex();
 		for (int i = 0; i < GetParent().GetChildCount(); i++){

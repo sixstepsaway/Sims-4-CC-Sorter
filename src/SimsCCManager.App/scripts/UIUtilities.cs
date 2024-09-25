@@ -108,7 +108,9 @@ namespace SimsCCManager.UI.Utilities
             }
             List<Node> rcm_labels = tree.GetNodesInGroup("RCM_Labels").ToList();
             foreach (Label label in rcm_labels ){
-                label.AddThemeFontSizeOverride("font_size", 12);
+                label.AddThemeFontSizeOverride("font_size", 14);
+                Color font = GetFGColor(theme.BackgroundColor);
+                label.AddThemeColorOverride("font_color", font);
             }
 
 

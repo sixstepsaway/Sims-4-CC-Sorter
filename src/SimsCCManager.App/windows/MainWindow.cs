@@ -6,6 +6,7 @@ using SimsCCManager.UI.Themes;
 using SimsCCManager.UI.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 
@@ -19,6 +20,10 @@ public partial class MainWindow : MarginContainer
 	Node splashinsance;
 	MarginContainer footerpbar;
 	ProgressBar footerpbarbar;
+	Guid currentinstance = Guid.Empty;
+	MainMenu mainmenu; 
+	PackageDisplay packageDisplay;
+	LoadingInstance loadingscreen;
 
 	bool loadingPD = false;
 	public override void _Ready()
@@ -55,7 +60,7 @@ public partial class MainWindow : MarginContainer
 			AddChild(pd);
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Moving package manager."));
 			MoveChild(pd, 0);*/
-			StartInstance(LoadedSettings.SetSettings.Instances.Where(x => x.InstanceLocation == LoadedSettings.SetSettings.LastInstanceLoaded).First().Identifier.ToString());
+			StartInstance(LoadedSettings.SetSettings.Instances.Where(x => x.InstanceLocation == LoadedSettings.SetSettings.LastInstanceLoaded).First().Identifier);
 		} else {
 			ShowMainMenu();
 		}
@@ -73,53 +78,76 @@ public partial class MainWindow : MarginContainer
 
 	public void ShowMainMenu(){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instantiating main menu."));
-		var mm = MainMenu.Instantiate();
-		mm.Connect("MainMenuStartInstance", new Callable(this, "StartInstance"));
+		mainmenu = MainMenu.Instantiate() as MainMenu;
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		mainmenu.MainMenuStartInstance += (instance) => StartInstance(instance);
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		//mainmenu.Connect("MainMenuStartInstance", new Callable(this, "StartInstance"));
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding main menu."));
-		AddChild(mm);
+		AddChild(mainmenu);
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Moving main menu."));
-		MoveChild(mm, 0);
+		MoveChild(mainmenu, 0);
 	}
 
-	private void StartInstance(string instance){
+	private void StartInstance(Guid instance){
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Heard the signal to load instance on the main window!"));
-		LoadingInstance ls = LoadingScreen.Instantiate() as LoadingInstance;
-		ls.message = "Loading instance. Please wait.";		
-		GetChild(0).QueueFree();
-		AddChild(ls);
-		MoveChild(ls, 0);
-		var pd = PackageDisplay.Instantiate() as PackageDisplay;
-		pd.SetPbarMax += (value) => SetPbarMax(value);
+		loadingscreen = LoadingScreen.Instantiate() as LoadingInstance;
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		loadingscreen.ReadyLoad += () => ReadyLoad();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		loadingscreen.message = "Loading instance. Please wait.";		
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		mainmenu.QueueFree();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		AddChild(loadingscreen);
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		MoveChild(loadingscreen, 0);
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		currentinstance = instance;		
+	}
+
+	private void ReadyLoad(){
+		packageDisplay = PackageDisplay.Instantiate() as PackageDisplay;
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		packageDisplay.SetPbarMax += (value) => SetPbarMax(value);
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
 		//pd.Connect("SetPbarMax", new Callable(this, "SetPbarMax"));
-		pd.IncrementPbar += () => IncrementPbar();
+		packageDisplay.IncrementPbar += () => IncrementPbar();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
 		//pd.Connect("IncrementPbar", Callable.From(IncrementPbar));
-		pd.ResetPbarValue += () => ResetPbarValue();
+		packageDisplay.ResetPbarValue += () => ResetPbarValue();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
 		//pd.Connect("ResetPbarValue", Callable.From(ResetPbarValue));
 
-		pd.DoneLoading += () => PDDoneLoading();
-		pd.ShowPbar += () => ShowPbar();
-		pd.HidePbar += () => HidePbar();
+		packageDisplay.DoneLoading += () => PDDoneLoading();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		packageDisplay.ShowPbar += () => ShowPbar();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		packageDisplay.HidePbar += () => HidePbar();
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
 
 		//pd.Connect("ShowPbar", Callable.From(ShowPbar));
 		//pd.Connect("HidePbar", Callable.From(HidePbar));
-		pd.ThisInstance = LoadedSettings.SetSettings.Instances.Where(x => x.Identifier == Guid.Parse(instance)).First();	
+		packageDisplay.ThisInstance = LoadedSettings.SetSettings.Instances.Where(x => x.Identifier == currentinstance).First();	
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
 		LoadedSettings.SetSettings.InstanceLoaded = true;
-		LoadedSettings.SetSettings.CurrentInstance = pd.ThisInstance;
-		LoadedSettings.SetSettings.LastInstanceLoaded = pd.ThisInstance.InstanceLocation;
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding package manager."));
-		AddChild(pd);		
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		LoadedSettings.SetSettings.CurrentInstance = packageDisplay.ThisInstance;
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Debug line ;~;"));
+		LoadedSettings.SetSettings.LastInstanceLoaded = packageDisplay.ThisInstance.InstanceLocation;
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding package manager."));		
+		AddChild(packageDisplay);		
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Moving package manager."));
-		MoveChild(pd, 0);	
-		loadingPD = true;	
+		MoveChild(packageDisplay, 0);	
+		loadingPD = true;
 		UIUtilities.UpdateTheme(GetTree());
 	}
 
     private void PDDoneLoading()
     {
-        var loading = GetNodeOrNull<LoadingInstance>("LoadingInstance");
-		if (loading != null) loading.QueueFree();
-		//GetNode<PackageDisplay>("PackageDisplay").Visible = true;
-		UIUtilities.UpdateTheme(GetTree());
+        UIUtilities.UpdateTheme(GetTree());
+		loadingscreen.QueueFree();
     }
 
     private void _on_twitter_socials_button_clicked(){
@@ -144,19 +172,37 @@ public partial class MainWindow : MarginContainer
 	
 
 	public void ShowPbar(){
+		CallDeferred(nameof(_Showpbar));
+	}
+	private void _Showpbar(){
 		footerpbar.Visible = true;
 	}
 	public void HidePbar(){
+		CallDeferred(nameof(ShowPbar));
+	}
+	private void _HidePbar(){
 		footerpbar.Visible = false;
 	}
 
 	private void SetPbarMax(int max){
+		CallDeferred(nameof(SetPbarMax), max);
+	}
+
+	private void _SetPbarMax(int max){
 		footerpbarbar.MaxValue = max;
 	}
+
 	private void IncrementPbar(){
+		CallDeferred(nameof(_IncrementPbar));
+	}
+
+	private void _IncrementPbar(){
 		footerpbarbar.Value++;
 	}
-	private void ResetPbarValue(){
+	private void _ResetPbarValue(){
 		footerpbarbar.Value = 0;
+	}
+	private void ResetPbarValue(){
+		CallDeferred(nameof(_ResetPbarValue));
 	}
 }

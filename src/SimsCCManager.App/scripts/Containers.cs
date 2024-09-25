@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Godot;
@@ -99,7 +100,7 @@ namespace SimsCCManager.Containers
             Directory.CreateDirectory(InstancePackagesFolder);
             Directory.CreateDirectory(InstanceProfilesFolder);
             Directory.CreateDirectory(InstanceSharedGameDataFolder);
-            Identifier = Guid.NewGuid();
+            //Identifier = Guid.NewGuid();
             string nm = "";
             if (GameChoice == Games.Sims2) nm = "The Sims 2";
             if (GameChoice == Games.Sims3) nm = "The Sims 3";
@@ -126,7 +127,7 @@ namespace SimsCCManager.Containers
             Directory.CreateDirectory(InstanceDataFolder);
             Directory.CreateDirectory(InstanceProfilesFolder);
             Directory.CreateDirectory(InstanceSharedGameDataFolder);
-            Identifier = Guid.NewGuid();
+            //Identifier = Guid.NewGuid();
             string nm = "";
             if (GameChoice == Games.Sims2) nm = "The Sims 2";
             if (GameChoice == Games.Sims3) nm = "The Sims 3";
@@ -322,16 +323,20 @@ namespace SimsCCManager.Containers
         
 
 
-        public void BuildInstance(bool createfromcurrent){
-            SetCoreDirectories();
-            MakeFolderTree();
-            if (createfromcurrent){
-                BuildInstanceCoreFromCurrent();
-                CreateFromCurrent();
-            } else {
-                BuildInstanceCore();
-            }            
-            WriteXML();
+        public void BuildInstance(bool createfromcurrent, Guid ident){
+            new Thread (() => {
+                this.Identifier = ident;
+                SetCoreDirectories();
+                MakeFolderTree();
+                if (createfromcurrent){
+                    BuildInstanceCoreFromCurrent();
+                    CreateFromCurrent();
+                } else {
+                    BuildInstanceCore();
+                }            
+                WriteXML();
+            }){IsBackground = true}.Start();
+
         }
 
         public override void CreateFromCurrent()
@@ -416,12 +421,20 @@ namespace SimsCCManager.Containers
             ThumbnailsFiles.Add(Path.Combine(GameDocumentsFolder, @"Thumbnails\CASThumbnails.package"));
             ThumbnailsFiles.Add(Path.Combine(GameDocumentsFolder, @"Thumbnails\DesignModeThumbnails.package"));
             ThumbnailsFiles.Add(Path.Combine(GameDocumentsFolder, @"Thumbnails\ObjectThumbnails.package"));
+
+            GameVersion = Utilities.GetGameVersion(GameChoice, GameDocumentsFolder);
+
+
         }
 
         public override void WriteXML(){
             
             if (File.Exists(this.XMLfile())){
-                File.Delete(this.XMLfile());                
+                if (File.Exists(this.XMLfile().Replace(".xml", ".xml.bk"))){
+                    File.Delete(this.XMLfile().Replace(".xml", ".xml.bk"));
+                }
+                File.Copy(this.XMLfile(), this.XMLfile().Replace(".xml", ".xml.bk"));
+                File.Delete(this.XMLfile());
             }
             XmlSerializer InstanceSerializer = new XmlSerializer(this.GetType());
             using (var writer = new StreamWriter(this.XMLfile()))
@@ -667,18 +680,24 @@ namespace SimsCCManager.Containers
             ThumbnailsFiles.Add(Path.Combine(GameDocumentsFolder, "CASPartCache.package"));
             ThumbnailsFiles.Add(Path.Combine(GameDocumentsFolder, "compositorCache.package"));
             ThumbnailsFiles.Add(Path.Combine(GameDocumentsFolder, "simCompositorCache.package"));
+
+            GameVersion = Utilities.GetGameVersion(GameChoice, GameDocumentsFolder);
         }
 
-        public void BuildInstance(bool createfromcurrent){
-            SetCoreDirectories();
-            MakeFolderTree();
-            if (createfromcurrent){
-                BuildInstanceCoreFromCurrent();
-                CreateFromCurrent();
-            } else {
-                BuildInstanceCore();
-            }            
-            WriteXML();
+        public void BuildInstance(bool createfromcurrent, Guid ident){
+            new Thread (() => {
+                this.Identifier = ident;
+                SetCoreDirectories();
+                MakeFolderTree();
+                if (createfromcurrent){
+                    BuildInstanceCoreFromCurrent();
+                    CreateFromCurrent();
+                } else {
+                    BuildInstanceCore();
+                }            
+                WriteXML();
+            }){IsBackground = true}.Start();
+
         }
 
                 
@@ -848,18 +867,26 @@ namespace SimsCCManager.Containers
             CacheFiles.Add(Path.Combine(GameDocumentsFolder, "onlinethumbnailcache"));
 
             ThumbnailsFiles.Add(Path.Combine(GameDocumentsFolder, "localthumbcache.package"));
+
+            GameVersion = Utilities.GetGameVersion(GameChoice, GameDocumentsFolder);
         }
 
-        public void BuildInstance(bool createfromcurrent){
-            SetCoreDirectories();
-            MakeFolderTree();
-            if (createfromcurrent){
-                BuildInstanceCoreFromCurrent();
-                CreateFromCurrent();
-            } else {
-                BuildInstanceCore();
-            }            
-            WriteXML();
+        
+
+        public void BuildInstance(bool createfromcurrent, Guid ident){
+            new Thread (() => {
+                this.Identifier = ident;
+                SetCoreDirectories();
+                MakeFolderTree();
+                if (createfromcurrent){
+                    BuildInstanceCoreFromCurrent();
+                    CreateFromCurrent();
+                } else {
+                    BuildInstanceCore();
+                }            
+                WriteXML();
+            }){IsBackground = true}.Start();
+
         }
 
         public override void TestInstance()
@@ -991,11 +1018,42 @@ namespace SimsCCManager.Containers
         public string ScreenshotsFolder {get; set;} = "";
         public string VideosFolder {get; set;} = "";
         public string TrayFolder {get; set;} = "";
-        public List<ProfilePackage> Packages {get; set;} = new();
+        private List<ProfilePackage> _packages {get; set;} = new();
+        public List<ProfilePackage> Packages {
+            get { return _packages; }
+            set { _packages = value; 
+            SaveProfile();}
+        }
+
+        public ProfileInfo(){
+            Packages = new();
+        }
 
         public void MakeInfoLocation(){
             if (ProfileName != ""){
-                //LoadedSettings.SetSettings.Instances.Where(x => x.)
+                string proffolder = GlobalVariables.thisinstance.InstanceProfilesFolder;
+                string thisproffolder = Path.Combine(proffolder, ProfileName);
+                string profileinfo = Path.Combine(thisproffolder, "ProfileInformation.info");
+                InfoLocation = profileinfo;
+            }
+        }
+
+        public void SaveProfile(){
+            if (InfoLocation != ""){
+                if (File.Exists(InfoLocation)){
+                    File.Delete(InfoLocation);                
+                }
+                XmlSerializer packageSerializer = new XmlSerializer(this.GetType());
+                try { 
+                    using (var writer = new StreamWriter(InfoLocation))
+                    {
+                        
+                            packageSerializer.Serialize(writer, this); 
+                        
+                    }
+                } catch (Exception e) {
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Writing info file for profile {0} failed: {1}\n{2}\n{3}\n.", this.ProfileName, e.Message, e.StackTrace, e.Source));
+                }
             }
         }
     }

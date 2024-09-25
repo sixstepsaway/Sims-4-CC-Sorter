@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Godot;
@@ -36,6 +37,8 @@ namespace SimsCCManager.Packages.Containers
         public abstract DateTime DateAdded {get; set;}
         protected DateTime dateupdated;
         public abstract DateTime DateUpdated {get; set;}
+        protected string installedforversion;
+        public abstract string InstalledForVersion {get; set;}
         [XmlIgnore]
         protected bool selected;
         [XmlIgnore]
@@ -160,7 +163,16 @@ namespace SimsCCManager.Packages.Containers
         public void ChangeProperty(string property, string value){
             SetProperty(property, value);
             WriteInfoFile();
+            PackageChanged.Invoke();
         }
+        public void ChangeProperty(string property, bool value){
+            SetProperty(property, value);
+            WriteInfoFile();
+            PackageChanged.Invoke();
+        }
+        public delegate void PackageChangedEvent();
+        [XmlIgnore]
+        public PackageChangedEvent PackageChanged;
 
         public void SetProperty(string propName, dynamic input){
             var prop = this.ProcessProperty(propName);
@@ -439,6 +451,9 @@ namespace SimsCCManager.Packages.Containers
         public override bool Selected {
             get { return selected;} set {selected = value;}
         }
+        public override string InstalledForVersion {
+            get { return installedforversion;} set {installedforversion = value;}
+        }
         public List<string> LinkedFiles {get; set;} = new();
         public List<SimsPackageSubfolder> LinkedFolders {get; set;} = new();
         public Category Category {get; set;}
@@ -475,6 +490,10 @@ namespace SimsCCManager.Packages.Containers
             Conflicts = new();
             DuplicatePackages = new();
             OverriddenPackages = new();            
+        }
+
+        public void FlipBool(string property, bool flip){
+            ChangeProperty(property, flip);
         }
 
         public override void ContinueCreateInfo(string file){
@@ -538,21 +557,27 @@ namespace SimsCCManager.Packages.Containers
             WriteInfoFile();
         }
 
+        private static ReaderWriterLock locker = new();
+
         public override void WriteInfoFile()
         {
             if (File.Exists(InfoFile)){
-                File.Delete(InfoFile);                
+                try { 
+                    File.Delete(InfoFile);
+                } catch {
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to delete {0}: file locked.", InfoFile));
+                }
             }
             XmlSerializer packageSerializer = new XmlSerializer(this.GetType());
             try { 
-                using (var writer = new StreamWriter(InfoFile))
-                {
-                    
-                        packageSerializer.Serialize(writer, this); 
-                    
-                }
+                locker.AcquireWriterLock(int.MaxValue);
+                StreamWriter infowriter = new(InfoFile, append: false);
+                packageSerializer.Serialize(infowriter, this);
+                infowriter.Close();                
             } catch (Exception e) {
                 if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Writing info file for {0} failed: {1}\n{2}\n{3}\n.", this.FileName, e.Message, e.StackTrace, e.Source));
+            } finally {
+                locker.ReleaseWriterLock();
             }
         }
 
@@ -854,6 +879,9 @@ namespace SimsCCManager.Packages.Containers
         public override bool Selected {
             get { return selected;} set {selected = value;}
         }
+        public override string InstalledForVersion {
+            get { return installedforversion;} set {installedforversion = value;}
+        }
 
         public bool Installed {get; set;} = false;
 
@@ -861,21 +889,27 @@ namespace SimsCCManager.Packages.Containers
             this.Installed = false;
             WriteInfoFile();
         }
+
+        private static ReaderWriterLock locker = new();
         public override void WriteInfoFile()
         {
             if (File.Exists(InfoFile)){
-                File.Delete(InfoFile);                
+                try { 
+                    File.Delete(InfoFile);
+                } catch {
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to delete {0}: file locked.", InfoFile));
+                }
             }
             XmlSerializer packageSerializer = new XmlSerializer(this.GetType());
             try { 
-                using (var writer = new StreamWriter(InfoFile))
-                {
-                    
-                        packageSerializer.Serialize(writer, this); 
-                    
-                }
+                locker.AcquireWriterLock(int.MaxValue);
+                StreamWriter infowriter = new(InfoFile, append: false);
+                packageSerializer.Serialize(infowriter, this);
+                infowriter.Close();                
             } catch (Exception e) {
                 if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Writing info file for {0} failed: {1}\n{2}\n{3}\n.", this.FileName, e.Message, e.StackTrace, e.Source));
+            } finally {
+                locker.ReleaseWriterLock();
             }
         }
     }    

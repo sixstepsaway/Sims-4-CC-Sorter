@@ -204,7 +204,8 @@ public partial class DataGridCell : Control
 			GetNode<MarginContainer>("IconsOption").GetNode<HBoxContainer>("Icons").GetNode<TextureRect>("Group").Visible = iconOptions.Folder;		
 			GetNode<MarginContainer>("IconsOption").GetNode<HBoxContainer>("Icons").GetNode<TextureRect>("LoadAsFolder").Visible = iconOptions.LoadAsFolder;	
 			GetNode<MarginContainer>("IconsOption").GetNode<HBoxContainer>("Icons").GetNode<TextureRect>("LinkedFiles").Visible = iconOptions.LinkedFiles;		
-			GetNode<MarginContainer>("IconsOption").GetNode<HBoxContainer>("Icons").GetNode<TextureRect>("MiscFile").Visible = iconOptions.MiscFile;	
+			GetNode<MarginContainer>("IconsOption").GetNode<HBoxContainer>("Icons").GetNode<TextureRect>("MiscFile").Visible = iconOptions.MiscFile;		
+			GetNode<MarginContainer>("IconsOption").GetNode<HBoxContainer>("Icons").GetNode<TextureRect>("OutOfDate").Visible = iconOptions.OutOfDate;	
 			visibleicons = iconOptions.GetCount();
 			iconswidth = (visibleicons * 15) + (visibleicons * 2);
 		}

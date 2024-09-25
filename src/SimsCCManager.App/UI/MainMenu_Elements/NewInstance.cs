@@ -12,8 +12,8 @@ using System.Text;
 
 public partial class NewInstance : MarginContainer
 {
-	[Signal]
-	public delegate void NewInstanceStartPackageManagerEventHandler();
+	public delegate void NewInstanceStartPackageManagerEvent(Guid identifier);
+	public NewInstanceStartPackageManagerEvent NewInstanceStart;
 	Games GameChoice = Games.Null;
 	private LineEdit instancenamebox;
 	private LineEdit installfolderbox;
@@ -77,76 +77,66 @@ public partial class NewInstance : MarginContainer
 	}
 
 	private void _on_confirmation_dialog_confirmed(){
+		ConfirmBuild();
+	}
+
+	private void ConfirmBuild(){
 		gameinstance = GenerateInstancePrep();
 		page1.Visible = false;
+		
 		if (GameChoice == Games.Sims2){
 			Sims2Instance instance = gameinstance as Sims2Instance;
+			instance.InstanceName = "The Sims 2";;
+			if (!string.IsNullOrEmpty(instancenamebox.Text)) instance.InstanceName = instancenamebox.Text;				
 			installfolderbox.Text = instance.GameInstallFolder;			
 			documentsfolderbox.Text = instance.GameDocumentsFolder;
-			instancefolderbox.Text = instance.InstanceFolder;
+			string v = Path.Combine(instance.InstanceFolder, instance.InstanceName);
+			instance.InstanceFolder = v;
+			instancefolderbox.Text = v;
 			packagefolderbox.Text = @"%INSTANCE%\Packages";
 			downloadsfolderbox.Text = @"%INSTANCE%\Downloads";
 			datacachefolderbox.Text = @"%INSTANCE%\Data";
 			profilesfolderbox.Text = @"%INSTANCE%\Profiles";
+			instancename = instance.InstanceName;
 		} else if (GameChoice == Games.Sims3){
 			Sims3Instance instance = gameinstance as Sims3Instance;
+			instance.InstanceName = "The Sims 3";
+			if (!string.IsNullOrEmpty(instancenamebox.Text)) instance.InstanceName = instancenamebox.Text;
 			installfolderbox.Text = instance.GameInstallFolder;			
 			documentsfolderbox.Text = instance.GameDocumentsFolder;
-			instancefolderbox.Text = instance.InstanceFolder;
+			string v = Path.Combine(instance.InstanceFolder, instance.InstanceName);
+			instance.InstanceFolder = v;
+			instancefolderbox.Text = v;
 			packagefolderbox.Text = @"%INSTANCE%\Packages";
 			downloadsfolderbox.Text = @"%INSTANCE%\Downloads";
 			datacachefolderbox.Text = @"%INSTANCE%\Data";
 			profilesfolderbox.Text = @"%INSTANCE%\Profiles";
+			instancename = instance.InstanceName;
 		} else if (GameChoice == Games.Sims4){
 			Sims4Instance instance = gameinstance as Sims4Instance;
-			installfolderbox.Text = instance.GameInstallFolder;			
+			instance.InstanceName = "The Sims 4";
+			if (!string.IsNullOrEmpty(instancenamebox.Text)) instance.InstanceName = instancenamebox.Text;
+			string v = Path.Combine(instance.InstanceFolder, instance.InstanceName);
+			instance.InstanceFolder = v;
+			instancefolderbox.Text = v;
+			installfolderbox.Text = instance.GameInstallFolder;		
 			documentsfolderbox.Text = instance.GameDocumentsFolder;
 			instancefolderbox.Text = instance.InstanceFolder;
 			packagefolderbox.Text = @"%INSTANCE%\Packages";
 			downloadsfolderbox.Text = @"%INSTANCE%\Downloads";
 			datacachefolderbox.Text = @"%INSTANCE%\Data";
 			profilesfolderbox.Text = @"%INSTANCE%\Profiles";
-		}		
-		page2.Visible = true;
+			instancename = instance.InstanceName;
+		}			
+		page2.Visible = true;		
 	}
 
 	private void _on_confirm_button_clicked(){	
 		if (createfromcurrent){
 			GetNode<ConfirmationDialog>("ConfirmationDialog").Visible = true;
 		} else {
-			gameinstance = GenerateInstancePrep();
-			page1.Visible = false;
-			if (GameChoice == Games.Sims2){
-				Sims2Instance instance = gameinstance as Sims2Instance;
-				installfolderbox.Text = instance.GameInstallFolder;			
-				documentsfolderbox.Text = instance.GameDocumentsFolder;
-				instancefolderbox.Text = instance.InstanceFolder;
-				packagefolderbox.Text = @"%INSTANCE%\Packages";
-				downloadsfolderbox.Text = @"%INSTANCE%\Downloads";
-				datacachefolderbox.Text = @"%INSTANCE%\Data";
-				profilesfolderbox.Text = @"%INSTANCE%\Profiles";
-			} else if (GameChoice == Games.Sims3){
-				Sims3Instance instance = gameinstance as Sims3Instance;
-				installfolderbox.Text = instance.GameInstallFolder;			
-				documentsfolderbox.Text = instance.GameDocumentsFolder;
-				instancefolderbox.Text = instance.InstanceFolder;
-				packagefolderbox.Text = @"%INSTANCE%\Packages";
-				downloadsfolderbox.Text = @"%INSTANCE%\Downloads";
-				datacachefolderbox.Text = @"%INSTANCE%\Data";
-				profilesfolderbox.Text = @"%INSTANCE%\Profiles";
-			} else if (GameChoice == Games.Sims4){
-				Sims4Instance instance = gameinstance as Sims4Instance;
-				installfolderbox.Text = instance.GameInstallFolder;			
-				documentsfolderbox.Text = instance.GameDocumentsFolder;
-				instancefolderbox.Text = instance.InstanceFolder;
-				packagefolderbox.Text = @"%INSTANCE%\Packages";
-				downloadsfolderbox.Text = @"%INSTANCE%\Downloads";
-				datacachefolderbox.Text = @"%INSTANCE%\Data";
-				profilesfolderbox.Text = @"%INSTANCE%\Profiles";
-			}		
-			page2.Visible = true;
-		}	
-		
+			ConfirmBuild();
+		}			
 	}
 
 	private void _on_page_2_confirm_button_button_clicked(){
@@ -183,62 +173,108 @@ public partial class NewInstance : MarginContainer
 	}
 
 	private void _on_install_folder_button_pressed(){
-		GetNoFolder(true);
 		gettinginstallfolder = true;
-	}
-	private void _on_docs_folder_button_pressed(){
-		GetNoFolder(true);
-		gettingdocsfolder = true;
-	}
-	private void _on_instance_folder_button_pressed(){
-		GetNoFolder(true);
-		gettinginstancefolder = true;
-	}
-	private void _on_packages_folder_button_pressed(){
-		GetNoFolder(true);
-		gettingpackagefolder = true;
-	}
-	private void _on_downloads_folder_button_pressed(){
-		GetNoFolder(true);
-		gettingdownloadsfolder = true;
-	}
-	private void _on_data_cache_folder_button_pressed(){
-		GetNoFolder(true);
-		gettingdatacachefolder = true;
-	}
-	private void _on_profiles_button_pressed(){
-		GetNoFolder(true);
-		gettingprofilesfolder = true;
-	}
-
-	private void _on_file_dialog_dir_selected(string selected){
-		if (gettingdatacachefolder){
-			datacachefolderbox.Text = selected;
-		} else if (gettingdocsfolder){
-			documentsfolderbox.Text = selected;
-		} else if (gettingdownloadsfolder){
-			downloadsfolderbox.Text = selected;
-		} else if (gettinginstallfolder){
-			installfolderbox.Text = selected;
-		} else if (gettinginstancefolder){
-			installfolderbox.Text = selected;
-		} else if (gettingpackagefolder){
-			packagefolderbox.Text = selected;
-		} else if (gettingprofilesfolder){
-			profilesfolderbox.Text = selected;
-		}
-		GetNoFolder(false);
-	}
-
-	private void GetNoFolder(bool showfiledialog){
-		if (showfiledialog) filedialog.Visible = true;
-		gettinginstallfolder = false;
 		gettingdocsfolder = false;
 		gettinginstancefolder = false;
 		gettingpackagefolder = false;
 		gettingdownloadsfolder = false;
 		gettingdatacachefolder = false;
 		gettingprofilesfolder = false;
+		//gettinginstallfolder = false;
+		filedialog.Visible = true;
+	}
+	private void _on_docs_folder_button_pressed(){
+		gettingdocsfolder = true;
+		gettinginstancefolder = false;
+		gettingpackagefolder = false;
+		gettingdownloadsfolder = false;
+		gettingdatacachefolder = false;
+		gettingprofilesfolder = false;
+		gettinginstallfolder = false;
+		filedialog.Visible = true;
+	}
+	private void _on_instance_folder_button_pressed(){
+		gettinginstallfolder = false;
+		gettingdocsfolder = false;
+		gettinginstancefolder = true;
+		gettingpackagefolder = false;
+		gettingdownloadsfolder = false;
+		gettingdatacachefolder = false;
+		gettingprofilesfolder = false;
+		gettinginstallfolder = false;
+		filedialog.Visible = true;
+	}
+	private void _on_packages_folder_button_pressed(){
+		gettinginstallfolder = false;
+		gettingdocsfolder = false;
+		gettinginstancefolder = false;
+		gettingpackagefolder = true;
+		gettingdownloadsfolder = false;
+		gettingdatacachefolder = false;
+		gettingprofilesfolder = false;
+		gettinginstallfolder = false;
+		filedialog.Visible = true;
+	}
+	private void _on_downloads_folder_button_pressed(){
+		gettinginstallfolder = false;
+		gettingdocsfolder = false;
+		gettinginstancefolder = false;
+		gettingpackagefolder = false;
+		gettingdownloadsfolder = true;
+		gettingdatacachefolder = false;
+		gettingprofilesfolder = false;
+		gettinginstallfolder = false;
+		filedialog.Visible = true;
+	}
+	private void _on_data_cache_folder_button_pressed(){
+		gettinginstallfolder = false;
+		gettingdocsfolder = false;
+		gettinginstancefolder = false;
+		gettingpackagefolder = false;
+		gettingdownloadsfolder = false;
+		gettingdatacachefolder = true;
+		gettingprofilesfolder = false;
+		gettinginstallfolder = false;
+		filedialog.Visible = true;
+	}
+	private void _on_profiles_button_pressed(){
+		gettinginstallfolder = false;
+		gettingdocsfolder = false;
+		gettinginstancefolder = false;
+		gettingpackagefolder = false;
+		gettingdownloadsfolder = false;
+		gettingdatacachefolder = false;
+		gettingprofilesfolder = true;
+		gettinginstallfolder = false;
+		filedialog.Visible = true;
+	}
+
+	private void _on_file_dialog_dir_selected(string selected){
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected {0}.", selected));
+		if (gettingdatacachefolder){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected {0} as data cache folder.", selected));
+			datacachefolderbox.Text = selected;
+		} else if (gettingdocsfolder){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected {0} as documents folder.", selected));
+			documentsfolderbox.Text = selected;
+		} else if (gettingdownloadsfolder){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected {0} as downloads folder.", selected));
+			downloadsfolderbox.Text = selected;
+		} else if (gettinginstallfolder){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected {0} as install folder.", selected));
+			installfolderbox.Text = selected;
+		} else if (gettinginstancefolder){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected {0} as instance folder.", selected));
+			string v = Path.Combine(selected, instancename);
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instance folder: {0}.", v));
+			instancefolderbox.Text = v;
+		} else if (gettingpackagefolder){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected {0} as packages folder.", selected));
+			packagefolderbox.Text = selected;
+		} else if (gettingprofilesfolder){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Selected {0} as profiles folder.", selected));
+			profilesfolderbox.Text = selected;
+		}
 	}
 
 	private void _on_picked_game(string game){
@@ -271,7 +307,7 @@ public partial class NewInstance : MarginContainer
 			if (instancename != null){
 				game.InstanceName = instancename;
 			}
-			game.InstanceFolder = Path.Combine(GlobalVariables.AppFolder, string.Format(@"instances\{0}", game.InstanceName));
+			game.InstanceFolder = Path.Combine(GlobalVariables.AppFolder, string.Format(@"Instances\"));
 			if (File.Exists(Path.Combine(game.ExePath, game.GameExe))) if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Exe exists!");     
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instance: {0}\nInstall Location: {1}\nDocs Folder: {2}\nExe Name: {3}\nInstance Folder: {4}", game.InstanceName, game.GameInstallFolder, game.GameDocumentsFolder, game.GameExe, game.InstanceFolder));
 			return game;
@@ -292,7 +328,7 @@ public partial class NewInstance : MarginContainer
 			if (instancename != null){
 				game.InstanceName = instancename;
 			}
-			game.InstanceFolder = Path.Combine(GlobalVariables.AppFolder, string.Format(@"instances\{0}", game.InstanceName));
+			game.InstanceFolder = Path.Combine(GlobalVariables.AppFolder, string.Format(@"Instances\"));
 			if (File.Exists(Path.Combine(game.ExePath, game.GameExe))) if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Exe exists!");     
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instance: {0}\nInstall Location: {1}\nDocs Folder: {2}\nExe Name: {3}\nInstance Folder: {4}", game.InstanceName, game.GameInstallFolder, game.GameDocumentsFolder, game.GameExe, game.InstanceFolder));
 			return game;
@@ -313,7 +349,7 @@ public partial class NewInstance : MarginContainer
 			if (instancename != null){
 				game.InstanceName = instancename;
 			}
-			game.InstanceFolder = Path.Combine(GlobalVariables.AppFolder, string.Format(@"instances\{0}", game.InstanceName));
+			game.InstanceFolder = Path.Combine(GlobalVariables.AppFolder, string.Format(@"Instances\"));
 			if (File.Exists(Path.Combine(game.ExePath, game.GameExe))) if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Exe exists!");     
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instance: {0}\nInstall Location: {1}\nDocs Folder: {2}\nExe Name: {3}\nInstance Folder: {4}", game.InstanceName, game.GameInstallFolder, game.GameDocumentsFolder, game.GameExe, game.InstanceFolder));
 			return game;
@@ -353,38 +389,42 @@ public partial class NewInstance : MarginContainer
 
 	private void BuildInstance(){			
 		string game = "";
-		StringBuilder sb = new();	
+		Guid identifier = Guid.NewGuid();
 		if (GameChoice == Games.Sims2){
 			Sims2Instance instance = gameinstance as Sims2Instance;
+			instance.Identifier = identifier;
 			if (createfromcurrent){
-				instance.BuildInstance(true);
+				instance.BuildInstance(true, identifier);
 			} else {
-				instance.BuildInstance(false);
+				instance.BuildInstance(false, identifier);
 			}
 			game = "Sims2";
 		} else if (GameChoice == Games.Sims3){
 			Sims3Instance instance = gameinstance as Sims3Instance;
+			instance.Identifier = identifier;
 			if (createfromcurrent){
-				instance.BuildInstance(true);
+				instance.BuildInstance(true, identifier);
 			} else {
-				instance.BuildInstance(false);
+				instance.BuildInstance(false, identifier);
 			}
 			game = "Sims3";
 		} else if (GameChoice == Games.Sims4){
 			Sims4Instance instance = gameinstance as Sims4Instance;
+			instance.Identifier = identifier;
 			if (createfromcurrent){
-				instance.BuildInstance(true);
+				instance.BuildInstance(true, identifier);
 			} else {
-				instance.BuildInstance(false);
+				instance.BuildInstance(false, identifier);
 			}
 			game = "Sims4";
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Instance Ident: {0}.", instance.Identifier));
 		}
 
 		
 
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding new instance to instance list..."));
 		LoadedSettings.SetSettings.ChangeSetting(new Instance(){ Game = game, InstanceLocation = gameinstance.InstanceFolder, Name = gameinstance.InstanceName, Identifier = gameinstance.Identifier });
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Emitting signal with {0} guid.", gameinstance.Identifier.ToString()));
-		EmitSignal("NewInstanceStartPackageManager", gameinstance.Identifier.ToString());
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Emitting signal with {0} guid.", identifier));
+		NewInstanceStart.Invoke(identifier);
 	}
 }
