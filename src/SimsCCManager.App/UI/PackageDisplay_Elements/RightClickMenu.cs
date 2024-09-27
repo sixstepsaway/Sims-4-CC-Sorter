@@ -40,8 +40,9 @@ public partial class RightClickMenu : Control
 		if (someoutofdate) oodstr = "Toggle Updated";
 		EditDetailsBox = GetNode<MarginContainer>("EditDetails_Options");
 
+
 		float x = GetNode<MarginContainer>("MarginContainer").Size.X;
-		x -= 15;
+		x -= 15;		
 		
 		catoptions.Position = new(x, catoptions.Position.Y); 
 		EditDetailsBox.Position = new(x, EditDetailsBox.Position.Y);
@@ -59,10 +60,12 @@ public partial class RightClickMenu : Control
 			GetNode<Label>("EditDetails_Options/VBoxContainer/MoveFile/MoveFile_Label").Text = "Move Files";
 			GetNode<Label>("EditDetails_Options/VBoxContainer/Delete/DeleteFile_Label").Text = "Delete Files";
 			GetNode<Label>("EditDetails_Options/VBoxContainer/Rename/RenameFile_Label").Text = "Rename Files";
+			GetNode<Label>("MarginContainer/VBoxContainer/Linked/AddLinked_Label").Text = "Edit Linked";
 		} else {
 			GetNode<Label>("EditDetails_Options/VBoxContainer/MoveFile/MoveFile_Label").Text = "Move File";
 			GetNode<Label>("EditDetails_Options/VBoxContainer/Delete/DeleteFile_Label").Text = "Delete File";
 			GetNode<Label>("EditDetails_Options/VBoxContainer/Rename/RenameFile_Label").Text = "Rename File";
+			GetNode<Label>("MarginContainer/VBoxContainer/Linked/AddLinked_Label").Text = "Link Files";
 		}
 
 

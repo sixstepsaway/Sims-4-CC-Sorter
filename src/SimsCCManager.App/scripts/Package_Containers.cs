@@ -561,12 +561,16 @@ namespace SimsCCManager.Packages.Containers
 
         public override void WriteInfoFile()
         {
+            if (GlobalVariables.noinfofile.Where(x => x.Equals(Location)).Any()) return;
             if (File.Exists(InfoFile)){
                 try { 
                     File.Delete(InfoFile);
                 } catch {
                     if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Failed to delete {0}: file locked.", InfoFile));
                 }
+            }
+            if (FileType == FileTypes.TS4Script){
+                this.Game = Games.Sims4;
             }
             XmlSerializer packageSerializer = new XmlSerializer(this.GetType());
             try { 

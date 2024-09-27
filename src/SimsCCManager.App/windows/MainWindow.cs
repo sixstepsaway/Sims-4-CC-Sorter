@@ -178,14 +178,14 @@ public partial class MainWindow : MarginContainer
 		footerpbar.Visible = true;
 	}
 	public void HidePbar(){
-		CallDeferred(nameof(ShowPbar));
+		CallDeferred(nameof(_HidePbar));
 	}
 	private void _HidePbar(){
 		footerpbar.Visible = false;
 	}
 
 	private void SetPbarMax(int max){
-		CallDeferred(nameof(SetPbarMax), max);
+		CallDeferred(nameof(_SetPbarMax), max);
 	}
 
 	private void _SetPbarMax(int max){

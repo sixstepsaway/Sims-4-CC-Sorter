@@ -35,6 +35,13 @@ namespace SimsCCManager.Globals
         public static string SettingsFile = Path.Combine(AppFolder, "Settings.ini");
         public static string tempfolder = Path.Combine(AppFolder, "temp");
         public static string logfolder = Path.Combine(AppFolder, "logs");
+        public static List<string> noinfofile = new();
+
+        public static void AddNoInfoFile(string file){
+            if (!noinfofile.Contains(file)){
+                noinfofile.Add(file);
+            }
+        }
 
         public static Instance CurrentInstance = new();
         public static GameInstanceBase thisinstance;
@@ -372,6 +379,21 @@ namespace SimsCCManager.Globals
             
             return ver;
         }
+
+        public static string ListToString(List<string> items){
+            StringBuilder sb = new();
+            int i = 0;
+            foreach (string item in items){
+                if (i == 0){
+                    sb.Append(item.ToString());
+                } else {
+                    sb.Append(string.Format(", {0}", item.ToString()));
+                }
+                i++;
+            }
+            return sb.ToString();
+        }
+
         public static string GetSims4Version(string docfolder){
             string version = "";
             string versionfile = Path.Combine(docfolder, "GameVersion.txt");

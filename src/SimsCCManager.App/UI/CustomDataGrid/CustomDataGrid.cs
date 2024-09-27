@@ -213,8 +213,8 @@ public partial class CustomDataGrid : MarginContainer
 		HeaderRowContainer.AddChild(headerrow);
 		HeaderRowContainer.MoveChild(headerrow, 0);
 		HeaderRow = headerrow;
-		headersready = true;
 		GridReady.Invoke();
+		headersready = true;
 	}
 
 	private void GetScrollBarStuff(){
@@ -312,12 +312,12 @@ public partial class CustomDataGrid : MarginContainer
 	private void SetScrollBar(){
 		int y = (int)panesize;
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows on screen: {0}", rowsonscreen));
-		if (rowsonscreen >= GridContainer.GetChildCount()){
+		if (rowsonscreen >= rows.Count){
 			vScrollBar.Page = 1;
 			vScrollBar.MaxValue = 1;
 			vScrollBar.MinValue = 0;			
 		} else {
-			int items = GridContainer.GetChildCount();
+			int items = rows.Count;
 			MaxScroll = items - rowsonscreen;
 			vScrollBar.Step = 1;
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scrollbar Max Value: {0}", MaxScroll));
@@ -356,11 +356,16 @@ public partial class CustomDataGrid : MarginContainer
 	}
 
     public void RowsFromData(){
-		Task t = new Task(() => {
-			if (onceloaded) ClearChildren();
+		if (onceloaded){ 
+			Task t = new Task(() => {
+				if (onceloaded) ClearChildren();
+				MakeRows();
+			});
+			UpdateRows.Add(t);	
+		} else {
 			MakeRows();
-		});
-		UpdateRows.Add(t);		
+		}
+			
 	}
 
 	private void MakeRows(){
@@ -376,8 +381,11 @@ public partial class CustomDataGrid : MarginContainer
 			int currentrow = -1;		
 			foreach (CellContent item in Data){					
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}, column {1}: {2} as cell item.", item.RowNum, item.ColumnNum, item.Content));
-				if (currentrow != item.RowNum){
-					if (currentrow != -1) rowsholder.Add(dataGridRow);
+				if (currentrow != item.RowNum){					
+					if (currentrow != -1) {
+						dataGridRow.Visible = false;
+						rowsholder.Add(dataGridRow);
+					} 
 					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows count: {0}", rowsholder.Count));		
 					dataGridRow = row.Instantiate() as DataGridRow;	
 					dataGridRow.MouseAffected += (inside, idx) => MouseAffectingRow(inside, idx);
@@ -404,23 +412,30 @@ public partial class CustomDataGrid : MarginContainer
 			//dataGridRow.MouseAffected += (inside, idx) => MouseAffectingRow(inside, idx);			
 			dataGridRow.Visible = false;
 			rowsholder.Add(dataGridRow);	
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows count: {0}", rowsholder.Count));		
-			
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows count: {0}", rowsholder.Count));					
 		} else {
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Oops! No data."));
 		}
 		rows = rowsholder;
-		//CallDeferred(nameof(PopulateRows));		
+		if (rows.Count == 0 && !onceloaded) {
+			DoneLoading.Invoke();
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Emitting \"DoneLoading\"."));
+		}
+		//CallDeferred(nameof(PopulateRows));	
+			
 	}
 
 	private void PopulateRows(){		
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows to populate: {0}", rows.Count));
+		ClearChildren();
 		SetScrollBar();	
 		for (int i = 0; i < rows.Count; i++){
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}", i));
 			if (i >= ScrollPosition && i < ScrollPosition + rowsonscreen){
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("{0} should be visible. Making it so, number one!", i));
 				rows[i].Visible = true;
+			} else {
+				rows[i].Visible = false;
 			}
 			GridContainer.AddChild(rows[i]);			
 		}
@@ -428,6 +443,9 @@ public partial class CustomDataGrid : MarginContainer
 		for (int i = 0; i < ColumnSizes.Count; i++){
 			HeaderResized(i);
 		}
+		
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Emitting \"DoneLoading\"."));
+		if (!onceloaded) DoneLoading.Invoke();
 		onceloaded = true;
 		makingrows = false;	
 	}
@@ -515,6 +533,9 @@ public partial class CustomDataGrid : MarginContainer
 			if (@event.IsActionPressed("ui_down")){
 				SelectDown();
 			}
+			if (@event.IsActionPressed("CtrlA")){
+				SelectAll();
+			}
 		}
 
 		
@@ -524,7 +545,15 @@ public partial class CustomDataGrid : MarginContainer
 		//}
     }
 
-	private void SelectUp(){
+    private void SelectAll()
+    {
+        foreach (DataGridRow row in rows){
+			row.Selected = true;
+			SelectedItem.Invoke(row.Identifier, rows.IndexOf(row));
+		}
+    }
+
+    private void SelectUp(){
 		int idx = rows.IndexOf(rows.Where(x => x.Selected).First());
 		List<DataGridRow> selected = rows.Where(x => x.Selected).ToList();
 		if (selected.Any()){
