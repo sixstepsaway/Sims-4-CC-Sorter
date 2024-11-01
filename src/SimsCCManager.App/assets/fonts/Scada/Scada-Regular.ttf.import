@@ -15,6 +15,7 @@ dest_files=["res://.godot/imported/Scada-Regular.ttf-21acab9d17b64e0cf3b53914d0b
 Rendering=null
 antialiasing=1
 generate_mipmaps=false
+disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
 msdf_pixel_range=8
 msdf_size=48

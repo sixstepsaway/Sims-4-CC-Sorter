@@ -12,49 +12,379 @@ using SimsCCManager.Globals;
 using System.Drawing;
 using SimsCCManager.Settings.Loaded;
 using SimsCCManager.Debugging;
+using SimsCCManager.PackageReaders.Containers;
 
 namespace SimsCCManager.PackageReaders
 {
     public class Sims2PackageReader
     {
-        public static SimsPackage ReadSims2Package(SimsPackage package){
-            Sims2ScanData scanData = new();
-            List<string> AllInstanceIDS = new();
-			List<IndexEntry> PackageEntries = new();
-            IndexEntry SHPE = new();
-            uint chunkOffset = 0;
-            List<IndexEntry> IndexData = new();
-            FileInfo pack = new FileInfo(package.Location);
-            //MemoryStream msPackage = Methods.ReadBytesToFile(input, 12);
-            FileStream msPackage = new FileStream(package.Location, FileMode.Open, FileAccess.Read);
-            BinaryReader readFile = new BinaryReader(msPackage);
-            //"DBPF" but we already know this is fine
-            Encoding.ASCII.GetString(readFile.ReadBytes(4));
-            uint major = readFile.ReadUInt32();                
-            uint minor = readFile.ReadUInt32();
+		public static List<EntryType> Sims2EntryTypes = new()
+        {
+            new EntryType(){ Tag = "2ARY", TypeID = "6B943B43", Description = "2D Array" },
+            new EntryType(){ Tag = "3ARY", TypeID = "2A51171B", Description = "3D Array" },
+            new EntryType(){ Tag = "5DS", TypeID = "AC06A676", Description = "Lighting (Draw State Light)" },
+            new EntryType(){ Tag = "5EL", TypeID = "6A97042F", Description = "Lighting (Environment Cube Light)" },
+            new EntryType(){ Tag = "5LF", TypeID = "AC06A66F", Description = "Lighting (Linear Fog Light)" },
+            new EntryType(){ Tag = "5SC", TypeID = "25232B11", Description = "Scene Node" },
+            new EntryType(){ Tag = "ANIM", TypeID = "FB00791E", Description = "Animation Resource" },
+            new EntryType(){ Tag = "BCON", TypeID = "42434F4E", Description = "Behaviour Constant" },
+            new EntryType(){ Tag = "BHAV", TypeID = "42484156", Description = "Behaviour Function" },
+            new EntryType(){ Tag = "BMP", TypeID = "424D505F", Description = "Bitmaps" },
+            new EntryType(){ Tag = "BMP", TypeID = "856DDBAC", Description = "Bitmaps" },
+            new EntryType(){ Tag = "CATS", TypeID = "43415453", Description = "Catalog String" },
+            new EntryType(){ Tag = "CIGE", TypeID = "43494745", Description = "Image Link" },
+            new EntryType(){ Tag = "CINE", TypeID = "4D51F042", Description = "Cinematic Scenes" },
+            new EntryType(){ Tag = "CREG", TypeID = "CDB467B8", Description = "Content Registry" },
+            new EntryType(){ Tag = "CRES", TypeID = "E519C933", Description = "Resource Node" },
+            new EntryType(){ Tag = "CTSS", TypeID = "43545353", Description = "Catalog Description" },
+            new EntryType(){ Tag = "DGRP", TypeID = "44475250", Description = "Drawgroup" },
+            new EntryType(){ Tag = "DIR", TypeID = "E86B1EEF", Description = "Directory of Compressed Files" },
+            new EntryType(){ Tag = "FACE", TypeID = "46414345", Description = "Face Properties" },
+            new EntryType(){ Tag = "FAMh", TypeID = "46414D68", Description = "Family Data" },
+            new EntryType(){ Tag = "FAMI", TypeID = "46414D49", Description = "Family Information" },
+            new EntryType(){ Tag = "FAMt", TypeID = "8C870743", Description = "Family Ties" },
+            new EntryType(){ Tag = "FCNS", TypeID = "46434E53", Description = "Global Tuning Values" },
+            new EntryType(){ Tag = "FPL", TypeID = "AB4BA572", Description = "Fence Post Layer" },
+            new EntryType(){ Tag = "FWAV", TypeID = "46574156", Description = "Audio Reference" },
+            new EntryType(){ Tag = "FX", TypeID = "EA5118B0", Description = "Effects Resource Tree" },
+            new EntryType(){ Tag = "GLOB", TypeID = "474C4F42", Description = "Glabal Data" },
+            new EntryType(){ Tag = "GMDC", TypeID = "AC4F8687", Description = "Geometric Data Container" },
+            new EntryType(){ Tag = "GMND", TypeID = "7BA3838C", Description = "Geometric Node" },
+            new EntryType(){ Tag = "GZPS", TypeID = "EBCF3E27", Description = "Property Set" },
+            new EntryType(){ Tag = "HLS", TypeID = "7B1ACFCD", Description = "Hitlist (TS2 format)" },
+            new EntryType(){ Tag = "HOUS", TypeID = "484F5553", Description = "House Data" },
+            new EntryType(){ Tag = "JFIF", TypeID = "4D533EDD", Description = "JPEG/JFIF Image" },
+            new EntryType(){ Tag = "JFIF", TypeID = "856DDBAC", Description = "JPEG/JFIF Image" },
+            new EntryType(){ Tag = "JFIF", TypeID = "8C3CE95A", Description = "JPEG/JFIF Image" },
+            new EntryType(){ Tag = "JFIF", TypeID = "0C7E9A76", Description = "JPEG/JFIF Image" },
+            new EntryType(){ Tag = "LDEF", TypeID = "0BF999E7", Description = "Lot or Tutorial Description" },
+            new EntryType(){ Tag = "LGHT", TypeID = "C9C81B9B", Description = "Lighting (Ambient Light)" },
+            new EntryType(){ Tag = "LGHT", TypeID = "C9C81BA3", Description = "Lighting (Directional Light)" },
+            new EntryType(){ Tag = "LGHT", TypeID = "C9C81BA9", Description = "Lighting (Point Light)" },
+            new EntryType(){ Tag = "LGHT", TypeID = "C9C81BAD", Description = "Lighting (Spot Light)" },
+            new EntryType(){ Tag = "LIFO", TypeID = "ED534136", Description = "Level Information" },
+            new EntryType(){ Tag = "LOT", TypeID = "6C589723", Description = "Lot Definition" },
+            new EntryType(){ Tag = "LTTX", TypeID = "4B58975B", Description = "Lot Texture" },
+            new EntryType(){ Tag = "LxNR", TypeID = "CCCEF852", Description = "Facial Structure" },
+            new EntryType(){ Tag = "MATSHAD", TypeID = "CD7FE87A", Description = "Maxis Material Shader" },
+            new EntryType(){ Tag = "MMAT", TypeID = "4C697E5A", Description = "Material Override" },
+            new EntryType(){ Tag = "MOBJT", TypeID = "6F626A74", Description = "Main Lot Objects" },
+            new EntryType(){ Tag = "MP3", TypeID = "2026960B", Description = "MP3 Audio" },
+            new EntryType(){ Tag = "NGBH", TypeID = "4E474248", Description = "Neighborhood Data" },
+            new EntryType(){ Tag = "NHTG", TypeID = "ABCB5DA4", Description = "Neighbourhood Terrain Geometry" },
+            new EntryType(){ Tag = "NHTR", TypeID = "ABD0DC63", Description = "Neighborhood Terrain" },
+            new EntryType(){ Tag = "NHVW", TypeID = "EC44BDDC", Description = "Neighborhood View" },
+            new EntryType(){ Tag = "NID", TypeID = "AC8A7A2E", Description = "Neighbourhood ID" },
+            new EntryType(){ Tag = "NMAP", TypeID = "4E6D6150", Description = "Name Map" },
+            new EntryType(){ Tag = "NREF", TypeID = "4E524546", Description = "Name Reference" },
+            new EntryType(){ Tag = "OBJD", TypeID = "4F424A44", Description = "Object Data" },
+            new EntryType(){ Tag = "OBJf", TypeID = "4F424A66", Description = "Object Functions" },
+            new EntryType(){ Tag = "ObJM", TypeID = "4F626A4D", Description = "Object Metadata" },
+            new EntryType(){ Tag = "OBJT", TypeID = "FA1C39F7", Description = "Singular Lot Object" },
+            new EntryType(){ Tag = "OBMI", TypeID = "4F626A4D", Description = "Object Metadata Imposter" },
+            new EntryType(){ Tag = "PALT", TypeID = "50414C54", Description = "Image Color Palette" },
+            new EntryType(){ Tag = "PDAT", TypeID = "AACE2EFB", Description = "Person Data (Formerly SDSC/SINF/SDAT)" },
+            new EntryType(){ Tag = "PERS", TypeID = "50455253", Description = "Person Status" },
+            new EntryType(){ Tag = "PMAP", TypeID = "8CC0A14B", Description = "Predictive Map" },
+            new EntryType(){ Tag = "PNG", TypeID = "856DDBAC", Description = "PNG Image" },
+            new EntryType(){ Tag = "POOL", TypeID = "0C900FDB", Description = "Pool Surface" },
+            new EntryType(){ Tag = "Popups", TypeID = "2C310F46", Description = "Unknown" },
+            new EntryType(){ Tag = "POSI", TypeID = "504F5349", Description = "Edith Positional Information (deprecated)" },
+            new EntryType(){ Tag = "XFLR", TypeID = "4DCADB7E", Description = "Terrain Texture" },
+            new EntryType(){ Tag = "PTBP", TypeID = "50544250", Description = "Package Toolkit" },
+            new EntryType(){ Tag = "ROOF", TypeID = "AB9406AA", Description = "Roof" },
+            new EntryType(){ Tag = "SFX", TypeID = "8DB5E4C2", Description = "Sound Effects" },
+            new EntryType(){ Tag = "SHPE", TypeID = "FC6EB1F7", Description = "Shape" },
+            new EntryType(){ Tag = "SIMI", TypeID = "53494D49", Description = "Sim Information" },
+            new EntryType(){ Tag = "SKIN", TypeID = "AC506764", Description = "Sim Outfits" },
+            new EntryType(){ Tag = "SLOT", TypeID = "534C4F54", Description = "Object Slot" },
+            new EntryType(){ Tag = "SMAP", TypeID = "CAC4FC40", Description = "String Map" },
+            new EntryType(){ Tag = "SPR2", TypeID = "53505232", Description = "Sprites" },
+            new EntryType(){ Tag = "SPX1", TypeID = "2026960B", Description = "SPX Speech" },
+            new EntryType(){ Tag = "SREL", TypeID = "CC364C2A", Description = "Sim Relations" },
+            new EntryType(){ Tag = "STR#", TypeID = "53545223", Description = "Text String" },
+            new EntryType(){ Tag = "STXR", TypeID = "ACE46235", Description = "Surface Texture" },
+            new EntryType(){ Tag = "SWAF", TypeID = "CD95548E", Description = "Sim Wants and Fears" },
+            new EntryType(){ Tag = "TATT", TypeID = "54415454", Description = "Tree Attributes" },
+            new EntryType(){ Tag = "TGA", TypeID = "856DDBAC", Description = "Targa Image" },
+            new EntryType(){ Tag = "TMAP", TypeID = "4B58975B", Description = "Lot or Terrain Texture Map" },
+            new EntryType(){ Tag = "TPRP", TypeID = "54505250", Description = "Edith SimAntics Behavior Labels" },
+            new EntryType(){ Tag = "TRCN", TypeID = "5452434E", Description = "Behavior Constant Labels" },
+            new EntryType(){ Tag = "TREE", TypeID = "54524545", Description = "Tree Data" },
+            new EntryType(){ Tag = "TSSG", TypeID = "BA353CE1", Description = "The Sims SG System" },
+            new EntryType(){ Tag = "TTAB", TypeID = "54544142", Description = "Pie Menu Functions" },
+            new EntryType(){ Tag = "TTAs", TypeID = "54544173", Description = "Pie Menu Strings" },
+            new EntryType(){ Tag = "TXMT", TypeID = "49596978", Description = "Material Definitions" },
+            new EntryType(){ Tag = "TXTR", TypeID = "1C4A276C", Description = "Texture" },
+            new EntryType(){ Tag = "UI", TypeID = "00000000", Description = "User Interface" },
+            new EntryType(){ Tag = "VERT", TypeID = "CB4387A1", Description = "Vertex Layer" },
+            new EntryType(){ Tag = "WFR", TypeID = "CD95548E", Description = "Wants and Fears" },
+            new EntryType(){ Tag = "WGRA", TypeID = "0A284D0B", Description = "Wall Graph" },
+            new EntryType(){ Tag = "WLL", TypeID = "8A84D7B0", Description = "Wall Layer" },
+            new EntryType(){ Tag = "WRLD", TypeID = "49FF7D76", Description = "World Database" },
+            new EntryType(){ Tag = "WTHR", TypeID = "B21BE28B", Description = "Weather Info" },
+            new EntryType(){ Tag = "XA", TypeID = "2026960B", Description = "XA Audio" },
+            new EntryType(){ Tag = "XHTN", TypeID = "8C1580B5", Description = "Hairtone XML" },
+            new EntryType(){ Tag = "XMTO", TypeID = "584D544F", Description = "Material Object Class Dump" },
+            new EntryType(){ Tag = "XOBJ", TypeID = "CCA8E925", Description = "Object Class Dump" },
+            new EntryType(){ Tag = "XTOL", TypeID = "2C1FD8A1", Description = "Texture Overlay XML" },
+            new EntryType(){ Tag = "UNK", TypeID = "0F9F0C21", Description = "Unknown (from Nightlife)" },
+            new EntryType(){ Tag = "UNK", TypeID = "8B0C79D6", Description = "Unknown" },
+            new EntryType(){ Tag = "UNK", TypeID = "9D796DB4", Description = "Unknown" },
+            new EntryType(){ Tag = "UNK", TypeID = "CC2A6A34", Description = "Unknown" },
+            new EntryType(){ Tag = "UNK", TypeID = "CC8A6A69", Description = "Unknown" },
+            new EntryType(){ Tag = "COLL", TypeID = "6C4F359D", Description = "Collection" }
+        };
+
+        public static List<FunctionSortList> Sims2BuyFunctionSortList = new(){
+                        //seating   
+            new FunctionSortList(){flagnum = 0, functionsubsortnum = 1, Category = "Seating", Subcategory = "Dining Room"},
+            new FunctionSortList(){flagnum = 0, functionsubsortnum = 2, Category = "Seating", Subcategory = "Living Room"},
+            new FunctionSortList(){flagnum = 0, functionsubsortnum = 4, Category = "Seating", Subcategory = "Sofas"},
+            new FunctionSortList(){flagnum = 0, functionsubsortnum = 8, Category = "Seating", Subcategory = "Beds"},
+            new FunctionSortList(){flagnum = 0, functionsubsortnum = 16, Category = "Seating", Subcategory = "Recreation"},
+            new FunctionSortList(){flagnum = 0, functionsubsortnum = 32, Category = "Seating", Subcategory = "Unknown I"},
+            new FunctionSortList(){flagnum = 0, functionsubsortnum = 64, Category = "Seating", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 0, functionsubsortnum = 128, Category = "Seating", Subcategory = "Misc"},            
+                        //surfaces
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 1, Category = "Surfaces", Subcategory = "Counters"},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 2, Category = "Surfaces", Subcategory = "Tables"},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 4, Category = "Surfaces", Subcategory = "End Tables"},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 8, Category = "Surfaces", Subcategory = "Desks"},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 16, Category = "Surfaces", Subcategory = "Coffee Tables"},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 32, Category = "Surfaces", Subcategory = "Shelves"},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 64, Category = "Surfaces", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 128, Category = "Surfaces", Subcategory = "Misc"},            
+                        //Appliances
+            new FunctionSortList(){flagnum = 2, functionsubsortnum = 1, Category = "Appliances", Subcategory = "Cooking"},
+            new FunctionSortList(){flagnum = 2, functionsubsortnum = 2, Category = "Appliances", Subcategory = "Fridges"},
+            new FunctionSortList(){flagnum = 2, functionsubsortnum = 4, Category = "Appliances", Subcategory = "Small"},
+            new FunctionSortList(){flagnum = 2, functionsubsortnum = 8, Category = "Appliances", Subcategory = "Large"},
+            new FunctionSortList(){flagnum = 2, functionsubsortnum = 16, Category = "Appliances", Subcategory = "Unknown I"},
+            new FunctionSortList(){flagnum = 2, functionsubsortnum = 32, Category = "Appliances", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 2, functionsubsortnum = 64, Category = "Appliances", Subcategory = "Unknown III"},
+            new FunctionSortList(){flagnum = 2, functionsubsortnum = 128, Category = "Appliances", Subcategory = "Misc"},
+                        //Electronics
+            new FunctionSortList(){flagnum = 3, functionsubsortnum = 1, Category = "Electronics", Subcategory = "Entertainment"},
+            new FunctionSortList(){flagnum = 3, functionsubsortnum = 2, Category = "Electronics", Subcategory = "TV/Computer"},
+            new FunctionSortList(){flagnum = 3, functionsubsortnum = 4, Category = "Electronics", Subcategory = "Audio"},
+            new FunctionSortList(){flagnum = 3, functionsubsortnum = 8, Category = "Electronics", Subcategory = "Small"},
+            new FunctionSortList(){flagnum = 3, functionsubsortnum = 16, Category = "Electronics", Subcategory = "Unknown I"},
+            new FunctionSortList(){flagnum = 3, functionsubsortnum = 32, Category = "Electronics", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 3, functionsubsortnum = 64, Category = "Electronics", Subcategory = "Unknown III"},
+            new FunctionSortList(){flagnum = 3, functionsubsortnum = 128, Category = "Electronics", Subcategory = "Misc"},
+                        //Plumbing
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 1, Category = "Plumbing", Subcategory = "Toilets"},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 2, Category = "Plumbing", Subcategory = "Showers"},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 4, Category = "Plumbing", Subcategory = "Sinks"},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 8, Category = "Plumbing", Subcategory = "Hot Tubs"},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 16, Category = "Plumbing", Subcategory = "Unknown I"},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 32, Category = "Plumbing", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 64, Category = "Plumbing", Subcategory = "Unknown III"},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 128, Category = "Plumbing", Subcategory = "Misc"},
+                        //Decorative
+            new FunctionSortList(){flagnum = 5, functionsubsortnum = 1, Category = "Decorative", Subcategory = "Wall Decorations"},
+            new FunctionSortList(){flagnum = 5, functionsubsortnum = 2, Category = "Decorative", Subcategory = "Sculptures"},
+            new FunctionSortList(){flagnum = 5, functionsubsortnum = 4, Category = "Decorative", Subcategory = "Rugs"},
+            new FunctionSortList(){flagnum = 5, functionsubsortnum = 8, Category = "Decorative", Subcategory = "Plants"},
+            new FunctionSortList(){flagnum = 5, functionsubsortnum = 16, Category = "Decorative", Subcategory = "Mirrors"},
+            new FunctionSortList(){flagnum = 5, functionsubsortnum = 32, Category = "Decorative", Subcategory = "Curtains"},
+            new FunctionSortList(){flagnum = 5, functionsubsortnum = 64, Category = "Decorative", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 5, functionsubsortnum = 128, Category = "Decorative", Subcategory = "Misc"},
+                        //General
+            new FunctionSortList(){flagnum = 6, functionsubsortnum = 1, Category = "Misc", Subcategory = "Unknown I"},
+            new FunctionSortList(){flagnum = 6, functionsubsortnum = 2, Category = "Misc", Subcategory = "Dressers"},
+            new FunctionSortList(){flagnum = 6, functionsubsortnum = 4, Category = "Misc", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 6, functionsubsortnum = 8, Category = "Misc", Subcategory = "Party"},
+            new FunctionSortList(){flagnum = 6, functionsubsortnum = 16, Category = "Misc", Subcategory = "Child"},
+            new FunctionSortList(){flagnum = 6, functionsubsortnum = 32, Category = "Misc", Subcategory = "Cars"},
+            new FunctionSortList(){flagnum = 6, functionsubsortnum = 64, Category = "Misc", Subcategory = "Pets"},
+            new FunctionSortList(){flagnum = 6, functionsubsortnum = 128, Category = "Misc", Subcategory = "Misc"},
+                        //Lighting
+            new FunctionSortList(){flagnum = 7, functionsubsortnum = 1, Category = "Lighting", Subcategory = "Table Lamps"},
+            new FunctionSortList(){flagnum = 7, functionsubsortnum = 2, Category = "Lighting", Subcategory = "Floor Lamps"},
+            new FunctionSortList(){flagnum = 7, functionsubsortnum = 4, Category = "Lighting", Subcategory = "Wall Lamps"},
+            new FunctionSortList(){flagnum = 7, functionsubsortnum = 8, Category = "Lighting", Subcategory = "Ceiling Lamps"},
+            new FunctionSortList(){flagnum = 7, functionsubsortnum = 16, Category = "Lighting", Subcategory = "Outdoor"},
+            new FunctionSortList(){flagnum = 7, functionsubsortnum = 32, Category = "Lighting", Subcategory = "Unknown I"},
+            new FunctionSortList(){flagnum = 7, functionsubsortnum = 64, Category = "Lighting", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 7, functionsubsortnum = 128, Category = "Lighting", Subcategory = "Misc"},
+                        //Hobbies
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 1, Category = "Hobbies", Subcategory = "Creative"},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 2, Category = "Hobbies", Subcategory = "Knowledge"},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 4, Category = "Hobbies", Subcategory = "Exercise"},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 8, Category = "Hobbies", Subcategory = "Recreation"},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 16, Category = "Hobbies", Subcategory = "Unknown I"},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 32, Category = "Hobbies", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 64, Category = "Hobbies", Subcategory = "Unknown III"},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 128, Category = "Hobbies", Subcategory = "Misc"},
+                        //Aspiration Rewards
+            new FunctionSortList(){flagnum = 9, functionsubsortnum = 1, Category = "Aspiration Rewards", Subcategory = "Unknown I"},
+            new FunctionSortList(){flagnum = 9, functionsubsortnum = 2, Category = "Aspiration Rewards", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 9, functionsubsortnum = 4, Category = "Aspiration Rewards", Subcategory = "Unknown III"},
+            new FunctionSortList(){flagnum = 9, functionsubsortnum = 8, Category = "Aspiration Rewards", Subcategory = "Unknown IV"},
+            new FunctionSortList(){flagnum = 9, functionsubsortnum = 16, Category = "Aspiration Rewards", Subcategory = "Unknown V"},
+            new FunctionSortList(){flagnum = 9, functionsubsortnum = 32, Category = "Aspiration Rewards", Subcategory = "Unknown VI"},
+            new FunctionSortList(){flagnum = 9, functionsubsortnum = 64, Category = "Aspiration Rewards", Subcategory = "Unknown VII"},
+            new FunctionSortList(){flagnum = 9, functionsubsortnum = 128, Category = "Aspiration Rewards", Subcategory = "Unknown VIII"},
+                        //Career Rewards
+            new FunctionSortList(){flagnum = 10, functionsubsortnum = 1, Category = "Career Rewards", Subcategory = "Unknown I"},
+            new FunctionSortList(){flagnum = 10, functionsubsortnum = 2, Category = "Career Rewards", Subcategory = "Unknown II"},
+            new FunctionSortList(){flagnum = 10, functionsubsortnum = 4, Category = "Career Rewards", Subcategory = "Unknown III"},
+            new FunctionSortList(){flagnum = 10, functionsubsortnum = 8, Category = "Career Rewards", Subcategory = "Unknown IV"},
+            new FunctionSortList(){flagnum = 10, functionsubsortnum = 16, Category = "Career Rewards", Subcategory = "Unknown V"},
+            new FunctionSortList(){flagnum = 10, functionsubsortnum = 32, Category = "Career Rewards", Subcategory = "Unknown VI"},
+            new FunctionSortList(){flagnum = 10, functionsubsortnum = 64, Category = "Career Rewards", Subcategory = "Unknown VII"},
+            new FunctionSortList(){flagnum = 10, functionsubsortnum = 128, Category = "Career Rewards", Subcategory = "Unknown VIII"}
+                        /*//seating
+            new FunctionSortList(){flagnum = 11, functionsubsortnum = 1, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 11, functionsubsortnum = 2, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 11, functionsubsortnum = 4, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 11, functionsubsortnum = 8, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 11, functionsubsortnum = 16, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 11, functionsubsortnum = 32, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 11, functionsubsortnum = 64, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 11, functionsubsortnum = 128, Category = "Seating", Subcategory = ""},
+                        //seating
+            new FunctionSortList(){flagnum = 12, functionsubsortnum = 1, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 12, functionsubsortnum = 2, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 12, functionsubsortnum = 4, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 12, functionsubsortnum = 8, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 12, functionsubsortnum = 16, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 12, functionsubsortnum = 32, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 12, functionsubsortnum = 64, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 12, functionsubsortnum = 128, Category = "Seating", Subcategory = ""},
+                        //seating
+            new FunctionSortList(){flagnum = 13, functionsubsortnum = 1, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 13, functionsubsortnum = 2, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 13, functionsubsortnum = 4, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 13, functionsubsortnum = 8, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 13, functionsubsortnum = 16, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 13, functionsubsortnum = 32, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 13, functionsubsortnum = 64, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 13, functionsubsortnum = 128, Category = "Seating", Subcategory = ""},
+                        //seating
+            new FunctionSortList(){flagnum = 14, functionsubsortnum = 1, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 14, functionsubsortnum = 2, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 14, functionsubsortnum = 4, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 14, functionsubsortnum = 8, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 14, functionsubsortnum = 16, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 14, functionsubsortnum = 32, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 14, functionsubsortnum = 64, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 14, functionsubsortnum = 128, Category = "Seating", Subcategory = ""},
+                        //seating
+            new FunctionSortList(){flagnum = 15, functionsubsortnum = 1, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 15, functionsubsortnum = 2, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 15, functionsubsortnum = 4, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 15, functionsubsortnum = 8, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 15, functionsubsortnum = 16, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 15, functionsubsortnum = 32, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 15, functionsubsortnum = 64, Category = "Seating", Subcategory = ""},
+            new FunctionSortList(){flagnum = 15, functionsubsortnum = 128, Category = "Seating", Subcategory = ""},
+            */
+        };
+
+        public static List<FunctionSortList> Sims2BuildFunctionSortList = new(){
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 1, Category = "Door", Subcategory = ""},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 4, Category = "Window", Subcategory = ""},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 100, Category = "Two Story Door", Subcategory = ""},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 2, Category = "Two Story Window", Subcategory = ""},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 10, Category = "Arch", Subcategory = ""},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 20, Category = "Staircase", Subcategory = ""},
+            new FunctionSortList(){flagnum = 0, functionsubsortnum = 0, Category = "Fireplaces (?)", Subcategory = ""},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 400, Category = "Garage", Subcategory = ""},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 1, Category = "Trees", Subcategory = ""},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 4, Category = "Flowers", Subcategory = ""},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 10, Category = "Gardening", Subcategory = ""},
+            new FunctionSortList(){flagnum = 4, functionsubsortnum = 2, Category = "Shrubs", Subcategory = ""},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 1000, Category = "Architecture", Subcategory = ""},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 8, Category = "Column", Subcategory = ""},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 100, Category = "Two Story Column", Subcategory = ""},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 200, Category = "Connecting Column", Subcategory = ""},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 40, Category = "Pools", Subcategory = ""},
+            new FunctionSortList(){flagnum = 8, functionsubsortnum = 8, Category = "Gates", Subcategory = ""},
+            new FunctionSortList(){flagnum = 1, functionsubsortnum = 800, Category = "Elevator", Subcategory = ""}
+        };
+            
+        uint chunkOffset = 0;
+
+		FileStream msPackage;
+		BinaryReader readFile;
+		uint major;
+		uint minor;
+		uint dateCreated;
+		uint dateModified;
+		uint indexMajorVersion;
+		uint indexCount;
+		uint indexOffset;
+		uint indexSize;
+		uint holesCount;
+		uint holesOffset;
+		uint holesSize;
+		uint indexMinorVersion;
+		uint numrecords;
+        int dirnum = -1;
+		string instanceID2 = "";
+		List<IndexEntry> PackageEntries = new();
+		public SimsPackage simsPackage = new();
+		Sims2ScanData scanData = new();
+		
+		public SimsPackage ReadSims2Package(){
+			
+			msPackage = new FileStream(simsPackage.Location, FileMode.Open, FileAccess.Read);
+            readFile = new BinaryReader(msPackage);
+
+			Encoding.ASCII.GetString(readFile.ReadBytes(4));
+            major = readFile.ReadUInt32();                
+            minor = readFile.ReadUInt32();
 
             string reserved = Encoding.UTF8.GetString(readFile.ReadBytes(12));
-            uint dateCreated = readFile.ReadUInt32();
-            uint dateModified = readFile.ReadUInt32();
-            uint indexMajorVersion = readFile.ReadUInt32();
-            uint indexCount = readFile.ReadUInt32();
-            uint indexOffset = readFile.ReadUInt32();
-            uint indexSize = readFile.ReadUInt32();
-            uint holesCount = readFile.ReadUInt32();
-            uint holesOffset = readFile.ReadUInt32();
-            uint holesSize = readFile.ReadUInt32();
-            uint indexMinorVersion = readFile.ReadUInt32() -1;
+            dateCreated = readFile.ReadUInt32();
+            dateModified = readFile.ReadUInt32();
+            indexMajorVersion = readFile.ReadUInt32();
+            indexCount = readFile.ReadUInt32();
+            indexOffset = readFile.ReadUInt32();
+            indexSize = readFile.ReadUInt32();
+            holesCount = readFile.ReadUInt32();
+            holesOffset = readFile.ReadUInt32();
+            holesSize = readFile.ReadUInt32();
+            indexMinorVersion = readFile.ReadUInt32() -1;
             string reserved2 = Encoding.UTF8.GetString(readFile.ReadBytes(32));
             int dirnum = -1;
+            
+			msPackage.Seek(chunkOffset + indexOffset, SeekOrigin.Begin);
 
-            msPackage.Seek(chunkOffset + indexOffset, SeekOrigin.Begin);
-            for (int i = 0; i < indexCount; i++){
+			if (indexCount == 0) 
+			{
+				readFile.Close();
+				return simsPackage;
+			}
+
+			GetEntries();
+			GetDirectory();
+            ReadEntries();
+
+
+
+
+
+
+
+
+			simsPackage.ScanData = scanData;
+			simsPackage.WriteInfoFile();
+			return simsPackage;
+		}
+
+		public void GetEntries(){
+			int entrynum = 0;
+			for (int i = 0; i < indexCount; i++){
                 IndexEntry holderEntry = new IndexEntry();
                 holderEntry.TypeID = readFile.ReadUInt32().ToString("X8");
 
                 holderEntry.GroupID = readFile.ReadUInt32().ToString("X8");
 
-                holderEntry.InstanceID = readFile.ReadUInt32().ToString("X8");               
+                holderEntry.InstanceID = readFile.ReadUInt32().ToString("X8"); 
 
                 if ((indexMajorVersion == 7) && (indexMinorVersion == 1)) {
                     holderEntry.InstanceID2 = readFile.ReadUInt32().ToString("X8");
@@ -66,61 +396,111 @@ namespace SimsCCManager.PackageReaders
                 holderEntry.Filesize = readFile.ReadUInt32();
                 holderEntry.Truesize = 0;
                 holderEntry.Compressed = false;
-                IndexData.Add(holderEntry);               
-                if (indexCount == 0) 
-                {
-                    readFile.Close();
-                    return package;
+				holderEntry.Location = entrynum;
+				List<EntryType> e = Sims2EntryTypes.Where(x => x.TypeID == holderEntry.TypeID).ToList();
+				if (e.Any()){					
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} has {1}.", simsPackage.FileName, e[0].Tag));
+                    holderEntry.Tag = e[0].Tag;
+					holderEntry.Location = entrynum;
+					holderEntry.TypeID = e[0].TypeID;
                 }
+                PackageEntries.Add(holderEntry);         
+				entrynum++;       
             }
+		}
 
-            int entrynum = 0;
-            foreach (IndexEntry iEntry in IndexData){
-                switch (iEntry.TypeID.ToLower())
-                {
-                    case "fc6eb1f7":
-                        SHPE = iEntry;
-                        break;
-                }
+		private void GetDirectory(){
+			uint myFilesize;
+			if (PackageEntries.Exists(x => x.Tag == "DIR")){
+				dirnum = PackageEntries.Where(x => x.Tag == "DIR").First().Location;
+				msPackage.Seek(chunkOffset + PackageEntries[dirnum].Offset, SeekOrigin.Begin);
+				if (indexMajorVersion == 7 && indexMinorVersion == 1){
+					numrecords = PackageEntries[dirnum].Filesize / 20;
+				} else {
+					numrecords = PackageEntries[dirnum].Filesize / 16;
+				}
 
-                List<EntryType> e = GlobalVariables.Sims2EntryTypes.Where(x => x.TypeID == iEntry.TypeID).ToList();
-                if (e.Any()){					
-					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Package {0} has {1}.", package.FileName, e[0].Tag));
-                    PackageEntries.Add(new IndexEntry() {Tag = e[0].Tag, Location = entrynum, TypeID = e[0].TypeID});
-                }
-                entrynum++;
-            }
+				for (int i = 0; i < numrecords; i++){
+					IndexEntry holderEntry = new();
+					holderEntry.TypeID = readFile.ReadUInt32().ToString("X8");
+                    holderEntry.GroupID = readFile.ReadUInt32().ToString("X8");
+                    string instanceID = readFile.ReadUInt32().ToString("X8");
+                    holderEntry.InstanceID = readFile.ReadUInt32().ToString("X8");
+                    if (indexMajorVersion == 7 && indexMinorVersion == 1) instanceID2 = readFile.ReadUInt32().ToString("X8");
+                    myFilesize = readFile.ReadUInt32();
+                    foreach (IndexEntry idx in PackageEntries){
+						if ((idx.TypeID == holderEntry.TypeID) && (idx.GroupID == holderEntry.GroupID) && (idx.InstanceID == holderEntry.InstanceID))
+						{
+							if (indexMajorVersion == 7 && indexMinorVersion == 1){
+								if (idx.InstanceID2 == instanceID2){
+									idx.Compressed = true;
+									idx.Filesize = myFilesize;
+									break;
+								}
+							}
+						} else {
+							idx.Compressed = true;
+							idx.Truesize = myFilesize;
+							break;
+						}
+					}
+				}
+			} else if (PackageEntries.Exists(x => x.Tag == "UI")){
+                dirnum = PackageEntries.Where(x => x.Tag == "UI").First().Location;				
 
-            uint numrecords = -0; 
-            string typeID = "";
-            string groupID = "";
-            string instanceID = "";
-            string instanceID2 = "";
-            uint myFilesize = -0;
-            uint compfilesize;
-
-            if (PackageEntries.Exists(x => x.Tag == "DIR")){
-                dirnum = PackageEntries.Where(x => x.Tag == "STR#").First().Location;
-
-
-                msPackage.Seek(chunkOffset + IndexData[dirnum].Offset, SeekOrigin.Begin);
+                msPackage.Seek(chunkOffset + PackageEntries[dirnum].Offset, SeekOrigin.Begin);
                 if (indexMajorVersion == 7 && indexMinorVersion == 1){
-                    numrecords = IndexData[dirnum].Filesize / 20;
+                    numrecords = PackageEntries[dirnum].Filesize / 20;
                 } else {
-                    numrecords = IndexData[dirnum].Filesize / 16;
+                    numrecords = PackageEntries[dirnum].Filesize / 16;
                 }
 
                 for (int i = 0; i < numrecords; i++){
                     IndexEntry holderEntry = new();
-                    typeID = readFile.ReadUInt32().ToString("X8");
-                    groupID = readFile.ReadUInt32().ToString("X8");
-                    instanceID = readFile.ReadUInt32().ToString("X8");
+                    string typeID = readFile.ReadUInt32().ToString("X8");
+                    string groupID = readFile.ReadUInt32().ToString("X8");
+                    string instanceID = readFile.ReadUInt32().ToString("X8");
                     holderEntry.InstanceID = readFile.ReadUInt32().ToString("X8");
-                    AllInstanceIDS.Add(holderEntry.InstanceID);
                     myFilesize = readFile.ReadUInt32();
 
 
-                    foreach (IndexEntry idx in IndexData){
+                    foreach (IndexEntry idx in PackageEntries){
+                        if ((idx.TypeID == typeID) && (idx.GroupID == groupID) && (idx.InstanceID == instanceID))
+                        {
+                            if (indexMajorVersion == 7 && indexMinorVersion == 1){
+                                if (idx.InstanceID2 == instanceID2){
+                                    idx.Compressed = true;
+                                    idx.Filesize = myFilesize;
+                                    break;
+                                }
+                            }
+                        } else {
+                            idx.Compressed = true;
+                            idx.Truesize = myFilesize;
+                            break;
+                        }
+                    }
+                }
+            } else if (PackageEntries.Exists(x => x.TypeID == "286B1F03")){
+                dirnum = PackageEntries.Where(x => x.TypeID == "286B1F03").First().Location;				
+
+                msPackage.Seek(chunkOffset + PackageEntries[dirnum].Offset, SeekOrigin.Begin);
+                if (indexMajorVersion == 7 && indexMinorVersion == 1){
+                    numrecords = PackageEntries[dirnum].Filesize / 20;
+                } else {
+                    numrecords = PackageEntries[dirnum].Filesize / 16;
+                }
+
+                for (int i = 0; i < numrecords; i++){
+                    IndexEntry holderEntry = new();
+                    string typeID = readFile.ReadUInt32().ToString("X8");
+                    string groupID = readFile.ReadUInt32().ToString("X8");
+                    string instanceID = readFile.ReadUInt32().ToString("X8");
+                    holderEntry.InstanceID = readFile.ReadUInt32().ToString("X8");
+                    myFilesize = readFile.ReadUInt32();
+
+
+                    foreach (IndexEntry idx in PackageEntries){
                         if ((idx.TypeID == typeID) && (idx.GroupID == groupID) && (idx.InstanceID == instanceID))
                         {
                             if (indexMajorVersion == 7 && indexMinorVersion == 1){
@@ -138,393 +518,443 @@ namespace SimsCCManager.PackageReaders
                     }
                 }
             }
-
-            if (PackageEntries.Exists(x => x.Tag == "DIR")){
-                msPackage.Seek(chunkOffset + IndexData[dirnum].Offset, SeekOrigin.Begin);
-                if ((indexMajorVersion == 7) && indexMinorVersion == 1)
-                {
-                    numrecords = IndexData[dirnum].Filesize / 20;
-                } else {
-                    numrecords = IndexData[dirnum].Filesize / 16;
-                }
-
-                for (int i = 0; i < numrecords; i++){
-                    IndexEntry holderEntry = new();
-                    typeID = readFile.ReadUInt32().ToString("X8");
-                    groupID = readFile.ReadUInt32().ToString("X8");
-                    instanceID = readFile.ReadUInt32().ToString("X8");
-                    holderEntry.InstanceID = readFile.ReadUInt32().ToString("X8");
-                    AllInstanceIDS.Add(holderEntry.InstanceID);
-
-                    if (indexMajorVersion == 7 && indexMinorVersion == 1){
-                        instanceID2 = readFile.ReadUInt32().ToString("X8");
-                    }
-                    compfilesize = readFile.ReadUInt32();
-                    int idxcount = 0;
-
-                    
-
-                    foreach (IndexEntry idx in IndexData){
-                        string typefound = "";
-                        idxcount++;
-                        EntryType e = GlobalVariables.Sims2EntryTypes.Where(x => x.TypeID == idx.TypeID).First();
-                        if (e != null){
-                            typefound = e.Tag;
-                        }
-
-                        int cFileSize = 0;
-                        string cTypeID = "";
-
-                        if (typefound == "CTSS"){
-                            msPackage.Seek(chunkOffset + idx.Offset, SeekOrigin.Begin);
-                            cFileSize = readFile.ReadInt32();
-							cTypeID = readFile.ReadUInt16().ToString("X4");
-                            if (cTypeID == "FB10") 
-							{
-                                byte[] tempBytes = readFile.ReadBytes(3);
-								uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
-
-
-
-								DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-
-								scanData = EntryReaders.ReadCTSSChunk(decompressed, scanData);                                
-							} 
-							else 
-							{
-                                msPackage.Seek(chunkOffset + idx.Offset, SeekOrigin.Begin);
-								scanData = EntryReaders.ReadCTSSChunk(readFile, scanData);                                
-							}
-                        } else if (typefound == "XOBJ" || typefound == "XFNC" || typefound == "XFLR" || typefound == "XMOL" || typefound == "XROF"  || typefound == "XTOL"  || typefound == "XHTN"){
-                            msPackage.Seek(chunkOffset + idx.Offset, SeekOrigin.Begin);
-                            cFileSize = readFile.ReadInt32();
-                            cTypeID = readFile.ReadUInt16().ToString("X4");
-                            if (cTypeID == "FB10"){
-                                byte[] tempBytes = readFile.ReadBytes(3);
-                                uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
-                                string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-
-                                if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")){
-                                    scanData = EntryReaders.ReadCPFChunk(readFile, scanData);
-                                } else {
-                                    msPackage.Seek(chunkOffset + idx.Offset + 9, SeekOrigin.Begin);
-                                    DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-
-                                    if (cpfTypeID == "E750E0E2")
-                                    {
-                                        cpfTypeID = decompressed.ReadUInt32().ToString("X8");
-                                        if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
-                                        {
-                                            scanData = EntryReaders.ReadCPFChunk(decompressed, scanData);
-                                            
-                                        } 
-                                    } else {
-                                        scanData = EntryReaders.ReadXMLChunk(decompressed, scanData);
-                                    }
-                                }
-                            } else {
-                                // it's not that?? idk my code from a year ago ends here LOL
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (PackageEntries.Exists(x => x.Tag == "OBJD")){
-                int cFileSize = -1;
-                string cTypeID = "";
-                List<int> objdnum = PackageEntries.Where(x => x.Tag == "OBJD").Select(x => x.Location).ToList();
-                foreach (int loc in objdnum){
-                    msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-                    cFileSize = readFile.ReadInt32();
-                    cTypeID = readFile.ReadUInt16().ToString("X4");
-                    if (cTypeID == "FB10")
-                    { 
-                        byte[] tempBytes = readFile.ReadBytes(3);
-                        uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
-                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-                        scanData = EntryReaders.ReadOBJDChunk(decompressed, scanData);
-                        
-                    } else {
-                        msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-                        scanData = EntryReaders.ReadOBJDChunk(readFile, scanData);
-                        
-                    }
-                }
-            }
-
-
-            if (PackageEntries.Exists(x => x.Tag == "STR#")){
-                int cFileSize = -1;
-                string cTypeID = "";
-                List<int> strnm = PackageEntries.Where(x => x.Tag == "STR#").Select(x => x.Location).ToList();
-                
-                foreach (int loc in strnm){
-                    msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-                    cFileSize = readFile.ReadInt32();
-                    cTypeID = readFile.ReadUInt16().ToString("X4");
-                    
-                    if (cTypeID == "FB10")
-                    {
-                        byte[] tempBytes = readFile.ReadBytes(3);
-                        uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
-
-                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-
-                        scanData = EntryReaders.ReadSTRChunk(decompressed, scanData);                        
-                    } 
-                    else 
-                    {
-                        scanData = EntryReaders.ReadSTRChunk(readFile, scanData);                        
-                    }
-                }
-            }
-
-            if (PackageEntries.Exists(x => x.Tag == "MMAT")){
-                int cFileSize = -1;
-                string cTypeID = "";
-                List<int> matnm = PackageEntries.Where(x => x.Tag == "MMAT").Select(x => x.Location).ToList();
-                
-                foreach (int loc in matnm){
-                    msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-                    cFileSize = readFile.ReadInt32();
-                    cTypeID = readFile.ReadUInt16().ToString("X4");
-                    
+		}
+	
+        private void ReadEntries(){
+            List<EntryType> EntryTypes = new();
+            EntryType e = Sims2EntryTypes.Where(x => x.Tag == "CTSS").First();
+            if (PackageEntries.Where(x => x.TypeID == e.Tag).Any()){
+                List<IndexEntry> indexes = PackageEntries.Where(x => x.TypeID == e.Tag).ToList();
+                foreach (IndexEntry idx in indexes){
+                    msPackage.Seek(chunkOffset + idx.Offset, SeekOrigin.Begin);
+                    int cFileSize = readFile.ReadInt32();
+                    string cTypeID = readFile.ReadUInt16().ToString("X4");
                     if (cTypeID == "FB10") 
                     {
                         byte[] tempBytes = readFile.ReadBytes(3);
                         uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
-
+                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+                        ReadCTSSChunk cts = new(decompressed);     
+                        scanData.CTSSData.Add(cts.ctss);
+                    } 
+                    else 
+                    {
+                        msPackage.Seek(chunkOffset + idx.Offset, SeekOrigin.Begin);
+                        ReadCTSSChunk cts = new(readFile);
+                        scanData.CTSSData.Add(cts.ctss);
+                    }
+                }
+            }
+            List<string> typeids = new(){ Sims2EntryTypes.Where(x => x.Tag == "XOBJ").First().TypeID, Sims2EntryTypes.Where(x => x.Tag == "XFNC").First().TypeID, Sims2EntryTypes.Where(x => x.Tag == "XFLR").First().TypeID, Sims2EntryTypes.Where(x => x.Tag == "XMOL").First().TypeID, Sims2EntryTypes.Where(x => x.Tag == "XROF").First().TypeID, Sims2EntryTypes.Where(x => x.Tag == "XTOL").First().TypeID, Sims2EntryTypes.Where(x => x.Tag == "XHTN").First().TypeID};
+            if (PackageEntries.Where(x => typeids.Any(z => z == x.TypeID)).Any()){
+                List<IndexEntry> indexes = new();
+                foreach (string typeid in typeids){
+                    indexes.AddRange(PackageEntries.Where(x => x.TypeID == typeid).ToList());
+                }
+                foreach (IndexEntry idx in indexes){
+                    msPackage.Seek(chunkOffset + idx.Offset, SeekOrigin.Begin);
+                    int cFileSize = readFile.ReadInt32();
+                    string cTypeID = readFile.ReadUInt16().ToString("X4");
+                    if (cTypeID == "FB10"){
+                        byte[] tempBytes = readFile.ReadBytes(3);
+                        uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
                         string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-                        if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
-                        {
-                            scanData = EntryReaders.ReadCPFChunk(readFile, scanData);
-                        } 
-                        else 
-                        {
-                            msPackage.Seek(chunkOffset + IndexData[loc].Offset + 9, SeekOrigin.Begin);
+
+                        if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")){
+                            ReadCPFChunk cpfchunk = new(readFile);
+                            scanData.CPFData.Add(cpfchunk.cpf);
+                        } else {
+                            msPackage.Seek(chunkOffset + idx.Offset + 9, SeekOrigin.Begin);
                             DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
 
-                            if (cpfTypeID == "E750E0E2") 
+                            if (cpfTypeID == "E750E0E2")
                             {
                                 cpfTypeID = decompressed.ReadUInt32().ToString("X8");
-
                                 if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0")) 
                                 {
-                                    scanData = EntryReaders.ReadCPFChunk(decompressed, scanData);                                    
-                                }
-
-                            } 
-                            else 
-                            {
-                                scanData = EntryReaders.ReadXMLChunk(decompressed, scanData);                                
+                                    ReadCPFChunk cpfchunk = new(decompressed);      
+                                    scanData.CPFData.Add(cpfchunk.cpf);                              
+                                } 
+                            } else {
+                                ReadCPFChunk cpfchunk = new(decompressed);          
+                                scanData.CPFData.Add(cpfchunk.cpf);                      
                             }
                         }
                     } else {
-                        msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-
-                        string cpfTypeID = readFile.ReadUInt32().ToString("X8");
-                        if ((cpfTypeID == "CBE7505E") || (cpfTypeID == "CBE750E0"))
-                        {
-                            scanData = EntryReaders.ReadCPFChunk(readFile, scanData);                            
-                        }
-
-                        if  (cpfTypeID == "6D783F3C")
-                        {
-                            msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-
-                            string xmlData = Encoding.UTF8.GetString(readFile.ReadBytes((int)IndexData[loc].Filesize));
-                            scanData = EntryReaders.ReadXMLChunk(xmlData, scanData);                        
-
-                        }
+                        msPackage.Seek(chunkOffset + idx.Offset, SeekOrigin.Begin);
+                        ReadCPFChunk cpfchunk = new(readFile);
+                        scanData.CPFData.Add(cpfchunk.cpf);
                     }
-                }
-            }
-            /*
-            if (PackageEntries.Exists(x => x.Tag == "IMG"))
-            {
-				ImageConverter ic = new();
-                int cFileSize = -1;
-                string cTypeID = "";
-                List<int> imgnm = PackageEntries.Where(x => x.Tag == "IMG").Select(x => x.Location).ToList();
-                int loccount = 0;
-                foreach (int loc in imgnm){
-                    msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-                    cFileSize = readFile.ReadInt32();
-                    cTypeID = readFile.ReadUInt16().ToString("X4");
-                    System.Drawing.Bitmap bm;;
-                    if (cTypeID == "FB10")
-                    {
-                        byte[] tempBytes = readFile.ReadBytes(3);
-                        uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
-
-                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-
-						bm = (Bitmap)ic.ConvertFrom(decompressed);
-                        //scanData = EntryReaders.ReadSTRChunk(decompressed, scanData);                        
-                    } 
-                    else 
-                    {
-						byte[] imagebytes = readFile.ReadBytes(cFileSize);
-						bm = (Bitmap)ic.ConvertFrom(imagebytes);						
-                        //scanData = EntryReaders.ReadSTRChunk(readFile, scanData);                        
-                    }
-					string imgname = "";
-					if (imgnm.Count > 1){
-						imgname = string.Format("{0}_Image_{1}.png", package.FileName, loccount);
-					} else {
-						imgname = string.Format("{0}_Image.png", package.FileName);
-					}
-					FileInfo packageinf = new(package.Location);
-					DirectoryInfo dir = packageinf.Directory;
-					string saveloc = Path.Combine(dir.FullName, imgname);
-					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving IMG to {0}", saveloc));
-					bm.Save(saveloc);
-					loccount++;
-                }
+                }                
+                   
             }
 
-			if (PackageEntries.Exists(x => x.Tag == "THUM"))
+
+        }
+    
+    }
+
+
+    public class EntryReaders{
+        public static uint QFSLengthToInt(byte[] data)
+        {			
+            // Converts a 3 byte length to a uint
+            uint power = 1;
+            uint result = 0;
+            for (int i = data.Length; i > 0; i--)
             {
-				ImageConverter ic = new();
-                int cFileSize = -1;
-                string cTypeID = "";
-                List<int> imgnm = PackageEntries.Where(x => x.Tag == "THUM").Select(x => x.Location).ToList();
-                int loccount = 0;
-                foreach (int loc in imgnm){
-                    msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-                    cFileSize = readFile.ReadInt32();
-                    cTypeID = readFile.ReadUInt16().ToString("X4");
-                    System.Drawing.Bitmap bm;;
-                    if (cTypeID == "FB10")
-                    {
-                        byte[] tempBytes = readFile.ReadBytes(3);
-                        uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
-
-                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
-
-						bm = (Bitmap)ic.ConvertFrom(decompressed);
-                        //scanData = EntryReaders.ReadSTRChunk(decompressed, scanData);                        
-                    } 
-                    else 
-                    {
-						byte[] imagebytes = readFile.ReadBytes(cFileSize);
-						bm = (Bitmap)ic.ConvertFrom(imagebytes);						
-                        //scanData = EntryReaders.ReadSTRChunk(readFile, scanData);                        
-                    }
-					string imgname = "";
-					if (imgnm.Count > 1){
-						imgname = string.Format("{0}_Image_{1}.png", package.FileName, loccount);
-					} else {
-						imgname = string.Format("{0}_Image.png", package.FileName);
-					}
-					FileInfo packageinf = new(package.Location);
-					DirectoryInfo dir = packageinf.Directory;
-					string saveloc = Path.Combine(dir.FullName, imgname);
-					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving THUMB to {0}", saveloc));
-					bm.Save(saveloc);
-					loccount++;
-                }
+                result += (data[i-1] * power);
+                power = power * 256;
             }
 
-			if (PackageEntries.Exists(x => x.Tag == "JPG"))
-            {
-				ImageConverter ic = new();
-                int cFileSize = -1;
-                string cTypeID = "";
-                List<int> imgnm = PackageEntries.Where(x => x.Tag == "JPG").Select(x => x.Location).ToList();
-                int loccount = 0;
-                foreach (int loc in imgnm){
-                    msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-                    cFileSize = readFile.ReadInt32();
-                    cTypeID = readFile.ReadUInt16().ToString("X4");
-                    System.Drawing.Bitmap bm;;
-                    if (cTypeID == "FB10")
-                    {
-                        byte[] tempBytes = readFile.ReadBytes(3);
-                        uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
+            return result;
+        }
 
-                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+        public static byte[] Uncompress(byte[] data, uint targetSize, int offset)
+		{			
+			byte[] uncdata = null;
+			int index = offset;			
 
-						bm = (Bitmap)ic.ConvertFrom(decompressed);
-                        //scanData = EntryReaders.ReadSTRChunk(decompressed, scanData);                        
-                    } 
-                    else 
-                    {
-						byte[] imagebytes = readFile.ReadBytes(cFileSize);
-						bm = (Bitmap)ic.ConvertFrom(imagebytes);						
-                        //scanData = EntryReaders.ReadSTRChunk(readFile, scanData);                        
-                    }
-					string imgname = "";
-					if (imgnm.Count > 1){
-						imgname = string.Format("{0}_Image_{1}.png", package.FileName, loccount);
-					} else {
-						imgname = string.Format("{0}_Image.png", package.FileName);
+			try 
+			{
+				uncdata = new Byte[targetSize];
+			} 
+			catch(Exception) 
+			{
+				uncdata = new Byte[0];
+			}
+			
+			int uncindex = 0;
+			int plaincount = 0;
+			int copycount = 0;
+			int copyoffset = 0;
+			Byte cc = 0;
+			Byte cc1 = 0;
+			Byte cc2 = 0;
+			Byte cc3 = 0;
+			int source;
+			
+			try 
+			{
+				while ((index<data.Length) && (data[index] < 0xfc))
+				{
+					cc = data[index++];
+				
+					if ((cc&0x80)==0)
+					{
+						cc1 = data[index++];
+						plaincount = (cc & 0x03);
+						copycount = ((cc & 0x1C) >> 2) + 3;
+						copyoffset = ((cc & 0x60) << 3) + cc1 +1;
+					} 
+					else if ((cc&0x40)==0)
+					{
+						cc1 = data[index++];
+						cc2 = data[index++];
+						plaincount = (cc1 & 0xC0) >> 6 ; 
+						copycount = (cc & 0x3F) + 4 ;
+						copyoffset = ((cc1 & 0x3F) << 8) + cc2 +1;							
+					} 
+					else if ((cc&0x20)==0)
+					{
+						cc1 = data[index++];
+						cc2 = data[index++];
+						cc3 = data[index++];
+						plaincount = (cc & 0x03);
+						copycount = ((cc & 0x0C) << 6) + cc3 + 5;
+						copyoffset = ((cc & 0x10) << 12) + (cc1 << 8) + cc2 +1;
+					} 
+					else 
+					{									
+						plaincount = (cc - 0xDF) << 2; 
+						copycount = 0;
+						copyoffset = 0;				
 					}
-					FileInfo packageinf = new(package.Location);
-					DirectoryInfo dir = packageinf.Directory;
-					string saveloc = Path.Combine(dir.FullName, imgname);
-					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving JPG to {0}", saveloc));
-					bm.Save(saveloc);
-					loccount++;
-                }
-            }
 
-			if (PackageEntries.Exists(x => x.Tag == "TXTR"))
-            {
-				ImageConverter ic = new();
-                int cFileSize = -1;
-                string cTypeID = "";
-                List<int> imgnm = PackageEntries.Where(x => x.Tag == "TXTR").Select(x => x.Location).ToList();
-                int loccount = 0;
-                foreach (int loc in imgnm){
-                    msPackage.Seek(chunkOffset + IndexData[loc].Offset, SeekOrigin.Begin);
-                    cFileSize = readFile.ReadInt32();
-                    cTypeID = readFile.ReadUInt16().ToString("X4");
-                    System.Drawing.Bitmap bm;;
-                    if (cTypeID == "FB10")
-                    {
-                        byte[] tempBytes = readFile.ReadBytes(3);
-                        uint cFullSize = EntryReaders.QFSLengthToInt(tempBytes);
+					for (int i=0; i<plaincount; i++) uncdata[uncindex++] = data[index++];
 
-                        DecryptByteStream decompressed = new DecryptByteStream(EntryReaders.Uncompress(readFile.ReadBytes(cFileSize), cFullSize, 0));
+					source = uncindex - copyoffset;	
+					for (int i=0; i<copycount; i++) uncdata[uncindex++] = uncdata[source++];
+				}
+			} 
+			catch(Exception ex)
+			{
+				throw ex;
+			} 
+			
 
-						bm = (Bitmap)ic.ConvertFrom(decompressed);
-                        //scanData = EntryReaders.ReadSTRChunk(decompressed, scanData);                        
-                    } 
-                    else 
-                    {
-						byte[] imagebytes = readFile.ReadBytes(cFileSize);
-						bm = (Bitmap)ic.ConvertFrom(imagebytes);						
-                        //scanData = EntryReaders.ReadSTRChunk(readFile, scanData);                        
-                    }
-					string imgname = "";
-					if (imgnm.Count > 1){
-						imgname = string.Format("{0}_Image_{1}.png", package.FileName, loccount);
-					} else {
-						imgname = string.Format("{0}_Image.png", package.FileName);
-					}
-					FileInfo packageinf = new(package.Location);
-					DirectoryInfo dir = packageinf.Directory;
-					string saveloc = Path.Combine(dir.FullName, imgname);
-					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Saving JPG to {0}", saveloc));
-					bm.Save(saveloc);
-					loccount++;
-                }
-            }*/
-            
-            msPackage.Close();
-            readFile.Close();
-            msPackage.Dispose();
-            readFile.Dispose();
-			package.ScanData = scanData;
-			package.Scanned = true;
-			package.WriteInfoFile();			
-            return package;
-
-            
+			if (index<data.Length) 
+			{
+				plaincount = (data[index++] & 0x03);
+				for (int i=0; i<plaincount; i++) 
+				{
+					if (uncindex>=uncdata.Length) break;
+					uncdata[uncindex++] = data[index++];
+				}
+			}
+			return uncdata;
 		}
-	}
+
+        public static string ReadNullString(BinaryReader reader)
+		{
+            string result = "";
+			char c;
+			for (int i = 0; i < reader.BaseStream.Length; i++) 
+			{
+				if ((c = (char) reader.ReadByte()) == 0) 
+				{
+					break;
+				}
+				result += c.ToString();
+			}
+			return result;
+		}
+    }
+
+    public struct ReadCTSSChunk{
+        public S2CTSS ctss = new();
+        string Description = "";
+        string Title = "";
+
+        public ReadCTSSChunk(BinaryReader readFile){
+            readFile.ReadBytes(64);
+			readFile.ReadUInt16();
+
+			uint numStrings = readFile.ReadUInt16();
+			bool foundLang = false;
+            
+			for (int k = 0; k < numStrings; k++)
+			{
+				int langCode = Convert.ToInt32(readFile.ReadByte().ToString());
+
+				string blah = EntryReaders.ReadNullString(readFile);
+				string meep = EntryReaders.ReadNullString(readFile);
+
+				if (langCode == 1) 
+				{
+					if (foundLang == true) { Description = blah.Replace("\n", " "); break; }
+					if (foundLang == false) { Title = blah.Replace("\n", " "); foundLang = true; }
+				}
+
+			}
+            if (!string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(Description)){
+                ctss.Description = Description;
+            }
+            if (!string.IsNullOrWhiteSpace(Title) && !string.IsNullOrWhiteSpace(Title)){
+                ctss.Title = Title;
+            }
+        }
+        public ReadCTSSChunk(DecryptByteStream readFile){
+            readFile.SkipAhead(66);
+
+			uint numStrings = readFile.ReadUInt16();
+			bool foundLang = false;
+            
+			for (int k = 0; k < numStrings; k++)
+			{
+				byte[] langCode = readFile.ReadBytes(1);
+
+				string blah = readFile.GetNullString();
+				string meep = readFile.GetNullString();
+
+				if (langCode[0] == 1) 
+				{
+					if (foundLang == true) { Description = blah.Replace("\n", " "); break; }
+					if (foundLang == false) { Title = blah.Replace("\n", " "); foundLang = true; }
+				}
+
+			}
+            if (!string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(Description)){
+                ctss.Description = Description;
+            }
+            if (!string.IsNullOrWhiteSpace(Title) && !string.IsNullOrWhiteSpace(Title)){
+                ctss.Title = Title;
+            }           
+        }
+    }
+
+    public struct ReadCPFChunk{
+        public S2CPF cpf = new();
+        string title = "";
+        string description = "";
+        string xmltype = "";
+        string xmlsubtype = "";
+        string xmlcat = "";
+        string xmlmodelname = "";
+        string xmlcreator = "";
+        string xmlage = "";
+        string xmlgender = "";
+
+        public ReadCPFChunk(BinaryReader readFile){
+            // Read an uncompressed CPF chunk and extract the name, description and type
+			// Version
+			readFile.ReadUInt16();
+
+			uint numItems = readFile.ReadUInt32();
+
+			// Read the items
+			for (int i = 0; i < numItems; i++)
+			{
+				// Get type of the item
+				string dataType = readFile.ReadUInt32().ToString("X8");
+				uint nameLength = readFile.ReadUInt32();
+				string fieldName = Encoding.UTF8.GetString(readFile.ReadBytes((int)nameLength));
+
+				uint fieldValueInt = 0;
+				string fieldValueString = "";
+
+
+				switch (dataType)
+				{
+						// Int
+					case "EB61E4F7":
+						fieldValueInt = readFile.ReadUInt32();
+						break;
+						// Int #2 - Not Used
+					case "0C264712":
+						fieldValueInt = readFile.ReadUInt32();
+						break;
+						// String
+					case "0B8BEA18":
+						uint stringLength = readFile.ReadUInt32();
+						fieldValueString = Encoding.UTF8.GetString(readFile.ReadBytes((int)stringLength));
+						break;
+						// Float
+					case "ABC78708":
+						// Ignore for now
+						uint fieldValueFloat = readFile.ReadUInt32();
+						break;
+						// Boolean
+					case "CBA908E1":
+						bool fieldValueBool = readFile.ReadBoolean();
+						break;
+				}
+
+				switch (fieldName)
+				{
+					case "name":                    
+						title = fieldValueString;
+						break;
+					case "description":
+						description = fieldValueString;
+						break;
+					case "type":
+						xmltype = fieldValueString;
+						break;
+					case "subtype":
+						xmlsubtype = fieldValueInt.ToString();
+						break;
+					case "category":
+						xmlcat = fieldValueInt.ToString();
+						break;
+					case "modelName":
+						xmlmodelname = fieldValueString;
+						break;
+					case "objectGUID":
+						cpf.GUIDs.Add(fieldValueInt.ToString("X8"));
+						break;
+					case "creator":
+						xmlcreator = fieldValueString;
+						break;
+					case "age":
+						xmlage = fieldValueInt.ToString();
+						break;
+					case "gender":
+						xmlgender = fieldValueInt.ToString();
+						break;
+				}
+			}
+            if (string.IsNullOrEmpty(xmlage) && string.IsNullOrWhiteSpace(xmlage)) cpf.XMLAge = xmlage;
+            if (string.IsNullOrEmpty(xmlage) && string.IsNullOrWhiteSpace(xmlage)) cpf.XMLAge = xmlage;
+            if (string.IsNullOrEmpty(xmlage) && string.IsNullOrWhiteSpace(xmlage)) cpf.XMLAge = xmlage;
+            if (string.IsNullOrEmpty(xmlage) && string.IsNullOrWhiteSpace(xmlage)) cpf.XMLAge = xmlage;
+            if (string.IsNullOrEmpty(xmlage) && string.IsNullOrWhiteSpace(xmlage)) cpf.XMLAge = xmlage;
+            if (string.IsNullOrEmpty(xmlage) && string.IsNullOrWhiteSpace(xmlage)) cpf.XMLAge = xmlage;
+             
+        }
+        public ReadCPFChunk(DecryptByteStream readFile){
+            // Read a compressed CPF chunk from a byte stream and extrac the name, 
+			// description and type
+
+			// Version
+			readFile.ReadUInt16();
+
+			uint numItems = readFile.ReadUInt32();
+
+			// Read the items
+			for (int i = 0; i < numItems; i++)
+			{
+				// Get type of the item
+				string dataType = readFile.ReadUInt32().ToString("X8");
+				uint nameLength = readFile.ReadUInt32();
+				string fieldName = Encoding.UTF8.GetString(readFile.ReadBytes(nameLength));
+
+				uint fieldValueInt = 0;
+				string fieldValueString = "";
+
+				switch (dataType)
+				{
+					// Int
+					case "EB61E4F7":
+						fieldValueInt = readFile.ReadUInt32();
+						break;
+					// Int #2 - Not Used
+					case "0C264712":
+						fieldValueInt = readFile.ReadUInt32();
+						break;
+					// String
+					case "0B8BEA18":
+						uint stringLength = readFile.ReadUInt32();
+						fieldValueString = Encoding.UTF8.GetString(readFile.ReadBytes(stringLength));
+						break;
+					// Float
+					case "ABC78708":
+						// Ignore for now
+						uint fieldValueFloat = readFile.ReadUInt32();
+						break;
+					// Boolean
+					case "CBA908E1":
+						bool fieldValueBool = readFile.ReadBoolean();
+						break;
+				}
+
+				switch (fieldName)
+				{
+					case "name":                    
+						title = fieldValueString;
+						break;
+					case "description":
+						description = fieldValueString;
+						break;
+					case "type":
+						xmltype = fieldValueString;
+						break;
+					case "subtype":
+						xmlsubtype = fieldValueInt.ToString();
+						break;
+					case "category":
+						xmlcat = fieldValueInt.ToString();
+						break;
+					case "modelName":
+						xmlmodelname = fieldValueString;
+						break;
+					case "objectGUID":
+						cpf.GUIDs.Add(fieldValueInt.ToString("X8"));
+						break;
+					case "creator":
+						xmlcreator = fieldValueString;
+						break;
+					case "age":
+						xmlage = fieldValueInt.ToString();
+						break;
+					case "gender":
+						xmlgender = fieldValueInt.ToString();
+						break;
+				}
+			}
+        }
+    }
+
 
     public class DecryptByteStream{
         private int currOffset = 0;
@@ -635,1144 +1065,5 @@ namespace SimsCCManager.PackageReaders
             return byteStream;
         }
     }
-
-    public class EntryReaders{
-        
-        public static uint QFSLengthToInt(byte[] data)
-        {			
-            // Converts a 3 byte length to a uint
-            uint power = 1;
-            uint result = 0;
-            for (int i = data.Length; i > 0; i--)
-            {
-                result += (data[i-1] * power);
-                power = power * 256;
-            }
-
-            return result;
-        }
-
-        public static byte[] Uncompress(byte[] data, uint targetSize, int offset)
-		{			
-			byte[] uncdata = null;
-			int index = offset;			
-
-			try 
-			{
-				uncdata = new Byte[targetSize];
-			} 
-			catch(Exception) 
-			{
-				uncdata = new Byte[0];
-			}
-			
-			int uncindex = 0;
-			int plaincount = 0;
-			int copycount = 0;
-			int copyoffset = 0;
-			Byte cc = 0;
-			Byte cc1 = 0;
-			Byte cc2 = 0;
-			Byte cc3 = 0;
-			int source;
-			
-			try 
-			{
-				while ((index<data.Length) && (data[index] < 0xfc))
-				{
-					cc = data[index++];
-				
-					if ((cc&0x80)==0)
-					{
-						cc1 = data[index++];
-						plaincount = (cc & 0x03);
-						copycount = ((cc & 0x1C) >> 2) + 3;
-						copyoffset = ((cc & 0x60) << 3) + cc1 +1;
-					} 
-					else if ((cc&0x40)==0)
-					{
-						cc1 = data[index++];
-						cc2 = data[index++];
-						plaincount = (cc1 & 0xC0) >> 6 ; 
-						copycount = (cc & 0x3F) + 4 ;
-						copyoffset = ((cc1 & 0x3F) << 8) + cc2 +1;							
-					} 
-					else if ((cc&0x20)==0)
-					{
-						cc1 = data[index++];
-						cc2 = data[index++];
-						cc3 = data[index++];
-						plaincount = (cc & 0x03);
-						copycount = ((cc & 0x0C) << 6) + cc3 + 5;
-						copyoffset = ((cc & 0x10) << 12) + (cc1 << 8) + cc2 +1;
-					} 
-					else 
-					{									
-						plaincount = (cc - 0xDF) << 2; 
-						copycount = 0;
-						copyoffset = 0;				
-					}
-
-					for (int i=0; i<plaincount; i++) uncdata[uncindex++] = data[index++];
-
-					source = uncindex - copyoffset;	
-					for (int i=0; i<copycount; i++) uncdata[uncindex++] = uncdata[source++];
-				}
-			} 
-			catch(Exception ex)
-			{
-				throw ex;
-			} 
-			
-
-			if (index<data.Length) 
-			{
-				plaincount = (data[index++] & 0x03);
-				for (int i=0; i<plaincount; i++) 
-				{
-					if (uncindex>=uncdata.Length) break;
-					uncdata[uncindex++] = data[index++];
-				}
-			}
-			return uncdata;
-		}
-
-        public static Sims2ScanData ReadCTSSChunk(BinaryReader readFile, Sims2ScanData scanData)
-		{	
-			S2CTSS ctss = new();	
-            string description = "";
-            string title = "";
-
-			readFile.ReadBytes(64);
-			readFile.ReadUInt16();
-
-			uint numStrings = readFile.ReadUInt16();
-			bool foundLang = false;
-            
-			for (int k = 0; k < numStrings; k++)
-			{
-				int langCode = Convert.ToInt32(readFile.ReadByte().ToString());
-
-				string blah = ReadNullString(readFile);
-				string meep = ReadNullString(readFile);
-
-				if (langCode == 1) 
-				{
-					if (foundLang == true) { description = blah.Replace("\n", " "); break; }
-					if (foundLang == false) { title = blah.Replace("\n", " "); foundLang = true; }
-				}
-
-			}
-            if (!string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(description)){
-                ctss.Description = description;
-            }
-            if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(title)){
-                ctss.Title = title;
-            }
-			scanData.CTSSData.Add(ctss);
-            return scanData;
-		}
-
-		public static Sims2ScanData ReadCTSSChunk(DecryptByteStream readFile, Sims2ScanData scanData)
-		{
-            S2CTSS ctss = new();
-			string description = "";
-            string title = "";
-
-			readFile.SkipAhead(66);
-
-			uint numStrings = readFile.ReadUInt16();
-			bool foundLang = false;
-            
-			for (int k = 0; k < numStrings; k++)
-			{
-				byte[] langCode = readFile.ReadBytes(1);
-
-				string blah = readFile.GetNullString();
-				string meep = readFile.GetNullString();
-
-				if (langCode[0] == 1) 
-				{
-					if (foundLang == true) { description = blah.Replace("\n", " "); break; }
-					if (foundLang == false) { title = blah.Replace("\n", " "); foundLang = true; }
-				}
-
-			}
-            if (!string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(description)){
-                ctss.Description = description;
-            }
-            if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(title)){
-                ctss.Title = title;
-            }           
-            scanData.CTSSData.Add(ctss);
-            return scanData;
-		}
-
-        public static Sims2ScanData ReadCPFChunk(BinaryReader readFile, Sims2ScanData scanData)
-		{
-			S2CPF cpf = new();
-			// Read an uncompressed CPF chunk and extract the name, description and type
-			// Version
-			readFile.ReadUInt16();
-
-			uint numItems = readFile.ReadUInt32();
-
-			// Read the items
-			for (int i = 0; i < numItems; i++)
-			{
-				// Get type of the item
-				string dataType = readFile.ReadUInt32().ToString("X8");
-				uint nameLength = readFile.ReadUInt32();
-				string fieldName = Encoding.UTF8.GetString(readFile.ReadBytes((int)nameLength));
-
-				uint fieldValueInt = 0;
-				string fieldValueString = "";
-
-
-				switch (dataType)
-				{
-						// Int
-					case "EB61E4F7":
-						fieldValueInt = readFile.ReadUInt32();
-						break;
-						// Int #2 - Not Used
-					case "0C264712":
-						fieldValueInt = readFile.ReadUInt32();
-						break;
-						// String
-					case "0B8BEA18":
-						uint stringLength = readFile.ReadUInt32();
-						fieldValueString = Encoding.UTF8.GetString(readFile.ReadBytes((int)stringLength));
-						break;
-						// Float
-					case "ABC78708":
-						// Ignore for now
-						uint fieldValueFloat = readFile.ReadUInt32();
-						break;
-						// Boolean
-					case "CBA908E1":
-						bool fieldValueBool = readFile.ReadBoolean();
-						break;
-				}
-
-				switch (fieldName)
-				{
-					case "name":
-						cpf.Title = fieldValueString;
-						break;
-					case "description":
-						cpf.Description = fieldValueString;
-						break;
-					case "type":
-						cpf.XMLType = fieldValueString;
-						break;
-					case "subtype":
-						cpf.XMLSubtype = fieldValueInt.ToString();
-						break;
-					case "category":
-						cpf.XMLCategory = fieldValueInt.ToString();
-						break;
-					case "modelName":
-						cpf.XMLModelName = fieldValueString;
-						break;
-					case "objectGUID":
-						scanData.GUIDs.Add(fieldValueInt.ToString("X8"));
-						cpf.GUIDs.Add(fieldValueInt.ToString("X8"));
-						break;
-					case "creator":
-						cpf.XMLCreator = fieldValueString;
-						break;
-					case "age":
-						cpf.XMLAge = fieldValueInt.ToString();
-						break;
-					case "gender":
-						cpf.XMLGender = fieldValueInt.ToString();
-						break;
-				}
-			}
-			scanData.CPFData.Add(cpf);
-            return scanData;            
-		}
-		public static Sims2ScanData ReadCPFChunk(DecryptByteStream readFile, Sims2ScanData scanData)
-		{
-			S2CPF cpf = new();
-			// Read a compressed CPF chunk from a byte stream and extrac the name, 
-			// description and type
-
-			// Version
-			readFile.ReadUInt16();
-
-			uint numItems = readFile.ReadUInt32();
-
-			// Read the items
-			for (int i = 0; i < numItems; i++)
-			{
-				// Get type of the item
-				string dataType = readFile.ReadUInt32().ToString("X8");
-				uint nameLength = readFile.ReadUInt32();
-				string fieldName = Encoding.UTF8.GetString(readFile.ReadBytes(nameLength));
-
-				uint fieldValueInt = 0;
-				string fieldValueString = "";
-
-				switch (dataType)
-				{
-					// Int
-					case "EB61E4F7":
-						fieldValueInt = readFile.ReadUInt32();
-						break;
-					// Int #2 - Not Used
-					case "0C264712":
-						fieldValueInt = readFile.ReadUInt32();
-						break;
-					// String
-					case "0B8BEA18":
-						uint stringLength = readFile.ReadUInt32();
-						fieldValueString = Encoding.UTF8.GetString(readFile.ReadBytes(stringLength));
-						break;
-					// Float
-					case "ABC78708":
-						// Ignore for now
-						uint fieldValueFloat = readFile.ReadUInt32();
-						break;
-					// Boolean
-					case "CBA908E1":
-						bool fieldValueBool = readFile.ReadBoolean();
-						break;
-				}
-
-				switch (fieldName)
-				{
-					case "name":
-						cpf.Title = fieldValueString;
-						break;
-					case "description":
-						cpf.Description = fieldValueString;
-						break;
-					case "type":
-						cpf.XMLType = fieldValueString;
-						break;
-					case "subtype":
-						cpf.XMLSubtype = fieldValueInt.ToString();
-						break;
-					case "category":
-						cpf.XMLCategory = fieldValueInt.ToString();
-						break;
-					case "modelName":
-						cpf.XMLModelName = fieldValueString;
-						break;
-					case "objectGUID":
-						scanData.GUIDs.Add(fieldValueInt.ToString("X8"));
-						cpf.GUIDs.Add(fieldValueInt.ToString("X8"));
-						break;
-					case "creator":
-						cpf.XMLCreator = fieldValueString;
-						break;
-					case "age":
-						cpf.XMLAge = fieldValueInt.ToString();
-						break;
-					case "gender":
-						cpf.XMLGender = fieldValueInt.ToString();
-						break;
-				}
-			}          
-			scanData.CPFData.Add(cpf);  
-			return scanData;
-		}
-        
-
-        public static Sims2ScanData ReadSTRChunk(BinaryReader readFile, Sims2ScanData scanData)
-		{		
-            
-			S2STR str = new();
-			readFile.ReadBytes(64);
-			readFile.ReadBytes(2);
-			uint numStrings = readFile.ReadUInt16();
-			int lineNum = 0;
-			string tempString = "";
-			for (int j = 0; j < numStrings; j++)
-			{
-				byte langCode = readFile.ReadByte();
-				if (langCode == 1)
-				{
-					lineNum++;
-					if (lineNum == 1) { 
-						tempString = ReadNullString(readFile).Replace("\n", " ");
-                        if ((tempString != " ") && (tempString != "")){
-                            str.Title = tempString;
-                        }
-					}
-					if (lineNum == 2) { 
-						tempString = ReadNullString(readFile).Replace("\n", " "); 
-                        if ((tempString != " ") && (tempString != "")){
-                            str.Description += tempString;
-                        }
-						
-					}
-					ReadNullString(readFile);
-				}
-				else
-				{
-					ReadNullString(readFile);
-					ReadNullString(readFile);
-				}
-				if ((str.Title != null) && (str.Description != null)) { break; }
-			}
-			scanData.STRData.Add(str);
-            return scanData;
-		}
-
-        
-
-		public static Sims2ScanData ReadSTRChunk(DecryptByteStream readFile, Sims2ScanData scanData)
-		{	
-            S2STR str = new();
-			readFile.ReadBytes(64);
-			readFile.ReadBytes(2);
-
-			uint numStrings = readFile.ReadUInt16();
-			int lineNum = 0;
-			string tempString = "";
-			for (int j = 0; j < numStrings; j++)
-			{
-				byte langCode = readFile.ReadByte();
-				if (langCode == 1)
-				{
-					lineNum++;
-					if (lineNum == 1) 
-					{ 
-						tempString = readFile.GetNullString().Replace("\n", " ");
-                        if ((tempString != " ") && (tempString != "")){
-                            str.Title += tempString;
-                        }
-                        
-					}
-					if (lineNum == 2) 
-					{ 
-						tempString = readFile.GetNullString().Replace("\n", " "); 
-                        if ((tempString != " ") && (tempString != "")){
-                            str.Description += tempString;
-                        }
-						                         
-					}
-
-					readFile.GetNullString();
-				}
-				else
-				{
-					readFile.GetNullString();
-					readFile.GetNullString();
-				}
-				
-			}
-            scanData.STRData.Add(str);
-            return scanData;
-		}
-
-        public static Sims2ScanData ReadXMLChunk(DecryptByteStream readFile, Sims2ScanData scanData)
-		{
-			S2XML s2XML = new();			
-			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(readFile.GetEntireStream())));
-			bool inDesc = false;
-			string inAttrDesc = "";
-
-			while (xmlDoc.Read())
-			{
-				if (xmlDoc.NodeType == XmlNodeType.Element) 
-				{
-					if (xmlDoc.Name == "AnyString")	inDesc = true;
-					if (xmlDoc.Name == "AnyUint32") inDesc = true;
-				}
-				if (xmlDoc.NodeType == XmlNodeType.EndElement)
-				{
-					inDesc = false;
-					inAttrDesc = "";
-				}
-				if (inDesc == true)
-				{
-					if (xmlDoc.AttributeCount > 0) 
-					{
-						while (xmlDoc.MoveToNextAttribute())
-						{
-							switch (xmlDoc.Value)
-							{
-								case "description":
-								case "type":
-								case "name":
-								case "subsort":
-								case "subtype":
-								case "category":
-									inAttrDesc = xmlDoc.Value;
-									break;
-							}
-						}
-					}
-				}
-				if (xmlDoc.NodeType == XmlNodeType.Text)
-				{
-					if (inAttrDesc != "") 
-					{
-						switch (inAttrDesc)
-						{
-							case "subtype":
-								s2XML.XMLSubtype = xmlDoc.Value;
-								break;
-							case "subsort":
-								s2XML.XMLSubtype = xmlDoc.Value;
-								break;
-							case "category":
-								s2XML.XMLCategory = xmlDoc.Value;
-								break;
-							case "name":
-								s2XML.Title = xmlDoc.Value;
-								break;
-							case "type":
-								s2XML.XMLType = xmlDoc.Value;
-								break;
-							case "description":
-								s2XML.Description = xmlDoc.Value.Replace("\n", " ");
-								break;
-						}
-					}
-				}
-				//if ((this.title != "") && (this.description != "")) break;
-			}
-			scanData.XMLData.Add(s2XML);
-            return scanData;
-		}
-
-		public static Sims2ScanData ReadXMLChunk(string xmlData, Sims2ScanData scanData)
-		{
-			S2XML s2XML = new();
-			
-			XmlTextReader xmlDoc = new XmlTextReader(new StringReader(xmlData));
-			//xmlDoc.Load(new StringReader(xmlData));
-			bool inDesc = false;
-			string inAttrDesc = "";
-
-			while (xmlDoc.Read())
-			{
-				if (xmlDoc.NodeType == XmlNodeType.Element) 
-				{
-					if (xmlDoc.Name == "AnyString") inDesc = true;
-					if (xmlDoc.Name == "AnyUint32") inDesc = true;
-				}
-				if (xmlDoc.NodeType == XmlNodeType.EndElement)
-				{
-					inDesc = false;
-					inAttrDesc = "";
-				}
-				if (inDesc == true)
-				{
-					if (xmlDoc.AttributeCount > 0) 
-					{
-						while (xmlDoc.MoveToNextAttribute())
-						{
-							switch (xmlDoc.Value)
-							{
-								case "description":
-								case "type":
-								case "name":
-								case "subsort":
-								case "subtype":
-								case "category":
-									inAttrDesc = xmlDoc.Value;
-									break;
-							}
-						}
-					}
-				}
-				if (xmlDoc.NodeType == XmlNodeType.Text)
-				{
-					if (inAttrDesc != "") 
-					{
-						switch (inAttrDesc)
-						{
-							case "subtype":
-								s2XML.XMLSubtype = xmlDoc.Value;
-								break;
-							case "subsort":
-								s2XML.XMLSubtype = xmlDoc.Value;
-								break;
-							case "category":
-								s2XML.XMLCategory = xmlDoc.Value;
-								break;
-							case "name":
-								s2XML.Title = xmlDoc.Value;
-								break;
-							case "type":
-								s2XML.XMLType = xmlDoc.Value;
-								break;
-							case "description":
-								s2XML.Description = xmlDoc.Value.Replace("\n", " ");
-								break;
-						}
-					}
-				}
-				//if ((this.title != "") && (this.description != "")) break;
-            }       
-			scanData.XMLData.Add(s2XML);           
-            return scanData;
-		}
-
-
-        public static Sims2ScanData ReadOBJDChunk(BinaryReader readFile, Sims2ScanData scanData)
-		{
-            S2OBJD objd = new();
-			readFile.ReadBytes(64); // Filename - 64 bytes
-			uint version = readFile.ReadUInt32();
-			readFile.ReadUInt16(); // Initial Stack Size
-			readFile.ReadUInt16(); // Default Wall Adjacent Flags
-			readFile.ReadUInt16(); // Default Placement Flags
-			readFile.ReadUInt16(); // Default Wall Placement Flags
-			readFile.ReadUInt16(); // Default Allowed Height Flags
-			readFile.ReadUInt16(); // Interaction Table ID
-			readFile.ReadUInt16(); // Interaction Group
-			uint objectType = readFile.ReadUInt16(); // Type of Object
-			uint masterTileMasterId = readFile.ReadUInt16();
-			uint masterTileSubIndex = readFile.ReadUInt16();
-
-			// Only check further if this is a Master ID or single id
-			if ((masterTileSubIndex == 65535) || (masterTileMasterId == 0))
-			{
-				readFile.ReadUInt16(); // Use Default Placement Flags
-				readFile.ReadUInt16(); // Look at Score
-				scanData.GUIDs.Add(readFile.ReadUInt32().ToString("X8"));
-				objd.GUIDs.Add(readFile.ReadUInt32().ToString("X8"));
-				//this.objectGUID = objectGUID.ToString("X8");
-				//this.guidData.Add(this.objectGUID);
-				// Skip stuff we don't need
-				readFile.ReadBytes(46);
-				uint roomSortFlag = readFile.ReadUInt16();
-				int[] functionSortFlag = new int[1];
-				functionSortFlag[0] = (int)readFile.ReadUInt16();
-				BitArray functionSortFlags = new BitArray(functionSortFlag);
-
-                int fsfn = 0;
-                foreach (var fsf in functionSortFlags){
-                    fsfn++;
-                }
-
-
-				// No function sort, check Build Mode Sort
-				if (functionSortFlag[0] == 0)                 
-				{
-                    objd.XMLCategory = "Build Item";
-					// Skip until we hit the Build Mode sort and EP
-					readFile.ReadBytes(46);
-					uint expansionFlag = readFile.ReadUInt16();
-
-					readFile.ReadBytes(8);
-					uint buildModeType = readFile.ReadUInt16();
-					string originalGUID = readFile.ReadUInt32().ToString("X8");
-					string objectModelGUID = readFile.ReadUInt32().ToString("X8");
-					uint buildModeSubsort = readFile.ReadUInt16();
-
-
-                    int funcflags = functionSortFlags.Length;
-					FunctionSortList thissort = GlobalVariables.Sims2BuildFunctionSortList.Where(x => x.flagnum == buildModeType && x.functionsubsortnum == buildModeSubsort).First();
-                    objd.Function = thissort.Category;
-					objd.FunctionSubcategory = thissort.Subcategory;
-					
-					/*foreach (FunctionSortList category in GlobalVariables.Sims2BuildFunctionSortList){                            
-                        if ((buildModeType == category.flagnum) && (buildModeSubsort == category.functionsubsortnum)) {
-                            scandata.Function = category.Category;
-                            scandata.FunctionSubcategory = category.Subcategory;
-                        }
-                    }*/
-				}
-				else 
-				{
-					objd.XMLCategory = "Object";
-					readFile.ReadBytes(46);
-					uint expansionFlag = readFile.ReadUInt16();
-
-					readFile.ReadBytes(8);
-					uint buildModeType = readFile.ReadUInt16();
-					string originalGUID = readFile.ReadUInt32().ToString("X8");
-					string objectModelGUID = readFile.ReadUInt32().ToString("X8");
-					uint buildModeSubsort = readFile.ReadUInt16();
-					readFile.ReadBytes(38);
-					uint functionSubsort = readFile.ReadUInt16();
-
-                    
-
-                    int funcflags = functionSortFlags.Length;					
-                    foreach (FunctionSortList category in GlobalVariables.Sims2BuyFunctionSortList){
-                        for (int f = 0; f < funcflags; f++){
-                            if ((f == category.flagnum) && (functionSortFlags[f] == true) && (category.functionsubsortnum == functionSubsort)) {
-                                objd.Function = category.Category;
-                                objd.FunctionSubcategory = category.Subcategory;
-                            }
-                        }
-                    } 
-				}
-            } 
-			scanData.OBJDData.Add(objd);
-            return scanData;
-		}
-
-		public static Sims2ScanData ReadOBJDChunk(DecryptByteStream readFile, Sims2ScanData scanData)
-		{
-           	S2OBJD objd = new();
-			List<string> PackageTypes = new();        
-            List<string> XMLCatalogSortTypes = new(); 
-            List<string> xmlCatalogSortTypes = new();
-			List<string> xmlSubtypes = new();
-			List<string> xmlCategoryTypes = new();
-            List<string> objectGUID = new();
-			//readFile.ReadBytes(64); // Filename - 64 bytes
-			readFile.SkipAhead(64);
-			uint version = readFile.ReadUInt32();
-			var test = readFile.ReadUInt16(); // Initial Stack Size
-			test = readFile.ReadUInt16(); // Default Wall Adjacent Flags
-			test = readFile.ReadUInt16(); // Default Placement Flags
-			test = readFile.ReadUInt16(); // Default Wall Placement Flags
-			test = readFile.ReadUInt16(); // Default Allowed Height Flags
-			test = readFile.ReadUInt16(); // Interaction Table ID
-			test = readFile.ReadUInt16(); // Interaction Group
-			uint objectType = readFile.ReadUInt16(); // Type of Object
-			uint masterTileMasterId = readFile.ReadUInt16();
-			uint masterTileSubIndex = readFile.ReadUInt16();
-
-			// Only check further if this is a Master ID or single id
-			if ((masterTileSubIndex == 65535) || (masterTileMasterId == 0))
-			{
-				test = readFile.ReadUInt16(); // Use Default Placement Flags
-				test = readFile.ReadUInt16(); // Look at Score
-                scanData.GUIDs.Add(readFile.ReadUInt32().ToString("X8"));
-				objd.GUIDs.Add(readFile.ReadUInt32().ToString("X8"));
-				//this.objectGUID = objectGUID.ToString("X8");
-				//this.guidData.Add(this.objectGUID);
-				// Skip stuff we don't need
-				readFile.SkipAhead(46);
-				uint roomSortFlag = readFile.ReadUInt16();
-				int[] functionSortFlag = new int[1];
-				functionSortFlag[0] = (int)readFile.ReadUInt16();
-				BitArray functionSortFlags = new BitArray(functionSortFlag);
-                /*int fsfn = 0;
-                foreach (var fsf in functionSortFlags){
-                    fsfn++;
-                }*/
-                
-                
-                
-
-				// No function sort, check Build Mode Sort
-				if (functionSortFlag[0] == 0) 
-				{
-                    objd.XMLCategory = "Build Item";
-					// Skip until we hit the Build Mode sort and EP
-					readFile.ReadBytes(46);
-					uint expansionFlag = readFile.ReadUInt16();
-
-					readFile.ReadBytes(8);
-					uint buildModeType = readFile.ReadUInt16();
-					string originalGUID = readFile.ReadUInt32().ToString("X8");
-					string objectModelGUID = readFile.ReadUInt32().ToString("X8");
-					uint buildModeSubsort = readFile.ReadUInt16();
-
-
-                    int funcflags = functionSortFlags.Length;
-                    FunctionSortList thissort = GlobalVariables.Sims2BuildFunctionSortList.Where(x => x.flagnum == buildModeType && x.functionsubsortnum == buildModeSubsort).First();
-                    objd.Function = thissort.Category;
-					objd.FunctionSubcategory = thissort.Subcategory;
-					 
-				} 
-				else 
-				{
-					// Set the xmlCategory to Object
-                    objd.XMLCategory = "Object";
-					
-                    //if (this.xmlCategory == null) this.xmlCategory = this.xmlCategoryTypes[1];
-					// Also, get the catalog placement for this object
-					readFile.SkipAhead(46);
-					uint expansionFlag = readFile.ReadUInt16();
-                    if (expansionFlag == 0){
-                        //infovar.RequiredEPs.Add("None");
-                    } else {
-
-					}
-
-					readFile.SkipAhead(8);
-					uint buildModeType = readFile.ReadUInt16();
-					string originalGUID = readFile.ReadUInt32().ToString("X8");
-					string objectModelGUID = readFile.ReadUInt32().ToString("X8");
-					uint buildModeSubsort = readFile.ReadUInt16();
-					readFile.SkipAhead(38);
-					uint functionSubsort = readFile.ReadUInt16();
-
-                    int funcflags = functionSortFlags.Length;
-                    foreach (FunctionSortList category in GlobalVariables.Sims2BuyFunctionSortList){
-                        for (int f = 0; f < funcflags; f++){
-                            if ((f == category.flagnum) && (functionSortFlags[f] == true) && (category.functionsubsortnum == functionSubsort)) {
-                                objd.Function = category.Category;
-                                objd.FunctionSubcategory = category.Subcategory;
-                            }
-                        }
-                    }                    
-				}
-			}
-			scanData.OBJDData.Add(objd);
-            return scanData;
-		}
-
-		public static Sims2ScanData ReadSHPEChunk(BinaryReader readFile, Sims2ScanData scanData)
-		{
-			S2SHPE shpe = new();
-			string version = readFile.ReadUInt32().ToString("X8");
-			//if (this.debugMode) Console.WriteLine(version);
-			if (version == "FFFF0001") 
-			{
-				uint numFileLinks = readFile.ReadUInt32();
-				for (int i = 0; i < numFileLinks; i++)
-				{
-					string groupID = readFile.ReadUInt32().ToString("X8");
-					string instanceID = readFile.ReadUInt32().ToString("X8");
-					string resourceID = readFile.ReadUInt32().ToString("X8");
-					string typeID = readFile.ReadUInt32().ToString("X8");
-
-					//if (this.debugMode) Console.WriteLine(groupID + " " + instanceID + " " + resourceID + " " + typeID);
-				}
-			}
-
-			if (version != "FFFF0001") 
-			{
-				uint numFileLinks = Convert.ToUInt32(version);
-				for (int i = 0; i < numFileLinks; i++)
-				{
-					string groupID = readFile.ReadUInt32().ToString("X8");
-					string instanceID = readFile.ReadUInt32().ToString("X8");
-					string resourceID = "";
-					string typeID = readFile.ReadUInt32().ToString("X8");
-
-					//if (this.debugMode) Console.WriteLine(groupID + " " + instanceID + " " + resourceID + " " + typeID);
-				}
-			}
-
-			uint itemCount = readFile.ReadUInt32();
-			for (int j = 0; j < itemCount; j++)
-			{
-				string rcolID = readFile.ReadUInt32().ToString("X8");
-			}
-
-			for (int k = 0; k < itemCount; k++)
-			{
-				string blockName = readFile.ReadString();
-				string blockRcolID = readFile.ReadUInt32().ToString("X8");
-				uint blockVersion = readFile.ReadUInt32();
-								
-				// SHPE block
-				if (blockRcolID == "FC6EB1F7")
-				{
-					
-									
-					// cSGResource first
-					string cSGResourceName = readFile.ReadString();
-					string cSGResourceBlockID = readFile.ReadUInt32().ToString("X8");
-					uint cSGResourceVersion = readFile.ReadUInt32();
-					string cSGResourceFilename = readFile.ReadString();
-					
-
-					// cReferentNode
-					string cReferentNodeName = readFile.ReadString();
-					string cReferentBlockID = readFile.ReadUInt32().ToString("X8");
-					uint cReferentVersion = readFile.ReadUInt32();
-					
-
-					// cObjectGraphNode
-					string cObjectGraphNodeName = readFile.ReadString();
-					string cObjectGraphNodeClassID = readFile.ReadUInt32().ToString("X8");
-					uint cObjectGraphNodeVersion = readFile.ReadUInt32();
-					uint cObjectGraphNodeNumExtensions = readFile.ReadUInt32();
-								
-					for (int l = 0; l < cObjectGraphNodeNumExtensions; l++)
-					{
-						byte cObjectGraphNodeEnabled = readFile.ReadByte();
-						byte cObjectGraphNodeDepend = readFile.ReadByte();
-						uint cObjectGraphNodeIndex = readFile.ReadUInt32();
-					}
-
-					string cObjectGraphNodeFilename = readFile.ReadString();
-
-					if (blockVersion != 6)
-					{
-						uint unknown = readFile.ReadUInt32();
-						for (int i = 0; i < unknown; i++)
-						{
-							readFile.ReadUInt32();
-						}
-					}
-
-					// Shape Item
-					if (blockVersion == 7)
-					{
-						uint shpeNumLods3 = readFile.ReadUInt32();
-						for (int m = 0; m < shpeNumLods3; m++)
-						{
-							readFile.ReadUInt32();
-							readFile.ReadByte();
-							readFile.ReadByte();
-							readFile.ReadUInt32();
-						}
-					}
-					if (blockVersion == 8)
-					{
-						uint shpeNumLods2 = readFile.ReadUInt32();
-						for (int m = 0; m < shpeNumLods2; m++)
-						{
-							readFile.ReadUInt32();
-							readFile.ReadByte();
-							string shpeGMND = readFile.ReadString();
-						}
-					}
-
-					// Shape Parts
-					uint shpeMatCount = readFile.ReadUInt32();
-					//if (this.debugMode) Console.WriteLine("Material count: " + shpeMatCount);
-					for (int i = 0; i < shpeMatCount; i++)
-					{
-						string shpePartType = readFile.ReadString();
-						string shpePartDesc = readFile.ReadString();
-						readFile.ReadBytes(9);
-						bool addModelName = false;
-
-						switch (shpePartType)
-						{
-							case "southwallshadow":
-							case "northwallshadow":
-							case "eastwallshadow":
-							case "westwallshadow":
-							case "groundshadow":
-								break;
-							case "hair":
-							case "body":
-							case "frame":
-							case "top":
-							case "bottom":
-								//addModelName = true;
-								shpe.Type = shpePartType + "Mesh";
-								break;
-							default:
-								//addModelName = true;
-								if ((shpePartType.IndexOf("accessory") > -1) || (shpePartDesc.IndexOf("accessory") > -1)) shpe.Type = "frameMesh";
-								break;
-						}
-
-						if (addModelName == true)
-						{
-							TagsList modelName = new TagsList();
-							if (shpePartDesc.IndexOf("!") > -1) { modelName.Description = shpePartDesc.Substring(shpePartDesc.IndexOf("!")+1); } 
-							else { modelName.Description = shpePartDesc; }
-							shpe.CatalogTags.Add(modelName);
-						}
-
-					}
-				}
-			}
-			scanData.SHPEData.Add(shpe);
-			return scanData;
-		}
-
-		public static Sims2ScanData ReadSHPEChunk(DecryptByteStream readFile, Sims2ScanData scanData)
-		{
-			S2SHPE shpe = new();
-			string version = readFile.ReadUInt32().ToString("X8");
-			//if (this.debugMode) Console.WriteLine(version);
-			if (version == "FFFF0001") 
-			{
-				uint numFileLinks = readFile.ReadUInt32();
-				for (int i = 0; i < numFileLinks; i++)
-				{
-					string groupID = readFile.ReadUInt32().ToString("X8");
-					string instanceID = readFile.ReadUInt32().ToString("X8");
-					string resourceID = readFile.ReadUInt32().ToString("X8");
-					string typeID = readFile.ReadUInt32().ToString("X8");
-
-					//if (this.debugMode) Console.WriteLine(groupID + " " + instanceID + " " + resourceID + " " + typeID);
-				}
-			}
-
-			if (version != "FFFF0001") 
-			{
-				uint numFileLinks = Convert.ToUInt32(version);
-				for (int i = 0; i < numFileLinks; i++)
-				{
-					string groupID = readFile.ReadUInt32().ToString("X8");
-					string instanceID = readFile.ReadUInt32().ToString("X8");
-					string resourceID = "";
-					string typeID = readFile.ReadUInt32().ToString("X8");
-
-					//if (this.debugMode) Console.WriteLine(groupID + " " + instanceID + " " + resourceID + " " + typeID);
-				}
-			}
-
-			uint itemCount = readFile.ReadUInt32();
-			for (int j = 0; j < itemCount; j++)
-			{
-				string rcolID = readFile.ReadUInt32().ToString("X8");
-				//if (this.debugMode) Console.WriteLine(rcolID);
-			}
-
-			for (int k = 0; k < itemCount; k++)
-			{
-				string blockName = readFile.ReadString();
-				//if (this.debugMode) Console.WriteLine(blockName);
-				string blockRcolID = readFile.ReadUInt32().ToString("X8");
-				uint blockVersion = readFile.ReadUInt32();
-								
-				// SHPE block
-				if (blockRcolID == "FC6EB1F7")
-				{
-									
-					// cSGResource first
-					string cSGResourceName = readFile.ReadString();
-					string cSGResourceBlockID = readFile.ReadUInt32().ToString("X8");
-					uint cSGResourceVersion = readFile.ReadUInt32();
-					string cSGResourceFilename = readFile.ReadString();
-
-					// cReferentNode
-					string cReferentNodeName = readFile.ReadString();
-					string cReferentBlockID = readFile.ReadUInt32().ToString("X8");
-					uint cReferentVersion = readFile.ReadUInt32();
-
-					// cObjectGraphNode
-					string cObjectGraphNodeName = readFile.ReadString();
-					string cObjectGraphNodeClassID = readFile.ReadUInt32().ToString("X8");
-					uint cObjectGraphNodeVersion = readFile.ReadUInt32();
-					uint cObjectGraphNodeNumExtensions = readFile.ReadUInt32();
-								
-					for (int l = 0; l < cObjectGraphNodeNumExtensions; l++)
-					{
-						byte cObjectGraphNodeEnabled = readFile.ReadByte();
-						byte cObjectGraphNodeDepend = readFile.ReadByte();
-						uint cObjectGraphNodeIndex = readFile.ReadUInt32();
-					}
-
-					string cObjectGraphNodeFilename = readFile.ReadString();
-
-					if (blockVersion != 6)
-					{
-						uint unknown = readFile.ReadUInt32();
-						for (int i = 0; i < unknown; i++)
-						{
-							readFile.ReadUInt32();
-						}
-					}
-
-					// Shape Item
-					if (blockVersion == 7)
-					{
-						uint shpeNumLods3 = readFile.ReadUInt32();
-						for (int m = 0; m < shpeNumLods3; m++)
-						{
-							readFile.ReadUInt32();
-							readFile.ReadByte();
-							readFile.ReadByte();
-							readFile.ReadUInt32();
-						}
-					}
-					if (blockVersion == 8)
-					{
-						uint shpeNumLods2 = readFile.ReadUInt32();
-						for (int m = 0; m < shpeNumLods2; m++)
-						{
-							readFile.ReadUInt32();
-							readFile.ReadByte();
-							string shpeGMND = readFile.ReadString();
-						}
-					}
-
-					// Shape Parts
-					uint shpeMatCount = readFile.ReadUInt32();
-					for (int i = 0; i < shpeMatCount; i++)
-					{
-						string shpePartType = readFile.ReadString();
-						string shpePartDesc = readFile.ReadString();
-						readFile.ReadBytes(9);
-						
-						bool addModelName = false;
-
-						switch (shpePartType)
-						{
-							case "southwallshadow":
-							case "northwallshadow":
-							case "eastwallshadow":
-							case "westwallshadow":
-							case "groundshadow":
-								break;
-							case "hair":
-							case "body":
-							case "frame":
-							case "top":
-							case "bottom":
-								//addModelName = true;
-								shpe.Type = shpePartType + "Mesh";
-								break;
-							default:
-								//addModelName = true;
-								if ((shpePartType.IndexOf("accessory") > -1) || (shpePartDesc.IndexOf("accessory") > -1)) scanData.Type = "frameMesh";
-								break;
-						}
-
-						if (addModelName == true)
-						{
-							TagsList modelName = new TagsList();
-							if (shpePartDesc.IndexOf("!") > -1) { modelName.Description = shpePartDesc.Substring(shpePartDesc.IndexOf("!")+1); } 
-							else { modelName.Description = shpePartDesc; }
-							shpe.CatalogTags.Add(modelName);
-						}
-
-					}
-				}
-			}
-			scanData.SHPEData.Add(shpe);
-			return scanData;
-		}
-
-        public static string ReadNullString(BinaryReader reader)
-		{
-            string result = "";
-			char c;
-			for (int i = 0; i < reader.BaseStream.Length; i++) 
-			{
-				if ((c = (char) reader.ReadByte()) == 0) 
-				{
-					break;
-				}
-				result += c.ToString();
-			}
-			return result;
-		}
-
-    }
-
-
-
-    public class IndexEntry
-    {
-        public string Tag {get; set;} = "";
-        public int ID {get; set;} = -1;
-        public string TypeID {get; set;} = "";
-        public string GroupID {get; set;} = "";
-        public string InstanceID {get; set;} = "";
-        public string InstanceID2 {get; set;} = "";
-        public uint Offset {get; set;} = 0;
-        public uint Filesize {get; set;} = 0;
-        public uint Truesize {get; set;} = 0;
-        public bool Compressed {get; set;} = false;
-        public string Unused {get; set;} = "";
-        public string Size {get; set;} = "";
-        public int Location {get; set;} = -1;
-        public string PackageID {get; set;} = "";
-    }	
-
-    public class EntryType {
-        /// <summary>
-        /// For "types", for example Cas Parts or Geometry.
-        /// </summary>
-        public string Tag {get; set;}
-        public string TypeID {get; set;}
-        public string Description {get; set;}
-    }
+    
 }

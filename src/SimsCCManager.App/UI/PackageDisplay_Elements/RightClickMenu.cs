@@ -23,12 +23,15 @@ public partial class RightClickMenu : Control
 	public bool multiplefiles = false;
 	MarginContainer EditDetailsBox;
 	bool editdetailshover = false;
+	HolderNode holdernode;
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		holdernode = GetWindow().GetNode<HolderNode>("MainWindow/HolderNode");
 		string oodstr = "Make Out of Date";
 		//we are the ood
-		UIUtilities.UpdateTheme(GetTree());
+		//UIUtilities.UpdateTheme(GetTree());
+		holdernode.UpdateTheme(GetTree());
 		catoptions = GetNode<MarginContainer>("CategoryOptions");
 		VBoxContainer catbox = GetNode<VBoxContainer>("CategoryOptions/VBoxContainer");
 		catoptions.Visible = false;
@@ -70,20 +73,18 @@ public partial class RightClickMenu : Control
 
 
 		foreach (Category category in Categories){
-			if (category.Name != "Default"){
-				CategoryOption cat = CatOption.Instantiate() as CategoryOption;
-				cat.catcolor = category.Background;
-				cat.catname = category.Name;
-				if (cat.catname == TickedCat){
-					cat.selected = true;
-				} else if (OpenCats.Contains(cat.catname)){
-					cat.open = true;
-				}
-				cat.CategorySelected += (cat, selected) => CategorySelected(cat, selected);
-				catbox.AddChild(cat);
+			CategoryOption cat = CatOption.Instantiate() as CategoryOption;
+			cat.catcolor = category.Background;
+			cat.catname = category.Name;
+			if (cat.catname == TickedCat){
+				cat.selected = true;
+			} else if (OpenCats.Contains(cat.catname)){
+				cat.open = true;
 			}
-			if (catbox.GetChildCount() == 0) nocats = true;			
+			cat.CategorySelected += (cat, selected) => CategorySelected(cat, selected);
+			catbox.AddChild(cat);		
 		}
+		if (catbox.GetChildCount() == 0) nocats = true;	
 		if (nocats){
 			Label label = GetNode<Label>("MarginContainer/VBoxContainer/Category/Category_Label");
 			label.Modulate = Color.FromHtml("ffffff33");

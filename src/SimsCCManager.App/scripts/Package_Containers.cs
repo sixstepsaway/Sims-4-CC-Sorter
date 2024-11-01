@@ -13,6 +13,7 @@ using Godot;
 using SimsCCManager.Containers;
 using SimsCCManager.Debugging;
 using SimsCCManager.Globals;
+using SimsCCManager.PackageReaders.Containers;
 using SimsCCManager.Packages.Initial;
 using SimsCCManager.Settings.Loaded;
 
@@ -456,7 +457,16 @@ namespace SimsCCManager.Packages.Containers
         }
         public List<string> LinkedFiles {get; set;} = new();
         public List<SimsPackageSubfolder> LinkedFolders {get; set;} = new();
-        public Category Category {get; set;}
+        [XmlIgnore]
+        private Category _category;        
+        public Category Category {
+            get { return _category; }
+            set { _category = value; 
+            CategoryName = value.Name; }
+        }
+        [XmlIgnore]
+        public string CategoryName {get; set;}
+        [XmlIgnore]
         public int LoadOrder {get; set;} = -1;
         public string Creator {get; set;} = "";
         public string Notes {get; set;} = "";
@@ -480,7 +490,8 @@ namespace SimsCCManager.Packages.Containers
         public Texture2D Thumbnail {get; set;}
         public List<string> Conflicts {get; set;}
         public List<string> DuplicatePackages {get; set;}
-        public List<string> OverriddenPackages {get; set;}        
+        public List<string> OverriddenPackages {get; set;}   
+        [XmlIgnore]     
         public bool Enabled {get; set;} = false;
         public bool Scanned {get; set;} = false;
 
@@ -932,9 +943,6 @@ namespace SimsCCManager.Packages.Containers
         protected string subtype;
         public abstract string Subtype {get; set;}
 
-        protected string tuningid;
-        public abstract string TuningID {get; set;}
-
         protected bool allowrandom;
         public abstract bool AllowRandom {get; set;}
 
@@ -949,6 +957,21 @@ namespace SimsCCManager.Packages.Containers
 
         protected string thumbnaillocation;        
         public abstract string ThumbnailLocation {get; set;}
+        [XmlIgnore]
+        protected byte[] thumbnaildata;
+        [XmlIgnore]
+        public abstract byte[] ThumbnailData {get; set;}
+
+        protected bool merged;
+        public abstract bool Merged {get; set;}
+        protected bool _override;
+        public abstract bool Override {get; set;}
+        protected bool mesh;
+        public abstract bool Mesh {get; set;}
+        protected bool recolor;
+        public abstract bool Recolor {get; set;}
+        protected bool orphan;
+        public abstract bool Orphan {get; set;}
 
         public abstract StringBuilder GetStringBuilder(StringBuilder sb);
 
@@ -1048,9 +1071,6 @@ namespace SimsCCManager.Packages.Containers
         public override string Subtype{
             get { return subtype; } set {subtype = value; } 
         }
-        public override string TuningID{
-            get { return tuningid; } set {tuningid = value; } 
-        }
         public override bool AllowRandom{
             get { return allowrandom; } set {allowrandom = value; } 
         }
@@ -1066,6 +1086,29 @@ namespace SimsCCManager.Packages.Containers
         public override string ThumbnailLocation{
             get { return thumbnaillocation; } set {thumbnaillocation = value; } 
         }
+        [XmlIgnore]
+        public override byte[] ThumbnailData {
+            get {return thumbnaildata; } set {thumbnaildata = value; }
+        }
+
+        public override bool Merged {
+            get { return merged; } set { merged = value; }
+        }
+
+        public override bool Mesh {
+            get { return mesh; } set { mesh = value; }
+        }
+
+        public override bool Override {
+            get { return _override; } set { _override = value; }
+        }
+
+        public override bool Recolor {
+            get { return recolor; } set { recolor = value; }
+        }
+        public override bool Orphan {
+            get { return orphan; } set { orphan = value; }
+        }
 
         public List<S2CTSS> CTSSData {get; set;} = new();
         public List<S2CPF> CPFData {get; set;} = new();
@@ -1073,9 +1116,10 @@ namespace SimsCCManager.Packages.Containers
         public List<S2XML> XMLData {get; set;} = new();
         public List<S2OBJD> OBJDData {get; set;} = new();
         public List<S2SHPE> SHPEData {get; set;} = new();
-        public List<string> InstanceIDs {get; set;} = new();
+        public List<string> FullIDs {get; set;} = new();
         public List<string> GUIDs {get; set;} = new();
         public List<Sims2Expansions> RequiredEPs {get; set;} = new();   
+        public List<OverriddenList> Overrides {get; set;}
         
         
         public string PackageType {get; set;} = "";
@@ -1113,7 +1157,7 @@ namespace SimsCCManager.Packages.Containers
                 foreach (string title in titles){
                     sb.AppendLine(string.Format(title));
                 }
-            } else {
+            } else if (titles.Count != 0) {
                 sb.AppendLine(string.Format("Internal Name: {0}", titles[0]));
             }
             if (descriptions.Count > 1){
@@ -1121,7 +1165,7 @@ namespace SimsCCManager.Packages.Containers
                 foreach (string description in descriptions){
                     sb.AppendLine(string.Format(description));
                 }
-            } else {
+            } else if (descriptions.Count != 0) {
                 sb.AppendLine(string.Format("Internal Description: {0}", descriptions[0]));
             }
             return sb;
@@ -1195,9 +1239,6 @@ namespace SimsCCManager.Packages.Containers
         public override string Subtype{
             get { return subtype; } set {subtype = value; } 
         }
-        public override string TuningID{
-            get { return tuningid; } set {tuningid = value; } 
-        }
         public override bool AllowRandom{
             get { return allowrandom; } set {allowrandom = value; } 
         }
@@ -1217,6 +1258,28 @@ namespace SimsCCManager.Packages.Containers
         public override StringBuilder PackageInformationDump()
         {
             throw new NotImplementedException();
+        }
+        public override bool Merged {
+            get { return merged; } set { merged = value; }
+        }
+        [XmlIgnore]
+        public override byte[] ThumbnailData {
+            get {return thumbnaildata; } set {thumbnaildata = value; }
+        }
+
+        public override bool Mesh {
+            get { return mesh; } set { mesh = value; }
+        }
+
+        public override bool Override {
+            get { return _override; } set { _override = value; }
+        }
+
+        public override bool Recolor {
+            get { return recolor; } set { recolor = value; }
+        }
+        public override bool Orphan {
+            get { return orphan; } set { orphan = value; }
         }
 
 
@@ -1238,9 +1301,6 @@ namespace SimsCCManager.Packages.Containers
         public override string Subtype{
             get { return subtype; } set {subtype = value; } 
         }
-        public override string TuningID{
-            get { return tuningid; } set {tuningid = value; } 
-        }
         public override bool AllowRandom{
             get { return allowrandom; } set {allowrandom = value; } 
         }
@@ -1256,17 +1316,77 @@ namespace SimsCCManager.Packages.Containers
         public override string ThumbnailLocation{
             get { return thumbnaillocation; } set {thumbnaillocation = value; } 
         }
+        public override bool Merged {
+            get { return merged; } set { merged = value; }
+        }
 
         public override StringBuilder PackageInformationDump()
         {
             throw new NotImplementedException();
         }
+        [XmlIgnore]
+        public override byte[] ThumbnailData {
+            get {return thumbnaildata; } set {thumbnaildata = value; }
+        }
+
+        public override bool Mesh {
+            get { return mesh; } set { mesh = value; }
+        }
+
+        public override bool Override {
+            get { return _override; } set { _override = value; }
+        }
+
+        public override bool Recolor {
+            get { return recolor; } set { recolor = value; }
+        }
+        public override bool Orphan {
+            get { return orphan; } set { orphan = value; }
+        }
+
+        public S4AgeGenderFlags AgeGenderFlags {get; set;}
+        public string Title {get; set;} = "";
+        public List<string> OBJDPartKeys {get; set;}
+        public List<string> CASPartKeys {get; set;}
+        public List<string> MeshKeys {get; set;}
+        public string Tuning {get; set;} = "";
+        public int TuningID {get; set;} = -1;
+        public List<string> Components {get; set;}
+        public List<PackageTypeCounter> EntryTypeCount {get; set;} 
+        public List<EntryLocations> Entries {get; set;}     
+        public List<string> Flags {get; set;}  
+        public List<TagsList> CatalogTags {get; set;}
+        public List<string> InstanceIDs {get; set;}
+        public string Function {get; set;} = "";
+        public string FunctionSubcategory {get; set;} = "";
+        public List<string> RoomSort {get; set;}
+        public bool IsMod {get; set;} = false;
+        public string Gender {get; set;} = "";
+        public string Age {get; set;} = "";
+        //no mesh needed for this
+        public bool NoMesh {get; set;} = true;
+        public List<OverriddenList> Overrides {get; set;}
+        
 
         public override StringBuilder GetStringBuilder(StringBuilder sb){
             //sb.AppendLine(string.Format("{0}={1}", "Description", GetProperty("Description")));
             
             
             return sb;
+        }
+
+        public Sims4ScanData(){            
+            OBJDPartKeys = new();
+            MeshKeys = new();
+            Components = new();
+            EntryTypeCount = new();
+            Entries = new();
+            Flags = new();
+            CatalogTags = new();
+            InstanceIDs = new();
+            RoomSort = new();
+            CASPartKeys = new();
+            Overrides = new();
         }
     }
 

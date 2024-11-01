@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://dsflv6ica77kt"]
+[gd_scene load_steps=17 format=3 uid="uid://dsflv6ica77kt"]
 
 [ext_resource type="Script" path="res://windows/MainWindow.cs" id="1_be40n"]
 [ext_resource type="FontFile" uid="uid://rj6fcxmqe8tx" path="res://assets/fonts/Accidental_Presidency/AccidentalPresidency.ttf" id="3_quaxr"]
@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://dpix7pk4gs1c2" path="res://assets/images/githubicon.png" id="8_5h3pv"]
 [ext_resource type="Texture2D" uid="uid://c5hnr6jv0wxfx" path="res://assets/images/discordicon.png" id="9_asanl"]
 [ext_resource type="Texture2D" uid="uid://b7hf23rkhnbcp" path="res://assets/images/tumblricon_w.png" id="10_kata0"]
+[ext_resource type="Script" path="res://UI/HolderNode.cs" id="11_3c1oh"]
 [ext_resource type="Texture2D" uid="uid://bchdaw51l2qxm" path="res://assets/images/itch-io-icon-md-2372909491.png" id="11_6646j"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uic8o"]
@@ -150,6 +151,11 @@ buttonImage = ExtResource("10_kata0")
 [node name="Itch_SocialsButton" parent="Footer/FooterInternalMargins/SocialsButtons" groups=["SocialsButtons"] instance=ExtResource("5_ghblx")]
 layout_mode = 2
 buttonImage = ExtResource("11_6646j")
+
+[node name="HolderNode" type="Control" parent="."]
+visible = false
+layout_mode = 2
+script = ExtResource("11_3c1oh")
 
 [connection signal="ButtonClicked" from="Footer/FooterInternalMargins/SocialsButtons/Twitter_SocialsButton" to="." method="_on_twitter_socials_button_button_clicked"]
 [connection signal="ButtonClicked" from="Footer/FooterInternalMargins/SocialsButtons/Kofi_SocialsButton" to="." method="_on_kofi_socials_button_button_clicked"]

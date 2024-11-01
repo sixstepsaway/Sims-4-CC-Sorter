@@ -23,24 +23,15 @@ public partial class CustomCheckButton : MarginContainer
 		toggledcolor = GetNode<ColorRect>("ToggledMask/Mask/ToggledBlipColor");
 		untoggledcolor = GetNode<ColorRect>("UntoggledMask/Mask/UntoggledBlipColor");
 		UpdateColors();
-		Toggle();
 	}
 
 	private void _on_button_pressed(){
 		IsToggled = !IsToggled;
-		Toggle();
 		EmitSignal("CheckToggled", IsToggled);
-		GD.Print("toggled");
 	}
 
 	public void ButtonPressed(bool pressed){
 		IsToggled = pressed;
-		Toggle();
-	}
-
-	private void Toggle(){
-		toggledmask.Visible = IsToggled;
-		untoggledmask.Visible = !IsToggled;		
 	}
 
 	public void UpdateColors(){
@@ -55,4 +46,10 @@ public partial class CustomCheckButton : MarginContainer
 		toggledcolor.Color = theme.ButtonClick;
 		untoggledcolor.Color = theme.ButtonMain;
 	}
+
+    public override void _Process(double delta)
+    {
+        toggledmask.Visible = IsToggled;
+		untoggledmask.Visible = !IsToggled;	
+    }
 }

@@ -3,6 +3,7 @@ using Microsoft.VisualBasic;
 using SimsCCManager.Containers;
 using SimsCCManager.Debugging;
 using SimsCCManager.Globals;
+using SimsCCManager.PackageReaders.Containers;
 using SimsCCManager.Packages.Containers;
 using SimsCCManager.Settings.Loaded;
 using SimsCCManager.Settings.SettingsSystem;
@@ -13,6 +14,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Text;
@@ -22,9 +24,11 @@ using System.Linq;
 using System.Net.Mime;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 public partial class PackageDisplay : MarginContainer
 {
@@ -46,6 +50,7 @@ public partial class PackageDisplay : MarginContainer
 	MarginContainer wronggamefiles;
 	VBoxContainer AllModsRows;
 	VBoxContainer DownloadsRows;
+	ScrollContainer packagelistholder;
 	VBoxContainer packagelist;
 	
 
@@ -66,9 +71,23 @@ public partial class PackageDisplay : MarginContainer
 	PackedScene PackageListItem = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/package_list_item.tscn");
 	PackedScene RightClickMenu = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/right_click_menu.tscn");
 	PackedScene LinkFilesWindow = GD.Load<PackedScene>("res://UI/PackageDisplay_Elements/subwindows/LinkFilesWindow.tscn");
-
+	HolderNode holdernode;
 	//lists
-	List<Category> Categories = new();
+	private List<Category> _categories;
+	public List<Category> Categories { 
+		get { return _categories; }
+		set { _categories = value; 
+		if (Game == Games.Sims2) {
+			sims2Instance.Categories = value;
+			sims2Instance.WriteXML();
+		} else if (Game == Games.Sims3) {
+			sims3Instance.Categories = value;
+			sims3Instance.WriteXML();
+		} else if (Game == Games.Sims4) {
+			sims4Instance.Categories = value;
+			sims4Instance.WriteXML();
+		}}
+	}
 	List<DataGridHeaderCell> AMHeaders = new();
 	List<DataGridHeaderCell> DLHeaders = new();
 	List<Executable> Executables = new();
@@ -79,7 +98,22 @@ public partial class PackageDisplay : MarginContainer
 	public List<SimsPackage> packages = new();
 	List<SimsPackage> unsortedpackages = new();
 	List<string> Cachefiles = new();
-	List<string> Profiles = new();
+	private List<string> _profiles;
+	public List<string> Profiles {
+		get { return _profiles; }
+		set { _profiles = value; 
+		CallDeferred(nameof(MakeProfileOptions));
+		if (Game == Games.Sims2) {
+			sims2Instance.Profiles = value;
+			sims2Instance.WriteXML();
+		} else if (Game == Games.Sims3) {
+			sims3Instance.Profiles = value;
+			sims3Instance.WriteXML();
+		} else if (Game == Games.Sims4) {
+			sims4Instance.Profiles = value;
+			sims4Instance.WriteXML();
+		}}
+	}
 	List<string> ScannedPackages = new();
 	List<string> Thumbs = new();
 
@@ -174,11 +208,27 @@ public partial class PackageDisplay : MarginContainer
 	FileDialog AddFilesDiag;
 	string gameversion = "";
 	bool canreadpackages = true;
+	ProfileManagement profileManagement;
+	CategoryManagement categoryManagement;
+	Label amcount;
+
+	OptionButton profileoptions;
+	Godot.Timer AppTimer;
+	string activeprofile = "";
+	int filescount = 0;
+	private string _aminfolabel;
+	public string aminfolabel {
+		get {return _aminfolabel; }
+		set { _aminfolabel = value; 
+		CallDeferred(nameof(UpdateInfoLabel));}
+	}
+	List<OverriddenList> OverridesList = new();
 	
 
 
 	public override void _Ready()
 	{
+		holdernode = GetWindow().GetNode<HolderNode>("MainWindow/HolderNode");
 		
 		ThreadPool.GetMaxThreads(out int workerThreadsCount, out int ioThreadsCount);
 		if (LoadedSettings.SetSettings.LimitCPU){
@@ -189,6 +239,9 @@ public partial class PackageDisplay : MarginContainer
 
 		ConnectThings();
 
+		new Thread(() => {
+			//LoadOverridesList();
+		}){IsBackground = true}.Start();
 		
 		
 		new Thread (() => {
@@ -214,6 +267,36 @@ public partial class PackageDisplay : MarginContainer
 				}
 				gameversion = ver;
 				GlobalVariables.thisinstance = sims2Instance;
+				if (sims2Instance.Profiles.Any()){
+					foreach (string profile in sims2Instance.Profiles){
+						ProfileInfo pr = new(){ ProfileName = profile }; 
+						pr = MakeLocalFolders(pr, Game);
+						pr.MakeInfoLocation();
+						if (!File.Exists(pr.InfoLocation)){
+							pr.SaveProfile();
+						}						
+					}
+					activeprofile = sims2Instance.ActiveProfile;
+				} else {
+					sims2Instance.Profiles.Add("Default");
+					sims2Instance.ActiveProfile = "Default";
+					activeprofile = "Default";
+					sims2Instance.WriteXML();
+					ProfileInfo pr = new(){ ProfileName = "Default" }; 
+					pr = MakeLocalFolders(pr, Game);
+					pr.MakeInfoLocation();
+					if (!File.Exists(pr.InfoLocation)){
+						pr.SaveProfile();
+					}
+				}	
+				if (string.IsNullOrEmpty(sims2Instance.ActiveProfile)){
+					sims2Instance.ActiveProfile = "Default";
+					sims2Instance.WriteXML();
+				}
+				Profile = new(){ ProfileName = sims2Instance.ActiveProfile};
+				Profile = MakeLocalFolders(Profile, Game);
+				Profile.MakeInfoLocation();
+				Profile = Utilities.LoadProfile(Profile);
 			} else if (ThisInstance.Game == "Sims3"){
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims 3!");
 				Game = Games.Sims3;
@@ -233,7 +316,38 @@ public partial class PackageDisplay : MarginContainer
 					sims3Instance.WriteXML();
 				}
 				gameversion = ver;
-				GlobalVariables.thisinstance = sims3Instance;				
+				GlobalVariables.thisinstance = sims3Instance;
+				if (sims3Instance.Profiles.Any()){
+					foreach (string profile in sims3Instance.Profiles){
+						ProfileInfo pr = new(){ ProfileName = profile }; 
+						pr = MakeLocalFolders(pr, Game);
+						pr.MakeInfoLocation();
+						if (!File.Exists(pr.InfoLocation)){
+							pr.SaveProfile();
+						}
+						
+					}
+					activeprofile = sims3Instance.ActiveProfile;
+				} else {
+					sims3Instance.Profiles.Add("Default");
+					sims3Instance.ActiveProfile = "Default";
+					activeprofile = "Default";
+					sims3Instance.WriteXML();
+					ProfileInfo pr = new(){ ProfileName = "Default" }; 
+					pr = MakeLocalFolders(pr, Game);
+					pr.MakeInfoLocation();
+					if (!File.Exists(pr.InfoLocation)){
+						pr.SaveProfile();
+					}
+				}	
+				if (string.IsNullOrEmpty(sims3Instance.ActiveProfile)){
+					sims3Instance.ActiveProfile = "Default";
+					sims3Instance.WriteXML();
+				}
+				Profile = new(){ ProfileName = sims3Instance.ActiveProfile};
+				Profile = MakeLocalFolders(Profile, Game);
+				Profile.MakeInfoLocation();
+				Profile = Utilities.LoadProfile(Profile);				
 			} else if (ThisInstance.Game == "Sims4"){
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog("Sims 4!");
 				Game = Games.Sims4;
@@ -254,15 +368,58 @@ public partial class PackageDisplay : MarginContainer
 				}
 				gameversion = ver;
 				GlobalVariables.thisinstance = sims4Instance;
+				if (sims4Instance.Profiles.Any()){
+					foreach (string profile in sims4Instance.Profiles){
+						ProfileInfo pr = new(){ ProfileName = profile }; 
+						pr = MakeLocalFolders(pr, Game);
+						pr.MakeInfoLocation();
+						if (!File.Exists(pr.InfoLocation)){
+							pr.SaveProfile();
+						}
+						
+					}
+					activeprofile = sims4Instance.ActiveProfile;
+				} else {
+					sims4Instance.Profiles.Add("Default");
+					sims4Instance.ActiveProfile = "Default";
+					activeprofile = "Default";
+					sims4Instance.WriteXML();
+					ProfileInfo pr = new(){ ProfileName = "Default" }; 
+					pr = MakeLocalFolders(pr, Game);
+					pr.MakeInfoLocation();
+					if (!File.Exists(pr.InfoLocation)){
+						pr.SaveProfile();
+					}
+				}					
+				if (string.IsNullOrEmpty(sims4Instance.ActiveProfile)){
+					sims4Instance.ActiveProfile = "Default";
+					sims4Instance.WriteXML();
+				}
+				Profile = new(){ ProfileName = sims4Instance.ActiveProfile};
+				Profile = MakeLocalFolders(Profile, Game);
+				Profile.MakeInfoLocation();
+				Profile = Utilities.LoadProfile(Profile);
 			}
 			brokenmodsfolder = Path.Combine(instancefolder, "Broken Packages");
 			wronggamefolder = Path.Combine(instancefolder, "Incorrect Game Files");
-			GlobalVariables.CurrentInstance = ThisInstance;
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Game version: {0}", gameversion));
 			SetupDisplay();
 			UpdateExecutableList();			
 			//var x = WaitLoad();			
-		}){IsBackground = true}.Start();		
+		}){IsBackground = true}.Start();
+		holdernode.UpdateTheme(GetTree());
+		//UIUtilities.UpdateTheme(GetTree());				
+	}	
+
+	private void MakeProfileOptions(){
+		profileoptions.Clear();
+		profileoptions.AddItem(Profile.ProfileName);
+		foreach (string profile in Profiles){
+			if (profile != Profile.ProfileName){
+				profileoptions.AddItem(profile);
+			}			
+		}
+		profileoptions.Selected = 0;		
 	}
 
 	private GameInstanceBase ReturnInstance(){
@@ -277,10 +434,16 @@ public partial class PackageDisplay : MarginContainer
 		AddFilesDiag = GetNode<FileDialog>("AddFileDialog");
 		AddFolderDiag = GetNode<FileDialog>("AddFolderDialog");
 
+		amcount = GetNode<Label>("MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader/AllModsInfo_Label");
+
+		profileoptions = GetNode<OptionButton>("MainWindowSizer/TopPanels/Profiles/HBoxContainer/ProfileOptions");
+		profileoptions.ItemSelected += (i) => OnProfileChanged(i);
+
 		AddFilesDiag.FilesSelected += (files) => AddFilesSelected(files);
 		AddFolderDiag.DirSelected += (dir) => AddFolderSelected(dir);
+	
 
-		GetNode<CustomCheckButton>("MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader/TogglePositioner/CustomCheckButton").CheckToggled += () => DetailedViewToggled();		
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/SwapInstances_SettingsHelpButtons").ButtonClicked += () => _on_swap_instances_settings_help_buttons_button_clicked();
 
 		viewerrorscontainer = GetNode<ViewErrors_Container>("MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/ViewErrors_Container");
 		viewerrorscontainer.GetNode<topbar_button>("View Errors_SettingsHelpButtons").ButtonClicked += () => ViewErrors();
@@ -289,6 +452,8 @@ public partial class PackageDisplay : MarginContainer
 		GetNode<Button>("ViewErrors/MarginContainer/VBoxContainer/HBoxContainer/FixIncorrect_Button").Pressed += () => WrongGameDetected();
 		GetNode<Button>("ViewErrors/MarginContainer/VBoxContainer/HBoxContainer/FixBroken_Button").Pressed += () => BrokenPackagesDetected();
 		GetNode<Button>("ViewErrors/MarginContainer/VBoxContainer/HBoxContainer/Cancel_Button").Pressed += () => CancelViewErrors();
+
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/Help_SettingsHelpButtons").ButtonClicked += () => OpenHelp();
 
 		GetNode<Button>("MoveWrongGameFiles/MarginContainer/VBoxContainer/HBoxContainer/Move_Button").Pressed += () => ConfirmMoveIncorrectFiles();
 		GetNode<Button>("MoveWrongGameFiles/MarginContainer/VBoxContainer/HBoxContainer/Cancel_Button").Pressed += () => CancelMoveIncorrectFiles();
@@ -315,7 +480,7 @@ public partial class PackageDisplay : MarginContainer
 		deletefiles.Visible = false;
 		GetNode<Button>("DeleteItemsBox/MarginContainer/VBoxContainer/HBoxContainer/Delete_Button").Pressed += () => ConfirmDeleteFilesButton();
 		GetNode<Button>("DeleteItemsBox/MarginContainer/VBoxContainer/HBoxContainer/Cancel_Button").Pressed += () => CancelDeleteFilesButton();
-		packagelist = GetNode<VBoxContainer>("RenameItemsBox/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer");
+		packagelistholder = GetNode<ScrollContainer>("RenameItemsBox/MarginContainer/VBoxContainer/ScrollContainer");
 		renamefileswindow = GetNode<MarginContainer>("RenameItemsBox");
 		renamefileswindow.Visible = false;
 		GetNode<Button>("RenameItemsBox/MarginContainer/VBoxContainer/HBoxContainer/Rename_Button").Pressed += () => Rename_RenamePressed();
@@ -340,11 +505,128 @@ public partial class PackageDisplay : MarginContainer
 		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFolder_Topbar_Button").ButtonClicked += () => AddFolderButtonClicked();
 		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/Refresh_Topbar_Button").ButtonClicked += () => RefreshPackagesButtonClicked();
 		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/SortSubfolders_Topbar_Button").ButtonClicked += () => SortIntoSubfoldersButtonClicked();
-		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/ScanAll_Topbar_Button").ButtonClicked += () => ScanAllButtonClicked();
+		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/ExportProfile_Topbar_Button").ButtonClicked += () => ExportProfileButtonClicked();
 		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/ManageCats_Topbar_Button").ButtonClicked += () => ManageCategoriesClicked();
 		GetNode<topbar_button>("MainWindowSizer/TopPanels/Buttons/HBoxContainer/EditExes_Topbar_Button").ButtonClicked += () => EditExesClicked();
 
+		profileManagement = GetNode<ProfileManagement>("ProfileManagement") as ProfileManagement;
+		profileManagement.ChangeProfile += (s, i) => ProfileChanged(s, i);
+		profileManagement.MakeNewProfile += (s, c) => NewProfile(s, c);
+		profileManagement.CallError += (s) => PMError(s);
+		profileManagement.EditExistingProfile += (s, c) => EditProfile(s, c);
+		//profileManagement.PopulateProfiles(Profiles, Profile);
+
+		categoryManagement = GetNode<CategoryManagement>("CategoryManagement") as CategoryManagement;
+		categoryManagement.NewCat += (c) => NewCategoryMade(c);
+		categoryManagement.EditCat += (c) => CategoryEdited(c);
+		categoryManagement.DeleteCat += (c) => CategoryDeleted(c);
+
+
+		AppTimer = new();
+		AppTimer.OneShot = true;
+		AppTimer.WaitTime = 5;
+		AppTimer.Timeout += () => GameStartTimer();
+		applicationStarter.AddChild(AppTimer);
+	}
+
+    private void OpenHelp()
+    {
+        Process.Start(new ProcessStartInfo("https://github.com/sixstepsaway/Sims-CC-Manager/wiki") { UseShellExecute = true });
+    }
+
+    private void PMError(string s){
+		GetNode<AcceptDialog>("ProfileManagement/NameTaken").DialogText = s;
+		GetNode<AcceptDialog>("ProfileManagement/NameTaken").Visible = true;
+	}
+
+	private void EditProfile(ProfileInfo pr, string og){
+		if (pr.ProfileName != og){
+			Profiles.Remove(og);
+			Profiles.Add(pr.ProfileName);
+			string o = ProfileFolder(pr.ProfileName);
+			string n = ProfileFolder(og);
+			Directory.Move(o, n);
+		}
+		pr.MakeInfoLocation();
+		pr = MakeLocalFolders(pr, Game);
+		pr.SaveProfile();			
+	}
+
+	private void NewProfile(ProfileInfo pr, string o = ""){
+		//Profiles.Add(s);	
+		pr.MakeInfoLocation();
+		pr = MakeLocalFolders(pr, Game);
+		pr.SaveProfile();	
+		if (Game == Games.Sims2) {
+			sims2Instance.Profiles.Add(pr.ProfileName);
+			sims2Instance.WriteXML();
+		}	
+		if (Game == Games.Sims3) {
+			sims3Instance.Profiles.Add(pr.ProfileName);
+			sims3Instance.WriteXML();
+		}
+		if (Game == Games.Sims4) {
+			sims4Instance.Profiles.Add(pr.ProfileName);
+			sims4Instance.WriteXML();
+		}
+		MakeProfileOptions();
+	}
+
+	private void DeleteProfile(string name){
+		Profiles.Remove(name);
+		if (Game == Games.Sims2){
+			sims2Instance.Profiles.Remove(name);
+			if (sims2Instance.ActiveProfile == name){
+				sims2Instance.ActiveProfile = sims2Instance.Profiles.First();
+				ProfileInfo pr = new(){ ProfileName = name };
+				pr.MakeInfoLocation();
+				Profile = Utilities.LoadProfile(pr);
+				ReadPackages();
+			}
+			sims2Instance.WriteXML();
+		} else if (Game == Games.Sims3){
+			sims3Instance.Profiles.Remove(name);
+			if (sims3Instance.ActiveProfile == name){
+				sims3Instance.ActiveProfile = sims3Instance.Profiles.First();
+				ProfileInfo pr = new(){ ProfileName = name };
+				pr.MakeInfoLocation();
+				Profile = Utilities.LoadProfile(pr);
+				ReadPackages();
+			}
+			sims3Instance.WriteXML();
+		} else if (Game == Games.Sims4){
+			sims4Instance.Profiles.Remove(name);
+			if (sims4Instance.ActiveProfile == name){
+				sims4Instance.ActiveProfile = sims4Instance.Profiles.First();
+				ProfileInfo pr = new(){ ProfileName = name };
+				pr.MakeInfoLocation();
+				Profile = Utilities.LoadProfile(pr);
+				ReadPackages();
+			}
+			sims4Instance.WriteXML();
+		}
+		new Thread(() => {
+			Directory.Delete(ProfileFolder(name), true);
+		}){IsBackground = true}.Start();
 		
+	}
+
+	private void ProfileChanged(string profile, int i){
+		if (i == 0){
+			DeleteProfile(profile);
+		} else if (i == 1){
+			string newname = string.Format("{0}_Copy", profile);
+			Profiles.Add(newname);
+			ProfileInfo pr = new(){
+				ProfileName = profile				
+			};
+			pr.MakeInfoLocation();
+			pr = Utilities.LoadProfile(pr);
+			pr.ProfileName = newname;
+			pr.MakeInfoLocation();
+			pr.SaveProfile();
+		}
+			MakeProfileOptions();
 	}
 
     private void DetailedViewToggled()
@@ -477,7 +759,7 @@ public partial class PackageDisplay : MarginContainer
 
 	//package handlers
 
-	public bool ReadPackages(){
+	public bool ReadPackages(){		
 		if (!canreadpackages) return false;
 		defaultcat = Categories.Where(x => x.Name == "Default").First();
 		ConcurrentBag<SimsPackage> packagesbag = new();
@@ -490,6 +772,7 @@ public partial class PackageDisplay : MarginContainer
 
 		int pbar = packagefiles.Count + directories.Count;
 		pbar -= packages.Count;
+		filescount = pbar;
 
 		if (directories.Count != 0){
 			CallDeferred(nameof(_ShowPbar));
@@ -516,7 +799,12 @@ public partial class PackageDisplay : MarginContainer
 					} else if (simsPackage.DateUpdated < modified){
 						simsPackage.DateUpdated = modified;
 						simsPackage.OutOfDate = false;
-					}					
+					}
+					if (Profile.Packages.Where(x => x.Identifier == simsPackage.Identifier).Any()){
+						ProfilePackage pp = Profile.Packages.Where(x => x.Identifier == simsPackage.Identifier).First();
+						simsPackage.LoadOrder = pp.LoadOrder;
+						simsPackage.Enabled = true;
+					}
 				} else {
 					simsPackage.InstalledForVersion = simsInstance.GameVersion;
 					simsPackage.Folder = true;
@@ -559,10 +847,12 @@ public partial class PackageDisplay : MarginContainer
 					foreach (string s in linked){
 						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format(s));
 					}*/
-					simsPackage.WriteInfoFile();
-					simsPackage.PackageChanged += () => PackagesChanged.Invoke();
-					packagesbag.Add(simsPackage);
-					CallDeferred(nameof(_IncrementPbar));
+					if (!string.IsNullOrEmpty(simsPackage.FileName) && !string.IsNullOrWhiteSpace(simsPackage.FileName)){
+						simsPackage.WriteInfoFile();
+						simsPackage.PackageChanged += () => PackagesChanged.Invoke();
+						packagesbag.Add(simsPackage);
+						CallDeferred(nameof(_IncrementPbar));
+					}	
 				}
 			});
 		}
@@ -572,7 +862,7 @@ public partial class PackageDisplay : MarginContainer
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("List of Files: {0}", Utilities.ListToString(packagefiles)));
 			Parallel.ForEach(packagefiles, new ParallelOptions { MaxDegreeOfParallelism = paralellism }, file => {
 				SimsPackage simsPackage = new();				
-				FileInfo f = new FileInfo(file);				
+				FileInfo f = new FileInfo(file);
 				if (f.Extension == ".ts4script"){
 					string package = string.Format("{0}.package", f.Name.Replace(".ts4script", ""));
 					package = Path.Combine(f.DirectoryName, package);
@@ -602,6 +892,11 @@ public partial class PackageDisplay : MarginContainer
 					if (simsPackage.FileType == FileTypes.TS4Script){
 						simsPackage.Game = Games.Sims4;
 					}
+					if (Profile.Packages.Where(x => x.Identifier == simsPackage.Identifier).Any()){
+						ProfilePackage pp = Profile.Packages.Where(x => x.Identifier == simsPackage.Identifier).First();
+						simsPackage.LoadOrder = pp.LoadOrder;
+						simsPackage.Enabled = true;
+					}
 					simsPackage.WriteInfoFile();
 				} else {
 					if (f.Extension == ".ts4script"){
@@ -612,10 +907,11 @@ public partial class PackageDisplay : MarginContainer
 					DateTime now = DateTime.Now;
 					if (simsPackage.FileType == FileTypes.Package) {
 						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Going to scan {0}.", simsPackage.Location));					
-						scanner.Scan(simsPackage);
+						/*scanner.Scan(simsPackage, sims2Instance, sims3Instance, sims4Instance);
 						while (!ScannedPackages.Contains(simsPackage.Identifier.ToString())){
 							//wait.
-						}
+						}*/
+						simsPackage = Utilities.LoadPackageFile(simsPackage);
 						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Looks like {0} finished! \n             Started: {1}\n             Finished: {2}.", simsPackage.Location, now, DateTime.Now));
 					}
 					/*if (infoexists){
@@ -645,10 +941,12 @@ public partial class PackageDisplay : MarginContainer
 					foreach (string s in linked){
 						if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format(s));
 					}*/
-					simsPackage.WriteInfoFile();
-					simsPackage.PackageChanged += () => PackagesChanged.Invoke();
-					packagesbag.Add(simsPackage);
-					CallDeferred(nameof(_IncrementPbar));
+					if (!string.IsNullOrEmpty(simsPackage.FileName) && !string.IsNullOrWhiteSpace(simsPackage.FileName)){
+						simsPackage.WriteInfoFile();
+						simsPackage.PackageChanged += () => PackagesChanged.Invoke();
+						packagesbag.Add(simsPackage);
+						CallDeferred(nameof(_IncrementPbar));
+					}					
 				} 			
 			});	
 			packages = packagesbag.ToList();
@@ -665,7 +963,7 @@ public partial class PackageDisplay : MarginContainer
 		
 		readingpackages = false;
 		return true;
-	}
+	}	
 
 	private SimsPackageSubfolder GetFolderInfo(string folder){
 		SimsPackageSubfolder subfolder = new();
@@ -991,9 +1289,16 @@ public partial class PackageDisplay : MarginContainer
 			AllModsGrid.RowsFromData();
 			_packages = packages;
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("_packages count: {0}, packages count: {1}.", _packages.Count, packages.Count));
-		}		
+		}
+
+		aminfolabel = string.Format("({0} files, {1} packages)", filescount, packages.Count);
+
 		populatingpackages = false;
 		_HidePbar();
+	}
+
+	private void UpdateInfoLabel(){
+		amcount.Text = aminfolabel;
 	}
 
 	private void DownloadsDisplayPackages(){
@@ -1186,6 +1491,13 @@ public partial class PackageDisplay : MarginContainer
 			(AllModsRows.GetChild(idx) as DataGridRow).ToggleEnabled(true);
 			packages[idx].WriteInfoFile();
 		}
+		Profile.Packages.Clear();
+		List<SimsPackage> EnabledPackages = packages.Where(x => x.Enabled).ToList();
+		foreach (SimsPackage package in EnabledPackages){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding enabled file {0} to profile", package.FileName));
+			Profile.Packages.Add(new(){ PackageFile = package.FileName, LoadOrder = package.LoadOrder, Identifier = package.Identifier});
+		}
+		Profile.SaveProfile();
 	}
 	private void AllModsItemDisabled(string item, int idx){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Item {0} disabled at index {1}.", item, idx));
@@ -1217,6 +1529,13 @@ public partial class PackageDisplay : MarginContainer
 			package.WriteInfoFile();
 			lo++;
 		}
+		Profile.Packages.Clear();
+		List<SimsPackage> EnabledPackages = packages.Where(x => x.Enabled).ToList();
+		foreach (SimsPackage package in EnabledPackages){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding enabled file {0} to profile", package.FileName));
+			Profile.Packages.Add(new(){ PackageFile = package.FileName, LoadOrder = package.LoadOrder, Identifier = package.Identifier});
+		}
+		Profile.SaveProfile();
 	}
 
 	private void AllModsItemSelected(string item, int idx){
@@ -1563,9 +1882,23 @@ public partial class PackageDisplay : MarginContainer
             },
             new HeaderInformation()
             {
+                HeaderTitle = "Category",
+                ContentType = DataGridContentType.Text,
+                ColumnData = "CategoryName",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
                 HeaderTitle = "Creator",
                 ContentType = DataGridContentType.Text,
                 ColumnData = "Creator",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Type",
+                ContentType = DataGridContentType.Text,
+                ColumnData = "Type",
 				Resizeable = true
             },
             new HeaderInformation()
@@ -1601,6 +1934,13 @@ public partial class PackageDisplay : MarginContainer
                 HeaderTitle = "Scanned",
                 ContentType = DataGridContentType.Bool,
                 ColumnData = "Scanned",
+				Resizeable = true
+            },
+            new HeaderInformation()
+            {
+                HeaderTitle = "Override",
+                ContentType = DataGridContentType.Bool,
+                ColumnData = "Override",
 				Resizeable = true
             },
             new HeaderInformation()
@@ -1704,15 +2044,8 @@ public partial class PackageDisplay : MarginContainer
 		GetNode<Label>("MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/Name_Container/VBoxContainer/ExeExe_Label").Text = exe;
     }
 
-	private void OnPackagesListChanged(){
+	private void OnPackagesListChanged(){		
 		if (firstrunpackages) AllModsDisplayPackages();
-		new Thread(() => {
-			Profile.Packages.Clear();
-			List<SimsPackage> EnabledPackages = packages.Where(x => x.Enabled).ToList();
-			foreach (SimsPackage package in EnabledPackages){
-				Profile.Packages.Add(new(){ PackageFile = package.Location, LoadOrder = package.LoadOrder, Identifier = package.Identifier});
-			}
-		}){IsBackground = true}.Start();
 	}
 
 	private void OnDownloadsListChanged(){
@@ -1798,8 +2131,27 @@ public partial class PackageDisplay : MarginContainer
 		Executable selected = Executables.Where(x => x.Selected == true).First();
 		string path = Path.Combine(selected.Path, selected.Exe);
 		GetNode<MarginContainer>("GameRunning").Visible = true;
+		applicationStarter.ApplicationClosed += () => _on_application_starter_application_closed();
 		string args = string.Format("{0} {1}", selected.Arguments, "-noOrigin");
 		applicationStarter.Start(path, selected.Arguments, packages.Where(x => x.Enabled == true).ToList(), Game);
+		new Thread( () => {			
+			AwaitGameStart();
+		}){IsBackground = true}.Start();
+	}
+
+	private void AwaitGameStart(){
+		while (!GlobalVariables.GameRunning){
+			//
+		}
+		CallDeferred(nameof(StartAppTimer));
+	}
+
+	private void StartAppTimer(){
+		AppTimer.Start();		
+	}
+
+	private void GameStartTimer(){
+		PurgeSymlinks();
 	}
 
 	private void _on_disconnect_button_pressed(){
@@ -1808,6 +2160,10 @@ public partial class PackageDisplay : MarginContainer
 	}
 
 	private void _on_application_starter_application_closed(){
+		CallDeferred(nameof(AppClosed));
+	}
+
+	private void AppClosed(){
 		GetNode<MarginContainer>("GameRunning").Visible = false;
 		PurgeSymlinks();
 	}
@@ -1905,7 +2261,6 @@ public partial class PackageDisplay : MarginContainer
 		//rcm.GetNode<Button>("MarginContainer/VBoxContainer/Delete/DeleteFile_Button").Pressed += () => AMRCMenuPressed(2);			
 		//rcm.GetNode<Button>("MarginContainer/VBoxContainer/Rename/RenameFile_Button").Pressed += () => AMRCMenuPressed(3);			
 		//rcm.GetNode<Button>("MarginContainer/VBoxContainer/FilesFromFolder/FilesFromFolder_Button").Pressed += () => AMRCMenuPressed(4);
-		List<Category> categoriesforlist = Categories;
 		if (packages.Where(x => x.Selected == true).Count() > 1){			
 			List<Category> cats = selected.Select(x => x.Category).ToList();
 			cats = cats.Distinct().ToList();
@@ -2213,12 +2568,18 @@ public partial class PackageDisplay : MarginContainer
 
 	private void RenameFiles(){		
 		List<SimsPackage> selected = packages.Where(x => x.Selected == true).ToList();
+		packagelist = new VBoxContainer();
+		packagelist.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+		packagelist.SizeFlagsVertical = SizeFlags.ExpandFill;
+		packagelistholder.AddChild(packagelist);
 		foreach (SimsPackage package in selected){
 			PackageListItem pli = PackageListItem.Instantiate() as PackageListItem;
 			pli.package = package;
 			pli.packagename = package.FileName;
 			packagelist.AddChild(pli);
 		}
+		//UIUtilities.UpdateTheme(GetTree());
+		holdernode.UpdateTheme(GetTree());
 		renamefileswindow.Visible = true;		
 	}
 
@@ -2246,12 +2607,14 @@ public partial class PackageDisplay : MarginContainer
 		//AllModsDisplayPackages();
 		
 		renamefileswindow.Visible = false;
+		RemoveRenamePackageList();
 	}
 
 	private void RemoveRenamePackageList(){
-		foreach (PackageListItem package in packagelist.GetChildren()){
+		/*foreach (PackageListItem package in packagelist.GetChildren()){
 			QueueFree();
-		}
+		}*/
+		packagelist.QueueFree();
 	}
 
 	private void Rename_CancelPressed(){
@@ -2274,8 +2637,31 @@ public partial class PackageDisplay : MarginContainer
 
 	//profile handlers
 
-	private void OnProfileChanged(){
-
+	private void OnProfileChanged(long idx){
+		new Thread(() => {
+			string profile = profileoptions.GetItemText((int)idx);
+			if (Game == Games.Sims2) { 
+				sims2Instance.ActiveProfile = profile;
+				sims2Instance.WriteXML();
+			} else if (Game == Games.Sims3) { 
+				sims3Instance.ActiveProfile = profile;
+				sims3Instance.WriteXML();
+			} else if (Game == Games.Sims4) { 
+				sims4Instance.ActiveProfile = profile;
+				sims4Instance.WriteXML();
+			}
+			ProfileInfo pr = new(){ ProfileName = profile };
+			pr.MakeInfoLocation();
+			pr = Utilities.LoadProfile(pr);
+			Profile = pr;
+			if (!readingpackages) ReadPackages();		
+		}){IsBackground = true}.Start();				
+	}
+	
+	private void ProfilesButtonClicked(){
+		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("There are {0} profiles loaded.", Profiles.Count));
+		profileManagement.PopulateProfiles(Profiles, Profile);
+		profileManagement.Visible = true;
 	}
 
 
@@ -2409,9 +2795,6 @@ public partial class PackageDisplay : MarginContainer
 
 	//button handlers
 
-	private void ProfilesButtonClicked(){
-
-	}
 
 	private void AddFilesButtonClicked(){
 		AddFilesDiag.Visible = true;
@@ -2448,18 +2831,96 @@ public partial class PackageDisplay : MarginContainer
 		AddFolderDiag.Visible = true;
 	}
 	private void RefreshPackagesButtonClicked(){
-
+		new Thread(() => {
+			ReadPackages();
+		}){IsBackground = true}.Start();
+		new Thread(() => {
+			ReadDownloads();
+		}){IsBackground = true}.Start();		
 	}
 
 	private void SortIntoSubfoldersButtonClicked(){
 
 	}
-	private void ScanAllButtonClicked(){
-
+	private void ExportProfileButtonClicked(){
+		List<ProfilePackage> enabled = Profile.Packages;
+		string exportsfolder = Path.Combine(instancefolder, "Exported Profiles");
+		if (!Directory.Exists(exportsfolder)){
+			Directory.CreateDirectory(exportsfolder);
+		}
+		string thisexportfolder = Path.Combine(exportsfolder, Profile.ProfileName);
+		string packagesfolder = Path.Combine(thisexportfolder, "Packages");
+		if (!Directory.Exists(thisexportfolder)){
+			Directory.CreateDirectory(thisexportfolder);
+		}
+		Utilities.CopyDirectoryTree(new DirectoryInfo(Profile.ProfileFolder), new DirectoryInfo(thisexportfolder));
+		if (enabled.Any()){
+			if (!Directory.Exists(packagesfolder)){
+				Directory.CreateDirectory(packagesfolder);
+			}
+			foreach (ProfilePackage package in enabled){
+				string file = packages.Where(x => x.Identifier == package.Identifier).First().Location;
+				FileInfo f = new(file);
+				FileAttributes fa = f.Attributes;
+				if (fa.HasFlag(FileAttributes.Directory)){
+					Utilities.CopyDirectoryTree(new DirectoryInfo(file), new DirectoryInfo(packagesfolder));
+				} else {
+					string dest = Path.Combine(packagesfolder, package.PackageFile);
+					File.Copy(file, dest);
+				}				
+			}
+		}		
 	}
+
 	private void ManageCategoriesClicked(){
-
+		List<Category> cats = Categories;
+		foreach (Category cat in cats){
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Checking count of {0} category assigned to packages", cat.Name));
+			int count = packages.Where(x => x.Category.Name == cat.Name).Count();
+			cats[cats.IndexOf(cat)].Packages = count;
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Found {0} packages assigned to {1}", count, cat.Name));
+		}
+		categoryManagement.Categories = cats;
+		categoryManagement.ListCategories();
+		categoryManagement.Visible = true;
 	}
+
+	private void NewCategoryMade(Category cat){
+		List<Category> cats = Categories;
+		cats.Add(cat);
+		Categories = cats;
+	}
+
+	private void CategoryEdited(Category cat){
+		List<Category> cats = Categories;
+		int c = cats.IndexOf(Categories.Where(x => x.Identifier == cat.Identifier).First());
+		int p = cats[c].Packages;
+		cats[c] = cat;
+		cats[c].Packages = p;
+		Categories = cats;
+		List<SimsPackage> pack = packages.Where(x => x.Category.Identifier == cat.Identifier).ToList();
+		foreach (SimsPackage pp in pack){
+			packages[packages.IndexOf(pp)].Category = Categories[c];
+			packages[packages.IndexOf(pp)].CategoryName = Categories[c].Name;
+			packages[packages.IndexOf(pp)].WriteInfoFile();
+		}
+		if (!readingpackages) ReadPackages();
+	}
+
+	private void CategoryDeleted(Category cat){
+		Category d = Categories.Where(x => x.Name == "Default").First();
+		int c = Categories.IndexOf(Categories.Where(x => x.Name == cat.Name).First());
+		List<SimsPackage> p = packages.Where(x => x.CategoryName == cat.Name).ToList();
+		foreach (SimsPackage pack in p){
+			packages[packages.IndexOf(pack)].Category = d;
+			packages[packages.IndexOf(pack)].CategoryName = d.Name;
+			packages[packages.IndexOf(pack)].WriteInfoFile();
+		}
+		Categories.RemoveAt(c);
+		if (!readingpackages) ReadPackages();
+	}
+
+
 	private void EditExesClicked(){
 
 	}
@@ -2469,9 +2930,16 @@ public partial class PackageDisplay : MarginContainer
 	//game running handling
 
 	private void InstantiateVirtualFiles(){
-		if (Game == Games.Sims2) gamemodsfolder = sims2Instance.DownloadsFolder;
-		if (Game == Games.Sims3) gamemodsfolder = sims3Instance.ModsFolder;
-		if (Game == Games.Sims4) gamemodsfolder = sims4Instance.ModsFolder;
+		if (Game == Games.Sims2) { 
+			gamemodsfolder = sims2Instance.DownloadsFolder; 
+		} 
+		if (Game == Games.Sims3) { 
+			gamemodsfolder = sims3Instance.ModsFolder; 
+		}		
+		if (Game == Games.Sims4) { 
+			gamemodsfolder = sims4Instance.ModsFolder; 
+		}
+		VFLocals();
 		List<SimsPackage> enabled = packages.Where(x => x.Enabled).ToList();
 		foreach (SimsPackage package in enabled){
 			if (package.Folder && package.LoadAsFolder){
@@ -2490,6 +2958,52 @@ public partial class PackageDisplay : MarginContainer
 				}
 				VF_ProcessPackage(package);	
 			} 		
+		}
+	}
+	
+	private void VFLocals(){
+		if (Profile.LocalData){		
+			foreach (LocalFolders folder in Profile.LocalDataFolders){	
+				if (!Directory.Exists(folder.LocalFolder)){
+					Directory.CreateDirectory(folder.LocalFolder);
+				}
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Making link for: {0} and {1}", folder.LocalFolder, folder.OriginalFolder));	
+				VFileSystem.MakeDirectJunction(folder.LocalFolder, folder.OriginalFolder);
+			}
+		}
+		if (Profile.LocalMedia){
+			foreach (LocalFolders folder in Profile.LocalMediaFolders){				
+				if (!Directory.Exists(folder.LocalFolder)){
+					Directory.CreateDirectory(folder.LocalFolder);
+				}
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Making link for: {0} and {1}", folder.LocalFolder, folder.OriginalFolder));	
+				VFileSystem.MakeDirectJunction(folder.LocalFolder, folder.OriginalFolder);
+			}
+		}
+		if (Profile.LocalSaves){
+			foreach (LocalFolders folder in Profile.LocalSaveFolders){				
+				if (!Directory.Exists(folder.LocalFolder)){
+					Directory.CreateDirectory(folder.LocalFolder);
+				}
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Making link for: {0} and {1}", folder.LocalFolder, folder.OriginalFolder));	
+				VFileSystem.MakeDirectJunction(folder.LocalFolder, folder.OriginalFolder);
+			}
+		}
+		if (Profile.LocalSettings){			
+			foreach (LocalFolders folder in Profile.LocalSettingsFolders){				
+				if (!Directory.Exists(folder.LocalFolder)){
+					Directory.CreateDirectory(folder.LocalFolder);
+				}
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Making link for: {0} and {1}", folder.LocalFolder, folder.OriginalFolder));	
+				VFileSystem.MakeDirectJunction(folder.LocalFolder, folder.OriginalFolder);
+			}
+			foreach (LocalFolders file in Profile.LocalSettingsFiles){
+				if (!File.Exists(file.LocalFolder)){
+					File.Copy(file.OriginalFolder, file.LocalFolder);
+				}
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Making link for: {0} and {1}", file.LocalFolder, file.OriginalFolder));	
+				VFileSystem.MakeDirectSymbolicLink(file.OriginalFolder, file.LocalFolder);
+			}
 		}
 	}
 
@@ -2549,18 +3063,131 @@ public partial class PackageDisplay : MarginContainer
 			FileAttributes attr = info.Attributes;
 			if(attr.HasFlag(FileAttributes.ReparsePoint)){
 				VFileSystem.RemoveJunction(dir);
-			} else if (info.FullName.EndsWith("--DISABLED")){
-				string ren = dir.Replace("--DISABLED", "");
-				Directory.Move(dir, ren);
+			}
+		}
+		if (Profile.LocalData){		
+			foreach (LocalFolders folder in Profile.LocalDataFolders){	
+				if (Directory.Exists(folder.OriginalFolder)){
+					DirectoryInfo info = new(folder.OriginalFolder);
+					FileAttributes attr = info.Attributes;
+					if(attr.HasFlag(FileAttributes.ReparsePoint)){
+						VFileSystem.RemoveJunction(folder.OriginalFolder);
+					}
+				}
+				
+			}
+		}
+		if (Profile.LocalMedia){
+			foreach (LocalFolders folder in Profile.LocalMediaFolders){				
+				if (Directory.Exists(folder.OriginalFolder)){
+					DirectoryInfo info = new(folder.OriginalFolder);
+					FileAttributes attr = info.Attributes;
+					if(attr.HasFlag(FileAttributes.ReparsePoint)){
+						VFileSystem.RemoveJunction(folder.OriginalFolder);
+					}
+				}
+			}
+		}
+		if (Profile.LocalSaves){
+			foreach (LocalFolders folder in Profile.LocalSaveFolders){				
+				if (Directory.Exists(folder.OriginalFolder)){
+					DirectoryInfo info = new(folder.OriginalFolder);
+					FileAttributes attr = info.Attributes;
+					if(attr.HasFlag(FileAttributes.ReparsePoint)){
+						VFileSystem.RemoveJunction(folder.OriginalFolder);
+					}
+				}
+			}
+		}
+		if (Profile.LocalSettings){			
+			foreach (LocalFolders folder in Profile.LocalSettingsFolders){				
+				if (Directory.Exists(folder.OriginalFolder)){
+					DirectoryInfo info = new(folder.OriginalFolder);
+					FileAttributes attr = info.Attributes;
+					if(attr.HasFlag(FileAttributes.ReparsePoint)){
+						VFileSystem.RemoveJunction(folder.OriginalFolder);
+					}
+				}
+			}
+			foreach (LocalFolders file in Profile.LocalSettingsFiles){
+				if (!File.Exists(file.OriginalFolder)){
+					FileInfo info = new(file.OriginalFolder);
+					FileAttributes attr = info.Attributes;
+					if (attr.HasFlag(FileAttributes.ReparsePoint)){
+						VFileSystem.RemoveSymbolicLink(file.OriginalFolder);
+					}
+				}
 			}
 		}		
 	}
 
+	private string ProfileFolder(string name){
+		string f = "";
+		f = Path.Combine(instancefolder, "Profiles");
+		f = Path.Combine(f, name);		
+		return f;
+	}
 
+	public ProfileInfo MakeLocalFolders(ProfileInfo thisprofile, Games game){
+		thisprofile.LocalSavesFolder = Path.Combine(thisprofile.ProfileFolder, "Local Saves");
+		thisprofile.LocalDataFolder = Path.Combine(thisprofile.ProfileFolder, "Local Data");
+		thisprofile.LocalMediaFolder = Path.Combine(thisprofile.ProfileFolder, "Local Media");
+		thisprofile.LocalSettingsFolder = Path.Combine(thisprofile.ProfileFolder, "Local Settings");
+		if (game == Games.Sims2){						
+			thisprofile.LocalDataFolders.Clear();
+			thisprofile.LocalDataFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalDataFolder, "SC4Terrains")), OriginalFolder = sims2Instance.TerrainsFolder});
+			thisprofile.LocalDataFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalDataFolder, "LotCatalog")), OriginalFolder = sims2Instance.LotCatalogFolder});
+			thisprofile.LocalDataFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalDataFolder, "Collections")), OriginalFolder = sims2Instance.CollectionsFolder});
+			thisprofile.LocalDataFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalDataFolder, "PackagedLots")), OriginalFolder = sims2Instance.PackagedLotsFolder});
+			
+			thisprofile.LocalMediaFolders.Clear();
+			thisprofile.LocalMediaFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalMediaFolder, "Screenshots")), OriginalFolder = sims2Instance.ScreenshotsFolder});
+			thisprofile.LocalMediaFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalMediaFolder, "Movies")), OriginalFolder = sims2Instance.MoviesFolder});
+			thisprofile.LocalMediaFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalMediaFolder, "Music")), OriginalFolder = sims2Instance.MusicFolder});
 
+			thisprofile.LocalSaveFolders.Clear();
+			thisprofile.LocalSaveFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSavesFolder, "Neighborhoods")), OriginalFolder = sims2Instance.NeighborhoodsFolder});
 
+			thisprofile.LocalSettingsFolders.Clear();
+			thisprofile.LocalSettingsFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSettingsFolder, "Config")), OriginalFolder = sims2Instance.ConfigFolder});
+			thisprofile.LocalSettingsFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSettingsFolder, "Cameras")), OriginalFolder = sims2Instance.CamerasFolder});
+		} else if (game == Games.Sims3){
+			thisprofile.LocalDataFolders.Clear();
+			thisprofile.LocalDataFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalDataFolder, "Collections")), OriginalFolder = sims3Instance.CollectionsFolder});
+			thisprofile.LocalDataFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalDataFolder, "InstalledWorlds")), OriginalFolder = sims3Instance.InstalledWorldsFolder});
+			
+			thisprofile.LocalMediaFolders.Clear();
+			thisprofile.LocalMediaFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalMediaFolder, "CustomMusic")), OriginalFolder = sims3Instance.CustomMusicFolder});
+			thisprofile.LocalMediaFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalMediaFolder, "Videos")), OriginalFolder = sims3Instance.VideosFolder});
+			thisprofile.LocalMediaFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalMediaFolder, "Screenshots")), OriginalFolder = sims3Instance.ScreenshotsFolder});
 
+			thisprofile.LocalSaveFolders.Clear();
+			thisprofile.LocalSaveFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSavesFolder, "Exports")), OriginalFolder = sims3Instance.ExportsFolder});
+			thisprofile.LocalSaveFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSavesFolder, "SavedOutfits")), OriginalFolder = sims3Instance.SavedOutfitsFolder});
+			thisprofile.LocalSaveFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSavesFolder, "SavedSims")), OriginalFolder = sims3Instance.SavedSimsFolder});
+			thisprofile.LocalSaveFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSavesFolder, "Saves")), OriginalFolder = sims3Instance.SavesFolder});
 
+			thisprofile.LocalSettingsFiles.Clear();
+			thisprofile.LocalSettingsFiles.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSettingsFolder, "Options.ini")), OriginalFolder = Path.Combine(sims3Instance.GameDocumentsFolder, "Options.ini")});
+		} else if (game == Games.Sims4){
+			thisprofile.LocalDataFolders.Clear();
+			thisprofile.LocalDataFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalDataFolder, "Content")), OriginalFolder = sims4Instance.ContentFolder});
+			
+			thisprofile.LocalMediaFolders.Clear();
+			thisprofile.LocalMediaFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalMediaFolder, "Screenshots")), OriginalFolder = sims4Instance.ScreenshotsFolder});
+			thisprofile.LocalMediaFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalMediaFolder, "Recorded Videos")), OriginalFolder = sims4Instance.VideosFolder});
 
+			thisprofile.LocalSaveFolders.Clear();
+			thisprofile.LocalSaveFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSavesFolder, "Saves")), OriginalFolder = sims4Instance.SavesFolder});
+			thisprofile.LocalSaveFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSavesFolder, "Tray")), OriginalFolder = sims4Instance.TrayFolder});
 
+			thisprofile.LocalSettingsFolders.Clear();
+			thisprofile.LocalSettingsFolders.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSettingsFolder, "ConfigOverride")), OriginalFolder = sims4Instance.ConfigOverrideFolder});
+
+			thisprofile.LocalSettingsFiles.Clear();
+			thisprofile.LocalSettingsFiles.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSettingsFolder, "Options.ini")), OriginalFolder = Path.Combine(sims4Instance.GameDocumentsFolder, "Options.ini")});
+			thisprofile.LocalSettingsFiles.Add(new() { LocalFolder = string.Format(Path.Combine(thisprofile.LocalSettingsFolder, "UserSetting.ini")), OriginalFolder = Path.Combine(sims4Instance.GameDocumentsFolder, "UserSetting.ini")});
+		}
+		return thisprofile;	
+	}
 }

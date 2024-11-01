@@ -11,10 +11,13 @@ public partial class CategoryOption : MarginContainer
 	public bool open = false;
 	public delegate void CategorySelectedEvent(string categoryname, bool selected);
 	public CategorySelectedEvent CategorySelected;
+	HolderNode holdernode;
 
 	public override void _Ready()
 	{
-		UIUtilities.UpdateTheme(GetTree());
+		holdernode = GetWindow().GetNode<HolderNode>("MainWindow/HolderNode");
+		holdernode.UpdateTheme(GetTree());
+		//UIUtilities.UpdateTheme(GetTree());
 		GetNode<ColorRect>("CatColor").Color = catcolor;
 		GetNode<Label>("HBoxContainer/Label/CatName_Label").Text = catname;
 		GetNode<Button>("Button").Pressed += () => ButtonPressed();

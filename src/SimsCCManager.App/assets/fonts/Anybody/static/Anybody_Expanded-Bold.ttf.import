@@ -15,6 +15,7 @@ dest_files=["res://.godot/imported/Anybody_Expanded-Bold.ttf-a46e03e70ad1cfb794b
 Rendering=null
 antialiasing=1
 generate_mipmaps=false
+disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
 msdf_pixel_range=8
 msdf_size=48

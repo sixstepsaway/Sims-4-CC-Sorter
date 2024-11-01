@@ -15,6 +15,7 @@ dest_files=["res://.godot/imported/Livvic-Light.ttf-9f97fd24d64bd2adbf2f5fae274e
 Rendering=null
 antialiasing=1
 generate_mipmaps=false
+disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
 msdf_pixel_range=8
 msdf_size=48

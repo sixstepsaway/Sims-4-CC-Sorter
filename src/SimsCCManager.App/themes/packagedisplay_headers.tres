@@ -35,6 +35,7 @@ border_color = Color(0.996078, 0.996078, 0.996078, 1)
 Label/colors/font_color = Color(0.8, 0.670588, 0.847059, 1)
 Label/font_sizes/font_size = 18
 Label/fonts/font = ExtResource("1_7tl0v")
+LineEdit/colors/font_placeholder_color = Color(0.88, 0.88, 0.88, 1)
 LineEdit/styles/normal = SubResource("StyleBoxFlat_8ejxn")
 TextEdit/colors/font_color = Color(0.196078, 0.196078, 0.196078, 1)
 TextEdit/colors/font_placeholder_color = Color(0.498039, 0.498039, 0.498039, 1)

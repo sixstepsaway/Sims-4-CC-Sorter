@@ -15,6 +15,7 @@ dest_files=["res://.godot/imported/Marvel-Regular.ttf-068a7be30328c546ffc36880dd
 Rendering=null
 antialiasing=1
 generate_mipmaps=false
+disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
 msdf_pixel_range=8
 msdf_size=48

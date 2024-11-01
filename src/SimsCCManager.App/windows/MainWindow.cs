@@ -24,6 +24,7 @@ public partial class MainWindow : MarginContainer
 	MainMenu mainmenu; 
 	PackageDisplay packageDisplay;
 	LoadingInstance loadingscreen;
+	HolderNode holdernode;
 
 	bool loadingPD = false;
 	public override void _Ready()
@@ -39,7 +40,16 @@ public partial class MainWindow : MarginContainer
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Making splash permanent."));
 		AddChild(splash);
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Loaded splash."));
+		ChildEnteredTree += (x) => WhenChildEnteredTree(x);
+		holdernode = GetNode<HolderNode>("HolderNode");
 	}
+
+    private void WhenChildEnteredTree(Node x)
+    {
+		//UIUtilities.UpdateTheme(GetTree());
+		holdernode.UpdateTheme(GetTree());
+    }
+
 
     private void FinishedLoading(){
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(LoadedSettings.SetSettings.LoadedTheme.ThemeName);
@@ -73,7 +83,8 @@ public partial class MainWindow : MarginContainer
 		Show();
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Removing splash."));
 		sc.QueueFree();
-		UIUtilities.UpdateTheme(GetTree());
+		holdernode.UpdateTheme(GetTree());
+		//UIUtilities.UpdateTheme(GetTree());
 	}
 
 	public void ShowMainMenu(){
@@ -141,12 +152,14 @@ public partial class MainWindow : MarginContainer
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Moving package manager."));
 		MoveChild(packageDisplay, 0);	
 		loadingPD = true;
-		UIUtilities.UpdateTheme(GetTree());
+		holdernode.UpdateTheme(GetTree());
+		//UIUtilities.UpdateTheme(GetTree());
 	}
 
     private void PDDoneLoading()
     {
-        UIUtilities.UpdateTheme(GetTree());
+        holdernode.UpdateTheme(GetTree());
+		//UIUtilities.UpdateTheme(GetTree());
 		loadingscreen.QueueFree();
     }
 

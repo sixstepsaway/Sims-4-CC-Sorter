@@ -15,6 +15,7 @@ dest_files=["res://.godot/imported/Livvic-Bold.ttf-3773b9749aa023aa6cd7bb4437de1
 Rendering=null
 antialiasing=1
 generate_mipmaps=false
+disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
 msdf_pixel_range=8
 msdf_size=48

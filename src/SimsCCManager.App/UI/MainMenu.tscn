@@ -121,7 +121,6 @@ text = "DevTest"
 [connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_Help" to="." method="_on_mm_button_help_button_clicked"]
 [connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_Quit" to="." method="_on_mm_button_quit_button_clicked"]
 [connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_DevTest" to="." method="_on_mm_button_dev_test_button_clicked"]
-[connection signal="ButtonClicked" from="Menu/MarginContainer/VBoxContainer/MMButton_DevTest" to="." method="_on_mm_button_quit_button_clicked"]
 
 [editable path="Menu/MarginContainer/VBoxContainer/MMButton_NewInstance"]
 [editable path="Menu/MarginContainer/VBoxContainer/MMButton_LoadInstance"]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=60 format=3 uid="uid://c4rjghpqcjk60"]
+[gd_scene load_steps=63 format=3 uid="uid://c4rjghpqcjk60"]
 
 [ext_resource type="Script" path="res://UI/PackageDisplay.cs" id="1_l1mrx"]
 [ext_resource type="Texture2D" uid="uid://cuhu3356ym5r7" path="res://assets/icons/materialicons/twotone_account_box_black_48dp.png" id="2_4xbwd"]
@@ -12,15 +12,15 @@
 [ext_resource type="Texture2D" uid="uid://dosqoo8wirnm8" path="res://assets/icons/materialicons/twotone_archive_black_48dp.png" id="7_j0y88"]
 [ext_resource type="PackedScene" uid="uid://ryrvwl0ec34b" path="res://UI/PackageDisplay_Elements/topbar_button.tscn" id="7_j6a54"]
 [ext_resource type="Texture2D" uid="uid://btjijgdsk4da0" path="res://assets/icons/materialicons/twotone_assignment_black_48dp.png" id="8_6oeh4"]
-[ext_resource type="Texture2D" uid="uid://c0b5qcfj7rwq2" path="res://assets/icons/materialicons/twotone_pageview_black_48dp.png" id="9_21c15"]
 [ext_resource type="Texture2D" uid="uid://b6njo80bsr20m" path="res://assets/icons/materialicons/twotone_article_black_48dp.png" id="10_nviw3"]
+[ext_resource type="Texture2D" uid="uid://dkhgnqbvo1f0v" path="res://assets/icons/materialicons/twotone_create_new_folder_black_48dp.png" id="10_u3lp4"]
 [ext_resource type="Texture2D" uid="uid://b5n2gwxghupb1" path="res://assets/icons/materialicons/twotone_settings_applications_black_48dp.png" id="11_ltwr1"]
 [ext_resource type="Texture2D" uid="uid://bvsroafqogyd0" path="res://assets/images/s4.png" id="12_5fvq2"]
 [ext_resource type="Texture2D" uid="uid://dtc02rko6kqee" path="res://assets/icons/materialicons/twotone_play_arrow_black_48dp.png" id="13_xlbmk"]
-[ext_resource type="Texture2D" uid="uid://pclpeqlqhoje" path="res://assets/icons/materialicons/twotone_next_plan_black_48dp.png" id="15_djphk"]
 [ext_resource type="Texture2D" uid="uid://bkuudak2gjupp" path="res://assets/icons/materialicons/twotone_settings_black_48dp.png" id="16_bvsww"]
 [ext_resource type="PackedScene" uid="uid://cgimwkyuwfqpf" path="res://UI/PackageDisplay_Elements/exe_choice_popup_panel.tscn" id="17_wuhvj"]
 [ext_resource type="Texture2D" uid="uid://bp0j34pwjatb4" path="res://assets/icons/materialicons/twotone_help_black_48dp.png" id="18_yrn8a"]
+[ext_resource type="Texture2D" uid="uid://u7h16r70fle5" path="res://assets/icons/materialicons/twotone_backspace_black_48dp.png" id="19_njkpo"]
 [ext_resource type="PackedScene" uid="uid://d2xe1vnmdo7ng" path="res://UI/PackageDisplay_Elements/view_errors_container.tscn" id="19_qbjob"]
 [ext_resource type="Theme" uid="uid://b4fe82i5mblf5" path="res://themes/packagedisplay_headers.tres" id="19_upvln"]
 [ext_resource type="Texture2D" uid="uid://c8mq228vanu3y" path="res://assets/icons/materialicons/twotone_error_black_48dp.png" id="22_bpi4a"]
@@ -28,6 +28,8 @@
 [ext_resource type="Script" path="res://UI/ApplicationStarter.cs" id="23_wh1nx"]
 [ext_resource type="Theme" uid="uid://elq77dslte5a" path="res://themes/ManageCategories_buttons.tres" id="24_alsi8"]
 [ext_resource type="Texture2D" uid="uid://bfqqudt7sll4n" path="res://assets/icons/materialicons/twotone_refresh_black_48dp.png" id="26_16awj"]
+[ext_resource type="Script" path="res://UI/PackageDisplay_Elements/subwindows/ProfileManagement.cs" id="29_kno0j"]
+[ext_resource type="Script" path="res://UI/CategoryManagement.cs" id="30_p6yvk"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3p7jc"]
 
@@ -42,7 +44,7 @@ bg_color = Color(0.862745, 0.862745, 0.862745, 1)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pum2v"]
 
-[sub_resource type="Image" id="Image_cmr6u"]
+[sub_resource type="Image" id="Image_3wsbm"]
 data = {
 "data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 26, 255, 255, 255, 146, 255, 255, 255, 189, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 189, 255, 255, 255, 144, 255, 255, 255, 25, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 146, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 144, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 189, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 237, 237, 237, 195, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 189, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 177, 177, 177, 209, 37, 37, 37, 252, 178, 178, 178, 209, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 176, 176, 176, 209, 32, 32, 32, 254, 26, 26, 26, 255, 84, 84, 84, 235, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 176, 176, 176, 209, 32, 32, 32, 254, 26, 26, 26, 255, 78, 78, 78, 237, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 253, 253, 253, 192, 222, 222, 222, 198, 255, 255, 255, 191, 255, 255, 255, 191, 175, 175, 175, 210, 32, 32, 32, 254, 26, 26, 26, 255, 79, 79, 79, 237, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 253, 253, 253, 192, 90, 90, 90, 234, 45, 45, 45, 249, 212, 212, 212, 200, 174, 174, 174, 210, 32, 32, 32, 254, 26, 26, 26, 255, 79, 79, 79, 237, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 232, 232, 232, 196, 54, 54, 54, 246, 26, 26, 26, 255, 43, 43, 43, 250, 32, 32, 32, 254, 26, 26, 26, 255, 81, 81, 81, 237, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 226, 226, 226, 197, 54, 54, 54, 246, 26, 26, 26, 255, 26, 26, 26, 255, 81, 81, 81, 237, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 226, 226, 226, 197, 54, 54, 54, 246, 81, 81, 81, 236, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 189, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 230, 230, 230, 197, 248, 248, 248, 193, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 189, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 144, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 143, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 25, 255, 255, 255, 144, 255, 255, 255, 189, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 191, 255, 255, 255, 189, 255, 255, 255, 143, 255, 255, 255, 24, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
 "format": "RGBA8",
@@ -52,9 +54,9 @@ data = {
 }
 
 [sub_resource type="ImageTexture" id="ImageTexture_hxidq"]
-image = SubResource("Image_cmr6u")
+image = SubResource("Image_3wsbm")
 
-[sub_resource type="Image" id="Image_7qyiv"]
+[sub_resource type="Image" id="Image_icnuq"]
 data = {
 "data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 13, 255, 255, 255, 96, 255, 255, 255, 136, 255, 255, 255, 173, 255, 255, 255, 173, 255, 255, 255, 136, 255, 255, 255, 95, 255, 255, 255, 11, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 56, 255, 255, 255, 171, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 168, 255, 255, 255, 51, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 56, 255, 255, 255, 191, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 190, 255, 255, 255, 50, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 12, 255, 255, 255, 171, 198, 198, 198, 255, 198, 198, 198, 255, 176, 176, 176, 255, 81, 81, 81, 255, 43, 43, 43, 255, 43, 43, 43, 255, 83, 83, 83, 255, 177, 177, 177, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 168, 255, 255, 255, 10, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 97, 198, 198, 198, 255, 198, 198, 198, 255, 176, 176, 176, 255, 37, 37, 37, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 39, 39, 39, 255, 179, 179, 179, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 96, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 137, 198, 198, 198, 255, 198, 198, 198, 255, 81, 81, 81, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 86, 86, 86, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 154, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 174, 198, 198, 198, 255, 198, 198, 198, 255, 43, 43, 43, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 43, 43, 43, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 180, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 173, 198, 198, 198, 255, 198, 198, 198, 255, 43, 43, 43, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 44, 44, 44, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 180, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 136, 198, 198, 198, 255, 198, 198, 198, 255, 83, 83, 83, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 88, 88, 88, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 152, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 95, 198, 198, 198, 255, 198, 198, 198, 255, 178, 178, 178, 255, 39, 39, 39, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 26, 26, 26, 255, 42, 42, 42, 255, 181, 181, 181, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 94, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 11, 255, 255, 255, 169, 198, 198, 198, 255, 198, 198, 198, 255, 179, 179, 179, 255, 86, 86, 86, 255, 43, 43, 43, 255, 44, 44, 44, 255, 88, 88, 88, 255, 181, 181, 181, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 165, 255, 255, 255, 9, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 52, 255, 255, 255, 190, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 189, 255, 255, 255, 46, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 50, 255, 255, 255, 168, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 198, 198, 198, 255, 255, 255, 255, 165, 255, 255, 255, 46, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 10, 255, 255, 255, 96, 255, 255, 255, 154, 255, 255, 255, 180, 255, 255, 255, 180, 255, 255, 255, 152, 255, 255, 255, 94, 255, 255, 255, 9, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
 "format": "RGBA8",
@@ -64,9 +66,9 @@ data = {
 }
 
 [sub_resource type="ImageTexture" id="ImageTexture_tihjn"]
-image = SubResource("Image_7qyiv")
+image = SubResource("Image_icnuq")
 
-[sub_resource type="Image" id="Image_6kr51"]
+[sub_resource type="Image" id="Image_7moub"]
 data = {
 "data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 42, 42, 42, 12, 26, 26, 26, 67, 26, 26, 26, 105, 27, 27, 27, 122, 27, 27, 27, 122, 26, 26, 26, 105, 27, 27, 27, 66, 46, 46, 46, 11, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 29, 29, 29, 44, 27, 27, 27, 122, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 122, 30, 30, 30, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 29, 29, 29, 44, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 30, 30, 30, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 42, 42, 42, 12, 27, 27, 27, 122, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 121, 46, 46, 46, 11, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 67, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 65, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 105, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 104, 255, 255, 255, 0, 255, 255, 255, 0, 27, 27, 27, 122, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 122, 255, 255, 255, 0, 255, 255, 255, 0, 27, 27, 27, 122, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 121, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 105, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 103, 255, 255, 255, 0, 255, 255, 255, 0, 27, 27, 27, 66, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 65, 255, 255, 255, 0, 255, 255, 255, 0, 46, 46, 46, 11, 27, 27, 27, 122, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 121, 51, 51, 51, 10, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 30, 30, 30, 42, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 31, 31, 31, 41, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 30, 30, 30, 42, 27, 27, 27, 121, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 27, 27, 27, 121, 31, 31, 31, 41, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 46, 46, 46, 11, 27, 27, 27, 65, 27, 27, 27, 104, 27, 27, 27, 122, 27, 27, 27, 121, 27, 27, 27, 103, 27, 27, 27, 65, 51, 51, 51, 10, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
 "format": "RGBA8",
@@ -76,9 +78,9 @@ data = {
 }
 
 [sub_resource type="ImageTexture" id="ImageTexture_srmcp"]
-image = SubResource("Image_6kr51")
+image = SubResource("Image_7moub")
 
-[sub_resource type="Image" id="Image_8pth3"]
+[sub_resource type="Image" id="Image_ob421"]
 data = {
 "data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 179, 179, 179, 30, 178, 178, 178, 103, 178, 178, 178, 46, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 31, 178, 178, 178, 115, 178, 178, 178, 115, 176, 176, 176, 48, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 48, 178, 178, 178, 115, 178, 178, 178, 115, 176, 176, 176, 48, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 177, 177, 177, 49, 178, 178, 178, 115, 178, 178, 178, 115, 173, 173, 173, 31, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 177, 177, 177, 49, 178, 178, 178, 115, 178, 178, 178, 115, 181, 181, 181, 31, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 48, 178, 178, 178, 115, 178, 178, 178, 115, 179, 179, 179, 47, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 31, 178, 178, 178, 115, 178, 178, 178, 115, 179, 179, 179, 47, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 179, 179, 179, 30, 178, 178, 178, 103, 178, 178, 178, 46, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
 "format": "RGBA8",
@@ -88,9 +90,9 @@ data = {
 }
 
 [sub_resource type="ImageTexture" id="ImageTexture_ghu27"]
-image = SubResource("Image_8pth3")
+image = SubResource("Image_ob421")
 
-[sub_resource type="Image" id="Image_hqfji"]
+[sub_resource type="Image" id="Image_sj3jx"]
 data = {
 "data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 178, 178, 178, 46, 178, 178, 178, 103, 176, 176, 176, 29, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 48, 178, 178, 178, 115, 178, 178, 178, 115, 181, 181, 181, 31, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 48, 178, 178, 178, 115, 178, 178, 178, 115, 181, 181, 181, 48, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 31, 178, 178, 178, 115, 178, 178, 178, 115, 177, 177, 177, 49, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 181, 181, 181, 31, 178, 178, 178, 115, 178, 178, 178, 115, 177, 177, 177, 49, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 176, 176, 176, 48, 178, 178, 178, 115, 178, 178, 178, 115, 181, 181, 181, 48, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 176, 176, 176, 48, 178, 178, 178, 115, 178, 178, 178, 115, 173, 173, 173, 31, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 178, 178, 178, 46, 178, 178, 178, 103, 179, 179, 179, 30, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
 "format": "RGBA8",
@@ -100,9 +102,9 @@ data = {
 }
 
 [sub_resource type="ImageTexture" id="ImageTexture_cfb28"]
-image = SubResource("Image_hqfji")
+image = SubResource("Image_sj3jx")
 
-[sub_resource type="Image" id="Image_fjlmx"]
+[sub_resource type="Image" id="Image_7xkj2"]
 data = {
 "data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 30, 30, 30, 17, 26, 26, 26, 98, 26, 26, 26, 127, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 127, 26, 26, 26, 97, 30, 30, 30, 17, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 98, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 97, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 127, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 127, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 127, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 127, 255, 255, 255, 0, 255, 255, 255, 0, 26, 26, 26, 97, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 96, 255, 255, 255, 0, 255, 255, 255, 0, 30, 30, 30, 17, 26, 26, 26, 97, 26, 26, 26, 127, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 128, 26, 26, 26, 127, 26, 26, 26, 96, 32, 32, 32, 16, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
 "format": "RGBA8",
@@ -112,7 +114,7 @@ data = {
 }
 
 [sub_resource type="ImageTexture" id="ImageTexture_fb7kr"]
-image = SubResource("Image_fjlmx")
+image = SubResource("Image_7xkj2")
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_spj25"]
 
@@ -229,6 +231,9 @@ Button/styles/pressed = SubResource("StyleBoxFlat_8s3fj")
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x16ux"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r2byt"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l055a"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
 border_width_left = 3
@@ -292,29 +297,20 @@ size_flags_vertical = 8
 theme = ExtResource("19_upvln")
 text = "All Mods"
 
-[node name="TogglePositioner" type="HBoxContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader"]
+[node name="AllModsInfo_Label" type="Label" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader" groups=["Labels"]]
 layout_mode = 2
 size_flags_horizontal = 3
-mouse_filter = 2
-alignment = 1
-
-[node name="AllMods_Label" type="Label" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader/TogglePositioner" groups=["Labels"]]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 8
+size_flags_vertical = 1
 theme = ExtResource("19_upvln")
-text = " Detailed View "
-
-[node name="CustomCheckButton" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader/TogglePositioner" instance=ExtResource("4_l86u8")]
-visible = false
-layout_mode = 2
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="SearchPositioner" type="MarginContainer" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader"]
 layout_mode = 2
 size_flags_horizontal = 8
 
-[node name="AllMods_SearchBox" type="LineEdit" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader/SearchPositioner"]
+[node name="AllMods_SearchBox" type="LineEdit" parent="MainWindowSizer/MainPanels/HSplitContainer/AllMods_Frame_Container/ContainerHeader/SearchPositioner" groups=["LineEdits"]]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 8
@@ -400,7 +396,7 @@ text = "New Downloads"
 layout_mode = 2
 mouse_filter = 2
 
-[node name="NewDL_SearchBox" type="LineEdit" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/ContainerHeader/SearchPositioner"]
+[node name="NewDL_SearchBox" type="LineEdit" parent="MainWindowSizer/MainPanels/HSplitContainer/VSplitContainer/NewDownloads_Frame_Container/ContainerHeader/SearchPositioner" groups=["LineEdits"]]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 8
@@ -440,16 +436,16 @@ theme_override_constants/separation = -1
 
 [node name="AddFiles_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
 layout_mode = 2
-tooltip_text = "Add Files to Instance"
 buttonImage = ExtResource("5_6teur")
+Tooltip = "Add Files"
 
 [node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFiles_Topbar_Button" index="1"]
 tooltip_text = "Add Files"
 
 [node name="AddFolder_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
 layout_mode = 2
-tooltip_text = "Add Folder to Instance"
 buttonImage = ExtResource("6_ulswl")
+Tooltip = "Add Folder"
 
 [node name="TextureRect" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFolder_Topbar_Button" index="0"]
 texture = ExtResource("6_ulswl")
@@ -459,8 +455,8 @@ tooltip_text = "Add Folder"
 
 [node name="Refresh_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
 layout_mode = 2
-tooltip_text = "Refresh Modlisting"
 buttonImage = ExtResource("7_j0y88")
+Tooltip = "Refresh Items"
 
 [node name="TextureRect" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/Refresh_Topbar_Button" index="0"]
 texture = ExtResource("7_j0y88")
@@ -470,8 +466,8 @@ tooltip_text = "Refresh Files"
 
 [node name="SortSubfolders_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
 layout_mode = 2
-tooltip_text = "Sort Subfolders"
 buttonImage = ExtResource("8_6oeh4")
+Tooltip = "Sort Into Folders"
 
 [node name="TextureRect" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/SortSubfolders_Topbar_Button" index="0"]
 texture = ExtResource("8_6oeh4")
@@ -479,21 +475,21 @@ texture = ExtResource("8_6oeh4")
 [node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/SortSubfolders_Topbar_Button" index="1"]
 tooltip_text = "Sort Subfolders"
 
-[node name="ScanAll_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
+[node name="ExportProfile_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
 layout_mode = 2
-tooltip_text = "Scan All Unscanned Mods"
-buttonImage = ExtResource("9_21c15")
+buttonImage = ExtResource("10_u3lp4")
+Tooltip = "Export Profile"
 
-[node name="TextureRect" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ScanAll_Topbar_Button" index="0"]
-texture = ExtResource("9_21c15")
+[node name="TextureRect" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ExportProfile_Topbar_Button" index="0"]
+texture = ExtResource("10_u3lp4")
 
-[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ScanAll_Topbar_Button" index="1"]
+[node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ExportProfile_Topbar_Button" index="1"]
 tooltip_text = "Deep Scan All"
 
 [node name="ManageCats_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
 layout_mode = 2
-tooltip_text = "Manage Categories"
 buttonImage = ExtResource("10_nviw3")
+Tooltip = "Manage Categories"
 
 [node name="TextureRect" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ManageCats_Topbar_Button" index="0"]
 texture = ExtResource("10_nviw3")
@@ -503,8 +499,8 @@ tooltip_text = "Manage Categories"
 
 [node name="EditExes_Topbar_Button" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
 layout_mode = 2
-tooltip_text = "Edit Executables"
 buttonImage = ExtResource("11_ltwr1")
+Tooltip = "Edit Executables"
 
 [node name="TextureRect" parent="MainWindowSizer/TopPanels/Buttons/HBoxContainer/EditExes_Topbar_Button" index="0"]
 texture = ExtResource("11_ltwr1")
@@ -523,8 +519,8 @@ layout_mode = 2
 [node name="Profiles_Button" parent="MainWindowSizer/TopPanels/Profiles/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
-tooltip_text = "Swap Instances"
 buttonImage = ExtResource("2_4xbwd")
+Tooltip = "Manage Profiles"
 
 [node name="TextureRect" parent="MainWindowSizer/TopPanels/Profiles/HBoxContainer/Profiles_Button" index="0"]
 texture = ExtResource("2_4xbwd")
@@ -532,14 +528,11 @@ texture = ExtResource("2_4xbwd")
 [node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/Profiles/HBoxContainer/Profiles_Button" index="1"]
 tooltip_text = "Edit Profiles"
 
-[node name="OptionButton" type="OptionButton" parent="MainWindowSizer/TopPanels/Profiles/HBoxContainer"]
+[node name="ProfileOptions" type="OptionButton" parent="MainWindowSizer/TopPanels/Profiles/HBoxContainer"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme = SubResource("Theme_t880j")
-selected = 0
-item_count = 1
-popup/item_0/text = "Default"
 
 [node name="GameStartControls" type="MarginContainer" parent="MainWindowSizer/TopPanels"]
 layout_mode = 2
@@ -676,11 +669,11 @@ layout_mode = 2
 [node name="SwapInstances_SettingsHelpButtons" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer" groups=["PackageEditorButtons"] instance=ExtResource("7_j6a54")]
 custom_minimum_size = Vector2(45, 45)
 layout_mode = 2
-tooltip_text = "Swap Instances"
-buttonImage = ExtResource("15_djphk")
+buttonImage = ExtResource("19_njkpo")
+Tooltip = "Back to Main Menu"
 
 [node name="TextureRect" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/SwapInstances_SettingsHelpButtons" index="0"]
-texture = ExtResource("15_djphk")
+texture = ExtResource("19_njkpo")
 
 [node name="TopbarButton_Button" parent="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/SwapInstances_SettingsHelpButtons" index="1"]
 tooltip_text = "Return to Main Menu"
@@ -854,11 +847,6 @@ layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_x16ux")
 horizontal_scroll_mode = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="RenameItemsBox/MarginContainer/VBoxContainer/ScrollContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
 [node name="HBoxContainer" type="HBoxContainer" parent="RenameItemsBox/MarginContainer/VBoxContainer"]
 layout_mode = 2
 alignment = 1
@@ -909,7 +897,7 @@ vertical_alignment = 1
 [node name="ScrollContainer" type="ScrollContainer" parent="DeleteItemsBox/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 350)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_x16ux")
+theme_override_styles/panel = SubResource("StyleBoxFlat_r2byt")
 horizontal_scroll_mode = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="DeleteItemsBox/MarginContainer/VBoxContainer/ScrollContainer"]
@@ -973,7 +961,7 @@ vertical_alignment = 1
 [node name="ScrollContainer" type="ScrollContainer" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 350)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_x16ux")
+theme_override_styles/panel = SubResource("StyleBoxFlat_r2byt")
 horizontal_scroll_mode = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MoveWrongGameFiles/MarginContainer/VBoxContainer/ScrollContainer"]
@@ -1167,7 +1155,7 @@ vertical_alignment = 1
 [node name="ScrollContainer" type="ScrollContainer" parent="ViewErrors/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 350)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_x16ux")
+theme_override_styles/panel = SubResource("StyleBoxFlat_r2byt")
 horizontal_scroll_mode = 0
 
 [node name="MarginContainer" type="MarginContainer" parent="ViewErrors/MarginContainer/VBoxContainer/ScrollContainer"]
@@ -1226,11 +1214,396 @@ file_mode = 2
 access = 2
 use_native_dialog = true
 
+[node name="ProfileManagement" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 2
+script = ExtResource("29_kno0j")
+
+[node name="ColorRect" type="ColorRect" parent="ProfileManagement" groups=["PlainBG"]]
+modulate = Color(1, 1, 1, 0.505882)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="ProfileManagement"]
+layout_mode = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 125
+
+[node name="ColorRect" type="ColorRect" parent="ProfileManagement/MarginContainer" groups=["PlainBG"]]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ProfileManagement/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Profiles_Label" type="Label" parent="ProfileManagement/MarginContainer/VBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Manage Profiles"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="ProfileManagement/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(350, 0)
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_l055a")
+
+[node name="MarginContainer" type="MarginContainer" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer/MarginContainer"]
+custom_minimum_size = Vector2(0, 350)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_r2byt")
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MarginContainer2" type="MarginContainer" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 100
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer2"]
+layout_mode = 2
+alignment = 1
+
+[node name="NewProfile_Button" type="Button" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer2/VBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "New"
+
+[node name="EditProfile_Button" type="Button" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer2/VBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Edit"
+
+[node name="DuplicateProfile_Button" type="Button" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer2/VBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Duplicate"
+
+[node name="DeleteProfile_Button" type="Button" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer2/VBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Delete"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ProfileManagement/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Close_Button" type="Button" parent="ProfileManagement/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Close"
+
+[node name="MarginContainer2" type="MarginContainer" parent="ProfileManagement"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Panel" type="Panel" parent="ProfileManagement/MarginContainer2"]
+layout_mode = 2
+
+[node name="MarginContainer2" type="MarginContainer" parent="ProfileManagement/MarginContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="ColorRect" type="ColorRect" parent="ProfileManagement/MarginContainer2/MarginContainer2" groups=["PlainBG"]]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="ProfileManagement/MarginContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ProfileManagement/MarginContainer2/MarginContainer"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer" groups=["LineEdits"]]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+placeholder_text = "Profile name..."
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 2
+
+[node name="Label" type="Label" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Local Saves "
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LocalSaves_CheckButton" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer" instance=ExtResource("4_l86u8")]
+layout_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 2
+
+[node name="Label" type="Label" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer2" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Local Settings"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LocalSettings_CheckButton" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer2" instance=ExtResource("4_l86u8")]
+layout_mode = 2
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 2
+
+[node name="Label" type="Label" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer3" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Local Media"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LocalMedia_CheckButton" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer3" instance=ExtResource("4_l86u8")]
+layout_mode = 2
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 2
+
+[node name="Label" type="Label" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer4" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Local Data"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LocalData_CheckButton" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer4" instance=ExtResource("4_l86u8")]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Confirm_Button" type="Button" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Confirm"
+
+[node name="Cancel_Button" type="Button" parent="ProfileManagement/MarginContainer2/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Cancel"
+
+[node name="NameTaken" type="AcceptDialog" parent="ProfileManagement"]
+size = Vector2i(226, 100)
+force_native = true
+dialog_text = "Profile name already exists"
+
+[node name="CategoryManagement" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 2
+script = ExtResource("30_p6yvk")
+
+[node name="ColorRect" type="ColorRect" parent="CategoryManagement" groups=["PlainBG"]]
+modulate = Color(1, 1, 1, 0.505882)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CategoryManagement"]
+layout_mode = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 125
+
+[node name="ColorRect" type="ColorRect" parent="CategoryManagement/MarginContainer" groups=["PlainBG"]]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CategoryManagement/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Cats_Label" type="Label" parent="CategoryManagement/MarginContainer/VBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+text = "Manage Categories"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="CategoryManagement/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(350, 0)
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_l055a")
+
+[node name="MarginContainer" type="MarginContainer" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer/MarginContainer"]
+custom_minimum_size = Vector2(0, 350)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_r2byt")
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MarginContainer2" type="MarginContainer" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 100
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer2"]
+layout_mode = 2
+alignment = 1
+
+[node name="NewCategory_Button" type="Button" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer2/VBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "New"
+
+[node name="EditCategory_Button" type="Button" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer2/VBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Edit"
+
+[node name="DeleteCategory_Button" type="Button" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer2/MarginContainer2/VBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Delete"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CategoryManagement/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Close_Button" type="Button" parent="CategoryManagement/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Close"
+
+[node name="MarginContainer2" type="MarginContainer" parent="CategoryManagement"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Panel" type="Panel" parent="CategoryManagement/MarginContainer2"]
+layout_mode = 2
+
+[node name="MarginContainer2" type="MarginContainer" parent="CategoryManagement/MarginContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="ColorRect" type="ColorRect" parent="CategoryManagement/MarginContainer2/MarginContainer2" groups=["PlainBG"]]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CategoryManagement/MarginContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 65
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 65
+theme_override_constants/margin_bottom = 50
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CategoryManagement/MarginContainer2/MarginContainer"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="CategoryManagement/MarginContainer2/MarginContainer/VBoxContainer" groups=["LineEdits"]]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+placeholder_text = "Category name..."
+
+[node name="TextEdit" type="TextEdit" parent="CategoryManagement/MarginContainer2/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 3
+placeholder_text = "Category description..."
+
+[node name="Cats_Label" type="Label" parent="CategoryManagement/MarginContainer2/MarginContainer/VBoxContainer" groups=["Labels"]]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("19_upvln")
+theme_override_font_sizes/font_size = 13
+text = "Category Color"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ColorPickerButton" type="ColorPickerButton" parent="CategoryManagement/MarginContainer2/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+color = Color(0.838897, 0.838897, 0.838897, 1)
+edit_alpha = false
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CategoryManagement/MarginContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Confirm_Button" type="Button" parent="CategoryManagement/MarginContainer2/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Confirm"
+
+[node name="Cancel_Button" type="Button" parent="CategoryManagement/MarginContainer2/MarginContainer/VBoxContainer/HBoxContainer" groups=["MainButtons"]]
+layout_mode = 2
+theme = ExtResource("24_alsi8")
+text = "Cancel"
+
+[node name="NameTaken" type="AcceptDialog" parent="CategoryManagement"]
+auto_translate_mode = 1
+size = Vector2i(226, 100)
+force_native = true
+dialog_text = "Profile name already exists"
+
 [connection signal="pressed" from="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/ExeIcon_Container/HBoxContainer/MarginContainer3/GameChoice_Dropdown" to="." method="_on_game_choice_dropdown_pressed"]
-[connection signal="ButtonClicked" from="MainWindowSizer/TopPanels/GameStartControls/HBoxContainer/PlayButton_Container/Play_Button" to="." method="_on_play_button_button_clicked"]
 [connection signal="pressed" from="MainWindowSizer/TopPanels/GameStartControls/ExeChoice_PopupPanel_Control/HidePopup_Button" to="." method="_on_hide_popup_button_pressed"]
-[connection signal="ButtonClicked" from="MainWindowSizer/TopPanels/SettingsAndHelpControls/HBoxContainer/SwapInstances_SettingsHelpButtons" to="." method="_on_swap_instances_settings_help_buttons_button_clicked"]
-[connection signal="ApplicationClosed" from="ApplicationStarter" to="." method="_on_application_starter_application_closed"]
 [connection signal="pressed" from="GameRunning/MarginContainer/VBoxContainer/Disconnect_Button" to="." method="_on_disconnect_button_pressed"]
 [connection signal="gui_input" from="FloatingItemsContainer/RightClickCatcher" to="." method="_on_right_click_catcher_gui_input"]
 
@@ -1238,7 +1611,7 @@ use_native_dialog = true
 [editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/AddFolder_Topbar_Button"]
 [editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/Refresh_Topbar_Button"]
 [editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/SortSubfolders_Topbar_Button"]
-[editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ScanAll_Topbar_Button"]
+[editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ExportProfile_Topbar_Button"]
 [editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/ManageCats_Topbar_Button"]
 [editable path="MainWindowSizer/TopPanels/Buttons/HBoxContainer/EditExes_Topbar_Button"]
 [editable path="MainWindowSizer/TopPanels/Profiles/HBoxContainer/Profiles_Button"]

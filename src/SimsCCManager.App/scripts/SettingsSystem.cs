@@ -122,6 +122,9 @@ namespace SimsCCManager.Settings.SettingsSystem
         public void ChangeSetting(string setting, dynamic value){
             SetProperty(setting, value);
             SettingsFileManagement.SaveSettings();
+            if (setting == "DebugMode"){
+                GlobalVariables.RedoLocations();
+            }
         }
         public void ChangeSetting(Guid setting, dynamic value){
             SetProperty(setting.ToString(), value);

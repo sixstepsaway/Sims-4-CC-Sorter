@@ -1,13 +1,25 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
+using SimsCCManager.Containers;
+using SimsCCManager.Debugging;
+using SimsCCManager.Globals;
+using SimsCCManager.PackageReaders.Containers;
+using SimsCCManager.PackageReaders.DecryptionFunctions;
+using SimsCCManager.PackageReaders.ImageTransformations;
+using SimsCCManager.Packages.Containers;
 
 namespace SimsCCManager.PackageReaders
 {
     public class Sims4PackageReader
     {
-        List<EntryType> EntryTypes = new()
+        public static List<EntryType> EntryTypes = new()
         {
             new EntryType(){ Tag = "_IMG", TypeID = "00B2D882", Description = "dds " },
             new EntryType(){ Tag = "", TypeID = "00DE5AC5", Description = "rmi " },
@@ -180,7 +192,7 @@ namespace SimsCCManager.PackageReaders
             new EntryType(){ Tag = "OBTR", TypeID = "0069453E", Description = "Objective Tuning Resource" }
         };
     
-        List<S4Function> Functions = new(){
+        public static List<S4Function> Functions = new(){
             new S4Function(){ BodyType = "641354", Function = "Accessory", Subfunction = "Earrings" },
             new S4Function(){ BodyType = "100270191", Function = "Makeup", Subfunction = "Blush" },
             new S4Function(){ BodyType = "104", Function = "Hat", Subfunction = "" },
@@ -621,7 +633,7 @@ namespace SimsCCManager.PackageReaders
             new S4Function(){ BodyType = "458790", Function = "Clothing", Subfunction = "Bottom" }
         };
     
-        List<S4CategoryTag> CategoryTags = new(){
+        public static List<S4CategoryTag> CategoryTags = new(){
             new S4CategoryTag(){ TypeID = "84", Description = "AgeAppropriate_Adult", Function = "", Subfunction = "" },
             new S4CategoryTag(){ TypeID = "85", Description = "AgeAppropriate_Child", Function = "", Subfunction = "" },
             new S4CategoryTag(){ TypeID = "72", Description = "AgeAppropriate_Elder", Function = "", Subfunction = "" },
@@ -4390,20 +4402,2879 @@ namespace SimsCCManager.PackageReaders
             new S4CategoryTag(){ TypeID = "1985", Description = "WorldLog_NotInteractive", Function = "", Subfunction = "" }
         };
 
+        public static List<SimsOverride> Overrides = new() {
+
+        };
+
+        public static List<string> Flags = new(){"DefaultForBodyType","DefaultThumbnailPart","AllowForCASRandom","ShowInUI","ShowInSimInfoPanel","ShowInCasDemo","AllowForLiveRandom","DisableForOppositeGender","DisableForOppositeFrame","DefaultForBodyTypeMale","DefaultForBodyTypeFemale","Unk","Unk","Unk","Unk","Unk"};
+
+        public Sims4ScanData SearchS4Package(FileInfo package, Sims4Instance instance){            
+            
+            //locations
+            long entrycountloc = 36;
+            long indexRecordPositionloc = 64;
+
+            Sims4ScanData thisPackage = new();          
+
+            //Lists 
+            
+            List<TagsList> itemtags = new();
+            List<string> allFlags = new();      
+            List<string> allInstanceIDs = new();            
+            List<string> objdentries;
+            List<int> objdpositions;   
+            List<IndexEntry> entries = new();
+            IndexEntry MergedManifest = new();
+            List<EntryLocations> fileHas = new();
+            ArrayList linkData = new();
+            List<IndexEntry> indexData = new();
+
+            //create readers  
+            //FileStream filePackage = new FileStream(package.FullName, FileMode.Open, FileAccess.Read);
+            MemoryStream msPackage = ByteReaders.ReadBytesFromFile(package.FullName, (int)package.Length);
+            BinaryReader readFile = new BinaryReader(msPackage);
+            
+            //log opening file
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scanning package {0}", package.Name));
+            
+            readFile.BaseStream.Position = 0;
+
+            readFile.BaseStream.Position = entrycountloc;
+
+            uint entrycount = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Entry Count: {0}", entrycount.ToString()));
+            
+            //record position low
+            uint indexRecordPositionLow = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("IndexRecordPositionLow: {0}", indexRecordPositionLow.ToString()));
+            
+            //index record size
+            uint indexRecordSize = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("IndexRecordSize: {0}", indexRecordSize.ToString()));
+            
+            readFile.BaseStream.Position = indexRecordPositionloc;
+
+            ulong indexRecordPosition = readFile.ReadUInt64();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Index Record Position: {0}", indexRecordPosition.ToString()));
+            
+                        
+            byte[] headersize = new byte[96];
+            long here = 100;
+            long movedto = 0;
+
+            /*            //dbpf
+            test = Encoding.ASCII.GetString(readFile.ReadBytes(4));
+            log.MakeLog("DBPF: " + test, true);
+            
+            //major
+            uint testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Major :" + test, true);
+            
+            //minor
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Minor : " + test, true);
+            
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unknown : " + test, true);
+            
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unknown : " + test, true);
+            
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unknown : " + test, true);
+            
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Created : " + test, true);
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Modified : " + test, true);
+            
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Index Major : " + test, true);
+            
+            //entrycount
+            uint entrycount = readFile.ReadUInt32();
+            test = entrycount.ToString();
+            log.MakeLog("Entry Count: " + test, true);
+            
+            //record position low
+            uint indexRecordPositionLow = readFile.ReadUInt32();
+            test = indexRecordPositionLow.ToString();
+            log.MakeLog("indexRecordPositionLow: " + test, true);
+            
+            //index record size
+            uint indexRecordSize = readFile.ReadUInt32();
+            test = indexRecordSize.ToString();
+            log.MakeLog("indexRecordSize: " + test, true);
+            //unused
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unused Trash Index offset: " + test, true);
+            
+            //unused
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unused Trash Index size: " + test, true);
+            
+            //unused
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unused Index Minor Version: " + test, true);
+            
+            //unused but 3 for historical reasons
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unused, 3 for historical reasons: " + test, true);
+            
+            ulong indexRecordPosition = readFile.ReadUInt64();
+            test = indexRecordPosition.ToString();
+            log.MakeLog("Inded Record Position: " + test, true);
+            //unused
+            testint = readFile.ReadUInt32();
+            test = testint.ToString();
+            log.MakeLog("Unused Unknown:" + test, true);
+            
+            //unused six bytes
+            test = Encoding.ASCII.GetString(readFile.ReadBytes(24));
+            log.MakeLog("Unused: " + test, true);*/
+
+            if (indexRecordPosition != 0){
+                long indexseek = (long)indexRecordPosition - headersize.Length;
+                movedto = here + indexseek;
+                readFile.BaseStream.Position = here + indexseek;                
+            } else {
+                movedto = here + indexRecordPositionLow;
+                readFile.BaseStream.Position = here + indexRecordPositionLow;
+            }
+
+            readFile.BaseStream.Position = (long)indexRecordPosition;
+            uint indextype = readFile.ReadUInt32();            
+            
+            long streamsize = readFile.BaseStream.Length;
+            int indexbytes = ((int)entrycount * 32);
+            long indexpos = 0;
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Streamsize is {1}", package.Name, streamsize));
+            if ((int)movedto + indexbytes != streamsize){
+                int entriesfound = 0;
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Streamsize does not match!", package.Name));
+                readFile.BaseStream.Position = movedto - 400;
+                List<long> entrylocs = new();
+                uint item;
+                
+                while(readFile.BaseStream.Length > readFile.BaseStream.Position){                    
+                    item = readFile.ReadUInt32();
+                    //
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Read byte at {0}: {1}", readFile.BaseStream.Position, item.ToString("X8")));
+                    EntryType type = EntryTypes.Where(x => x.TypeID == item.ToString("X8")).First();
+
+                    if (type != null){
+                        IndexEntry holderEntry = new IndexEntry();
+                        holderEntry.TypeID = item.ToString("X8");
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Index Entry TypeID: {2}", package.Name, entriesfound, holderEntry.TypeID));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Found entry{2} - {0} at location {1}!", item, readFile.BaseStream.Position, entriesfound));
+                        entrylocs.Add(readFile.BaseStream.Position);
+                        if (entriesfound == 0){
+                            indexpos = readFile.BaseStream.Position - 4;
+                        }
+                        entriesfound++;
+                        if (entriesfound == entrycount){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Found {0} entries. Breaking.", entrycount));
+                            break;
+                        }
+                    }
+                }
+
+
+                readFile.BaseStream.Position = indexpos;
+                entrycount = 0;
+                foreach (int loc in entrylocs){
+                    IndexEntry holderEntry = new IndexEntry(); 
+                    readFile.BaseStream.Position = loc - 4;
+                    if (indextype == 2){
+                        holderEntry.TypeID = readFile.ReadUInt32().ToString("X8");
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Index Entry TypeID: {2}", package.Name, entrycount, holderEntry.TypeID));
+                        
+                        
+                        EntryType type = EntryTypes.Where(x => x.TypeID == holderEntry.TypeID).First();
+                        if(type != null){                        
+                            fileHas.Add(new() {TypeID = type.TypeID, Description = type.Tag, Location = (int)entrycount});
+                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("File {0} has {1} at location {2}.", package.Name, EntryTypes.Where(x => x.TypeID == holderEntry.TypeID).First().Description, (int)entrycount));
+                        } else {
+                            fileHas.Add(new() { TypeID = holderEntry.TypeID, Location = (int)entrycount});
+                        }                            
+
+                        string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
+                        string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
+                        holderEntry.InstanceID = string.Format("{0}{1}", instanceid1,instanceid2);
+                        if (holderEntry.InstanceID != "0000000000000000"){
+                            allInstanceIDs.Add(holderEntry.InstanceID);
+                        }
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - InstanceID: {2}", package.Name, entrycount, holderEntry.InstanceID));
+                        
+                        holderEntry.uLocation = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Index Entry Position: {2}", package.Name, entrycount, holderEntry.uLocation.ToString("X8")));
+
+                        holderEntry.Filesize = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - File Size: {2}", package.Name, entrycount, holderEntry.Filesize.ToString("X8")));
+
+                        holderEntry.Truesize = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Mem Size: {2}", package.Name, entrycount, holderEntry.Truesize.ToString("X8")));
+
+                        indexData.Add(holderEntry);
+                        MergedManifest = holderEntry;
+
+                        holderEntry = null;
+
+                        entrycount++;
+                    }
+                }
+            } else {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Streamsize for {0} matches.", package.Name));
+                long movedhere = readFile.BaseStream.Position;
+                uint testpos = readFile.ReadUInt32();
+                if (testpos != 0){
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Read first entry TypeID and it read as {1}, returning to read entries.", package.Name, testpos.ToString("X8")));
+                    readFile.BaseStream.Position = movedto;
+                } else if (testpos == 80000000) {
+                    long moveback = movedhere - 4;
+                    readFile.BaseStream.Position = moveback;
+                } else {
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Read first entry TypeID and it read as {1}, moving forward.", package.Name, testpos.ToString("X8")));
+                }                
+                for (int i = 0; i < entrycount; i++){                    
+                    IndexEntry holderEntry = new IndexEntry();                
+                    holderEntry.TypeID = readFile.ReadUInt32().ToString("X8");
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Index Entry TypeID: {2}", package.Name, i, holderEntry.TypeID));
+                    if (holderEntry.TypeID == "7FB6AD8A"){
+                        thisPackage.Type = "Merged Package";
+                        thisPackage.Merged = true;
+
+                        EntryType type = EntryTypes.Where(x => x.TypeID == holderEntry.TypeID).First();
+                        
+                        if(type != null){                        
+                            fileHas.Add(new() {TypeID = type.TypeID, Description = type.Tag, Location = i});
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("File {0} has {1} at location {2}.", package.Name, type.Tag, i));
+                        } else {
+                            fileHas.Add(new() { TypeID = holderEntry.TypeID, Location = i});
+                        }
+
+                        holderEntry.GroupID = readFile.ReadUInt32().ToString("X8");
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Index Entry GroupID: {2}", package.Name, i, holderEntry.GroupID));
+                        
+                        string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
+                        string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
+                        holderEntry.InstanceID = string.Format("{0}{1}", instanceid1,instanceid2);
+                        allInstanceIDs.Add(holderEntry.InstanceID);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - InstanceID: {2}", package.Name, i, holderEntry.InstanceID));
+
+                        uint testin = readFile.ReadUInt32();
+                        holderEntry.uLocation = testin;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Position: {2}", package.Name, i, holderEntry.uLocation));
+
+                        holderEntry.Filesize = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - File Size: {2}", package.Name, i, holderEntry.Filesize));
+
+                        holderEntry.Truesize = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Mem Size: {2}", package.Name, i, holderEntry.Truesize));
+
+                        holderEntry.CompressionType = readFile.ReadUInt16().ToString("X4");
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Compression Type: {2}", package.Name, i, holderEntry.CompressionType));
+
+                        readFile.BaseStream.Position = readFile.BaseStream.Position + 2;
+
+                        indexData.Add(holderEntry);
+
+                        holderEntry = null;                        
+
+                        /*thisPackage = MakeNoNulls(thisPackage);
+                        GlobalVariables.AddPackages.Enqueue(thisPackage); 
+                        log.MakeLog(string.Format("Package {0} is a merged package, and cannot be processed in this manner right now. Package will either need unmerging or to be sorted manually.", thisPackage.uLocation), false);
+
+                        readFile.Dispose();
+                        sw.Stop();
+                        TimeSpan tss = sw.Elapsed;
+                        string elapsedtimee = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                                            tss.Hours, tss.Minutes, tss.Seconds,
+                                            tss.Milliseconds / 10);
+                        GlobalVariables.packagesRead++;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Reading file {0} took {1}", package.Name, elapsedtimee));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Closing package # {0}/{1}: {2}", package.Name, GlobalVariables.PackageCount, packageinfo.Name));
+                        return;*/
+
+                    } else {
+                        EntryType type = EntryTypes.Where(x => x.TypeID == holderEntry.TypeID).First();
+                        
+                    
+                        if(type != null){
+                            fileHas.Add(new() { TypeID = type.TypeID, Description = type.Tag, Location = i });
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("File {0} has {1} at location {2}.", package.Name, type.Tag, i));
+                        } else {
+                            fileHas.Add(new() { TypeID = holderEntry.TypeID, Location = i});
+                        } 
+
+                        holderEntry.GroupID = readFile.ReadUInt32().ToString("X8");
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Index Entry GroupID: {2}", package.Name, i, holderEntry.GroupID));
+                        
+                        string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
+                        string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
+                        holderEntry.InstanceID = string.Format("{0}{1}", instanceid1,instanceid2);
+                        allInstanceIDs.Add(holderEntry.InstanceID);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - InstanceID: {2}", package.Name, i, holderEntry.InstanceID));
+
+                        uint testin = readFile.ReadUInt32();
+                        holderEntry.uLocation = testin;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Position: {2}", package.Name, i, holderEntry.uLocation));
+
+                        holderEntry.Filesize = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - File Size: {2}", package.Name, i, holderEntry.Filesize));
+
+                        holderEntry.Truesize = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Mem Size: {2}", package.Name, i, holderEntry.Truesize));
+
+                        holderEntry.CompressionType = readFile.ReadUInt16().ToString("X4");
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Compression Type: {2}", package.Name, i, holderEntry.CompressionType));
+
+                        readFile.BaseStream.Position = readFile.BaseStream.Position + 2;
+
+                        indexData.Add(holderEntry);
+
+                        holderEntry = null;
+                    }
+
+                    
+                }
+            }
+
+            /*if (thisPackage.Merged == true){
+                var entryspots = (from has in fileHas
+                        where has.Name =="S4SM"
+                        select has.uLocation).ToList();
+                
+                int loc = entryspots[0];
+
+                long entrylength = indexData[loc + 1].uLocation - indexData[loc].uLocation;
+
+                readFile.BaseStream.Position = MergedManifest.uLocation;
+                //XmlTextReader xmlDoc = new XmlTextReader(new StringReader(Encoding.UTF8.GetString(Methods.ReadEntryBytes(readFile, (int)entrylength))));
+                //BinaryReader decompbr = new BinaryReader(decomps);
+                for (int i = 0; i < readFile.BaseStream.Length; i++){
+                    log.MakeLog(readFile.ReadByte().ToString(), true);
+                }
+
+                //Stream decomps = S4Decryption.Decompress(Methods.ReadEntryBytes(readFile, (int)entrylength));
+
+                //BinaryReader decompbr = new BinaryReader(decomps);
+            }
+            
+            currently unable to read merged packages or unmerge them. workign on it though.
+            
+            */
+
+
+
+
+
+
+            if (fileHas.Exists(x => x.Description == "CASP")){
+
+
+                var entryspots = fileHas.Where(x => x.Description == "CASP").Select(x => x.Location).ToList();
+
+                thisPackage.Recolor = true;
+
+                int caspc = 0;
+                foreach (int e in entryspots){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Opening CASP #{1}", package.Name, caspc));
+                    if (indexData[e].CompressionType == "5A42"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Compression type is {2}.", package.Name, caspc, indexData[e].CompressionType));
+                        if (indexData[e].uLocation > 0){
+                            readFile.BaseStream.Position = indexData[e].uLocation;
+                        } else {
+                            readFile.BaseStream.Position = indexData[e].uLocation;
+                        }
+                        long entryEnd = indexData[e].uLocation + indexData[e].Truesize;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Position: {2}", package.Name, caspc, indexData[e].uLocation));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Filesize: {2}", package.Name, caspc, indexData[e].Filesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Memsize: {2}", package.Name, caspc, indexData[e].Truesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Ends at: {2}", package.Name, caspc, entryEnd));
+
+                        Stream decomps = Sims4Decryption.Decompress(ByteReaders.ReadEntryBytes(readFile, (int)indexData[e].Truesize));
+                        
+                        BinaryReader decompbr = new(decomps);
+
+                        try { 
+                            ProcessCASP pcasp = new(thisPackage, package.Name, decompbr, decomps, e, itemtags, allFlags); 
+                            thisPackage = pcasp.scanData;
+                            allFlags = pcasp.allFlags;
+                            itemtags = pcasp.itemtags;
+                        } 
+                        catch (Exception ex) {
+                            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}: Caught exception reading package: {1}. Stack trace: {2}", package.Name, ex.Message, ex.StackTrace));
+                        }
+
+                        
+                        
+                        decompbr.Dispose();
+                        decomps.Dispose();
+
+                    } else if (indexData[e].CompressionType == "0000"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Compression type is {2}.", package.Name, caspc, indexData[e].CompressionType));
+                        readFile.BaseStream.Position = indexData[e].uLocation;
+                        long entryEnd = indexData[e].uLocation + indexData[e].Truesize;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Position: {2}", package.Name, caspc, indexData[e].uLocation));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Filesize: {2}", package.Name, caspc, indexData[e].Filesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Memsize: {2}", package.Name, caspc, indexData[e].Truesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Ends at: {2}", package.Name, caspc, entryEnd));
+
+                        ProcessCASP pcasp = new(thisPackage, package.Name, readFile, msPackage, e, itemtags, allFlags);
+
+                        thisPackage = pcasp.scanData;
+                        allFlags = pcasp.allFlags;
+                        itemtags = pcasp.itemtags;
+
+                    }
+                    caspc++;                    
+                }                     
+
+            }
+
+            
+
+
+            if (fileHas.Exists(x => x.Description == "COBJ")){
+
+                var entryspots = fileHas.Where(x => x.Description == "COBJ").Select(x => x.Location).ToList();
+
+                int cobjc = 0;
+                foreach (int e in entryspots){
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Opening COBJ #{1}", package.Name, cobjc));
+                    if (indexData[e].CompressionType == "5A42"){                                
+                        readFile.BaseStream.Position = indexData[e].uLocation;                  
+                        int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].Truesize;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/COBJ{1} - Position: {2}", package.Name, cobjc, indexData[e].uLocation));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/COBJ{1} - File Size: {2}", package.Name, cobjc, indexData[e].Filesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/COBJ{1} - Memory Size: {2}", package.Name, cobjc, indexData[e].Truesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/COBJ{1} - Entry Ends At: {2}", package.Name, cobjc, entryEnd));
+                        Stream decomps = Sims4Decryption.Decompress(ByteReaders.ReadEntryBytes(readFile, (int)indexData[e].Truesize));
+                        
+                        BinaryReader decompbr = new BinaryReader(decomps);  
+
+                        ProcessCOBJ pcobj = new(thisPackage, decompbr, package.Name, e, itemtags, allInstanceIDs);
+
+                        thisPackage = pcobj.scanData;
+                        allInstanceIDs = pcobj.iids;
+                        itemtags = pcobj.tagl;
+
+                        decompbr.Dispose();
+                        decomps.Dispose();
+                    } else if (indexData[e].CompressionType == "0000"){
+                        readFile.BaseStream.Position = indexData[e].uLocation;                           
+                        int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].Truesize;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/COBJ{1} - Position: {2}", package.Name, cobjc, indexData[e].uLocation));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/COBJ{1} - File Size: {2}", package.Name, cobjc, indexData[e].Filesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/COBJ{1} - Memory Size: {2}", package.Name, cobjc, indexData[e].Truesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/COBJ{1} - Entry Ends At: {2}", package.Name, cobjc, entryEnd));
+
+                        ProcessCOBJ pcobj = new(thisPackage, readFile, package.Name, e, itemtags, allInstanceIDs); 
+
+                        thisPackage = pcobj.scanData;
+                        allInstanceIDs = pcobj.iids;
+                        itemtags = pcobj.tagl;                                      
+                    }
+                    cobjc++;
+                }
+            }
+
+            if (fileHas.Exists(x => x.Description == "OBJD")){
+                var entryspots = fileHas.Where(x => x.Description == "OBJD").Select(x => x.Location).ToList();
+
+                int objdc = 0;
+                foreach (int e in entryspots){
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Opening OBJD #{1}", package.Name, objdc));
+                    if (indexData[e].CompressionType == "5A42"){
+                        readFile.BaseStream.Position = indexData[e].uLocation;                       
+                        int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].Truesize;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - Position: {2}", package.Name, objdc, indexData[e].uLocation));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - File Size: {2}", package.Name, objdc, indexData[e].Filesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - Memory Size: {2}", package.Name, objdc, indexData[e].Truesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - Entry Ends At: {2}", package.Name, objdc, entryEnd));
+
+
+                        Stream decomps = Sims4Decryption.Decompress(ByteReaders.ReadEntryBytes(readFile, (int)indexData[e].Truesize));
+                        
+                        BinaryReader decompbr = new BinaryReader(decomps);
+
+                        ProcessOBJD pobjd = new(thisPackage, decompbr, package.Name, e, itemtags, allInstanceIDs, objdc);
+
+                        thisPackage = pobjd.package;
+                        allInstanceIDs = pobjd.iids;
+                        itemtags = pobjd.tagl;
+                                                                      
+                        decompbr.Dispose();
+                        decomps.Dispose();
+                    } else if (indexData[e].CompressionType == "0000"){
+                        readFile.BaseStream.Position = indexData[e].uLocation;                       
+                        int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].Truesize;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - Position: {2}", package.Name, objdc, indexData[e].uLocation));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - File Size: {2}", package.Name, objdc, indexData[e].Filesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - Memory Size: {2}", package.Name, objdc, indexData[e].Truesize));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - Entry Ends At: {2}", package.Name, objdc, entryEnd));
+
+
+
+                        ProcessOBJD pobjd = new(thisPackage, readFile, package.Name, e, itemtags, allInstanceIDs, objdc);
+
+                        thisPackage = pobjd.package;
+                        allInstanceIDs = pobjd.iids;
+                        itemtags = pobjd.tagl;                   
+                    }                
+                    objdc++;
+                }                
+            }
+
+            if (fileHas.Exists(x => x.Description == "GEOM")){
+                var entryspots = fileHas.Where(x => x.Description == "GEOM").Select(x => x.Location).ToList();
+                
+                thisPackage.Mesh = true;
+
+                foreach (int e in entryspots){
+                    string key = string.Format("{0}-{1}-{2}", indexData[e].TypeID, indexData[e].GroupID, indexData[e].InstanceID);
+                    if (key != "00000000-00000000-0000000000000000"){
+                        if (!thisPackage.MeshKeys.Exists(x => x == key)){
+                            thisPackage.MeshKeys.Add(key);
+                        }
+                    }                                       
+                }
+            }
+
+            if (fileHas.Exists(x => x.Description == "THUM")){
+                TransformImages imageTransformations = new();
+
+                var entryspots = fileHas.Where(x => x.Description == "THUM").Select(x => x.Location).ToList();
+
+                int c = 0;
+                foreach (int e in entryspots){
+                    c++;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/THUM{1} - Reading THUM {1}, identified as: {2}.", package.Name, e, indexData[e].TypeID));
+
+                    readFile.BaseStream.Position = indexData[e].uLocation; 
+                    if (indexData[e].CompressionType == "5A42"){  
+                        int entryEnd = (int)readFile.BaseStream.Position + (int)indexData[e].Truesize;                        
+                        MemoryStream decomps = Sims4Decryption.DecompressMS(ByteReaders.ReadEntryBytes(readFile, (int)indexData[e].Truesize));
+                        byte[] imagebyte = decomps.ToArray();                                            
+                        imageTransformations.TransformToPNG(imagebyte, package.Name);
+                        thisPackage.ThumbnailData = imagebyte;
+                    } else if (indexData[e].CompressionType == "0000"){
+                        byte[] imagebyte = ByteReaders.ReadEntryBytes(readFile, (int)indexData[e].Truesize);
+
+                        imageTransformations.TransformToPNG(imagebyte, package.Name);
+                        thisPackage.ThumbnailData = imagebyte;
+                    }
+                }
+            } else if (fileHas.Exists(x => x.Description == "CASP")) {
+                List<string> instanceids = new();
+
+                var entryspots = fileHas.Where(x => x.Description == "CASP").Select(x => x.Location).ToList();
+
+                foreach (int e in entryspots){
+                    instanceids.Add(indexData[e].InstanceID);
+                }
+                ReadThumbCache rtc = new(thisPackage, fileHas, instanceids, instance, package.Name);
+                thisPackage = rtc.thisPackage;
+            } else if (fileHas.Exists(x => x.Description == "COBJ")) {
+                List<string> instanceids = new();
+                var entryspots = fileHas.Where(x => x.Description == "COBJ").Select(x => x.Location).ToList();
+                foreach (int e in entryspots){
+                    instanceids.Add(indexData[e].InstanceID);
+                }
+                ReadThumbCache rtc = new(thisPackage, fileHas, instanceids, instance, package.Name);
+                thisPackage = rtc.thisPackage;
+            }
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - All methods complete, moving on to getting info.", package.Name));            
+            List<PackageTypeCounter> typecount = new List<PackageTypeCounter>();
+
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Making dictionary.", package.Name));
+
+            foreach (EntryType type in EntryTypes){
+                var match = fileHas.Where(x => x.TypeID == type.TypeID).Count();
+                          
+                if (match != 0){
+                    PackageTypeCounter tc = new PackageTypeCounter();
+                    tc.Description = type.Tag;
+                    tc.Count = match;
+                    tc.TypeID = type.TypeID;
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}  has {1} of {2}.", package.Name, tc.Count, tc.Description));
+                    typecount.Add(tc);
+                } 
+            }
+
+            thisPackage.EntryTypeCount= typecount;
+            thisPackage.Entries = fileHas;
+            thisPackage.Flags = allFlags.Distinct().ToList();
+
+            /*foreach (string flag in allFlags){
+                var inp = thisPackage.Flags.Where(c => c.Flag == flag.Flag);
+                if (!inp.Any()){
+                    thisPackage.Flags.Add(flag); 
+                }                
+            }
+
+            foreach (TagsList tag in itemtags){
+                var inp = thisPackage.CatalogTags.Where(c => c.TypeID == tag.TypeID);
+                if (!inp.Any()){
+                    thisPackage.CatalogTags.Add(tag); 
+                }
+            }
+            
+            foreach (string iid in allInstanceIDs){
+                var inp = thisPackage.InstanceIDs.Where(c => c == iid);
+                if (!inp.Any()){
+                    thisPackage.InstanceIDs.Add(iid); 
+                }                
+            }
+            
+            */
+
+            thisPackage.InstanceIDs = allInstanceIDs.Distinct().ToList();
+
+            
+
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}: Checking {1} against override IDs.", package.Name,package.Name));
+
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}: Checking instances.", package.Name));
+
+            List<SimsOverride> overrides = (from r in Overrides
+                                where thisPackage.InstanceIDs.Any(mr => r.InstanceID == mr)
+                                select r).ToList();
+            
+            if(overrides.Count > 0){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}: Found {1} overrides!", package.Name, overrides.Count));
+                thisPackage.Override = true;
+                //thisPackage.Type = "OVERRIDE";
+            }
+
+            /*var specoverrides = Overrides.Where(p => overrides.Any(l => p.InstanceID == l.InstanceID)).ToList();
+
+            List<SimsOverride> speco = new List<SimsOverride>();
+            List<OverriddenList> OverridesList = new();
+            string overridedesc = "";
+            foreach (SimsOverride ov in overrides) {
+                if (ov.InstanceID != "0000000000000000"){
+                    var specco = overrides.Where(p => p.InstanceID == ov.InstanceID).ToList();                    
+                    string description = "";
+                    if (specco.Any()){
+                        description = specco[0].Description;
+                        thisPackage.Type = string.Format("OVERRIDE: {0}", description);
+                        overridedesc = description;
+                    }
+                    OverridesList.Add(new OverriddenList(){InstanceID = ov.InstanceID, Name = ov.Name, Pack = ov.Pack, Type = ov.Type});
+                }
+            }
+
+            if (OverridesList.Any()){
+                thisPackage.OverridesList.AddRange(OverridesList);
+            }
+
+
+            if (overridedesc == "Eyes - Sim"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID == "7882EE328F843230" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.uLocation).FirstOrDefault();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Retrieving default {2} image from {1}", package.Name, overridedesc, indexData[entryspot].TypeID));
+
+                if (indexData[entryspot].TypeID == "2BC04EDF"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as LRLE.", package.Name, overridedesc));
+                    ImageTransformations imageTransformations = new();
+                    if (indexData[entryspot].TypeID == "5A42"){
+                        //MemoryStream decomps = S4Decryption.DecompressMS(Methods.ReadEntryBytes(readFile, (int)indexData[entryspot].Truesize));
+                        //imageTransformations.LRLE(new BinaryReader(decomps), LogMessage, LogFile, log);
+                    } else if (indexData[entryspot].TypeID == "0000"){
+                        //MemoryStream decomps = new (Methods.ReadEntryBytes(readFile, (int)indexData[entryspot].Truesize));
+                        //imageTransformations.LRLE(readFile, LogMessage, LogFile, log);
+                    }
+                } else if (indexData[entryspot].TypeID == "3453CF95"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as RLE2.", package.Name, overridedesc));
+                }
+            } else if (overridedesc == "Eyes - Vampire"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="C6BF87F05E8A3FA7" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.uLocation).FirstOrDefault();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Retrieving default {2} image from {1}", package.Name, overridedesc, indexData[entryspot].TypeID));
+
+                if (indexData[entryspot].TypeID == "2BC04EDF"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as LRLE.", package.Name, overridedesc));
+                } else if (indexData[entryspot].TypeID == "3453CF95"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as RLE2.", package.Name, overridedesc));
+                }
+            } else if (overridedesc == "Eyes - Werewolf"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="B30EE6C1DE1BF2AD" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.uLocation).FirstOrDefault();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Retrieving default {2} image from {1}", package.Name, overridedesc, indexData[entryspot].TypeID));
+
+                if (indexData[entryspot].TypeID == "2BC04EDF"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as LRLE.", package.Name, overridedesc));
+                } else if (indexData[entryspot].TypeID == "3453CF95"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as RLE2.", package.Name, overridedesc));
+                }
+            } else if (overridedesc == "Eyes - Merperson"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="0125D3F76E073504" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.uLocation).FirstOrDefault();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Retrieving default {2} image from {1}", package.Name, overridedesc, indexData[entryspot].TypeID));
+
+                if (indexData[entryspot].TypeID == "2BC04EDF"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as LRLE.", package.Name, overridedesc));
+                } else if (indexData[entryspot].TypeID == "3453CF95"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as RLE2.", package.Name, overridedesc));
+                }
+            } else if (overridedesc == "Eyes - Alien"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="6C3AC424D2673953" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.uLocation).FirstOrDefault();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Retrieving default {2} image from {1}", package.Name, overridedesc, indexData[entryspot].TypeID));
+
+                if (indexData[entryspot].TypeID == "2BC04EDF"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as LRLE.", package.Name, overridedesc));
+                } else if (indexData[entryspot].TypeID == "3453CF95"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as RLE2.", package.Name, overridedesc));
+                }
+            } else if (overridedesc == "Eyes - Cat"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="6EC5F5CED3435737" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.uLocation).FirstOrDefault();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Retrieving default {2} image from {1}", package.Name, overridedesc, indexData[entryspot].TypeID));
+
+                if (indexData[entryspot].TypeID == "2BC04EDF"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as LRLE.", package.Name, overridedesc));
+                } else if (indexData[entryspot].TypeID == "3453CF95"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as RLE2.", package.Name, overridedesc));
+                }
+            } else if (overridedesc == "Eyes - Big Dog"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="809410A14AC0FD9A" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.uLocation).FirstOrDefault();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Retrieving default {2} image from {1}", package.Name, overridedesc, indexData[entryspot].TypeID));
+
+                if (indexData[entryspot].TypeID == "2BC04EDF"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as LRLE.", package.Name, overridedesc));
+                } else if (indexData[entryspot].TypeID == "3453CF95"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as RLE2.", package.Name, overridedesc));
+                }
+            } else if (overridedesc == "Eyes - Small Dog"){
+                var entryspot = (from has in fileHas
+                                    where has.InstanceID =="770417D9838C8EF2" && (has.TypeID == "2BC04EDF" || has.TypeID == "3453CF95")
+                                    select has.uLocation).FirstOrDefault();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Retrieving default {2} image from {1}", package.Name, overridedesc, indexData[entryspot].TypeID));
+
+                if (indexData[entryspot].TypeID == "2BC04EDF"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as LRLE.", package.Name, overridedesc));
+                } else if (indexData[entryspot].TypeID == "3453CF95"){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - {1} saved as RLE2.", package.Name, overridedesc));
+                }
+            }*/
+
+
+
+
+
+            if (thisPackage.CatalogTags.Any()){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}: Checking tags list for function.", package.Name));
+                TagsList tag = new();
+                List<TagsList> roomsort = new();
+                bool identifiedTags = false;;
+                bool identifiedRS = false;
+                List<string> checks = new(){ "2380","2381","2382","2383","2384","2385","2219","264","351","459","18451","63538","265","12290","691","1661","159","157","160","158","1614","2203","1602","10263","55379","359","2083","1499","1984","63511","45089","63512","1728","1730","1729","759","2236","43025","1686","651","1603","28674","28678","28676","28675","28677","12302","10253","12373","10241","1345","12386","1349","1351","1350","12305","12301","817","55335","12303","67631","2429","795","12307","12308","12298","12299","2432","816","47142","1242","12306","67632","2430","10242","1344","12387","1346","1348","1347","1243","12388","12309","12310","12364","67633","12304","12300","67634","2431","815","67636","67604","1536","1537","1533","1518","1531","1532","1515","1534","1513","1517","1535","1519","1516","1514","1522","49154","1521","1523","1507","1509","1524","1508","59472","1510","1512","1511","83985","1506","2423","1505","57425","57424","269","2358","268","65551","347","2357","523","831","833","832","667","669","670","10260","671","672","673","674","970","176","456","457","968","2075","173","969","458","175","226","966","972","973","185","967","193","191","190","189","186","187","913","1032","61493","45069","797","798","799","800","67621","921","810","801","802","803","804","805","10256","806","807","808","43012","809","2246","65623","811","812","813","865","818","561","538","535","918","974","1611","544","541","554","556","1068","1067","1069","552","1081","550","537","915","976","1441","1442","2425","251","250","782","547","560","540","539","975","919","906","977","543","551","559","557","1065","1066","545","546","558","555","542","981","536","224","225","914","971","222","217","221","219","229","916","220","223","917","218","446","979","194","2188","823","978","785","199","231","252","195","207","965","964","209","202","1246","198","1496","200","203","201","824","197","1071","440","169","163","171","162","165","177","166","161","164","55356","55374","2240","178","298","309","308","307","303","302","304","305","306","301","299","300","441","570","1413","174","167","168","179","172","196","205","204","208","1718","206","310","1283","1293","1205","1396","24577","1446","1374","12365","1112","55375","2241","2014","1948","1944","1947","1978","1945","1976","1977","1946","1979","192","2042","183","180","920","182","181","184","1228","2211","59410","59416","59415","230","1122","1123","211","214","210","215","212","963","962","216","227","1072","213" };
+                List<string> checks2 = new(){"1126","228","872","873","875","874","2237","891","2443","2349","892","55376","2242","2226","2227","2231","2232","412","415","408","411","413","414","410","409","428","768","769","790","791","792","1038","1039","793","794","980","770","2224","866","771","772","773","774","775","776","819","1656","45071","1596","429"};
+                checks.AddRange(checks2);
+                List<string> roomchecks = new() {"271","272","468","273","864","274","270","407","275","276"};
+                var tagstrings = thisPackage.CatalogTags.Select(ct => ct.TypeID);
+                foreach (string c in checks){
+                    if (tagstrings.Contains(c)){                        
+                        identifiedTags = true;
+                        tag = thisPackage.CatalogTags.Where(ct => ct.TypeID == c).FirstOrDefault();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}: Found tag {1}: {2} {3}", package.Name, tag.TypeID, tag.Function, tag.Subfunction));
+                        break;
+                    }
+                }
+                foreach (string rc in roomchecks){
+                    if (tagstrings.Contains(rc)){
+                        identifiedRS = true;
+                        var rs = thisPackage.CatalogTags.Where(ct => ct.TypeID == rc).FirstOrDefault();
+                        roomsort.Add(rs);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}: Found roomsort {1}: {2}", package.Name, rs.TypeID, rs.Function));
+                    }
+                }                
+
+                if (identifiedTags){
+                    thisPackage.Function = tag.Function;
+                    thisPackage.FunctionSubcategory = tag.Subfunction;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}: Package function identified from tags list: {1}: {2}", package.Name, thisPackage.Function, thisPackage.FunctionSubcategory));
+                }
+                if (identifiedRS){
+                    foreach (TagsList tg in roomsort){
+                        thisPackage.RoomSort.Add(tag.Function);
+                    }
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}: Room sorts identified from tags list.", package.Name));
+                }                
+            }
+
+            var S4SM = typecount.Where(Type => Type.Description == "S4SM").Select(Type => Type.Count).FirstOrDefault();
+            var BGEO = typecount.Where(Type => Type.Description == "BGEO").Select(Type => Type.Count).FirstOrDefault();
+            var HOTC = typecount.Where(Type => Type.Description == "HOTC").Select(Type => Type.Count).FirstOrDefault();
+            var SMOD = typecount.Where(Type => Type.Description == "SMOD").Select(Type => Type.Count).FirstOrDefault();
+            var BOND = typecount.Where(Type => Type.Description == "BOND").Select(Type => Type.Count).FirstOrDefault();
+            var CPRE = typecount.Where(Type => Type.Description == "CPRE").Select(Type => Type.Count).FirstOrDefault();
+            var DMAP = typecount.Where(Type => Type.Description == "DMAP").Select(Type => Type.Count).FirstOrDefault();
+            var RLE2 = typecount.Where(Type => Type.Description == "RLE2").Select(Type => Type.Count).FirstOrDefault();
+            var CASP = typecount.Where(Type => Type.Description == "CASP").Select(Type => Type.Count).FirstOrDefault();
+            var GEOM = typecount.Where(Type => Type.Description == "GEOM").Select(Type => Type.Count).FirstOrDefault();
+            var LRLE = typecount.Where(Type => Type.Description == "LRLE").Select(Type => Type.Count).FirstOrDefault();
+            var RLE = typecount.Where(Type => Type.Description == "RLE").Select(Type => Type.Count).FirstOrDefault();
+            var RMAP = typecount.Where(Type => Type.Description == "RMAP").Select(Type => Type.Count).FirstOrDefault();
+            var CLHD = typecount.Where(Type => Type.Description == "CLHD").Select(Type => Type.Count).FirstOrDefault();
+            var STBL = typecount.Where(Type => Type.Description == "STBL").Select(Type => Type.Count).FirstOrDefault();
+            var IMG = typecount.Where(Type => Type.Description == "_IMG").Select(Type => Type.Count).FirstOrDefault();
+            //trait tuning
+            var TRTR = typecount.Where(Type => Type.Description == "TRTR").Select(Type => Type.Count).FirstOrDefault();
+            //snippet tuning
+            var SNTR = typecount.Where(Type => Type.Description == "SNTR").Select(Type => Type.Count).FirstOrDefault();
+            //interaction tuning
+            var INTR = typecount.Where(Type => Type.Description == "INTR").Select(Type => Type.Count).FirstOrDefault();
+            //interaction tuning
+            var GFX = typecount.Where(Type => Type.Description == "GFX").Select(Type => Type.Count).FirstOrDefault();
+            //action tuning
+            var ACT = typecount.Where(Type => Type.TypeID == "0C772E27").Select(Type => Type.Count).FirstOrDefault();
+            //test based score tuning
+            var TBST = typecount.Where(Type => Type.Description == "TBST").Select(Type => Type.Count).FirstOrDefault();
+            //buff tuning
+            var BUFT = typecount.Where(Type => Type.TypeID == "6017E896").Select(Type => Type.Count).FirstOrDefault();
+            //sim data
+            var DATA = typecount.Where(Type => Type.Description == "DATA").Select(Type => Type.Count).FirstOrDefault();
+            //rel bit
+            var RBTR = typecount.Where(Type => Type.Description == "RBTR").Select(Type => Type.Count).FirstOrDefault();
+            //rel bit
+            var SGTR = typecount.Where(Type => Type.Description == "SGTR").Select(Type => Type.Count).FirstOrDefault();
+            //aspiration
+            var ASTR = typecount.Where(Type => Type.Description == "ASTR").Select(Type => Type.Count).FirstOrDefault();
+            //pie menu
+            var PMTR = typecount.Where(Type => Type.Description == "PMTR").Select(Type => Type.Count).FirstOrDefault();
+            //broadcaster
+            var BCTR = typecount.Where(Type => Type.Description == "BCTR").Select(Type => Type.Count).FirstOrDefault();
+            //reward traits
+            var RWTR = typecount.Where(Type => Type.Description == "RWTR").Select(Type => Type.Count).FirstOrDefault();
+            //statistics
+            var STTR = typecount.Where(Type => Type.Description == "STTR").Select(Type => Type.Count).FirstOrDefault();
+            //career levels
+            var CLTR = typecount.Where(Type => Type.Description == "CLTR").Select(Type => Type.Count).FirstOrDefault();
+            //career tracks
+            var CTTR = typecount.Where(Type => Type.Description == "CTTR").Select(Type => Type.Count).FirstOrDefault();
+            //career
+            var CATR = typecount.Where(Type => Type.Description == "CATR").Select(Type => Type.Count).FirstOrDefault();
+            //objectives
+            var OBTR = typecount.Where(Type => Type.Description == "OBTR").Select(Type => Type.Count).FirstOrDefault();
+            //model
+            var MODL = typecount.Where(Type => Type.Description == "MODL").Select(Type => Type.Count).FirstOrDefault();
+            //model lod
+            var MLOD = typecount.Where(Type => Type.Description == "MLOD").Select(Type => Type.Count).FirstOrDefault();
+            //object catlog
+            var COBJ = typecount.Where(Type => Type.Description == "COBJ").Select(Type => Type.Count).FirstOrDefault();
+            
+
+            if (thisPackage.Override == false){
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("No overrides were found. Checking other options."));
+                if (S4SM != 0){
+                    thisPackage.Type = "Merged Package";
+                } else if (!String.IsNullOrWhiteSpace(thisPackage.Function)) {
+                    thisPackage.Type = thisPackage.Function;
+                } else if (!String.IsNullOrWhiteSpace(thisPackage.Tuning)) {
+                    if (thisPackage.Tuning.Contains("object_bassinetGEN")){
+                        thisPackage.Type = "Bassinet";
+                    }
+                } else {                    
+                    if (CLTR >= 1 || CTTR >= 1 || CATR >= 1){
+                        thisPackage.Type = "MOD: Career";
+                        thisPackage.IsMod = true;
+                    } else if (SNTR >= 1 && INTR >= 1 && ACT >= 1 && TBST >= 1 && BUFT >= 1 && DATA >= 1 && RBTR >= 1 && SGTR >= 1 && ASTR >= 1 && PMTR >= 1 && BCTR >= 1 && RWTR >= 1 && STTR >= 1) {
+                        thisPackage.Type = "MOD: Large";
+                        thisPackage.IsMod = true;
+                    } else if (OBTR >= 1 || SNTR >= 1 || INTR >= 1 || ACT >= 1 || TBST >= 1 || BUFT >= 1 || DATA >= 1 || RBTR >= 1 || SGTR >= 1 || ASTR >= 1 || PMTR >= 1 || BCTR >= 1 || RWTR >= 1 || STTR >= 1 || GFX >= 1) {
+                        thisPackage.Type = "MOD";
+                        thisPackage.IsMod = true;
+                    } else if (TRTR >= 1) {
+                        thisPackage.Type = "MOD: Trait";
+                        thisPackage.IsMod = true;
+                    } else if (BGEO >= 1 && HOTC >= 1 && SMOD >= 1){
+                        thisPackage.Type = "Slider";
+                    } else if (BOND >= 1 && CPRE >= 1 && DMAP >= 1 && SMOD >= 1){
+                        thisPackage.Type = "CAS Preset";
+                    } else if (RLE2 >= 1 && CASP >= 1 && GEOM <= 0){
+                        thisPackage.Type = "CAS Recolor";
+                    } else if (LRLE >= 1 && CASP >= 1 && GEOM <= 0){
+                        thisPackage.Type = "Makeup";
+                    } else if (IMG >= 1 && CLHD >= 1 && STBL >= 1) {
+                        thisPackage.Type = "Pose Pack";
+                    } else {
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}: Unable to identify package!", package.Name));
+                        thisPackage.Type = "UNKNOWN";
+                    }                    
+                }
+                if (GEOM >= 1 || MODL >= 1 || MLOD >= 1){
+                    thisPackage.Mesh = true;
+                    thisPackage.NoMesh = false;
+                }                
+                if (CASP >= 1 || COBJ >= 1){
+                    thisPackage.Recolor = true;
+                }             
+            }
+
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("This is a {0}!!", thisPackage.Type));
+
+            if (thisPackage.AgeGenderFlags != null){
+                if ((thisPackage.AgeGenderFlags.Female == true) && (thisPackage.AgeGenderFlags.Male == true)){
+                    thisPackage.Gender = "Both";
+                } else if (thisPackage.AgeGenderFlags.Female == true){
+                    thisPackage.Gender = "Female";
+                } else if (thisPackage.AgeGenderFlags.Male == true){
+                    thisPackage.Gender = "Male";
+                }
+
+                string age = "";
+                if (thisPackage.AgeGenderFlags.Adult == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age = "Adult";
+                    } else {
+                        age += string.Format(", Adult");
+                    }
+                }
+                if (thisPackage.AgeGenderFlags.Baby == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age = "Baby";
+                    } else {
+                        age += string.Format(", Baby");
+                    }
+                }
+                if (thisPackage.AgeGenderFlags.Child == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age = "Child";
+                    } else {
+                        age += string.Format(", Child");
+                    }
+                }
+                if (thisPackage.AgeGenderFlags.Elder == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age = "Elder";
+                    } else {
+                        age += string.Format(", Elder");
+                    }
+                }
+                if (thisPackage.AgeGenderFlags.Infant == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age = "Infant";
+                    } else {
+                        age += string.Format(", Infant");
+                    }
+                }
+                if (thisPackage.AgeGenderFlags.Teen == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age = "Teen";
+                    } else {
+                        age += string.Format(", Teen");
+                    }
+                }
+                if (thisPackage.AgeGenderFlags.Toddler == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age = "Toddler";
+                    } else {
+                        age += string.Format(", Toddler");
+                    }
+                }
+                if (thisPackage.AgeGenderFlags.YoungAdult == true){
+                    if (string.IsNullOrEmpty(age)){
+                        age = "Young Adult";
+                    } else {
+                        age += string.Format(" and Young Adult");
+                    }
+                }
+                thisPackage.Age = age;           
+            }
+            //dbpfFile.Close();
+            //dbpfFile.Dispose();
+            readFile.Close();
+            readFile.Dispose();
+
+            if (thisPackage.NoMesh == true){
+                thisPackage.Orphan = false;
+            } else if (thisPackage.Mesh == false && thisPackage.Recolor == true && thisPackage.Override == false){
+                thisPackage.Orphan = true;  
+            } else if (thisPackage.Mesh == true && thisPackage.Recolor == false && thisPackage.Override == false){
+                thisPackage.Orphan = true;
+            }           
+            
+
+            if (thisPackage.Function == "Hair" && thisPackage.Mesh == false){
+                thisPackage.FunctionSubcategory = "Recolor";
+            }
+
+            //DEBUG TESTING ONLY - COMMENT OUT!!
+            /*SimsPackage simsPackage = new();
+            simsPackage.ScanData = thisPackage;            
+            simsPackage.InfoFile = Path.Combine(@"M:\SCCM\The Sims 4\debugtesting", string.Format("{0}.xml", package.Name));
+            simsPackage.WriteInfoFile();*/
+
+            return thisPackage;
+        }
+
+        public List<OverriddenList> GetSims4Overrides(FileInfo package){
+            Dictionary<string, string> PackOptions = new()
+            {
+                { "Data", "Base Game"},
+                { "EP01", "Get To Work" },
+                { "EP02", "Get Together" },
+                { "EP03", "City Living" },
+                { "EP04", "Cats & Dogs" },
+                { "EP05", "Seasons" },
+                { "EP06", "Get Famous" },
+                { "EP07", "Island Living" },
+                { "EP08", "Discover University" },
+                { "EP09", "Eco Lifestyle" },
+                { "EP10", "Snowy Escape" },
+                { "EP11", "Cottage Living" },
+                { "EP12", "High School Years" },
+                { "EP13", "Growing Together" },
+                { "EP14", "Horse Ranch" },
+                { "EP15", "For Rent" },
+                { "EP16", "Lovestruck" },
+                { "GP01", "Outdoor Retreat" },
+                { "GP02", "Spa Day" },
+                { "GP03", "Dine Out" },
+                { "GP04", "Vampires" },
+                { "GP05", "Parenthood" },
+                { "GP06", "Jungle Adventure" },
+                { "GP07", "StrangerVille" },
+                { "GP08", "Realm of Magic" },
+                { "GP09", "Star Wars: Journey to Batuu" },
+                { "GP10", "Dream Home Decorator" },
+                { "GP11", "My Wedding Stories" },
+                { "GP12", "Werewolves" },
+                { "SP01", "Luxury Party Stuff" },
+                { "SP02", "Perfect Patio Stuff" },
+                { "SP03", "Cool Kitchen Stuff" },
+                { "SP04", "Spooky Stuff" },
+                { "SP05", "Movie Hangout Stuff" },
+                { "SP06", "Romantic Garden Stuff" },
+                { "SP07", "Kids Room Stuff" },
+                { "SP08", "Backyard Stuff" },
+                { "SP09", "Vintage Glamour Stuff" },
+                { "SP10", "Bowling Night Stuff" },
+                { "SP11", "Fitness Stuff" },
+                { "SP12", "Toddler Stuff" },
+                { "SP13", "Laundry Day Stuff" },
+                { "SP14", "My First Pet Stuff" },
+                { "SP15", "Moshino Stuff Pack" },
+                { "SP16", "Tiny Living" },
+                { "SP17", "Nifty Knitting" },
+                { "SP18", "Paranormal" },
+                { "SP46", "Home Chef Hustle Stuff" },
+                { "SP49", "Crystal Creations Stuff Pack" },
+                { "SP20", "Throwback Fit Kit" },
+                { "SP21", "Country Kitchen Kit" },
+                { "SP22", "Bust The Dust Kit" },
+                { "SP23", "Courtyard Oasis Kit" },
+                { "SP24", "Fashion Street-Set" },
+                { "SP25", "Industrial Loft Kit" },
+                { "SP26", "Incheon Arrivals Kit" },
+                { "SP28", "Modern Menswear Kit" },
+                { "SP29", "Blooming Rooms Kit" },
+                { "SP30", "Carnaval Streetwear Kit" },
+                { "SP31", "Decor to the Max Kit" },
+                { "SP32", "Moonlight Chic Kit" },
+                { "SP33", "Little Campers Kit" },
+                { "SP34", "First Fits Kit" },
+                { "SP35", "Desert Luxe Kit" },
+                { "SP36", "Pastel Pop Kit" },
+                { "SP37", "Everyday Clutter Kit" },
+                { "SP38", "Simtimates Collection Kit" },
+                { "SP39", "Bathroom Clutter Kit" },
+                { "SP40", "Greenhouse Haven Kit" },
+                { "SP41", "Basement Treasures Kit" },
+                { "SP42", "Grunge Revival Kit" },
+                { "SP43", "Book Nook Kit" },
+                { "SP44", "Poolside Splash Kit" },
+                { "SP45", "Modern Luxe Kit" },
+                { "SP47", "Castle Estate Kit" },
+                { "SP48", "Goth Galore Kit" },
+                { "SP50", "Urban Homage Kit" },
+                { "SP51", "Party Essentials Kit" },
+                { "SP52", "Riviera Retreat Kit" },
+                { "SP53", "Cozy Bistro Kit" },
+                { "SP54", "Artist Studio Kit" },
+                { "SP55", "Storybook Nursery Kit" },
+                { "FP01", "Holiday Celebration" }
+			};
+            List<OverriddenList> overrides = new();
+            //locations
+            long entrycountloc = 36;
+            long indexRecordPositionloc = 64;
+
+            //Lists 
+                
+            List<IndexEntry> entries = new();
+            IndexEntry MergedManifest = new();
+            List<EntryLocations> fileHas = new();
+            ArrayList linkData = new();
+            List<IndexEntry> indexData = new();
+
+            //create readers  
+            //FileStream filePackage = new FileStream(package.FullName, FileMode.Open, FileAccess.Read);
+            MemoryStream msPackage = ByteReaders.ReadBytesFromFile(package.FullName, (int)package.Length);
+            BinaryReader readFile = new BinaryReader(msPackage);
+            
+            //log opening file
+            
+            readFile.BaseStream.Position = 0;
+
+            readFile.BaseStream.Position = entrycountloc;
+
+            uint entrycount = readFile.ReadUInt32();
+            
+            //record position low
+            uint indexRecordPositionLow = readFile.ReadUInt32();
+            
+            //index record size
+            uint indexRecordSize = readFile.ReadUInt32();
+            
+            readFile.BaseStream.Position = indexRecordPositionloc;
+
+            ulong indexRecordPosition = readFile.ReadUInt64();
+            
+                        
+            byte[] headersize = new byte[96];
+            long here = 100;
+            long movedto = 0;
+
+            if (indexRecordPosition != 0){
+                long indexseek = (long)indexRecordPosition - headersize.Length;
+                movedto = here + indexseek;
+                readFile.BaseStream.Position = here + indexseek;                
+            } else {
+                movedto = here + indexRecordPositionLow;
+                readFile.BaseStream.Position = here + indexRecordPositionLow;
+            }
+
+            readFile.BaseStream.Position = (long)indexRecordPosition;
+            uint indextype = readFile.ReadUInt32();            
+            
+            long streamsize = readFile.BaseStream.Length;
+            int indexbytes = ((int)entrycount * 32);
+            long indexpos = 0;
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Streamsize is {1}", package.Name, streamsize));
+            if ((int)movedto + indexbytes != streamsize){
+                /*int entriesfound = 0;
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Streamsize does not match!", package.Name));
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0} - Position: {1}, Moved to: {2}", package.Name, readFile.BaseStream.Position, movedto));
+                readFile.BaseStream.Position = movedto - 400;
+                List<long> entrylocs = new();
+                uint item;
+                
+                while(readFile.BaseStream.Length > readFile.BaseStream.Position){                    
+                    item = readFile.ReadUInt32();
+                    //
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Read byte at {0}: {1}", readFile.BaseStream.Position, item.ToString("X8")));
+                    EntryType type = new();
+                    if (EntryTypes.Where(x => x.TypeID == item.ToString("X8")).Any()){
+                        type = EntryTypes.Where(x => x.TypeID == item.ToString("X8")).First();  
+                    }
+
+                    if (type != null){
+                        IndexEntry holderEntry = new IndexEntry();
+                        holderEntry.TypeID = item.ToString("X8");
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Index Entry TypeID: {2}", package.Name, entriesfound, holderEntry.TypeID));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Found entry{2} - {0} at location {1}!", item, readFile.BaseStream.Position, entriesfound));
+                        entrylocs.Add(readFile.BaseStream.Position);
+                        if (entriesfound == 0){
+                            indexpos = readFile.BaseStream.Position - 4;
+                        }
+                        entriesfound++;
+                        if (entriesfound == entrycount){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Found {0} entries. Breaking.", entrycount));
+                            break;
+                        }
+                    }
+                }
+
+
+                readFile.BaseStream.Position = indexpos;
+                entrycount = 0;
+                foreach (int loc in entrylocs){
+                    IndexEntry holderEntry = new IndexEntry(); 
+                    readFile.BaseStream.Position = loc - 4;
+                    if (indextype == 2){
+                        holderEntry.TypeID = readFile.ReadUInt32().ToString("X8");                       
+                        
+                        EntryType type = new();
+                        if (EntryTypes.Where(x => x.TypeID == holderEntry.TypeID).Any()){
+                            type = EntryTypes.Where(x => x.TypeID == holderEntry.TypeID).First();  
+                        }
+                        if(type != null){                        
+                            fileHas.Add(new() {TypeID = type.TypeID, Description = type.Tag, Location = (int)entrycount});
+                        } else {
+                            fileHas.Add(new() { TypeID = holderEntry.TypeID, Location = (int)entrycount});
+                        }                            
+
+                        string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
+                        string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
+                        holderEntry.InstanceID = string.Format("{0}{1}", instanceid1,instanceid2);
+                        
+                        
+                        holderEntry.uLocation = readFile.ReadUInt32();
+
+                        holderEntry.Filesize = readFile.ReadUInt32();
+
+                        holderEntry.Truesize = readFile.ReadUInt32();
+
+                        indexData.Add(holderEntry);
+                        MergedManifest = holderEntry;
+
+                        holderEntry = null;
+
+                        entrycount++;
+                    }
+                }*/
+            } else {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Streamsize for {0} matches.", package.Name));
+                long movedhere = readFile.BaseStream.Position;
+                uint testpos = readFile.ReadUInt32();
+                if (testpos != 0){                    
+                    readFile.BaseStream.Position = movedto;
+                } else if (testpos == 80000000) {
+                    long moveback = movedhere - 4;
+                    readFile.BaseStream.Position = moveback;
+                }
+                for (int i = 0; i < entrycount; i++){                    
+                    IndexEntry holderEntry = new IndexEntry();                
+                    holderEntry.TypeID = readFile.ReadUInt32().ToString("X8");
+                    EntryType type = new();
+                    if (EntryTypes.Where(x => x.TypeID == holderEntry.TypeID).Any()){
+                        type = EntryTypes.Where(x => x.TypeID == holderEntry.TypeID).First();  
+                    }
+                
+                    if(type != null){
+                        fileHas.Add(new() { TypeID = type.TypeID, Description = type.Tag, Location = i });                    
+                    } else {
+                        fileHas.Add(new() { TypeID = holderEntry.TypeID, Location = i});
+                    } 
+
+                    holderEntry.GroupID = readFile.ReadUInt32().ToString("X8");
+
+                    string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
+                    string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
+                    holderEntry.InstanceID = string.Format("{0}{1}", instanceid1,instanceid2);
+                  
+                    uint testin = readFile.ReadUInt32();
+                    holderEntry.uLocation = testin;
+
+                    holderEntry.Filesize = readFile.ReadUInt32();
+
+                    holderEntry.Truesize = readFile.ReadUInt32();
+
+                    holderEntry.CompressionType = readFile.ReadUInt16().ToString("X4");
+
+                    readFile.BaseStream.Position = readFile.BaseStream.Position + 2;
+
+                    indexData.Add(holderEntry);
+                }
+            }
+            foreach (IndexEntry ie in indexData){
+				string pack = "Unknown";
+				foreach (KeyValuePair<string, string> pck in PackOptions){
+					if (package.DirectoryName.Contains(pck.Key)) pack = pck.Value;
+				}	
+				EntryType et = new();
+				if (EntryTypes.Where(x => x.TypeID == ie.TypeID).Any()){
+					et = EntryTypes.Where(x => x.TypeID == ie.TypeID).First();
+				} else {
+					et = new(){
+						Description = "Unknown"
+					};
+				}
+				OverriddenList ol = new() {
+					InstanceID = ie.InstanceID,
+					GroupID = ie.GroupID,
+					TypeID = ie.TypeID,
+					Override = string.Format("{0}-{1}-{2}", ie.TypeID, ie.GroupID, ie.InstanceID),
+					Type = et.Description,
+					Pack = pack
+				};
+				overrides.Add(ol);
+			}
+            return overrides;
+        }
+
+        public static List<S4CategoryTag> GetTagInfo(CASTag16Bit tags, uint count){            
+            List<S4CategoryTag> taglist = new();
+            S4CategoryTag tagg = new();
+            //List<TagsList> tagQuery = new();
+            for (int i = 0; i < count; i++)
+            {   
+                if (tags.tagKey[i] != 0){
+                    List<S4CategoryTag> tagQuery = CategoryTags.Where(x => x.TypeID == tags.tagKey[i].ToString()).ToList();
+                    
+                    //tagQuery = GlobalVariables.S4FunctionTypesConnection.Query<TagsList>(string.Format("SELECT * FROM S4CategoryTags where TypeID='{0}'", tags.tagKey[i]));
+                    if (tagQuery.Any()){
+                        tagg = tagQuery[0];
+                        taglist.Add(tagg);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} ({1}) was matched to {2}.", i, tagg.TypeID, tagg.Description));
+                    } else {
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} matched nothing.", tags.tagKey[i]));
+                    }  
+                }
+                if (tags.catKey[i] != 0){
+                    List<S4CategoryTag> tagQuery = CategoryTags.Where(x => x.TypeID == tags.catKey[i].ToString()).ToList();
+                    if (tagQuery.Any()){
+                        tagg = tagQuery[0];
+                        taglist.Add(tagg);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} ({1}) was matched to {2}.", i, tagg.TypeID, tagg.Description));
+                    } else {
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} matched nothing.", tags.catKey[i]));
+                    }  
+                }   
+                tagg = new();                                         
+            }
+            return taglist;
+        }
+        
+        public static List<S4CategoryTag> GetTagInfo(Tag tags, uint count){
+            List<S4CategoryTag> taglist = new();
+            S4CategoryTag tagg = new();
+            for (int i = 0; i < count; i++)
+            {
+                List<S4CategoryTag> tagQuery = CategoryTags.Where(x => x.TypeID == tags.tagKey[i].ToString()).ToList();
+                if (tagQuery.Any()){
+                    tagg = tagQuery[0];
+                    taglist.Add(tagg);
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} ({1}) was matched to {2}.", i, tags.tagKey[i], tagg.Description));
+                } else {
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} matched nothing.", tags.tagKey[i]));
+                }
+                tagg = new();
+            }
+            return taglist;
+        }        
+        
+        public static List<S4CategoryTag> GetTagInfo(List<uint> tags, uint count){
+            List<S4CategoryTag> taglist = new();
+            S4CategoryTag tagg = new();         
+            for (int i = 0; i < count; i++)
+            {
+
+                List<S4CategoryTag> tagQuery = CategoryTags.Where(x => x.TypeID == tags[i].ToString()).ToList();
+                if (tagQuery.Any()){
+                    tagg = tagQuery[0];
+                    taglist.Add(tagg);
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} ({2}) was matched to {1}.", i, taglist[i].Description, tags[i]));
+                } else {
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} matched nothing.", taglist[i]));
+                }
+                tagg = new();
+            }
+            return taglist;
+        }
     }
 
-    public class S4Function{
-        public string BodyType {get; set;} = "";
-        public string Function {get; set;} = "";
-        public string Subfunction {get; set;} = "";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public struct ProcessCASP{
+        public List<string> allFlags;
+        public Sims4ScanData scanData;
+        public List<TagsList> itemtags;
+
+        public ProcessCASP(Sims4ScanData sd, string fileName, BinaryReader readFile, Stream dbpfFile, int caspnum, List<TagsList> tagsl, List<string> flagslist){
+            this.allFlags = flagslist;
+            this.scanData = sd;
+            this.itemtags = tagsl;
+
+            uint version = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Version: {2}", fileName, caspnum, version.ToString("X8")));
+            uint tgioffset = readFile.ReadUInt32() +8;
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - TGI Offset: {2} \n -- As Hex: {3}", fileName,caspnum, tgioffset, tgioffset.ToString("X8")));
+            uint numpresets = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Number of Presets: {2} \n -- As Hex: {3}", fileName,caspnum, numpresets, numpresets.ToString("X8")));
+            using (BinaryReader reader = new BinaryReader(dbpfFile, Encoding.BigEndianUnicode, true))
+            {
+                scanData.Title = reader.ReadString();
+            }
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Title: {2}", fileName,caspnum, scanData.Title));
+
+            float sortpriority = readFile.ReadSingle();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Sort Priority: {2}", fileName,caspnum, sortpriority));
+
+            int secondarySortIndex = readFile.ReadUInt16();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Secondary Sort Index: {2}", fileName,caspnum, secondarySortIndex));
+
+            uint propertyid = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Property ID: {2}", fileName,caspnum, propertyid));
+            
+            uint auralMaterialHash = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Aural Material Hash: {2}", fileName,caspnum, sortpriority));
+
+            if (version <= 42){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Version is <= 42: {0}", version));
+                int[] parameterFlag = new int[1];
+                parameterFlag[0] = (int)readFile.ReadUInt16();
+                BitArray parameterFlags = new BitArray(parameterFlag);
+                for(int p = 0; p < 16; p++)
+                {
+                    if (parameterFlags[p] == true) {
+                        var af = allFlags.Where(x => x == Sims4PackageReader.Flags[p]);
+                        if (af.Any()){
+                            allFlags.Add(Sims4PackageReader.Flags[p]);  
+                        }
+                    }
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Function Sort Flag [{2}]: {3}, {4}", fileName,caspnum, p, Sims4PackageReader.Flags[p], parameterFlags[p].ToString()));
+                } 
+                
+            } else if (version >= 43){
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Version is >= 43: {2}", fileName,caspnum, version));
+                int[] parameterFlag = new int[1];
+                parameterFlag[0] = (int)readFile.ReadUInt16();
+                BitArray parameterFlags = new BitArray(parameterFlag);
+
+                for(int pfc = 0; pfc < 16; pfc++){
+                    if (parameterFlags[pfc] == true) {
+                        var af = allFlags.Where(x => x == Sims4PackageReader.Flags[pfc]);
+                        if (af.Any() && pfc == 2) {
+                            allFlags.Add(Sims4PackageReader.Flags[pfc]);   
+                            scanData.AllowRandom = true; 
+                        } else if (af.Any()){
+                            allFlags.Add(Sims4PackageReader.Flags[pfc]);  
+                        }
+                    }
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Function Sort Flag [{2}]: {3}, {4}", fileName,caspnum, pfc, Sims4PackageReader.Flags[pfc], parameterFlags[pfc].ToString()));
+                }                            
+            }
+                ulong excludePartFlags = readFile.ReadUInt64();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Exclude Part Flags: {2}", fileName,caspnum, excludePartFlags.ToString("X16")));
+                ulong excludePartFlags2 = readFile.ReadUInt64();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Exclude Part Flags 2: {2}", fileName,caspnum, excludePartFlags2.ToString("X16")));
+                ulong excludeModifierRegionFlags = readFile.ReadUInt64();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Exclude Modifier Region Flags: {2}", fileName,caspnum, excludeModifierRegionFlags.ToString("X16")));
+
+            if (version >= 37){
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} >= 37, Version: {0}", fileName,caspnum, version));
+                uint count = readFile.ReadByte();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Tag Count: {2}", fileName,caspnum, count.ToString()));
+                readFile.ReadByte();
+                CASTag16Bit tags = new CASTag16Bit(readFile, count);                            
+                List<S4CategoryTag> gottags = Readers.GetTagInfo(tags, count);
+                foreach (S4CategoryTag tag in gottags){
+                    itemtags.Add(new() { Description = tag.Description, Function = tag.Function, TypeID = tag.TypeID, Subfunction = tag.Subfunction});
+                }
+            } 
+            else 
+            {
+                uint count = readFile.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Tag Count: {2}", fileName,caspnum, count.ToString()));
+                readFile.ReadByte();
+                CASTag16Bit tags = new CASTag16Bit(readFile, count);
+                
+                List<S4CategoryTag> gottags = Readers.GetTagInfo(tags, count);
+                foreach (S4CategoryTag tag in gottags){
+                    itemtags.Add(new() { Description = tag.Description, Function = tag.Function, TypeID = tag.TypeID, Subfunction = tag.Subfunction});
+                }
+
+                }
+
+                uint simoleonprice = readFile.ReadUInt32();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Simoleon Price: {2}", fileName,caspnum, simoleonprice.ToString()));
+                uint partTitleKey = readFile.ReadUInt32();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Part Title Key: {2}", fileName,caspnum, partTitleKey.ToString()));
+                uint partDescriptionKey = readFile.ReadUInt32();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Part Description Key: {2}", fileName,caspnum, partDescriptionKey.ToString()));
+                if (version >= 43) {
+                    uint createDescriptionKey = readFile.ReadUInt32();
+                }
+                int uniqueTextureSpace = readFile.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Unique Texture Space: {2}", fileName,caspnum, uniqueTextureSpace.ToString("X8")));
+                uint bodytype = readFile.ReadUInt32();
+                bool foundmatch = false;
+
+                List<S4Function> bodytypes = Sims4PackageReader.Functions.Where(x => x.BodyType == bodytype.ToString()).ToList();
+                
+                if (bodytypes.Any()){
+                    foundmatch = true;
+                    scanData.Function = bodytypes[0].Function;
+                    if (!String.IsNullOrWhiteSpace(bodytypes[0].Subfunction)) {
+                        scanData.FunctionSubcategory = bodytypes[0].Subfunction;
+                    }
+                }
+
+                if (foundmatch == false){
+                    scanData.Function = string.Format("Unidentified function (contact SinfulSimming). Code: {0}", bodytype.ToString());
+                }
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Bodytype: {2}", fileName,caspnum, bodytype.ToString()));
+                uint bodytypesubtype = readFile.ReadUInt16();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Body Sub Type: {2}", fileName,caspnum, bodytypesubtype.ToString()));
+                readFile.ReadUInt32();                        
+                uint agflags = readFile.ReadUInt32();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Ag Flags: {2}", fileName,caspnum, agflags.ToString("X8")));
+
+                string AGFlag = agflags.ToString("X8");
+                
+                S4AgeGenderFlags agegenderset = new();
+
+                if (AGFlag == "00000000") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = false, 
+                    Baby = false, 
+                    Child = false, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = false, 
+                    YoungAdult = false, 
+                    Female = false, 
+                    Male = false};
+                } else if (AGFlag == "00000020") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = true, 
+                    Baby = false, 
+                    Child = false, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = false, 
+                    YoungAdult = false, 
+                    Female = false, 
+                    Male = false};
+                } else if (AGFlag == "00002020") {
+                    agegenderset = new S4AgeGenderFlags{
+                        Adult = true, 
+                    Baby = false, 
+                    Child = false, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = false, 
+                    YoungAdult = false, 
+                    Female = true, 
+                    Male = false};
+                } else if (AGFlag == "00020000") {
+                    agegenderset = new S4AgeGenderFlags{
+                        Adult = true, 
+                        Baby = false, 
+                        Child = false, 
+                        Elder = false, 
+                        Infant = false, 
+                        Teen = false, 
+                        Toddler = false, 
+                        YoungAdult = false, 
+                        Female = false, 
+                        Male = true};
+                } else if (AGFlag == "00002078") {
+                    agegenderset = new S4AgeGenderFlags{
+                        Adult = true, 
+                        Baby = false, 
+                        Child = false, 
+                        Elder = true, 
+                        Infant = false, 
+                        Teen = true, 
+                        Toddler = false, 
+                        YoungAdult = true, 
+                        Female = true, 
+                        Male = false};
+                } else if (AGFlag == "000030FF") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = true, 
+                    Baby = true, 
+                    Child = true, 
+                    Elder = true, 
+                    Infant = true, 
+                    Teen = true, 
+                    Toddler = true, 
+                    YoungAdult = true, 
+                    Female = true, 
+                    Male = true};
+                } else if (AGFlag == "00003004") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = false, 
+                    Baby = false, 
+                    Child = true, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = false, 
+                    YoungAdult = false, 
+                    Female = true, 
+                    Male = true};
+                } else if (AGFlag == "00001078") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = true, 
+                    Baby = false, 
+                    Child = false, 
+                    Elder = true, 
+                    Infant = false, 
+                    Teen = true, 
+                    Toddler = false, 
+                    YoungAdult = true, 
+                    Female = false, 
+                    Male = true};
+                } else if (AGFlag == "00003078") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = true, 
+                    Baby = false, 
+                    Child = false, 
+                    Elder = true, 
+                    Infant = false, 
+                    Teen = true, 
+                    Toddler = false, 
+                    YoungAdult = true, 
+                    Female = true, 
+                    Male = true};
+                } else if (AGFlag == "000030BE") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = true, 
+                    Baby = false, 
+                    Child = true, 
+                    Elder = false, 
+                    Infant = true, 
+                    Teen = true, 
+                    Toddler = true, 
+                    YoungAdult = true, 
+                    Female = true, 
+                    Male = true};
+                } else if (AGFlag == "00002002") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = false, 
+                    Baby = false, 
+                    Child = false, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = true, 
+                    YoungAdult = false, 
+                    Female = true, 
+                    Male = false};
+                }  else if (AGFlag == "00002004") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = false, 
+                    Baby = false, 
+                    Child = true, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = false, 
+                    YoungAdult = false, 
+                    Female = true, 
+                    Male = false};
+                }  else if (AGFlag == "00003002") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = false, 
+                    Baby = false, 
+                    Child = false, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = true, 
+                    YoungAdult = false, 
+                    Female = true, 
+                    Male = true};
+                }  else if (AGFlag == "00003004") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = false, 
+                    Baby = false, 
+                    Child = true, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = false, 
+                    YoungAdult = false, 
+                    Female = true, 
+                    Male = true};
+                }  else if (AGFlag == "00001002") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = false, 
+                    Baby = false, 
+                    Child = false, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = true, 
+                    YoungAdult = false, 
+                    Female = false, 
+                    Male = true};
+                }  else if (AGFlag == "00001004") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = false, 
+                    Baby = false, 
+                    Child = true, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = false, 
+                    YoungAdult = false, 
+                    Female = false, 
+                    Male = true};
+                } else if (AGFlag == "00100101") {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = false, 
+                    Baby = true, 
+                    Child = false, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = false, 
+                    YoungAdult = false, 
+                    Female = false, 
+                    Male = false};                            
+                } else if (AGFlag == "0000307E"){
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = true, 
+                    Baby = false, 
+                    Child = true, 
+                    Elder = true, 
+                    Infant = false, 
+                    Teen = true, 
+                    Toddler = true, 
+                    YoungAdult = true, 
+                    Female = true, 
+                    Male = true};
+                } else if (AGFlag == "000030FE"){
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = true, 
+                    Baby = false, 
+                    Child = true, 
+                    Elder = true, 
+                    Infant = true, 
+                    Teen = true, 
+                    Toddler = true, 
+                    YoungAdult = true, 
+                    Female = true, 
+                    Male = true};
+                } else {
+                    agegenderset = new S4AgeGenderFlags{
+                    Adult = false, 
+                    Baby = false, 
+                    Child = false, 
+                    Elder = false, 
+                    Infant = false, 
+                    Teen = false, 
+                    Toddler = false, 
+                    YoungAdult = false, 
+                    Female = false, 
+                    Male = false};
+                }
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} Ages:\n -- Adult: {2}, \n -- Baby: {3}, \n -- Child: {4}, \n -- Elder: {5}, \n -- Infant: {6}, \n -- Teen: {7}, \n -- Toddler: {8}, \n -- Young Adult: {9}\n\nGender: \n -- Male: {10}\n -- Female: {11}.", fileName,caspnum, agegenderset.Adult.ToString(), agegenderset.Baby.ToString(), agegenderset.Child.ToString(), agegenderset.Elder.ToString(), agegenderset.Infant.ToString(), agegenderset.Teen.ToString(), agegenderset.Toddler.ToString(), agegenderset.YoungAdult.ToString(), agegenderset.Female.ToString(), agegenderset.Male.ToString()));
+
+                scanData.AgeGenderFlags = agegenderset;  
+
+                if (version >= 0x20)
+                {
+                    uint species = readFile.ReadUInt32();
+                }
+                if (version >= 34)
+                {
+                    int packID = readFile.ReadInt16();
+                    int packFlags = readFile.ReadByte();
+                    for(int p = 0; p < packFlags; p++)
+                    {
+                        bool check = readFile.ReadBoolean();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Packflag is: {2}", fileName,caspnum, check.ToString()));
+                    } 
+                    byte[] reserved2 = readFile.ReadBytes(9);
+                }
+                else
+                {
+                    byte unused2 = readFile.ReadByte();
+                    if (unused2 > 0) {
+                        int unused3 = readFile.ReadByte();
+                    }
+                }
+
+                uint buffResKey = readFile.ReadByte();
+                uint varientThumbnailKey = readFile.ReadByte();
+                if (version >= 28){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Version is >= 28: {2}.", fileName,caspnum, version));
+                    ulong voiceEffecthash = readFile.ReadUInt64();
+                }
+                if (version >= 30){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Version is >= 30: {2}.", fileName,caspnum, version));
+                    uint usedMaterialCount = readFile.ReadByte();
+                    if (usedMaterialCount > 0){
+                        uint materialSetUpperBodyHash = readFile.ReadUInt32();
+                        uint materialSetLowerBodyHash = readFile.ReadUInt32();
+                        uint materialSetShoesBodyHash = readFile.ReadUInt32();
+                    }
+                }
+                if (version >= 31){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Version is >= 31: {2}.", fileName,caspnum, version));
+                    uint hideForOccultFlags = readFile.ReadUInt32();
+                }
+
+                if (version >= 38){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Version is >= 38: {2}.", fileName,caspnum, version));
+                    ulong oppositeGenderPart = readFile.ReadUInt64();
+                }
+
+                if (version >= 39)
+                {
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Version is >= 39: {2}.", fileName,caspnum, version));
+                    ulong fallbackPart = readFile.ReadUInt64();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Fallback Part: {2}.", fileName,caspnum, fallbackPart));
+                }
+                if (version >= 44)
+                {
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Version is >= 44: {2}.", fileName,caspnum, version));
+                    
+                    float opacitySliderMin = readFile.ReadSingle();
+                    float opacitySliderInc = readFile.ReadSingle();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Opacity: {2}/{3}.", fileName,caspnum, opacitySliderMin, opacitySliderInc));
+
+                    float hueMin = readFile.ReadSingle();
+                    float hueMax = readFile.ReadSingle();
+                    float hueInc = readFile.ReadSingle();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Hue: {2}/{3}/{4}.", fileName,caspnum, hueMin, hueMax, hueInc));
+
+                    float satMin = readFile.ReadSingle();
+                    float satMax = readFile.ReadSingle();
+                    float satInc = readFile.ReadSingle();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Saturation: {2}/{3}/{4}.", fileName,caspnum, satMin, satMax, satInc));
+
+                    float brgMin = readFile.ReadSingle();
+                    float brgMax = readFile.ReadSingle();
+                    float brgInc = readFile.ReadSingle();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Brightness: {2}/{3}/{4}.", fileName,caspnum, brgMin, brgMax, brgInc));
+                }
+
+                uint nakedKey = readFile.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Naked Key: {2}.", fileName,caspnum, nakedKey));
+                uint parentKey = readFile.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Parent Key: {2}.", fileName,caspnum, parentKey));
+
+                if (version == 42){
+                    readFile.ReadBytes(17);
+                    uint sortLayer = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Sort Layer: {2}.", fileName,caspnum, sortLayer.ToString("X8")));
+
+                    var currentPosition = readFile.BaseStream.Position;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD Count should be at: {2}.", fileName,caspnum, currentPosition));
+                    
+                    var lodcount = readFile.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD Count: {2}.", fileName,caspnum, lodcount.ToString("X2")));
+                    
+                    if (lodcount == 0 || lodcount == 00 || lodcount == 000){
+                        scanData.NoMesh = true;
+                    } else {
+                        var level = readFile.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Level: {2}.", fileName,caspnum, level.ToString("X2")));
+                        var assetlist = readFile.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD Asset List: {2}.", fileName,caspnum, assetlist.ToString("X8")));
+                        
+                        var CastShadow = readFile.ReadInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Cast Shadow: {2}.", fileName,caspnum, CastShadow.ToString("X8")));
+                        var Sorting = readFile.ReadInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Sorting: {2}.", fileName,caspnum, Sorting.ToString("X8")));
+                        var SpecLevel = readFile.ReadInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Spec Level: {2}.", fileName,caspnum, SpecLevel.ToString("X8")));
+                        
+                        readFile.ReadBytes(4);
+                        var LODKeyList = readFile.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD Key List: {2}.", fileName,caspnum, LODKeyList.ToString("X2")));
+
+                        readFile.ReadBytes(102);
+
+                        for (int i = 0; i < LODKeyList * lodcount; i++){
+                            ulong iid1 = readFile.ReadUInt64();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD {2}, IID: {3}.", fileName,caspnum, i, iid1.ToString("X16")));
+                            uint gid1 = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD {2}, GID: {3}.", fileName,caspnum, i, gid1.ToString("X8")));
+                            uint tid1 = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD {2}, tID: {3}.", fileName,caspnum, i, tid1.ToString("X8")));
+                            string lodkey = string.Format("{0}-{1}-{2}", tid1.ToString("X8"), gid1.ToString("X8"), iid1.ToString("X16"));
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD {2} Key: {3}", fileName,caspnum, i, lodkey));
+                            if (lodkey != "00000000-00000000-0000000000000000"){
+                                var match = scanData.CASPartKeys.Contains(lodkey);
+                                if (!match){
+                                    scanData.CASPartKeys.Add(lodkey);
+                                } 
+                            }
+                        }
+                        ulong iid2 = readFile.ReadUInt64();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Diffuse Key IID: {2}.", fileName,caspnum, iid2.ToString("X16")));
+
+
+                        uint gid2 = readFile.ReadUInt32();
+
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Diffuse Key GID: {2}.", fileName,caspnum, gid2.ToString("X8")));
+
+
+                        uint tid2 = readFile.ReadUInt32();
+
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Diffuse Key tID: {2}.", fileName,caspnum, tid2.ToString("X8")));
+
+
+                        string diffusekey = string.Format("{0}-{1}-{2}", tid2.ToString("X8"), gid2.ToString("X8"), iid2.ToString("X16"));
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Diffuse Key Key: {2}", fileName,caspnum, diffusekey));
+                        
+                        ulong iid3 = readFile.ReadUInt64();
+
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Shadow Key IID: {2}.", fileName,caspnum, iid3.ToString("X16")));
+
+
+                        uint gid3 = readFile.ReadUInt32();
+
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Shadow Key GID: {2}.", fileName,caspnum, gid3.ToString("X8")));
+
+
+                        uint tid3 = readFile.ReadUInt32();
+
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Shadow Key tID: {2}.", fileName,caspnum, tid3.ToString("X8")));
+
+
+                        string shadowkey = string.Format("{0}-{1}-{2}", tid3.ToString("X8"), gid3.ToString("X8"), iid3.ToString("X16"));
+
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Shadow Key Key: {2}", fileName,caspnum, shadowkey));
+
+                        ulong iid4 = readFile.ReadUInt64();
+
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Region Key IID: {2}.", fileName,caspnum, iid4.ToString("X16")));
+
+
+                        uint gid4 = readFile.ReadUInt32();
+
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Region Key GID: {2}.", fileName,caspnum, gid4.ToString("X8")));
+
+
+                        uint tid4 = readFile.ReadUInt32();
+
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Region Key tID: {2}.", fileName,caspnum, tid4.ToString("X8")));
+
+
+                        string regionkey = string.Format("{0}-{1}-{2}", tid4.ToString("X8"), gid4.ToString("X8"), iid4.ToString("X16"));
+
+
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Region Key: {2}", fileName,caspnum, regionkey));
+
+                    }
+                } else {                    
+                    uint sortLayer = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - Sort Layer: {2}.", fileName,caspnum, sortLayer.ToString("X8")));
+
+                    var currentPosition = readFile.BaseStream.Position;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD Count should be at: {2}.", fileName,caspnum, currentPosition));
+                    
+                    readFile.BaseStream.Position = tgioffset;
+                    var tginum = readFile.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - TGI Num: {2}.", fileName,caspnum, tginum));
+                    for (int t = 0; t < tginum; t++){
+                        ulong iid = readFile.ReadUInt64();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - TGI {2}, IID: {3}.", fileName,caspnum, t, iid));
+                        uint gid = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - TGI {2}, GID: {3}.", fileName,caspnum, t, gid));
+                        uint tid = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - TGI {2}, TID: {3}.", fileName,caspnum, t, tid));
+                        string key = string.Format("{0}-{1}-{2}", tid.ToString("X8"), gid.ToString("X8"), iid.ToString("X16"));
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - TGI {2} Key: {3}", fileName,caspnum, t, key));
+                        if (key != "00000000-00000000-0000000000000000"){
+                            var match = scanData.CASPartKeys.Contains(key);
+                            if (!match){                                
+                                scanData.CASPartKeys.Add(key);
+                            } 
+                        }                                
+                    }
+                    
+                    readFile.BaseStream.Position = currentPosition;
+
+
+                    var lodcount = readFile.ReadByte();
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD Count: {2}.", fileName,caspnum, lodcount.ToString("X2")));                    
+                    
+                    if (lodcount == 0){
+                        scanData.NoMesh = true;
+                    } else {
+                        for (int t = 0; t < lodcount; t++){
+                            ulong iid = readFile.ReadUInt64();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD {2}, IID: {3}.", fileName,caspnum, t, iid.ToString("X16")));
+                            uint gid = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD {2}, GID: {3}.", fileName,caspnum, t, gid.ToString("X8")));
+                            uint tid = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD {2}, tID: {3}.", fileName,caspnum, t, tid.ToString("X8")));
+                            string key = string.Format("{0}-{1}-{2}", tid.ToString("X8"), gid.ToString("X8"), iid.ToString("X16"));
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/CASP{1} - LOD {2} Key: {3}", fileName,caspnum, t, key));
+                            if (key != "00000000-00000000-0000000000000000"){
+                                var match = scanData.CASPartKeys.Contains(key);
+                                if (!match){                                    
+                                    scanData.CASPartKeys.Add(key);
+                                } 
+                            }                                
+                        }
+                    }
+                }
+        }        
+    }
+    
+    public struct ProcessCOBJ {
+        public Sims4ScanData scanData;
+        public List<string> iids;
+        public List<TagsList> tagl;
+
+        public ProcessCOBJ(Sims4ScanData sd, BinaryReader readFile,  string packagename, int e, List<TagsList> itemtags, List<string> allInstanceIDs){
+            this.scanData = sd;
+            this.iids = allInstanceIDs;
+            this.tagl = itemtags;
+            
+            ReadCOBJ rc = new ReadCOBJ(readFile, packagename, e, itemtags);  
+            scanData.OBJDPartKeys.AddRange(rc.objkeys);
+            iids.Add(rc.instanceid.ToString("X8"));
+            foreach (TagsList tag in rc.itemtags) {
+                tagl.Add(tag);                                 
+            }
+        }        
     }
 
-    public class S4CategoryTag{
-        public string TypeID {get; set;} = "";
-        public string Description {get; set;} = "";
-        public string Function {get; set;} = "";
-        public string Subfunction {get; set;} = "";
+    public struct ReadCOBJ{
+        /// <summary>
+        /// Reads COBJD entries.
+        /// </summary>
+        public string GUID = "null";
+        public List<TagsList> itemtags = new();
+        GlobalVariables globals = new GlobalVariables();
+        public List<string> allinstanceIDs = new();
+        public List<string> objkeys = new();
+        public ulong instanceid;
+        public uint typeid;
+        public uint groupid;
+
+        public ReadCOBJ(BinaryReader readFile, string packagename, int e, List<TagsList> itemtags){
+            uint version = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Version: {2} \n-- As hex: {3}", packagename, e, version, version.ToString("X8")));
+            uint commonblockversion = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Common Block Version: {2} \n-- As hex: {3}", packagename, e, commonblockversion, commonblockversion.ToString("X8")));
+            uint namehash = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Name Hash: {2} \n-- As hex: {3}", packagename, e, namehash, namehash.ToString("X8")));
+            uint descriptionhash = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Description Hash: {2} \n-- As hex: {3}", packagename, e, descriptionhash, descriptionhash.ToString("X8")));
+            uint price = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Price: {2} \n-- As hex: {3}", packagename, e, price, price.ToString("X8")));
+
+            ulong thumbhash = readFile.ReadUInt64();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Thumb Hash: {2} \n-- As hex: {3}", packagename, e, thumbhash, thumbhash.ToString("X8")));
+
+            uint devcatflags = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1} - Dev Cat Flags: {2} \n-- As hex: {3}", packagename, e, devcatflags, devcatflags.ToString("X8")));
+            
+            int tgicount = readFile.ReadByte();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - TGI Count: {2}", packagename, e, tgicount));
+            instanceid = 0;
+            typeid = 0;
+            groupid = 0;
+
+            if (tgicount != 0){
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - TGI Count is not zero. Reading Resources.", packagename, e));
+                for (int i = 0; i < tgicount; i++){
+                    ResourceKeyITG resourcekey = new ResourceKeyITG(readFile);
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - TGI #{2}: {3}", packagename, e, i, resourcekey.ToString()));
+                    instanceid = resourcekey.instance;
+                    typeid = resourcekey.type;
+                    groupid = resourcekey.group;
+                    allinstanceIDs.Add(instanceid.ToString("X8"));
+                    objkeys.Add(resourcekey.ToString());
+                }                
+            }
+            
+            if (commonblockversion >= 10)
+            {
+                int packId = readFile.ReadInt16();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - Pack ID: {2}", packagename, e, packId));
+                int packFlags = readFile.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - PackFlags: {2}", packagename, e, packFlags));
+                readFile.ReadBytes(9);
+            } else {
+                int unused2 = readFile.ReadByte();
+                if (unused2 > 0)
+                {
+                    readFile.ReadByte();
+                }
+            }
+
+            if (commonblockversion >= 11){
+                uint count = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - Tags Count: {2}", packagename, e, count));
+                Tag tags = new Tag(readFile, count);
+
+                List<S4CategoryTag> gottags = Sims4PackageReader.GetTagInfo(tags, count);
+                foreach (S4CategoryTag tag in gottags){
+                    itemtags.Add(new() { Description = tag.Description, Function = tag.Function, Subfunction = tag.Subfunction, TypeID = tag.TypeID});                      
+                }
+                
+            } else {
+                uint count = readFile.ReadUInt32();
+                List<uint> tagsread = new List<uint>();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - Num Tags: {2}", packagename, e, count));
+                for (int t = 0; t < count; t++){                    
+                    uint tagvalue = readFile.ReadUInt16();
+                    tagsread.Add(tagvalue);
+                }
+                List<S4CategoryTag> gottags = Sims4PackageReader.GetTagInfo(tagsread, count);
+                foreach (S4CategoryTag tag in gottags){
+                    itemtags.Add(new() { Description = tag.Description, Function = tag.Function, Subfunction = tag.Subfunction, TypeID = tag.TypeID});                                          
+                }
+            }
+            long location = readFile.BaseStream.Position;
+            uint count2 = readFile.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - Selling Point Count: {2}", packagename, e, count2));
+            if (count2 > 100){
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - Selling point count is too high, something went wrong.", packagename, e));
+            } else {
+                Tag sellingtags = new Tag(readFile, count2);
+                List<S4CategoryTag> gottags = Sims4PackageReader.GetTagInfo(sellingtags, count2);
+                foreach (S4CategoryTag tag in gottags){
+                    itemtags.Add(new() { Description = tag.Description, Function = tag.Function, Subfunction = tag.Subfunction, TypeID = tag.TypeID}); 
+                }
+            }
+
+            uint unlockByHash = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - UnlockBy Hash: {2}", packagename, e, unlockByHash));
+            
+            uint unlockedByHash = readFile.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - UnlockedBy Hash: {2}", packagename, e, unlockedByHash));
+
+            int swatchColorSortPriority = readFile.ReadUInt16();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - Swatch Sort Priority: {2}", packagename, e, swatchColorSortPriority));
+
+            ulong varientThumbImageHash = readFile.ReadUInt64();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/E{1}, - Varient Thumb Image Hash: {2}", packagename, e, varientThumbImageHash));
+        }   
     }
+    
+    public struct ProcessOBJD {
+        public Sims4ScanData package;
+        public List<string> iids;
+        public List<TagsList> tagl;
+
+        public ProcessOBJD(Sims4ScanData thisPackage, BinaryReader readFile, string packagename, int e, List<TagsList> itemtags, List<string> allInstanceIDs, int objdc){
+            this.package = thisPackage;
+            string[] objde;
+            int[] objdp;
+            this.iids = allInstanceIDs;
+            this.tagl = itemtags;
+            
+
+            ReadOBJDIndex readOBJD = new ReadOBJDIndex(readFile, packagename, objdc);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - There are {2} entries to read.", packagename, objdc, readOBJD.count));
+            objde = new string[readOBJD.count];
+            objdp = new int[readOBJD.count];
+            for (int f = 0; f < readOBJD.count; f++){
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - Entry {2}: \n--- Type: {3}\n --- Position: {4}", packagename, objdc, f, readOBJD.entrytype[f], readOBJD.position[f]));
+                objde[f] = readOBJD.entrytype[f].ToString();
+                objdp[f] = (int)readOBJD.position[f];
+            }
+            readFile.BaseStream.Position = objdp[0];
+            ReadOBJDEntry readobjdentry = new ReadOBJDEntry(readFile, objde, objdp, packagename, objdc);
+            thisPackage.Title = readobjdentry.name;
+            thisPackage.Tuning = readobjdentry.tuningname;
+            thisPackage.TuningID = (int)readobjdentry.tuningid;            
+
+            thisPackage.MeshKeys.AddRange(readobjdentry.meshes);
+            
+            iids.Add(readobjdentry.instance.ToString("X8"));
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding components to package: "));
+                
+            for (int c = 0; c < readobjdentry.componentcount; c++){
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1} - Components: {2}", packagename, e, readobjdentry.components[c].ToString("X8")));
+                thisPackage.Components.Add(readobjdentry.components[c].ToString("X8"));
+            }            
+        }
+    }
+
+    public struct ReadOBJDIndex {
+        /// <summary>
+        /// Retrieves OBJD index.
+        /// </summary>
+        public int version;
+        public long refposition;
+        public int count;
+        public uint[] entrytype;
+        public uint[] position;
+
+        public ReadOBJDIndex(BinaryReader reader, string packagename, int e){
+            long entrystart = reader.BaseStream.Position;
+            this.version = reader.ReadUInt16();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Version: {2}", packagename, e, this.version));
+
+            if (this.version > 150){
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Version is not legitimate.", packagename, e));
+                this.refposition = 0; 
+                this.count = (int)0;
+                this.entrytype = new uint[0];
+                this.position = new uint[0];
+            } else {
+                this.refposition = reader.ReadUInt32();
+                this.refposition = refposition + entrystart;
+                reader.BaseStream.Position = refposition;
+                this.count = reader.ReadUInt16();
+                this.entrytype = new uint[count];
+                this.position = new uint[count];
+                for (int i = 0; i < count; i++){
+                    this.entrytype[i] = reader.ReadUInt32();
+                    this.position[i] = reader.ReadUInt32();
+                }
+            }   
+        }
+    }
+
+    public struct ReadOBJDEntry {
+        /// <summary>
+        /// Reads OBJD entries.
+        /// </summary>
+        public int namelength;
+        public byte[] namebit;
+        public string name;
+        
+        public int tuningnamelength;
+        public byte[] tuningbit;
+        public string tuningname;        
+        public ulong tuningid;
+        public uint componentcount;
+        public uint[] components;        
+        public int materialvariantlength;
+        public byte[] materialvariantbyte;
+        public string materialvariant;
+        public uint price;
+        public string[] icon;
+        public string[] rig;
+        public string[] slot;
+        public string[] model;
+        public string[] footprint;
+        public List<string> meshes = new();
+        private bool tuningidmissing = false;
+        public uint type;
+        public uint group;
+        public ulong instance; 
+        public ReadOBJDEntry(BinaryReader reader, string[] entries, int[] positions, string packageName, int e){
+            uint preceeding;
+            uint preceedingDiv;
+            namelength = 0;
+            namebit = new byte[0];
+            name = "";
+            tuningnamelength = 0;
+            tuningbit = new byte[0];
+            tuningname = "";
+            tuningid = 0;
+            componentcount = 0;
+            components = new uint[0];
+            materialvariantlength = 0;
+            materialvariantbyte = new byte[0];
+            materialvariant = "";
+            price = 0;
+            icon = new string[0];
+            rig = new string[0];
+            slot = new string[0];
+            model = new string[0];
+            footprint = new string[0];            
+            tuningidmissing = false;  
+            instance = 0;
+            group = 0;
+            type = 0;          
+
+            for (int j = 0; j < entries.Length; j++){
+                string entryid = entries[j];
+                int entrypos = positions[j];
+                switch (entryid)
+                {
+                    case "E7F07786": // name
+                        reader.BaseStream.Position = entrypos;
+                        this.namelength = reader.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Name Length: {2}", packageName, e, namelength));
+                        reader.BaseStream.Position = reader.BaseStream.Position + 3;
+                        //LogMessage = "Byte 1: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 2: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 3: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        this.namebit = reader.ReadBytes(namelength);
+                        this.name = Encoding.UTF8.GetString(namebit);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Name: {2}", packageName, e, name));
+                        break;
+                    case "790FA4BC": //tuning
+                        reader.BaseStream.Position = entrypos;
+                        this.tuningnamelength = reader.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Tuning Name Length: {2}", packageName, e, tuningnamelength));
+                        reader.BaseStream.Position = reader.BaseStream.Position + 3;
+                        //log.MakeLog("Reading three empty bytes.", true);
+                        //LogMessage = "Byte 1: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 2: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 3: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        this.tuningbit = reader.ReadBytes(tuningnamelength);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Tuning Name Length: {2}", packageName, e, tuningbit));
+                        this.tuningname = Encoding.UTF8.GetString(tuningbit);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Tuning Name: {2}", packageName, e, tuningname));
+                        break;
+                    case "B994039B": //TuningID
+                        reader.BaseStream.Position = entrypos;
+                        this.tuningid = reader.ReadUInt64(); 
+                        break;
+                    case "CADED888": //Icon
+                        reader.BaseStream.Position = entrypos;
+                        preceeding = reader.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Reading Preceeding UInt32: {2}", packageName, e, preceeding));
+                        preceedingDiv = preceeding / 4;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Number of Icon GUIDs: {2}", packageName, e, preceedingDiv));
+                        this.icon = new string[preceedingDiv];
+                        for (int p = 0; p < preceedingDiv; p++){
+                            ResourceKeyITGFlip ricon = new ResourceKeyITGFlip(reader);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Icon GUID: {2}", packageName, e, ricon.ToString()));
+                            this.icon[p] = ricon.ToString();
+                            this.meshes.Add(ricon.ToString());
+                            this.type = ricon.type;
+                            this.group = ricon.group;
+                            this.instance = ricon.instance;                            
+                        }
+                        break;
+                    case "E206AE4F": //Rig
+                        reader.BaseStream.Position = entrypos;
+                        preceeding = reader.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageName, e, preceeding));
+                        preceedingDiv = preceeding / 4;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Number of Rig GUIDs: {2}", packageName, e, preceedingDiv));
+                        this.rig = new string[preceedingDiv];
+                        for (int p = 0; p < preceedingDiv; p++){
+                            ResourceKeyITGFlip rkrig = new ResourceKeyITGFlip(reader);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Rig GUID: {2}", packageName, e, rkrig.ToString()));
+                            this.rig[p] = rkrig.ToString();
+                            this.meshes.Add(rkrig.ToString());
+                            this.type = rkrig.type;
+                            this.group = rkrig.group;
+                            this.instance = rkrig.instance;
+                        }   
+                        break;
+                    case "8A85AFF3": //Slot
+                        reader.BaseStream.Position = entrypos;
+                        preceeding = reader.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageName, e, preceeding));
+                        preceedingDiv = preceeding / 4;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Number of Slot GUIDs: {2}", packageName, e, preceedingDiv));
+                        this.slot = new string[preceedingDiv];
+                        for (int p = 0; p < preceedingDiv; p++){
+                            ResourceKeyITGFlip rkslot = new ResourceKeyITGFlip(reader);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Slot GUID: {2}", packageName, e, rkslot.ToString()));
+                            this.slot[p] = rkslot.ToString();     
+                            this.meshes.Add(rkslot.ToString());                       
+                            this.type = rkslot.type;
+                            this.group = rkslot.group;
+                            this.instance = rkslot.instance;
+                        }            
+                        break;
+                    case "8D20ACC6": //Model
+                        reader.BaseStream.Position = entrypos;
+                        preceeding = reader.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageName, e, preceeding));
+                        preceedingDiv = preceeding / 4;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Number of Model GUIDs: {2}", packageName, e, preceedingDiv));
+                        this.model = new string[preceedingDiv];
+                        for (int p = 0; p < preceedingDiv; p++){
+                            ResourceKeyITGFlip rkmodel = new ResourceKeyITGFlip(reader);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Model GUID: {2}", packageName, e, rkmodel.ToString()));
+                            this.model[p] = rkmodel.ToString();
+                            this.meshes.Add(rkmodel.ToString());
+                            this.type = rkmodel.type;
+                            this.group = rkmodel.group;
+                            this.instance = rkmodel.instance;
+                        }
+                        break;
+                    case "6C737AD8": //Footprint
+                        reader.BaseStream.Position = entrypos;
+                        preceeding = reader.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Reading preceeding UInt32: {2}", packageName, e, preceeding));
+                        preceedingDiv = preceeding / 4;
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Number of Footprint GUIDs: {2}", packageName, e, preceedingDiv));
+                        this.footprint = new string[preceedingDiv];
+                        for (int p = 0; p < preceedingDiv; p++){
+                            ResourceKeyITGFlip rkft = new ResourceKeyITGFlip(reader);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Footprint GUID: {2}", packageName, e, rkft.ToString()));
+                            this.footprint[p] = rkft.ToString();
+                            this.meshes.Add(rkft.ToString());
+                            this.type = rkft.type;
+                            this.group = rkft.group;
+                            this.instance = rkft.instance;                
+                        }
+                        break;
+                    case "E6E421FB": //Components
+                        reader.BaseStream.Position = entrypos;
+                        this.componentcount = reader.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Component Count: {2}", packageName, e, componentcount));
+                        this.components = new uint[this.componentcount];
+                        for (int i = 0; i < this.componentcount; i++){
+                            components[i] = reader.ReadUInt32();
+                        }
+                        break;
+                    case "ECD5A95F": //MaterialVariant
+                        reader.BaseStream.Position = entrypos;
+                        this.materialvariantlength = reader.ReadByte();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Material Variant Length: {2}", packageName, e, materialvariantlength));
+                        reader.BaseStream.Position = reader.BaseStream.Position + 3;
+                        //log.MakeLog("Reading three empty bytes.", true);
+                        //LogMessage = "Byte 1: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 2: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        //LogMessage = "Byte 3: " + reader.ReadByte().ToString();
+                        //if(GlobalVariables.highdebug == true) log.MakeLog(LogMessage, true);
+                        //if(GlobalVariables.highdebug == false) LogFile.Append(string.Format("{0}\n", LogMessage));
+                        this.materialvariantbyte = reader.ReadBytes(materialvariantlength);
+                        this.materialvariant = Encoding.UTF8.GetString(materialvariantbyte);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Material Variant: {2}", packageName, e, materialvariant));
+                        break;
+                    case "AC8E1BC0": //Unknown1
+                        reader.BaseStream.Position = entrypos;
+
+                        break;
+                    case "E4F4FAA4": //SimoleonPrice
+                        reader.BaseStream.Position = entrypos;
+                        this.price = reader.ReadUInt32();
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}/OBJD{1}, - Price: {2}", packageName, e, price));
+                        break;
+                    case "7236BEEA": //PositiveEnvironmentScore
+                        reader.BaseStream.Position = entrypos;
+
+                        break;
+                    case "44FC7512": //NegativeEnvironmentScore
+                        reader.BaseStream.Position = entrypos;
+
+                        break;
+                    case "4233F8A0": //ThumbnailGeometryState
+                        reader.BaseStream.Position = entrypos;
+
+                        break;
+                    case "EC3712E6": //Unknown2
+                        reader.BaseStream.Position = entrypos;
+
+                        break;
+                    case "2172AEBE": //EnvironmentScoreEmotionTags
+                        reader.BaseStream.Position = entrypos;
+
+                        break;
+                    case "DCD08394": //EnvironmentScores
+                        reader.BaseStream.Position = entrypos;
+
+                        break;
+                    case "52F7F4BC": //Unknown3
+                        reader.BaseStream.Position = entrypos;
+
+                        break;
+                    case "AEE67A1C": //IsBaby
+                        reader.BaseStream.Position = entrypos;
+
+                        break;
+                    case "F3936A90": //Unknown4
+                        reader.BaseStream.Position = entrypos;
+                        
+                        break;
+                }
+            }
+        }
+
+        public override string ToString(){
+            return string.Format("Name: {0} \n Tuning Name: {1} \n TuningID: {2} \n Components: {3} \n Material Variant: {4} \n Price: {5} \n Icon: {6} \n Rig: {7}, Model: {8}, Slot: {9}, Footprint: {10}", this.name, this.tuningname, this.tuningid.ToString("X16"), GetFormatUIntArray(this.components), this.materialvariant, this.price.ToString("X8"), this.icon, this.rig, this.model, this.slot, this.footprint);
+        }
+
+        public static string GetFormatUIntArray(uint[] ints){
+            string retVal = string.Empty;
+            foreach (uint number in ints){
+                if (string.IsNullOrEmpty(retVal)){
+                    retVal += number.ToString("X8");
+                } else {
+                    retVal += string.Format(", {0}", number.ToString("X8"));
+                }
+                
+            }
+            return retVal;
+        }
+    }
+
+    public struct ReadThumbCache {   
+        public Sims4ScanData thisPackage;
+        public ReadThumbCache(Sims4ScanData package, List<EntryLocations> fileHas, List<string> instanceids, Sims4Instance instance, string packagename){
+            this.thisPackage = package;
+            List<string> parts = new();
+
+            string cache = instance.CacheFiles.Where(c => c.EndsWith("localthumbcache.package")).FirstOrDefault();
+            
+            if (File.Exists(cache))
+            {   
+                TransformImages imageTransformations = new();
+                FileStream fs = new FileStream(cache, FileMode.Open, FileAccess.Read);
+                BinaryReader readFile = new BinaryReader(fs);
+                List<IndexEntry> indexData = new();
+
+                long entrycountloc = 36;
+                long indexRecordPositionloc = 64;
+
+                readFile.BaseStream.Position = 0;
+
+                readFile.BaseStream.Position = entrycountloc;
+
+                uint entrycount = readFile.ReadUInt32();
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("P: {0}- THUMBCACHE Entry Count: {1}", packagename, entrycount.ToString()));
+                
+                //record position low
+                uint indexRecordPositionLow = readFile.ReadUInt32();
+
+                //index record size
+                uint indexRecordSize = readFile.ReadUInt32();
+                
+                readFile.BaseStream.Position = indexRecordPositionloc;
+
+                ulong indexRecordPosition = readFile.ReadUInt64();                
+                            
+                byte[] headersize = new byte[96];
+                long here = 100;
+                long movedto = 0;
+
+
+                if (indexRecordPosition != 0){
+                    long indexseek = (long)indexRecordPosition - headersize.Length;
+                    movedto = here + indexseek;
+                    readFile.BaseStream.Position = here + indexseek;                
+                } else {
+                    movedto = here + indexRecordPositionLow;
+                    readFile.BaseStream.Position = here + indexRecordPositionLow;
+                }
+
+                readFile.BaseStream.Position = (long)indexRecordPosition + 4;
+
+                for (int i = 0; i < entrycount; i++){                    
+                    IndexEntry holderEntry = new IndexEntry();                
+                    holderEntry.TypeID = readFile.ReadUInt32().ToString("X8");
+
+                    EntryType type = Sims4PackageReader.EntryTypes.Where(x => x.TypeID == holderEntry.TypeID).First();
+                    
+                    holderEntry.GroupID = readFile.ReadUInt32().ToString("X8");
+                    
+                    string instanceid1 = (readFile.ReadUInt32() << 32).ToString("X8");
+                    string instanceid2 = (readFile.ReadUInt32() << 32).ToString("X8");
+                    holderEntry.InstanceID = string.Format("{0}{1}", instanceid1,instanceid2);
+                    
+                    uint testin = readFile.ReadUInt32();
+                    holderEntry.uLocation = testin;
+
+                    holderEntry.Filesize = readFile.ReadUInt32();
+
+                    holderEntry.Truesize = readFile.ReadUInt32();
+
+                    holderEntry.CompressionType = readFile.ReadUInt16().ToString("X4");
+
+                    readFile.BaseStream.Position = readFile.BaseStream.Position + 2;
+
+                    indexData.Add(holderEntry);
+                }
+
+                foreach (string id in instanceids){
+                            
+                    var thumb = indexData.Where(i => i.InstanceID == id).FirstOrDefault();
+                    if (thumb != null){
+                        readFile.BaseStream.Position = thumb.uLocation;
+                        if (thumb.CompressionType == "5A42"){  
+                            int entryEnd = (int)readFile.BaseStream.Position + (int)thumb.Truesize;
+                            MemoryStream decomps = Sims4Decryption.DecompressMS(ByteReaders.ReadEntryBytes(readFile, (int)thumb.Truesize));
+                            byte[] imagebyte = decomps.ToArray();
+                            
+                            //string byteasstring = Convert.ToBase64String(imagebyte);
+                            imageTransformations.TransformToPNG(imagebyte, packagename);
+                            thisPackage.ThumbnailData = imagebyte;
+                            fs.Close();
+                            fs.Dispose();
+                            readFile.Close();
+                            readFile.Dispose(); 
+                            return;
+                        } else if (thumb.CompressionType == "0000"){
+                            byte[] imagebyte = ByteReaders.ReadEntryBytes(readFile, (int)thumb.Truesize);
+                            imageTransformations.TransformToPNG(imagebyte, packagename);
+                            thisPackage.ThumbnailData = imagebyte;
+                            fs.Close();
+                            fs.Dispose();
+                            readFile.Close();
+                            readFile.Dispose(); 
+                            return;
+                        }
+                    }
+                }
+            fs.Close();
+            fs.Dispose();
+            readFile.Close();
+            readFile.Dispose(); 
+            }            
+        }        
+    }
+    
+
+    
+    public struct ResourceKeyITG {
+        /// <summary>
+        /// Reads resource keys and does not flip the instance ID.
+        /// </summary>
+        public ulong instance;
+        public uint type;
+        public uint group;
+        
+        public ResourceKeyITG(BinaryReader reader){
+            this.instance = reader.ReadUInt64();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("GUID Instance: {0}", this.instance));
+            this.type = reader.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("GUID Type: {0}", this.type));
+            this.group = reader.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("GUID Group: {0}", this.group));
+        }
+
+        public override string ToString() => $"{type.ToString("X8")}-{group.ToString("X8")}-{instance.ToString("X16")}";
+        
+    }
+    public struct ResourceKeyITGFlip {
+        /// <summary>
+        /// Reads resource keys and flips the instance ID.
+        /// </summary>
+        public ulong instance;
+        public uint type;
+        public uint group;
+        
+        public ResourceKeyITGFlip(BinaryReader reader){
+            uint left = reader.ReadUInt32();
+            uint right = reader.ReadUInt32();
+            ulong longleft = left;
+            longleft = (longleft << 32);
+            this.instance = longleft | right;
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("GUID Instance: {0}", this.instance));
+            this.type = reader.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("GUID Type: {0}", this.type));
+            this.group = reader.ReadUInt32();
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("GUID Group: {0}", this.group));
+        }
+
+        public override string ToString() => $"{type.ToString("X8")}-{group.ToString("X8")}-{instance.ToString("X16")}";
+    }
+
+    public struct Tag {
+        /// <summary>
+        /// Reads tags.
+        /// </summary>
+        public int[] tagKey;  
+        public int[] empty; 
+
+        public Tag(BinaryReader reader, uint count){
+            if (count == 1){
+                this.tagKey = new int[count];
+                this.empty = new int[count];
+                this.tagKey[0] = reader.ReadUInt16();
+                this.empty[0] = 0;
+            } else {
+                this.tagKey = new int[count];
+                this.empty = new int[count];
+                for (int i = 0; i < count; i++){
+                    this.tagKey[i] = reader.ReadUInt16(); 
+                    this.empty[i] = reader.ReadUInt16(); 
+                }
+            }
+        }
+    }
+    public struct CASTag16Bit {
+        /// <summary>
+        /// Gets CAS Tags from package. 16bit version.
+        /// </summary>
+        public int[] tagKey;  
+        public int[] catKey;
+        public int[] empty; 
+
+        public CASTag16Bit(BinaryReader reader, uint count){
+            if (count == 1){
+                this.tagKey = new int[count];
+                this.catKey = new int[count];
+                this.empty = new int[count];
+                this.empty[0] = reader.ReadUInt16();
+                this.catKey[0] = reader.ReadUInt16();
+                this.tagKey[0] = reader.ReadUInt16();
+                
+            } else {
+                this.tagKey = new int[count];
+                this.catKey = new int[count];
+                this.empty = new int[count];
+                for (int i = 0; i < count; i++){
+                    this.empty[i] = reader.ReadUInt16();
+                    this.catKey[i] = reader.ReadUInt16(); 
+                    this.tagKey[i] = reader.ReadUInt16(); 
+                     
+                }
+            }
+        }
+    }
+
+    public struct CASTag32Bit {
+        /// <summary>
+        /// Gets CAS Tags from package. 32bit version.
+        /// </summary>
+        public uint[] tagKey;  
+        public uint[] catKey;
+        public uint[] empty; 
+
+        public CASTag32Bit(BinaryReader reader, int count){
+            if (count == 1){
+                this.tagKey = new uint[count];
+                this.catKey = new uint[count];
+                this.empty = new uint[count];
+                this.empty[0] = reader.ReadUInt32();
+                this.catKey[0] = reader.ReadUInt32();
+                this.tagKey[0] = reader.ReadUInt32();
+                
+            } else {
+                this.tagKey = new uint[count];
+                this.catKey = new uint[count];
+                this.empty = new uint[count];
+                for (int i = 0; i < count; i++){
+                    this.empty[i] = reader.ReadUInt32();
+                    this.catKey[i] = reader.ReadUInt32(); 
+                    this.tagKey[i] = reader.ReadUInt32(); 
+                     
+                }
+            }
+        }
+    }    
+
+    public class Readers {
+        public static List<S4CategoryTag> GetTagInfo(CASTag16Bit tags, uint count){
+            
+            List<S4CategoryTag> taglist = new();
+            S4CategoryTag tagg = new();
+            List<S4CategoryTag> tagQuery = new();
+            for (int i = 0; i < count; i++)
+            {   
+                if (tags.tagKey[i] != 0){
+                    tagQuery = Sims4PackageReader.CategoryTags.Where(x => x.TypeID == tags.tagKey[i].ToString()).ToList();
+                    if (tagQuery.Any()){
+                        tagg = tagQuery[0];
+                        taglist.Add(tagg);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} ({1}) was matched to {2}.", i, tagg.TypeID, tagg.Description));
+                    } else {
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} matched nothing.", tags.tagKey[i]));
+                    }  
+                }
+                if (tags.catKey[i] != 0){
+                    tagQuery = Sims4PackageReader.CategoryTags.Where(x => x.TypeID == tags.catKey[i].ToString()).ToList();                    
+                    if (tagQuery.Any()){
+                        tagg = tagQuery[0];
+                        taglist.Add(tagg);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} ({1}) was matched to {2}.", i, tagg.TypeID, tagg.Description));
+                    } else {
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} matched nothing.", tags.catKey[i]));
+                    }  
+                }                                            
+            }
+            tagg = new();
+            return taglist;
+        }
+        
+        public static List<S4CategoryTag> GetTagInfo(Tag tags, uint count){
+            List<S4CategoryTag> taglist = new();
+            S4CategoryTag tagg = new();
+            List<S4CategoryTag> tagQuery = new();
+            for (int i = 0; i < count; i++)
+            {
+                tagQuery = Sims4PackageReader.CategoryTags.Where(x => x.TypeID == tags.tagKey[i].ToString()).ToList();
+                if (tagQuery.Any()){
+                    tagg = tagQuery[0];
+                    taglist.Add(tagg);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} ({1}) was matched to {2}.", i, tags.tagKey[i], tagg.Description));
+                } else {
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} matched nothing.", tags.tagKey[i]));
+                }
+            }
+            return taglist;
+        }        
+        
+        public static List<S4CategoryTag> GetTagInfo(List<uint> tags, uint count){
+            List<S4CategoryTag> taglist = new();
+            S4CategoryTag tagg = new();
+            List<S4CategoryTag> tagQuery = new();            
+            for (int i = 0; i < count; i++)
+            {
+                tagQuery = Sims4PackageReader.CategoryTags.Where(x => x.TypeID == tags[i].ToString()).ToList();
+                if (tagQuery.Any()){
+                    tagg = tagQuery[0];
+                    taglist.Add(tagg);
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} ({2}) was matched to {1}.", i, taglist[i].Description, tags[i]));
+                } else {
+                        if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Tag {0} matched nothing.", taglist[i]));
+                }
+            }
+            return taglist;
+        }
+    }
+
+    
+
+
+
 
 
 }

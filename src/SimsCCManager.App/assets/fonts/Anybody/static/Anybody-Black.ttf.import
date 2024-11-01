@@ -15,6 +15,7 @@ dest_files=["res://.godot/imported/Anybody-Black.ttf-8e8f55f727286f0f84478b4b1b1
 Rendering=null
 antialiasing=1
 generate_mipmaps=false
+disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
 msdf_pixel_range=8
 msdf_size=48

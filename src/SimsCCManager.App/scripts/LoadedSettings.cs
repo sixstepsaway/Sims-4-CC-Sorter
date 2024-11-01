@@ -82,9 +82,11 @@ namespace SimsCCManager.Settings.Loaded
 
     public class Category {
         public string Name {get; set;} = "";
+        public Guid Identifier {get; set;} = Guid.NewGuid();
         public string Description {get; set;} = "";
         public Godot.Color Background {get; set;} = Godot.Color.FromHtml("FFFFFF");
         public Godot.Color TextColor {get; set;} = Godot.Color.FromHtml("000000");
+        public int Packages {get; set;} = 0;
     }
 
     public class Executable {

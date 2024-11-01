@@ -56,7 +56,9 @@ public partial class CustomDataGrid : MarginContainer
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows set. Count: {0}", value.Count));
 		CallDeferred(nameof(PopulateRows));}
 	}
-	List<DataGridRow> rowsholder = new();
+	List<DataGridRow> rowsholder = new();	
+
+	public List<string> FilesForRows = new();
 
 	Button ScrollUp; 
 	Button ScrollDown;
@@ -130,6 +132,7 @@ public partial class CustomDataGrid : MarginContainer
 
 	double hscrollstep = 0;
 	List<Task> UpdateRows = new();
+	bool lockscroll = false;
 
 
 	public override void _Ready()	
@@ -225,13 +228,7 @@ public partial class CustomDataGrid : MarginContainer
 	}
 
 	private void ChooseScroll(){
-		ChangeScroll();
-		/*if (ScrollBarPosition > vScrollBarPosition){			
-			ScrollDownClick((int)(ScrollBarPosition - vScrollBarPosition));
-		} else if (ScrollBarPosition < vScrollBarPosition){
-			ScrollUpClick((int)(ScrollBarPosition + vScrollBarPosition));
-		}*/
-		
+		ChangeScroll();		
 	}
 
 	private void ChangeScroll(){
@@ -277,26 +274,31 @@ public partial class CustomDataGrid : MarginContainer
 	}
 
 	private void ScrollUpClick(){
-		if (ScrollPosition != 0){			
-			vScrollBar.Value--;
-			ScrollPosition--;
-		} 
-		//canscroll = true;	
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scroll position: {0}.", ScrollPosition));	
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Visible rows: {0}.", rows.Where(x => x.Visible).Count()));
+		if (!lockscroll){
+				if (ScrollPosition != 0){			
+				vScrollBar.Value--;
+				ScrollPosition--;
+			} 
+			//canscroll = true;	
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scroll position: {0}.", ScrollPosition));	
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Visible rows: {0}.", rows.Where(x => x.Visible).Count()));
+		}
+		
 	}
 
 	private void ScrollDownClick(){
-		if (ScrollPosition != MaxScroll){
-			int idx = rows.IndexOf(rows.Where(x => x.Visible).Last());
-			if (idx < rows.Count){
-				vScrollBar.Value++;
-				ScrollPosition++;
+		if (!lockscroll){
+			if (ScrollPosition != MaxScroll){
+				int idx = rows.IndexOf(rows.Where(x => x.Visible).Last());
+				if (idx < rows.Count){
+					vScrollBar.Value++;
+					ScrollPosition++;
+				}
 			}
-		}
-		//canscroll = true;
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scroll position: {0}.", ScrollPosition));
-		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Visible rows: {0}.", rows.Where(x => x.Visible).Count()));
+			//canscroll = true;
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scroll position: {0}.", ScrollPosition));
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Visible rows: {0}.", rows.Where(x => x.Visible).Count()));
+		}		
 	}
 
 	private void Scroll(){		
@@ -358,7 +360,7 @@ public partial class CustomDataGrid : MarginContainer
     public void RowsFromData(){
 		if (onceloaded){ 
 			Task t = new Task(() => {
-				if (onceloaded) ClearChildren();
+				//if (onceloaded) CallDeferred(nameof(ClearChildren));
 				MakeRows();
 			});
 			UpdateRows.Add(t);	
@@ -369,6 +371,7 @@ public partial class CustomDataGrid : MarginContainer
 	}
 
 	private void MakeRows(){
+		lockscroll = true;
 		makingrows = true;
 		rowsholder.Clear();
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Setting rows from data!"));
@@ -380,7 +383,7 @@ public partial class CustomDataGrid : MarginContainer
 			int rowscount = 0;
 			int currentrow = -1;		
 			foreach (CellContent item in Data){					
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}, column {1}: {2} as cell item.", item.RowNum, item.ColumnNum, item.Content));
+				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Creating row {0}, column {1}: {2} as cell item.", item.RowNum, item.ColumnNum, item.Content));
 				if (currentrow != item.RowNum){					
 					if (currentrow != -1) {
 						dataGridRow.Visible = false;
@@ -422,15 +425,17 @@ public partial class CustomDataGrid : MarginContainer
 			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Emitting \"DoneLoading\"."));
 		}
 		//CallDeferred(nameof(PopulateRows));	
+		lockscroll = false;
 			
 	}
 
-	private void PopulateRows(){		
+	private void PopulateRows(){	
+		lockscroll = true;	
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Rows to populate: {0}", rows.Count));
 		ClearChildren();
 		SetScrollBar();	
 		for (int i = 0; i < rows.Count; i++){
-			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Adding row {0}", i));
+			if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Populating row {0}", i));
 			if (i >= ScrollPosition && i < ScrollPosition + rowsonscreen){
 				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("{0} should be visible. Making it so, number one!", i));
 				rows[i].Visible = true;
@@ -442,12 +447,12 @@ public partial class CustomDataGrid : MarginContainer
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Grid container children: {0}", GridContainer.GetChildCount()));
 		for (int i = 0; i < ColumnSizes.Count; i++){
 			HeaderResized(i);
-		}
-		
+		}		
 		if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Emitting \"DoneLoading\"."));
 		if (!onceloaded) DoneLoading.Invoke();
 		onceloaded = true;
 		makingrows = false;	
+		lockscroll = false;
 	}
 
     public override void _Process(double delta)
@@ -516,27 +521,30 @@ public partial class CustomDataGrid : MarginContainer
 
     public override void _Input(InputEvent @event)
     {
-		if (mouseingrid /*&& canscroll*/){		
-			if (@event.IsActionPressed("ScrollUp")){
-				//canscroll = false;
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scrolling datagrid up."));
-				ScrollUpClick();
-			}
-			if (@event.IsActionPressed("ScrollDown")){
-				//canscroll = false;
-				if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scrolling datagrid down."));
-				ScrollDownClick();
-			}	
-			if (@event.IsActionPressed("ui_up")){
-				SelectUp();
-			}
-			if (@event.IsActionPressed("ui_down")){
-				SelectDown();
-			}
-			if (@event.IsActionPressed("CtrlA")){
-				SelectAll();
+		if (!lockscroll) {
+			if (mouseingrid /*&& canscroll*/){		
+				if (@event.IsActionPressed("ScrollUp")){
+					//canscroll = false;
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scrolling datagrid up."));
+					ScrollUpClick();
+				}
+				if (@event.IsActionPressed("ScrollDown")){
+					//canscroll = false;
+					if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Scrolling datagrid down."));
+					ScrollDownClick();
+				}	
+				if (@event.IsActionPressed("ui_up")){
+					SelectUp();
+				}
+				if (@event.IsActionPressed("ui_down")){
+					SelectDown();
+				}
+				if (@event.IsActionPressed("CtrlA")){
+					SelectAll();
+				}
 			}
 		}
+		
 
 		
 		// else if (scrollbarheld && @event.IsActionReleased("LeftClick")){

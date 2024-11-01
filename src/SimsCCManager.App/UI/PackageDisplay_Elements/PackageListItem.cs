@@ -44,9 +44,11 @@ public partial class PackageListItem : HBoxContainer
 				}
 			}
 		} else if (package.Game == Games.Sims3){
-			Sims3ScanData scandata = package.ScanData as Sims3ScanData;
+			//Sims3ScanData scandata = package.ScanData as Sims3ScanData;
+			///nodata
 		} else if (package.Game == Games.Sims4){
-			Sims4ScanData scandata = package.ScanData as Sims4ScanData;
+			//Sims4ScanData scandata = package.ScanData as Sims4ScanData;
+			//nodata
 		}
 	}
 

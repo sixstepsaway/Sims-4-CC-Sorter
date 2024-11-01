@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Text;
 using SimsCCManager.Debugging;
+using Godot;
+using SimsCCManager.Globals;
 
 namespace SSA.VirtualFileSystem
 {
@@ -16,39 +18,7 @@ namespace SSA.VirtualFileSystem
         //https://learn.microsoft.com/en-us/dotnet/api/system.io.file.createsymboliclink?view=net-7.0
         //https://stackoverflow.com/questions/3387690/how-to-create-a-hardlink-in-c
         //https://github.com/usdAG/SharpLink  
-
-        public static void GetException(Exception e, string info, DirectoryInfo location){
-            StringBuilder sb = new();
-            sb.AppendLine(info);
-            string str = string.Format("Exception Message: {0}", e.Message);
-            sb.AppendLine(str);
-            str = string.Format("Exception Source: {0}", e.Source);
-            sb.AppendLine(str);
-            str = string.Format("Inner Exception: {0}", e.InnerException);
-            sb.AppendLine(str);
-            str = string.Format("Base Exception: {0}", e.GetBaseException().ToString());
-            sb.AppendLine(str);
-            str = string.Format("Exception Data: {0}", e.Data);
-            sb.AppendLine(str);
-            str = string.Format("Exception Stack Trace: {0}", e.StackTrace);
-            sb.AppendLine(str);
-            List<string> dirs = Directory.GetDirectories(location.FullName).ToList();
-            List<string> files = Directory.GetFiles(location.FullName).ToList();
-            StringBuilder filesandfolders = new();
-
-            sb.AppendLine("Items in Location:");            
-            foreach (string folder in dirs){
-                DirectoryInfo dirInfo = new(folder);
-                filesandfolders.AppendLine(string.Format("       Folder: {0}\n       Symlink: {1}", dirInfo.Name, dirInfo.Attributes.HasFlag(FileAttributes.ReparsePoint).ToString()));
-            }          
-            foreach (string file in files){
-                FileInfo fileInfo = new(file);
-                filesandfolders.AppendLine(string.Format("       File: {0}\n       Symlink: {1}", fileInfo.Name, fileInfo.Attributes.HasFlag(FileAttributes.ReparsePoint).ToString()));
-            }
-            sb.AppendLine(filesandfolders.ToString());
-            Logging.WriteExceptionReport(sb);
-        }
-   
+         
         
         public static void MakeSymbolicLink(string Original, string Destination){
             FileInfo fileInfo = new(Original);
@@ -56,19 +26,35 @@ namespace SSA.VirtualFileSystem
             Destination = Path.Combine(Destination, fileInfo.Name);
             if (File.Exists(Destination)){
                 try { 
-                    File.Move(Destination, string.Format("{0}.disabled", Destination)); 
+                    string n = string.Format("{0}.disabled", Destination);
+                    File.Move(Destination, n);                     
                 } catch (Exception e) {
-                    string exceptionstring = string.Format("Caught exception disabling duplicate file: {0}\nException: {1}", fileInfo.Name, e.Message);
-                    //System.Windows.Forms.MessageBox.Show(exceptionstring);
-                    GetException(e, exceptionstring, destinfo.Directory);
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception disabling duplicate file: {0}\nException: {1}", fileInfo.Name, e.Message));
                 }
             }
             try {
-                File.CreateSymbolicLink(Destination, Original);                
+                File.CreateSymbolicLink(Destination, Original);                 
             } catch (Exception e) {
-                string exceptionstring = string.Format("Caught exception making symbolic link: {0}\nException: {1}", fileInfo.Name, e.Message);
-                //System.Windows.Forms.MessageBox.Show(exceptionstring);
-                GetException(e, exceptionstring, destinfo.Directory);
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception making symbolic link: {0}\nException: {1}", fileInfo.Name, e.Message));
+            }            
+        }
+        
+        public static void MakeDirectSymbolicLink(string Original, string Destination){
+            FileInfo fileInfo = new(Original);
+            FileInfo destinfo = new(Destination);
+            //Destination = Path.Combine(Destination, fileInfo.Name);
+            if (File.Exists(Destination)){
+                try { 
+                    string n = string.Format("{0}.disabled", Destination);
+                    File.Move(Destination, n);                     
+                } catch (Exception e) {
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception disabling duplicate file: {0}\nException: {1}", fileInfo.Name, e.Message));
+                }
+            }
+            try {
+                File.CreateSymbolicLink(Destination, Original);                 
+            } catch (Exception e) {
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception making symbolic link: {0}\nException: {1}", fileInfo.Name, e.Message));
             }            
         }
 
@@ -78,19 +64,16 @@ namespace SSA.VirtualFileSystem
             Destination = Path.Combine(Destination, AsName);
             if (File.Exists(Destination)){
                 try {
-                    File.Move(Destination, string.Format("{0}.disabled", Destination));
+                    string n = string.Format("{0}.disabled", Destination);
+                    File.Move(Destination, n);                    
                 } catch (Exception e) {
-                    string exceptionstring = string.Format("Caught exception disabling duplicate file: {0}\nException: {1}", fileInfo.Name, e.Message);
-                    //System.Windows.Forms.MessageBox.Show(exceptionstring);
-                    GetException(e, exceptionstring, destinfo.Directory);
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception disabling duplicate file: {0}\nException: {1}", fileInfo.Name, e.Message));
                 }
             }
             try {
-                File.CreateSymbolicLink(Destination, Original);          
+                File.CreateSymbolicLink(Destination, Original);                
             } catch (Exception e) {
-                string exceptionstring = string.Format("Caught exception making symbolic link: {0}\nException: {1}", fileInfo.Name, e.Message);
-                //System.Windows.Forms.MessageBox.Show(exceptionstring);
-                GetException(e, exceptionstring, destinfo.Directory);
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception making symbolic link: {0}\nException: {1}", fileInfo.Name, e.Message));
             }
             
         }
@@ -100,25 +83,22 @@ namespace SSA.VirtualFileSystem
                 try { 
                     File.Delete(Item); 
                 } catch (Exception e) {
-                    string exceptionstring = string.Format("Caught exception deleting symbolic link: {0}\nException: {1}", Item, e.Message);
-                    //System.Windows.Forms.MessageBox.Show(exceptionstring);
-                    GetException(e, exceptionstring, new FileInfo(Item).Directory);
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception deleting symbolic link: {0}\nException: {1}", Item, e.Message));
                 }
             }
-            /*if (File.Exists(string.Format("{0}.disabled", Item))){
+            if (File.Exists(string.Format("{0}.disabled", Item))){
                 string og = string.Format("{0}.disabled", Item);
                 string ren = og.Replace(".disabled", "");
                 try {
                     File.Move(og, ren);
                 } catch (Exception e) {
-                    string exceptionstring = string.Format("Caught exception renaming disabled file: {0}\nException: {1}", Item, e.Message);
-                    //System.Windows.Forms.MessageBox.Show(exceptionstring);
-                    GetException(e, exceptionstring, new FileInfo(Item).Directory);
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception renaming disabled file: {0}\nException: {1}", Item, e.Message));
                 }
-            }*/
+            }
         }
 
-        public static void MakeJunction(string Original, string Destination){            
+        public static void MakeJunction(string Original, string Destination){  
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Creating junction from {0} to {1}", Destination, Original));
             DirectoryInfo destinfo = new(Destination);
             DirectoryInfo directoryInfo = new(Original);
             Destination = Path.Combine(Destination, directoryInfo.Name);
@@ -126,17 +106,32 @@ namespace SSA.VirtualFileSystem
                 try { 
                     Directory.Move(Destination, string.Format("{0}--DISABLED", Destination)); 
                 } catch (Exception e) {
-                    string exceptionstring = string.Format("Caught exception disabling duplicate folder: {0}\nException: {1}", directoryInfo.Name, e.Message);
-                    //System.Windows.Forms.MessageBox.Show(exceptionstring);
-                    GetException(e, exceptionstring, destinfo);
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception disabling duplicate folder: {0}\nException: {1}", directoryInfo.Name, e.Message));
                 }
             }
             try {
                 Directory.CreateSymbolicLink(Destination, Original);
-            } catch (Exception e) {         
-                string exceptionstring = string.Format("Caught exception making junction: {0}\nException: {1}", directoryInfo.Name, e.Message);
-                //System.Windows.Forms.MessageBox.Show(exceptionstring);
-                GetException(e, exceptionstring, destinfo);
+            } catch (Exception e) {  
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("EXCEPTION: Caught exception making junction: {0}\nException: {1}", directoryInfo.Name, e.Message));                      
+            }
+        }
+
+        public static void MakeDirectJunction(string Original, string Destination){  
+            if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Creating junction from {0} to {1}", Destination, Original));
+            DirectoryInfo destinfo = new(Destination);
+            DirectoryInfo directoryInfo = new(Original);
+            //Destination = Path.Combine(Destination, directoryInfo.Name);
+            if (Directory.Exists(Destination)){
+                try { 
+                    Directory.Move(Destination, string.Format("{0}--DISABLED", Destination)); 
+                } catch (Exception e) {
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception disabling duplicate folder: {0}\nException: {1}", directoryInfo.Name, e.Message));
+                }
+            }
+            try {
+                Directory.CreateSymbolicLink(Destination, Original);
+            } catch (Exception e) {  
+                if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("EXCEPTION: Caught exception making junction: {0}\nException: {1}", directoryInfo.Name, e.Message));                      
             }
         }
 
@@ -145,9 +140,7 @@ namespace SSA.VirtualFileSystem
                 try {
                     Directory.Delete(Item);
                 } catch (Exception e) {
-                    string exceptionstring = string.Format("Caught exception removing junction: {0}\nException: {1}", Item, e.Message);
-                    //System.Windows.Forms.MessageBox.Show(exceptionstring);
-                    GetException(e, exceptionstring, new FileInfo(Item).Directory);
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("EXCEPTION: Caught exception removing junction: {0}\nException: {1}", Item, e.Message));
                 }
             }            
             if (Directory.Exists(string.Format("{0}--DISABLED", Item))){
@@ -160,9 +153,7 @@ namespace SSA.VirtualFileSystem
                         File.Move(og, ren);
                     }                    
                 } catch (Exception e) {
-                    string exceptionstring = string.Format("Caught exception renaming disabled folder: {0}\nException: {1}", Item, e.Message);
-                    //System.Windows.Forms.MessageBox.Show(exceptionstring);
-                    GetException(e, exceptionstring, new FileInfo(Item).Directory);
+                    if (GlobalVariables.DebugMode) Logging.WriteDebugLog(string.Format("Caught exception renaming disabled folder: {0}\nException: {1}", Item, e.Message));                    
                 }
             }
         }

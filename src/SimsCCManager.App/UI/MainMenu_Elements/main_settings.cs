@@ -19,9 +19,11 @@ public partial class main_settings : MarginContainer
 	CustomCheckButton RestrictCPU;
 	CustomCheckButton AutomaticallyLoad;
 	CustomCheckButton ShowTali;
+	HolderNode holdernode;
 	
 	public override void _Ready()
 	{
+		holdernode = GetWindow().GetNode<HolderNode>("MainWindow/HolderNode");
 		themes = GetNode<OptionButton>("MarginContainer/VBoxContainer/HBoxContainer2/OptionButton");
 		GD.Print(string.Format("There are {0} loaded themes", LoadedSettings.SetSettings.ThemeOptions.Count));
 		themes.AddItem(LoadedSettings.SetSettings.LoadedTheme.ThemeName);
@@ -41,14 +43,16 @@ public partial class main_settings : MarginContainer
 		AutomaticallyLoad.ButtonPressed(LoadedSettings.SetSettings.LoadLatestInstance);
 		ShowTali = GetNode<CustomCheckButton>("MarginContainer/VBoxContainer/ShowTali_Setting/ShowTali_Check");
 		ShowTali.ButtonPressed(LoadedSettings.SetSettings.ShowTali);
-		UIUtilities.UpdateTheme(GetTree());
+		//UIUtilities.UpdateTheme(GetTree());
+		holdernode.UpdateTheme(GetTree());
 	}
 
 	private void _on_option_button_item_selected(int option){
 		ThemeColors prevtheme = LoadedSettings.SetSettings.LoadedTheme;
 		LoadedSettings.SetSettings.ChangeSetting("LoadedTheme", themesList[option]);	
 		if (LoadedSettings.SetSettings.LoadedTheme != prevtheme){						
-			UIUtilities.UpdateTheme(GetTree());
+			holdernode.UpdateTheme(GetTree());
+			//UIUtilities.UpdateTheme(GetTree());
 		}
 	}
 

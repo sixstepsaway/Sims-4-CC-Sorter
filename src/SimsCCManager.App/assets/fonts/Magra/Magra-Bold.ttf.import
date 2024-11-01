@@ -15,6 +15,7 @@ dest_files=["res://.godot/imported/Magra-Bold.ttf-9e7f094c13178216a473c897fdcca2
 Rendering=null
 antialiasing=1
 generate_mipmaps=false
+disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
 msdf_pixel_range=8
 msdf_size=48
